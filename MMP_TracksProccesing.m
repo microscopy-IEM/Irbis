@@ -1,0 +1,180 @@
+
+function [tracks] = MMP_TracksProccesing(tracks)
+
+% tracks = MMpack.tracks;
+
+tracks.frame_interval = 0.05;
+
+dT = tracks.frame_interval;
+
+% 
+% % Define table
+%     varNames = {'id';'Length';'MeanDisp';'NumOfNaN';'NumOfGaps';'LongestGap';'VisArea';'MeanVel';'OvVel';'Type';'meanX';'meanY'};
+%     varTypes = {'double','double','double','double','double','double','double','double','double','string','double','double'};
+%         
+%     % get size of the table
+%     sz = [tracks.numOfTracks size(varTypes,2)];
+% 
+%     % create table
+%     T = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
+
+    T = tracks.tracksList;
+
+     % calculate length of each trajectory
+%     lengthsOfTrajectories = cell2mat(cellfun(@length, tracks.xyz, 'UniformOutput', false));    
+
+     lengthsOfTrajectories = cell2mat(cellfun(@size, tracks.tracksList.xyz, 'UniformOutput', false));
+     lengthsOfTrajectories = lengthsOfTrajectories(:,1);
+     
+     for TrackNum = tracks.ids
+
+        % length of trajectory
+        TrLength = lengthsOfTrajectories(TrackNum);
+        
+
+        % get coordinates
+        coor_nan = tracks.tracksList.xyz{TrackNum}(:,1:2);
+        
+%         % number of jumps
+%         fi =tracks.tracksList.frame_i{TrackNum};
+%         dfi = diff(fi);
+%         nOfJumps = sum(dfi > 1);
+
+         % count Nan values
+        Nan_values = (isnan(coor_nan(:,1)))'; % find NaN values
+        numOfNaN = sum(Nan_values); % num of nan in trajectory
+
+        % gap analysis
+        valid_frame_ind = tracks.tracksList.frame_i{TrackNum}(~Nan_values);
+
+        TrDuration = valid_frame_ind(end)-valid_frame_ind(1)+1;
+
+        gaps = diff(valid_frame_ind)-1;
+        gap_ind = find(gaps > 0);
+        gap_lengths = gaps(gap_ind);
+        
+        if isempty(gap_lengths)
+            gap_lengths = 0;
+        end
+        
+        % find the longest gap
+        if numOfNaN == 0
+            longestGap = 0; % num of missing frames in longest gap
+%             numOfGaps = 0; % number of gaps    
+        else
+            longestGap = max(gap_lengths); % num of missing frames in longest gap
+%             numOfGaps = size(gap_ind,1);
+        end
+
+        
+
+        % type asignment
+        
+        switch  tracks.tracksList.zone(TrackNum)
+
+            case 0
+                T.type{TrackNum} = 'syn';
+            case 1
+                T.type{TrackNum} = 'ext';
+            case 2
+                T.type{TrackNum} = 'sur';
+
+        end
+
+        % tracks witnout NaN
+        coor = coor_nan(~isnan(coor_nan(:,1)),:);
+        
+
+         % calculate overall velocity
+        if TrLength >= 20
+            beg = mean(coor(1:3,:));
+            ending = mean(coor(end-4:end,:),'omitnan');
+    %         ending = mean(coor(end-4:end,:));
+%             ov_veloc = sqrt(sum((beg - ending).^2,2))/TrLength*dT;
+            ovDist = sqrt(sum((beg - ending).^2,2));
+            else
+            ovDist = -1;
+        end
+
+        
+        % calculate mean displacement
+          
+
+        disp = sqrt(sum(diff(coor).^2,2));
+
+        mean_disp = mean(disp);  
+
+        w = 25;
+        disp = sqrt(sum(diff(coor_nan).^2,2));
+        runMean_disp = movmean(disp,w);
+
+
+        % calculate mean velocity
+%         mean_vel = mean_disp/dT;
+
+        % distance to reference
+%         dist2nearestRef = tracks.dist2nearestRef(TrackNum);
+
+        [~,area] = boundary(coor(:,1),coor(:,2));
+
+%         x = coor(:,:)'
+        T.id(TrackNum) = TrackNum;
+
+%         T.Length(TrackNum) = TrLength;
+        T.length(TrackNum) = TrDuration;
+        T.numOfNaN(TrackNum) = numOfNaN;
+        T.longestGap(TrackNum) = longestGap;
+        T.meanDisp(TrackNum) = mean_disp;
+
+        
+
+        T.ovArea(TrackNum) = area;
+        T.ovDist(TrackNum) = ovDist;
+
+        % XY means
+        XYmean(TrackNum,:) = mean(T.xyz{TrackNum}(:,1:2),'omitnan');
+
+%         distanceMatrix = pdist2(XYmean(TrackNum,:),roiCentres);
+% 
+%         [mn,I] = min(distanceMatrix,[],2);
+% 
+%         nearestRef(TrackNum,1) = I;
+%         dist2nearestRef(TrackNum,1) = mn;
+
+        T.meanX(TrackNum) = XYmean(TrackNum,1);
+        T.meanY(TrackNum) = XYmean(TrackNum,2);
+
+%         T.nearestRef(TrackNum) = 0;
+
+        T.runMean_disp(TrackNum) = {runMean_disp};
+        
+                
+       
+     end
+        
+%         T.nearestRef = nearestRef;
+%         T.nearestRef = nearestRef;
+%         T.dist2nearestRef = dist2nearestRef;
+%         T.XYmean = XYmean;
+     
+%      T
+%      tracks.statTable = T;
+
+     tracks.tracksList = T;
+
+     [tracks] = MMP_MSD_analysis(tracks);
+
+    
+
+%     MMpack.tracks = tracks;
+
+
+end
+
+
+
+
+
+
+
+
