@@ -80,6 +80,8 @@ function [varargout]=tubeplot(x,y,z,varargin)
     Z(i,:)=z(i) + r(i)*(n(i,3)*cos(theta) + b(i,3)*sin(theta));
 
     Z(i,:) =Z(i,:) - z(i);
+    disp('zscale')
+    zscale
     Z(i,:)=Z(i,:).*zscale;
     Z(i,:) =Z(i,:) + z(i);
   end
