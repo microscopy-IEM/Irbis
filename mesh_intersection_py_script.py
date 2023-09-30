@@ -2,8 +2,6 @@ import pymeshlab
 import pyvista as pv
 import trimesh
 
-import os
-os.chdir("C:\\Users\\iva.svecova\\Documents\\MMPack_git_repo")
 
 '''
 def pt_shaft_to_mesh(depth=6):
