@@ -29,6 +29,12 @@ def separate_spines(input_file = 'temp_meshIntersection_remeshed.ply'):
         name = object.name
         obj = bpy.data.objects[name]
         if name == input_name:
+            obj.select_set(True)
+            bpy.context.view_layer.objects.active = obj
+            print(bpy.context.view_layer.objects.active)
+            print([obj.name for obj in bpy.context.selected_objects])
+            bpy.ops.export_mesh.ply(filepath=f'temp_{input_name}.ply',use_selection=True)
+
             obj.select_set(False)
             bpy.data.meshes.remove(object)
         else:
