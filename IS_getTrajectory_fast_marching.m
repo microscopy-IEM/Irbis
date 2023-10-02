@@ -9,6 +9,9 @@ function dendrite_trajectory = IS_getTrajectory_fast_marching(wf_singlezstack,st
     options.nb_iter_max = Inf;
     options.end_points = end_point;
 
+    start_point
+    end_point
+
     [D,S,Q] = perform_fast_marching(wf_singlezstack,start_point,options);
 
     dendrite_trajectory = compute_geodesic(D,end_point);
