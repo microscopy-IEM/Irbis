@@ -14,7 +14,7 @@ def pt_shaft_to_mesh(depth=6):
     return()
 '''
 
-def intersection_of_meshes(neuron_name='Mesh_temporary.ply',shaft_name='temp_meshShaft.ply'):
+def intersection_of_meshes(neuron_name='temp_meshNeuron.ply',shaft_name='temp_meshShaft.ply'):
     neuron = trimesh.load_mesh(neuron_name)
     shaft = trimesh.load_mesh(shaft_name)
     neuron_pv = pv.wrap(neuron)
