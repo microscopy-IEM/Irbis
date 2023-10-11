@@ -1,3 +1,5 @@
+#231011 bpy replaced with pymeshlab
+
 #output - couple of ply files with meshes of indiviudal spines
 #return could be the number of spines
 
