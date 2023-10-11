@@ -1,3 +1,6 @@
+# 231011 outdated
+# no longer needed because of fixing problems with normals and boolean operations
+
 import pymeshlab
 
 def remesh(input_file = 'temp_meshIntersection.ply',output_file='temp_meshIntersection_remeshed.ply'):
