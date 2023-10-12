@@ -1,9 +1,11 @@
-#output - couple of ply files with meshes of indiviudal spines
+#231011 bpy replaced with pymeshlab
+
+#output - couple of ply files with meshes of individual spines
 #return could be the number of spines
 
 import bpy
 
-def separate_spines(input_file = 'temp_meshIntersection_remeshed.ply'):
+def separate_spines(input_file = 'temp_meshSpines.ply'):
     # cleaning the environment
     for object in bpy.data.meshes:
         bpy.data.meshes.remove(object)
