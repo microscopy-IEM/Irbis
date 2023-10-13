@@ -16,4 +16,3 @@ def poisson(depth=8,input='poinCloud_tp_1_.ply',output='Mesh_temporary.ply'):
 
 
 output = poisson(d,input_name,output_name)
-print('Python ran shaft_mesh generation')
