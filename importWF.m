@@ -6,7 +6,10 @@
 
 % Script reads general info (num of channles, planes etc.) from the image metadata
 
-function wf = importWF()
+function wf = importWF(figureH)
+
+wb = uiprogressdlg(figureH,'Title','Importing file','Message','Importing file...','Cancelable','on');
+wb.Value = 0;
 
   % select files
 [fileName,path] = uigetfile('*.tif','MultiSelect','off');
@@ -17,12 +20,15 @@ if isequal(fileName,0)
 else
 
 
+    
      % get tiff info from file
     info = imfinfo([path fileName]);
     
     % get number of tiffs in multiple tiff file
     numOfTiffs = size(info,1);
     desc = info(1).ImageDescription;
+
+    
     
     % read pixel size
     x_size = info(1).XResolution;
@@ -112,6 +118,9 @@ else
     zstack = nan(xres,yres,numOfZPlanes,3,numOfTimePoints,'single');
     
     % First run cycle for each channel
+
+    frameNum = 1;
+
     for timePoint = 1:numOfTimePoints
     
         for channelNum = 1:numOfChannels
@@ -136,6 +145,9 @@ else
                         zstack(:,:,slice,channelNum,timePoint) = im1;
                 
                     % end
+
+                    wb.Value = frameNum/numOfTiffs;
+                    frameNum = frameNum+1;
         
              end
     
@@ -175,6 +187,10 @@ else
     wf.refImParam.channel = referenceChannel;                % channel used as reference image (synaptic marker, membrane marker...)
 
 end
+
+wb.Value = 1;
+pause(0.1)
+close(wb)
 
 end
 
