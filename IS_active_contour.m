@@ -1,4 +1,4 @@
-function result = IS_active_contour(pointA,pointB,pointsInROI)
+function result = IS_active_contour(pointA,pointB,pointsInROI,radiusFactor)
 
 clear binaryImage_high;
 
@@ -82,10 +82,9 @@ simpCont = cont(2:ending,:);
 
 xyProj = [];
 
-rescaleFactor = 1.1;
 
-xyProj(:,1) = (simpCont(:,1)*(rescaleX)/sizeIm - shiftX)*rescaleFactor;
-xyProj(:,2) = (simpCont(:,2)*(rescaleX)/sizeIm - shiftY)*rescaleFactor;
+xyProj(:,1) = (simpCont(:,1)*(rescaleX)/sizeIm - shiftX)*radiusFactor;
+xyProj(:,2) = (simpCont(:,2)*(rescaleX)/sizeIm - shiftY)*radiusFactor;
 xyProj(:,3) = zeros(size(simpCont,1),1);
 
 backRotated = [];
