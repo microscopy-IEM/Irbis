@@ -46,45 +46,85 @@ for i=1:size(newCoord)
 
 end
 
-sizeIm = 400;
-shiftX = -min(newCoordRotIn(:,1))+0.05;
-shiftY = -min(newCoordRotIn(:,2))+0.05;
-rescaleX = (max(newCoordRotIn(:,1))-min(newCoordRotIn(:,1)))*1.1;
-rescaleY = (max(newCoordRotIn(:,2))-min(newCoordRotIn(:,2)))*1.1;
+% expandFactor = 1.1;
+
+sizeIm = 200;
+% shiftX = -min(newCoordRotIn(:,1))+0.05;
+% shiftY = -min(newCoordRotIn(:,2))+0.05;
+% rescaleX = (max(newCoordRotIn(:,1))-min(newCoordRotIn(:,1)))*expandFactor;
+% rescaleY = (max(newCoordRotIn(:,2))-min(newCoordRotIn(:,2)))*expandFactor;
 Zshift = min(newCoordRotIn(:,3));
 
-newCoordRot(:,1) = (newCoordRotIn(:,1)+shiftX)*sizeIm/rescaleX;
-newCoordRot(:,2) = (newCoordRotIn(:,2)+shiftY)*sizeIm/rescaleX;
+rescale = 1;
+
+% newCoordRot(:,1) = (newCoordRotIn(:,1)+shiftX)*sizeIm/rescaleX;
+% newCoordRot(:,2) = (newCoordRotIn(:,2)+shiftY)*sizeIm/rescaleX;
+% newCoordRot(:,3) = 0;
+
+newCoordRot(:,1) = (newCoordRotIn(:,1))*sizeIm/rescale + sizeIm/2;
+newCoordRot(:,2) = (newCoordRotIn(:,2))*sizeIm/rescale + sizeIm/2;
 newCoordRot(:,3) = 0;
 
 binaryImage_high = zeros(sizeIm,sizeIm);
 
 for i=1:size(newCoordRot,1)
+
     xR = newCoordRot(i,1);
     yR = newCoordRot(i,2);
-    binaryImage_high(round(yR),round(xR)) = 255;
+    if xR >= 1 && xR <= sizeIm && yR >= 1 && yR <= sizeIm
+        binaryImage_high(round(yR),round(xR)) = 255;
+    end
 end
 
-imshow(binaryImage_high)
-r = drawcircle("Center",[(shiftX)*sizeIm/rescaleX,(shiftY)*sizeIm/rescaleX],'Radius',50,'Visible','off');
+binaryImage_high = imgaussfilt(binaryImage_high,5);
+
+binaryImage_high(binaryImage_high>2) = 255;
+
+% imshow(binaryImage_high,[])
+% r = drawcircle("Center",[(shiftX)*sizeIm/rescaleX,(shiftY)*sizeIm/rescaleX],'Radius',10,'Visible','on');
+% mask = createMask(r);
+
+squaredDist = newCoordRot(:,1).^2 + newCoordRot(:,2).^2;
+[minDistanceSqrt,index] = min(squaredDist);
+
+disp('minimum radius')
+disp(index)
+disp(sqrt(minDistanceSqrt))
+minDistance = sqrt(minDistanceSqrt);
+
+figure
+imshow(binaryImage_high,[])
+r = drawcircle("Center",[sizeIm/2,sizeIm/2],'Radius',10,'Visible','on');
 mask = createMask(r);
 
+tic
 bw = activecontour(binaryImage_high,mask,600,'edge','ContractionBias',-0.5);
+toc
 
 hold on
 visboundaries(bw,'Color','r')
-hold off
+
 
 cont = contour(bw).';
 ending = cont(1,2);
 
 simpCont = cont(2:ending,:);
 
+simpCont = reducepoly(simpCont,0.01);
+
+plot(simpCont(:,1),simpCont(:,2))
+drawnow
+hold off
+
 xyProj = [];
 
 
-xyProj(:,1) = (simpCont(:,1)*(rescaleX)/sizeIm - shiftX)*radiusFactor;
-xyProj(:,2) = (simpCont(:,2)*(rescaleX)/sizeIm - shiftY)*radiusFactor;
+% xyProj(:,1) = (simpCont(:,1)*(rescaleX)/sizeIm - shiftX)*radiusFactor;
+% xyProj(:,2) = (simpCont(:,2)*(rescaleX)/sizeIm - shiftY)*radiusFactor;
+% xyProj(:,3) = zeros(size(simpCont,1),1);
+
+xyProj(:,1) = ((simpCont(:,1)-sizeIm/2)*(rescale)/sizeIm)*radiusFactor;
+xyProj(:,2) = ((simpCont(:,2)-sizeIm/2)*(rescale)/sizeIm)*radiusFactor;
 xyProj(:,3) = zeros(size(simpCont,1),1);
 
 backRotated = [];
@@ -97,6 +137,13 @@ for i=1:size(xyProj,1)
     backRotated(i,2) = vRotInv(2)+pointA(2);
     backRotated(i,3) = vRotInv(3)+pointA(3);
 end
+
+figure
+scatter3(pointsInROI(:,1),pointsInROI(:,2),pointsInROI(:,3));
+hold on
+scatter3(backRotated(:,1),backRotated(:,2),backRotated(:,3));
+drawnow
+hold off
 
 result = backRotated(:,:);
 
