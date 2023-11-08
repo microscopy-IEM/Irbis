@@ -13,7 +13,7 @@ addParameter(par,'realCenterDim',1,@isnumeric);
 parse(par,varargin{:});
 
 sizeIm = par.Results.sizeIm;
-realCenterDim = par.Results.radiusScaling;
+realCenterDim = par.Results.realCenterDim;
 radiusScaling = par.Results.radiusScaling;
 
 % parameters for active contour algorithm:
@@ -73,7 +73,7 @@ for i=1:size(pointsRescaled,1)
     end
 end
 
-binaryImage = imgaussfilt(binaryImage,5);
+binaryImage = imgaussfilt(binaryImage,2);
 binaryImage(binaryImage>2) = 255;
 
 % active contour algorithm:
