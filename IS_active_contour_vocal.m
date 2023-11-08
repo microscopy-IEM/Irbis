@@ -56,6 +56,8 @@ for i=1:size(pointsInROI,1)
 
 end
 
+pointB_rotated = (pointB-pointA)*R
+
 % projecting the point cloud onto a plane and rescaling the dimensions:
 pointsRescaled(:,1) = (pointsRotated(:,1))*sizeIm/realCenterDim + sizeIm/2;
 pointsRescaled(:,2) = 0;
@@ -73,7 +75,7 @@ for i=1:size(pointsRescaled,1)
     end
 end
 
-binaryImage = imgaussfilt(binaryImage,5);
+binaryImage = imgaussfilt(binaryImage,2);
 binaryImage(binaryImage>2) = 255;
 
 % active contour algorithm:
@@ -126,6 +128,15 @@ for i=1:size(contourRescaled,1)
     contourFinal(i,2) = vRotInv(2)+pointA(2);
     contourFinal(i,3) = vRotInv(3)+pointA(3);
 end
+
+pointB_rotatedBack = pointB_rotated*R_inv + pointA;
+
+diff = NormalVector - (pointB_rotatedBack-pointA)
+diffangle = acos(dot(pointB_rotatedBack-pointA,NormalVector)/(norm(pointB_rotatedBack-pointA)*norm(NormalVector)))
+
+diffangle2 = acos(dot(contourFinal(1,:)-pointA,NormalVector-pointA)/(norm(NormalVector-pointA)*norm(contourFinal(1,:)-pointA)))
+% diffangle2 = acos(dot(backRotated(10,:),pointB)/(norm(pointB)*norm(backRotated(10,:))))
+diffangle2 = acos(dot(contourFinal(1,:)-pointA,pointB_rotatedBack-pointA)/(norm(pointB_rotatedBack-pointA)*norm(contourFinal(1,:)-pointA)))
 
 figure
 scatter3(pointsInROI(:,1),pointsInROI(:,2),pointsInROI(:,3));
