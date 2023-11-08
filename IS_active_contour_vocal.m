@@ -75,8 +75,8 @@ for i=1:size(pointsRescaled,1)
     end
 end
 
-binaryImage = imgaussfilt(binaryImage,2);
-binaryImage(binaryImage>2) = 255;
+% binaryImage = imgaussfilt(binaryImage,2);
+% binaryImage(binaryImage>2) = 255;
 
 % active contour algorithm:
 
@@ -133,6 +133,7 @@ pointB_rotatedBack = pointB_rotated*R_inv + pointA;
 
 diff = NormalVector - (pointB_rotatedBack-pointA)
 diffangle = acos(dot(pointB_rotatedBack-pointA,NormalVector)/(norm(pointB_rotatedBack-pointA)*norm(NormalVector)))
+diffangle = acos(dot(pointB_rotated-pointA,NormalVector)/(norm(pointB_rotated-pointA)*norm(NormalVector)))
 
 diffangle2 = acos(dot(contourFinal(1,:)-pointA,NormalVector-pointA)/(norm(NormalVector-pointA)*norm(contourFinal(1,:)-pointA)))
 % diffangle2 = acos(dot(backRotated(10,:),pointB)/(norm(pointB)*norm(backRotated(10,:))))
@@ -142,6 +143,13 @@ figure
 scatter3(pointsInROI(:,1),pointsInROI(:,2),pointsInROI(:,3));
 hold on
 scatter3(contourFinal(:,1),contourFinal(:,2),contourFinal(:,3));
+drawnow
+hold off
+
+figure
+scatter3(pointsRotated(:,1),pointsRotated(:,2),pointsRotated(:,3));
+hold on
+scatter3(contourRescaled(:,1),contourRescaled(:,2),contourRescaled(:,3));
 drawnow
 hold off
 
