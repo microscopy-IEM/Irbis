@@ -75,8 +75,8 @@ for i=1:size(pointsRescaled,1)
     end
 end
 
-% binaryImage = imgaussfilt(binaryImage,2);
-% binaryImage(binaryImage>2) = 255;
+binaryImage = imgaussfilt(binaryImage,2);
+binaryImage(binaryImage>2) = 255;
 
 % active contour algorithm:
 
