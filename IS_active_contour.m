@@ -81,9 +81,9 @@ binaryImage(binaryImage>2) = 255;
 squaredDist = pointsRescaled(:,1).^2 + pointsRescaled(:,2).^2;
 [minDistanceSqrt,index] = min(squaredDist);
 
-disp('minimum radius')
-disp(index)
-disp(sqrt(minDistanceSqrt))
+% disp('minimum radius')
+% disp(index)
+% disp(sqrt(minDistanceSqrt))
 minDistance = sqrt(minDistanceSqrt);
 
 % figure
