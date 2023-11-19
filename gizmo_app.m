@@ -169,6 +169,24 @@ function gizmo_app(ax,fig,stickyPoints,pointA,pointB)
             newPosition = [pointA.XData,pointA.YData,pointA.ZData];
             updatePosition(newPosition,moveHandles)            
 
+            v1 = [normSquare.XData;normSquare.YData;normSquare.ZData] - [pointA.XData;pointA.YData;pointA.ZData];
+            v2 = - [pointA.XData;pointA.YData;pointA.ZData] + [pointB.XData;pointB.YData;pointB.ZData];
+
+            v1 = v1/norm(v1);
+            v2 = v2/norm(v2);
+
+            vRot = cross(v1,v2);
+
+            theta = acos(dot(v1,v2)/(norm(v1)*norm(v2)));
+
+            startPositionI = [moveHandles(1).XData;moveHandles(1).YData;moveHandles(1).ZData];
+            startPositionRotI = {};
+            for i=1:length(rotHandles)
+                startPositionRotI{i} = [rotHandles(i).XData;rotHandles(i).YData;rotHandles(i).ZData];
+            end
+
+            updateDirection(vRot,theta,rotHandles,startPositionI,startPositionRotI,pointA,pointB)
+            
 end
 
 function updatePosition(newPosition,handles,pointA,pointB)

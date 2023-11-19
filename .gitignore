@@ -2,3 +2,4 @@ test data/*
 *.ply
 MMP_settings.mat
 *.asv
+*.csv
