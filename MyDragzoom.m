@@ -598,13 +598,14 @@ Initialize(varargin{:})
         
         switch clickType
             case 'normal'
-                DragMouseBegin3D();
+                % DragMouseBegin3D();
             % case 'open'
             %     ResetAxesToOrigView3D();
             case 'alt'
                 RotateMouseBegin3D();
             case 'extend'
                 % ZoomMouseExtendBegin3D();
+                DragMouseBegin3D();
         end
     end
 %--------------------------------------------------------------------------
