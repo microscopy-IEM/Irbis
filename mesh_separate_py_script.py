@@ -1,6 +1,10 @@
 import pymeshlab
+import os
 
-def mesh_separate(input = 'temp_meshSynapses.ply'):
+def mesh_separate(input = 'temp_meshSynapses.ply',temp_path ='C:\\Users\\Public\\MMP\\temp'):
+
+    os.chdir(temp_path)
+
     ms = pymeshlab.MeshSet()
     ms.load_new_mesh(input)
 

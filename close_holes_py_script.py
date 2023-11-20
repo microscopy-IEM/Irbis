@@ -1,6 +1,9 @@
 import pymeshlab
+import os
 
-def close_holes(input='poinCloud_tp_1_.ply',output='Mesh_temporary.ply'):
+def close_holes(input='poinCloud_tp_1_.ply',output='Mesh_temporary.ply',temp_path ='C:\\Users\\Public\\MMP\\temp'):
+
+    os.chdir(temp_path)
 
     ms = pymeshlab.MeshSet()
 

@@ -1,6 +1,9 @@
 import pymeshlab
+import os
 
-def find_intersection_volume(spine = 'temp_1.ply',synapses = 'temp_meshSynapses.ply'):
+def find_intersection_volume(spine = 'temp_1.ply',synapses = 'temp_meshSynapses.ply',temp_path ='C:\\Users\\Public\\MMP\\temp'):
+
+    os.chdir(temp_path)
 
     # requires optimization!!!
     # it is calculating the number of synapses every time, but it is always the same number

@@ -1,7 +1,11 @@
 import pymeshlab
 import numpy as np
+import os
 
-def mesh_cut_and_separate(bigger = 'temp_meshNeuron.ply', smaller = 'temp_meshShaft.ply', output = 'temp_meshSpines.ply'):
+def mesh_cut_and_separate(bigger = 'temp_meshNeuron.ply', smaller = 'temp_meshShaft.ply', output = 'temp_meshSpines.ply',temp_path ='C:\\Users\\Public\\MMP\\temp'):
+
+    os.chdir(temp_path)
+
     ms = pymeshlab.MeshSet()
     ms.load_new_mesh(bigger)
     ms.load_new_mesh(smaller)

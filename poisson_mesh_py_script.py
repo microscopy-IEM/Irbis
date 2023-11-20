@@ -1,8 +1,11 @@
 # poisson_py_script.py
 
 import pymeshlab
+import os
 
-def poisson(depth=8,input='poinCloud_tp_1_.ply',output='Mesh_temporary.ply'):
+def poisson(depth=8,input='poinCloud_tp_1_.ply',output='Mesh_temporary.ply',temp_path ='C:\\Users\\Public\\MMP\\temp'):
+
+    os.chdir(temp_path)
 
     ms = pymeshlab.MeshSet()
 

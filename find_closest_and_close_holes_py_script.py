@@ -1,7 +1,11 @@
 import pymeshlab
 import numpy as np
+import os
 
-def find_closest_and_close_holes(original = 'temp_originalSpine.ply',input = 'temp_cut_in.ply',output = 'temp_cut_out.ply'):
+def find_closest_and_close_holes(original = 'temp_originalSpine.ply',input = 'temp_cut_in.ply',output = 'temp_cut_out.ply',temp_path ='C:\\Users\\Public\\MMP\\temp'):
+
+    os.chdir(temp_path)
+    
     ms = pymeshlab.MeshSet()
     ms.load_new_mesh(original)
     ms.load_new_mesh(input)  
