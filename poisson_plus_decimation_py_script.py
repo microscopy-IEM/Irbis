@@ -1,8 +1,11 @@
 # poisson_py_script.py
 
 import pymeshlab
+import os
 
-def poisson_plus_decimation(depth=8,fraction_to_keep=0.1,input='poinCloud_tp_1_.ply',output='Mesh_temporary.ply'):
+def poisson_plus_decimation(depth=8,fraction_to_keep=0.1,input='poinCloud_tp_1_.ply',output='Mesh_temporary.ply',temp_path ='C:\\Users\\Public\\MMP\\temp'):
+
+    os.chdir(temp_path)
 
     ms = pymeshlab.MeshSet()
 
