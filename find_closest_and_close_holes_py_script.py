@@ -26,6 +26,8 @@ def find_closest_and_close_holes(original = 'temp_originalSpine.ply',input = 'te
             matchProp = np.sum(matchList)/len(matchList)
             if matchProp > 0.1:
                 matchProp = 1.1
+        print(i)
+        print(matchProp)
         matches.append(matchProp)
     
     max_match_n = matches.index(max(matches))
