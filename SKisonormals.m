@@ -80,7 +80,7 @@ function nout=SKisonormals(varargin)
         hz = z(1,1,:);
 
         data = gpuArray(data);
-        [nx, ny, nz] = gradient(data, hx, hy, hz);
+        [nx, ny, nz] = SKgradient(data, hx, hy, hz);
 
         clear data
         
