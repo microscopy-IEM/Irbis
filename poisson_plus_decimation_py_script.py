@@ -24,4 +24,4 @@ def poisson_plus_decimation(depth=8,fraction_to_keep=0.1,input='poinCloud_tp_1_.
     return(current_mesh)
 
 
-output = poisson_plus_decimation(d,fraction_to_keep,input_name,output_name)
+output = poisson_plus_decimation(d,fraction_to_keep,input_name,output_name,temp_path=path)

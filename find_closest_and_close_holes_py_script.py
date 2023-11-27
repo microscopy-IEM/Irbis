@@ -43,4 +43,4 @@ def find_closest_and_close_holes(original = 'temp_originalSpine.ply',input = 'te
     ms.save_current_mesh(str(output),save_vertex_normal = True)
     return()  
 
-output = find_closest_and_close_holes(original_name,input_name,output_name)  
+output = find_closest_and_close_holes(original_name,input_name,output_name,temp_path=path)  

@@ -13,4 +13,4 @@ def mesh_intersection(bigger = 'temp_meshNeuron.ply', smaller = 'temp_meshShaft.
     ms.save_current_mesh(str(output),save_vertex_normal=True)
     return()
 
-mesh_intersection()
+mesh_intersection(temp_path=path)

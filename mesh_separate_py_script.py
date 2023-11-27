@@ -25,4 +25,4 @@ def mesh_separate(input = 'temp_meshSynapses.ply',temp_path ='C:\\Users\\Public\
 
     return(n_spines)
 
-n_spines = mesh_separate(input_name)
+n_spines = mesh_separate(input_name,temp_path=path)
