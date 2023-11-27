@@ -15,4 +15,4 @@ def close_holes(input='poinCloud_tp_1_.ply',output='Mesh_temporary.ply',temp_pat
 
     return(current_mesh)    
 
-output = close_holes(input_name,output_name)
+output = close_holes(input_name,output_name,path)

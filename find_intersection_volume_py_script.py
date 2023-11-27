@@ -33,5 +33,5 @@ def find_intersection_volume(spine = 'temp_1.ply',synapses = 'temp_meshSynapses.
         volume = msAll.get_geometric_measures()['mesh_volume']
     return([contains_synapse,volume])
 
-results = find_intersection_volume(spine_name,synapses_name)
+results = find_intersection_volume(spine_name,synapses_name,temp_path=path)
 

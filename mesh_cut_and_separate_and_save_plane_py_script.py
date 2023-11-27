@@ -59,4 +59,4 @@ def mesh_cut_and_separate(bigger = 'temp_meshNeuron.ply', smaller = 'temp_meshSh
 
     return(n_spines)
 
-n_spines = mesh_cut_and_separate()
+n_spines = mesh_cut_and_separate(temp_path=path)

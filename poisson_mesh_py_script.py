@@ -18,4 +18,4 @@ def poisson(depth=8,input='poinCloud_tp_1_.ply',output='Mesh_temporary.ply',temp
     return(current_mesh)
 
 
-output = poisson(d,input_name,output_name)
+output = poisson(d,input_name,output_name,temp_path=path)
