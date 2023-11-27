@@ -98,31 +98,12 @@ function gizmo_app(ax,fig,stickyPoints,pointA,pointB)
             % save handles of all objects
             moveHandles = [cBallPoint xBallPoint yBallPoint zBallPoint lx ly lz normLine normPlane normSquare xzRot xyRot];
             rotHandles = [normLine normPlane normSquare xzRot xyRot];
-            % rotHandles = [normLine normPlane normSquare];
-            
 
             % Assign ButtonDownFcn to elements
             % for central element only if there are sticky points
             if ~isempty(stickyPoints)
-                stickyPoints2D = MicroMToPixelPositionArray(stickyPoints,cBallPoint);
-
                 cBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig);
                 cBallPoint.UserData = stickyPoints;
-                zBallPoint.UserData = stickyPoints2D;
-
-                % stickyPoints2D = [];
-                % disp('transformation to 2D')
-                % disp(size(stickyPoints,1))
-                % for i=1:size(stickyPoints,1)
-                %  stickyPoints2D(i,:) = MicroMToPixelPosition(stickyPoints(i,:),cBallPoint);
-                % end
-                % disp('2D size')
-                % disp(size(stickyPoints2D))
-                % cBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig);
-                % cBallPoint.UserData = stickyPoints;
-                % zBallPoint.UserData = stickyPoints2D;
-                % % disp('sticky points')
-                % % disp(class(stickyPoints))
             end
 
             xBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig);
@@ -277,105 +258,6 @@ function dir = getDirection(handles)
 end
 
 % function that gets uM position of an object and return its position in pixel coordinates of the screen
-function PixelPos = MicroMToPixelPosition(MicroMObject,tool)
-
-    ax = tool.Parent
-    p0Pos = tool.Parent.Position;
-    xP0 = p0Pos(1);
-    yP0 = p0Pos(2);
-    % disp('ax')
-    % disp(tool.Parent)
-    % disp(tool.Parent.Parent)
-    p1Pos = tool.Parent.Parent.Position;
-    xP1 = p1Pos(1);
-    yP1 = p1Pos(2);
-    % disp(tool.Parent.Parent.Parent)
-    p2Pos = tool.Parent.Parent.Parent.Position;
-    xP2 = p2Pos(1);
-    yP2 = p2Pos(2);
-    % disp(tool.Parent.Parent.Parent.Parent)
-    p3Pos = tool.Parent.Parent.Parent.Parent.Position;
-    xP3 = p3Pos(1);
-    yP3 = p3Pos(2);
-    % disp(tool.Parent.Parent.Parent.Parent.Parent)
-    p4Pos = tool.Parent.Parent.Parent.Parent.Parent.Position;
-    xP4 = p4Pos(1);
-    yP4 = p4Pos(2);
-
-    xParentPix = xP1 + xP2 + xP3 + xP4;
-    yParentPix = yP1 + yP2 + yP3 + yP4;
-
-    elevation = ax.View(2)
-    azimuth = wrapTo360(ax.View(1))
-    
-    % getting dimensions of the axes object
-    tighPos = ax.tightPosition;
-    x0Pix = tighPos(1);
-    y0Pix = tighPos(2);
-    xPix = tighPos(3);
-    yPix = tighPos(4);
-
-    % calculating position of axes in respect to the origin of the screen
-    % all in pixel world
-    % FigurePos = ax.Parent.Position
-    % 
-    % x0FigPix = FigurePos(1);
-    % y0FigPix = FigurePos(2);
-    % 
-    % getting axes size in uM and position of the point in uM
-
-        
-    xLimMic = ax.XLim(2)-ax.XLim(1);
-    yLimMic = ax.YLim(2)-ax.YLim(1); 
-    zLimMic = ax.ZLim(2)-ax.ZLim(1);
-
-    if isa(MicroMObject,'double')
-
-        disp('it is a double')
-    
-        xCMic = MicroMObject(1);
-        yCMic = MicroMObject(2);
-        zCMic = MicroMObject(3);
-
-    else
-
-        xCMic = MicroMObject.XData;
-        yCMic = MicroMObject.YData;
-        zCMic = MicroMObject.ZData;
-    end
-
-    % calculating ratio of x and y side, in respect to the bounding box
-    cosRatio = abs(cosd(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
-    sinRatio = abs(sind(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
-
-    % calculating proportional movement contribution by x and y, depending on the rotation
-    xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
-    if xXratio < 0
-    xXratio = 1 + xXratio;
-    end
-    xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
-    if xYratio < 0
-    xYratio = 1 + xYratio;
-    end
-    yXratio = sign(-sind(azimuth))*yCMic/yLimMic;
-    if yXratio < 0
-    yXratio = 1 + yXratio;
-    end
-    yYratio = sign(-cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
-    if yYratio < 0
-    yYratio = 1 + yYratio;
-    end
-
-    % calculating the position of point in pixel world relative to the origin in coordinates of the screen
-    xCPix = x0Pix + xParentPix + xPix*cosRatio*xXratio + xPix*sinRatio*yXratio;
-    yCPix = y0Pix + yParentPix + yPix*abs(sind(elevation))*sinRatio*xYratio + yPix*abs(sind(elevation))*cosRatio*yYratio + yPix*(1-abs(sind(elevation)))*(zCMic-ax.ZLim(1))/zLimMic;
-    
-    PixelPos = [xCPix,yCPix]
-    disp('end')
-
-end
-
-% function that gets uM position of an object and return its position in pixel coordinates of the screen
 function PixelPos = MicroMToPixelPositionArray(MicroMArray,tool)
 
     ax = tool.Parent;
@@ -440,9 +322,6 @@ function PixelPos = MicroMToPixelPositionArray(MicroMArray,tool)
     yCPix = y0Pix + yParentPix + yPix*abs(sind(elevation))*sinRatio*xYratio + yPix*abs(sind(elevation))*cosRatio*yYratio + yPix*(1-abs(sind(elevation)))*(zCMic-ax.ZLim(1))/zLimMic;
     
     PixelPos = [xCPix,yCPix];
-    disp('PixelPos')
-    disp(PixelPos)
-    disp(size(PixelPos))
 end
 
 
@@ -459,14 +338,11 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig)
     startPositionPix = MicroMToPixelPositionArray(cBallPointArray,tool);
 
     % initial position of the pointer in pixel world
-    startScreenPosition = get(0,'Pointerlocation')
+    startScreenPosition = get(0,'Pointerlocation');
     
     % initial position of the selected part in pixel world
     toolArray = [tool.XData,tool.YData,tool.ZData];
     startPositionToolPix = MicroMToPixelPositionArray(toolArray,tool);
-
-    % disp('fig')
-    % disp(fig)
 
     startPositionRot = {};
     for i=1:length(rotHandles)
@@ -493,11 +369,6 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig)
             
             figHandle.WindowButtonMotionFcn = @(src,evt)gizmoMove(src,evt,moveHandles,rotHandles,startPosition,startPositionRot,tool,startScreenPosition,startPositionPix,startPositionToolPix,pointA,pointB,fig);
             figHandle.WindowButtonUpFcn = @(src,evt)resetClb(src,evt,figHandle);
-
-            % switch src.Tag
-            %     case 'cBallPoint'
-            %         figHandle.WindowButtonUpFcn = @(src,evt)rotateAndReset(src,evt,tool,moveHandles,rotHandles,pointA,pointB,figHandle);
-            % end
 
     end
 
@@ -669,7 +540,7 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig)
    
                  % find the index in 2D...
                  stickyPoints2D = moveHandles(4).UserData;
-                 stickyPoints3D = tool.UserData;
+                 stickyPoints3D = moveHandles(1).UserData;
                  csp = [currentScreenPosition(1) currentScreenPosition(2)];
                  [spineIndexes,~] = knnsearch(stickyPoints2D,csp);
                  %[spineIndexes,~] = knnsearch(tool.UserData,cursorPoint);
@@ -681,9 +552,17 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig)
 
                  % rotation:
 
+                 if spineIndexes+5 < size(stickyPoints2D,1)
+                    
                  pointB.XData = stickyPoints3D(spineIndexes+5,1);
                  pointB.YData = stickyPoints3D(spineIndexes+5,2);
                  pointB.ZData = stickyPoints3D(spineIndexes+5,3);
+
+                 else
+                     pointB.XData = stickyPoints3D(spineIndexes-5,1);
+                     pointB.YData = stickyPoints3D(spineIndexes-5,2);
+                     pointB.ZData = stickyPoints3D(spineIndexes-5,3);
+                 end
 
                  pA = [pointA.XData;pointA.YData;pointA.ZData];
                  pB = [pointB.XData;pointB.YData;pointB.ZData];
@@ -704,23 +583,6 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig)
                     startPositionRot{i} = [rotHandles(i).XData;rotHandles(i).YData;rotHandles(i).ZData];
                 end
                 updateDirection(vRot,theta,rotHandles,startPosition,startPositionRot,pointA,pointB)
-          
-
-                 % pB = stickyPoints3D(spineIndexes+5,:);
-                 % pC = [rotHandles(3).XData,rotHandles(3).YData,rotHandles(3).ZData];
-                 % 
-                 % v1 = (pB - pA)/norm(pB - pA);
-                 % v2 = (pC - pA)/norm(pC - pA);
-                 % 
-                 % vRot = cross(v1,v2)/norm(cross(v1,v2));
-                 % 
-                 % theta = acos(dot(v1,v2)/(norm(v1)*norm(v2)));
-
-                 % problem with non-updating startPositionRot, line 2D
-                 % position just at the beginning - can be recalculated
-                 % after that
-
-                 % fig.WindowButtonUpFcn = @(src,evt)rotateAndReset(src,evt,tool,vRot,theta,rotHandles,startPosition,pointA,pointB,fig);
 
              case 'normSquare'
                 x0 = startPositionToolPix(1);
@@ -799,33 +661,33 @@ function resetClb(src,~,f)
             MyDragzoom(ax,'on');        
 end
 
-function rotateAndReset(src,evt,tool,moveHandles,rotHandles,pointA,pointB,f)
-
-        ax = src;
-        f.WindowButtonMotionFcn = [];     
-
-         % rotation:
-    
-         pA = [pointA.XData;pointA.YData;pointA.ZData];
-         pB = [pointB.XData;pointB.YData;pointB.ZData];
-         pC = [rotHandles(3).XData;rotHandles(3).YData;rotHandles(3).ZData];
-    
-         v1 = (pB - pA)/norm(pB - pA);
-         v2 = (pC - pA)/norm(pC - pA);
-    
-         vRot = cross(v1,v2)/norm(cross(v1,v2));
-    
-         theta = acos(-dot(v1,v2)/(norm(v1)*norm(v2)));
-
-         startPosition = pA;
-
-        
-        startPositionRot = {};
-        for i=1:length(rotHandles)
-            startPositionRot{i} = [rotHandles(i).XData;rotHandles(i).YData;rotHandles(i).ZData];
-        end
-        updateDirection(vRot,theta,rotHandles,startPosition,startPositionRot,pointA,pointB)
-  
-        MyDragzoom(ax,'on');  
-
-end
+% function rotateAndReset(src,evt,tool,moveHandles,rotHandles,pointA,pointB,f)
+% 
+%         ax = src;
+%         f.WindowButtonMotionFcn = [];     
+% 
+%          % rotation:
+% 
+%          pA = [pointA.XData;pointA.YData;pointA.ZData];
+%          pB = [pointB.XData;pointB.YData;pointB.ZData];
+%          pC = [rotHandles(3).XData;rotHandles(3).YData;rotHandles(3).ZData];
+% 
+%          v1 = (pB - pA)/norm(pB - pA);
+%          v2 = (pC - pA)/norm(pC - pA);
+% 
+%          vRot = cross(v1,v2)/norm(cross(v1,v2));
+% 
+%          theta = acos(-dot(v1,v2)/(norm(v1)*norm(v2)));
+% 
+%          startPosition = pA;
+% 
+% 
+%         startPositionRot = {};
+%         for i=1:length(rotHandles)
+%             startPositionRot{i} = [rotHandles(i).XData;rotHandles(i).YData;rotHandles(i).ZData];
+%         end
+%         updateDirection(vRot,theta,rotHandles,startPosition,startPositionRot,pointA,pointB)
+% 
+%         MyDragzoom(ax,'on');  
+% 
+% end
