@@ -7,7 +7,7 @@
     <param.authnamewatermark>Stepan Kortus, Iva Svecova</param.authnamewatermark>
     <param.email>stepan.kortus@iem.cas.cz</param.email>
     <param.company>Institute of Experimental Medicine CAS</param.company>
-    <param.summary />
+    <param.summary>Testing version</param.summary>
     <param.description />
     <param.screenshot>${PROJECT_ROOT}\icons\logo.png</param.screenshot>
     <param.guid />
@@ -46,7 +46,6 @@
       <param.icon />
       <param.icons />
       <param.version />
-      <param.summary />
       <param.description />
       <param.guid />
       <param.installpath.string />
