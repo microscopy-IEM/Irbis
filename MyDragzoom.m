@@ -638,6 +638,13 @@ Initialize(varargin{:})
         %WindowScrollWheelFcn3D
         
         if fIsMouseOnLegend, return; end
+
+        %SK act only cursor is above main axis
+        axi = GetAxesIndexUnderCursor();
+        % mAxesInfo(axi)
+        if axi == 0
+            return; 
+        end
         
         UpdateCurrentZoomAxes3D();
         
@@ -658,9 +665,16 @@ Initialize(varargin{:})
             return;
         end
         
-        % if fIsEnableControl
-        ZoomMouse3D(direction);
-        % end
+        % % if fIsEnableControl
+        % ZoomMouse3D(direction);
+        % % end
+
+        % SK
+        if axi == 2
+            ZoomMouse(direction);
+        elseif axi == 1
+            ZoomMouse3D(direction);
+        end
     end
 %--------------------------------------------------------------------------
 %==========================================================================
@@ -1150,6 +1164,9 @@ Initialize(varargin{:})
         %ZoomAxes Zoom axes in 2D and image modes
         
         [xLim, yLim] = GetAxesLimits();
+
+        % SK
+        fIsEnableZoomY = 0;
         
         if fIsImage
             mZoomIndexX = ChangeZoomIndex(direction, mZoomIndexX);
@@ -2462,6 +2479,9 @@ Initialize(varargin{:})
         
         if (axi > 0)
             fIsEnableControl = true;
+
+            % SK
+            % set(hFig,'WindowScrollWheelFcn',{@WindowScrollWheelFcn3D})
             
             if ~mAxesInfo(axi).iscurrent
                 caxi = GetCurrentAxesIndex();
@@ -2503,6 +2523,12 @@ Initialize(varargin{:})
             end
         else
             fIsEnableControl = false;
+
+            %% SK
+            % set(hFig,'WindowScrollWheelFcn',mOrigCallbacks.window_scroll_whell_fcn)
+
+
+
         end
     end
 %--------------------------------------------------------------------------
@@ -2649,6 +2675,11 @@ Initialize(varargin{:})
             switch handleType
                 case 'axes'
                     hAxes = unique(hObj);
+                    %SK
+                    hAxes(1) = hObj(1);
+                    hAxes(2) = hObj(2);
+
+                   
                     hFig = ancestor(hAxes(1), 'figure');
                     
                 case 'figure'
