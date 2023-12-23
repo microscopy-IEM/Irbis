@@ -20,51 +20,6 @@ function newMMpack = newMMpackDialog()
 
         end
 
-        
-    %     dial = inputdlg({'Name','Group','Description','Round','Cell number','Space units','Time units'},...
-    %                   'New MMpack', [1 50; 1 30; 1 30; 1 7; 1 7; 1 7; 1 7],{'test','test','test','2','1','µm','sec'}); 
-    % 
-    %     % dial = inputdlg({'Name','Group','Description','Round','Cell number','Space units','Time units'},...
-    %     %               'New MMpack', [1 50; 1 30; 1 30; 1 7; 1 7; 1 7; 1 7],{'GF3A_Homer_mice2a2b_1518_QD605_01','noCre','mice2a2b','2','1','µm','sec'}); 
-    %     waitfor(dial);
-    % 
-    %     if ~isempty(dial)
-    % 
-    %         if isnan(str2double(dial{4}))
-    % 
-    %             f = warndlg('Round must be numeric (1,2,3...)','Warning');
-    %             waitfor(f);
-    % 
-    %         elseif isempty(dial{1})
-    % 
-    %             f = warndlg('Name must be filled','Warning');
-    %             waitfor(f);
-    % 
-    %         elseif isempty(dial{2})
-    % 
-    %             f = warndlg('Group must be filled','Warning');
-    %             waitfor(f);
-    % 
-    %         elseif isempty(dial{3})
-    % 
-    %             f = warndlg('Description must be filled','Warning');
-    %             waitfor(f);
-    % 
-    %         elseif isempty(dial{5})
-    % 
-    %             f = warndlg('Cell number must be filled','Warning');
-    %             waitfor(f);
-    % 
-    %         else
-    %             repeatDial = 0;
-    %         end
-    % 
-    %     else
-    %         disp('User canceled')
-    %         newMMpack = [];
-    %         return
-    %     end
-    % 
     end
 
     newMMpack = createEmptyMMpack(dial);
@@ -98,12 +53,12 @@ function MMpack = createEmptyMMpack(dial)
     
     %% WF data (wide-field, confocal, SIM or other pixel-brightness based images)
     
-    wf = [];
+    planes = [];
     % planes = [];
     
     %% SMLM data (single molecule localizations)
     
-    smlm = [];
+    points = [];
     % points = [];
     
     %% Tracks (data from single particle tracking input)
@@ -139,8 +94,8 @@ function MMpack = createEmptyMMpack(dial)
     %% Compose structured MMpack file
     
     MMpack.info = info;
-    MMpack.wf = wf;
-    MMpack.storm = smlm;
+    MMpack.planes = planes;
+    MMpack.points = points;
     MMpack.tracks = tracks;
     MMpack.model = model;
     MMpack.timeline = timeline;
