@@ -6,7 +6,7 @@
 
 % Script reads general info (num of channles, planes etc.) from the image metadata
 
-function wf = importWF(figureH)
+function planes = importPlanes(figureH)
 
 wb = uiprogressdlg(figureH,'Title','Importing file','Message','Importing file...','Cancelable','on');
 wb.Value = 0;
@@ -16,7 +16,7 @@ wb.Value = 0;
 
 if isequal(fileName,0)
                    disp('User selected Cancel');
-                   wf = [];
+                   planes = [];
 else
 
 
@@ -172,19 +172,19 @@ else
     
     % Sort data for the MMpack format
     
-    wf.refOrigFileName = fileName;
-    wf.pixel_size = pixelSize;                               % pixel size in defien units (micrometeres)
-    wf.z_spacing = z_spacing;                                % step in Z-stack data
-    wf.zstack = zstack;                                      % raw image data (multiple tiff of zstack or single tiff per channel)
-    wf.channel_names = channels_desc;                        % channel specification {'GFP','Homer','DIC'}
-    wf.channelColors = channelColors;
-    wf.channel_ranges = channel_ranges;                      % histogram ranges for plotting
-    wf.nChannels = numOfChannels;
+    planes.refOrigFileName = fileName;
+    planes.pixel_size = pixelSize;                               % pixel size in defien units (micrometeres)
+    planes.z_spacing = z_spacing;                                % step in Z-stack data
+    planes.zstack = zstack;                                      % raw image data (multiple tiff of zstack or single tiff per channel)
+    planes.channel_names = channels_desc;                        % channel specification {'GFP','Homer','DIC'}
+    planes.channelColors = channelColors;
+    planes.channel_ranges = channel_ranges;                      % histogram ranges for plotting
+    planes.nChannels = numOfChannels;
     
     % reference image default settings
-    wf.refImParam.plane = actualPlane;
-    wf.refImParam.depth = refDepth;
-    wf.refImParam.channel = referenceChannel;                % channel used as reference image (synaptic marker, membrane marker...)
+    planes.refImParam.plane = actualPlane;
+    planes.refImParam.depth = refDepth;
+    planes.refImParam.channel = referenceChannel;                % channel used as reference image (synaptic marker, membrane marker...)
 
 end
 
