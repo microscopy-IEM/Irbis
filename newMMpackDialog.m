@@ -16,13 +16,18 @@ function newMMpack = newMMpackDialog()
             else
                 repeatDial = 0;
             end
-
+        else    
+            break   % enable to exit using Cancel - returns empty {}
 
         end
 
     end
 
-    newMMpack = createEmptyMMpack(dial);
+    if ~isempty(dial)   % does not continue if Cancel was pressed
+        newMMpack = createEmptyMMpack(dial);
+    else 
+        newMMpack = {}; % something needs to be returned
+    end
         
 end
 

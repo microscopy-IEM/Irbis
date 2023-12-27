@@ -3,3 +3,4 @@ test data/*
 MMP_settings.mat
 *.asv
 *.csv
+*.xlsx
