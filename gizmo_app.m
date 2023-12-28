@@ -299,7 +299,25 @@ function PixelPos = MicroMToPixelPositionArray(MicroMArray,tool)
     cosRatio = abs(cosd(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
     sinRatio = abs(sind(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
 
-    % calculating proportional movement contribution by x and y, depending on the rotation
+    % % calculating proportional movement contribution by x and y, depending on the rotation - new rotational system
+    % xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
+    % if sign(cosd(azimuth)) < 0
+    % xXratio = 1 + xXratio;
+    % end
+    % xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
+    % if sign(sind(azimuth)) < 0
+    % xYratio = 1 + xYratio;
+    % end
+    % yXratio = sign(-sind(azimuth))*yCMic/yLimMic;
+    % if sign(-sind(azimuth)) < 0
+    % yXratio = 1 + yXratio;
+    % end
+    % yYratio = sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
+    % if sign(-cosd(azimuth)) < 0
+    % yYratio = 1 + yYratio;
+    % end
+
+    % calculating proportional movement contribution by x and y, depending on the rotation - old rotational system
     xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
     if sign(cosd(azimuth)) < 0
     xXratio = 1 + xXratio;
