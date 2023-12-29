@@ -29,7 +29,7 @@ tgl_area = cellfun(@(r1,r2,r3) sqrt(sum(r1.^2,2))*point_to_line_distance(r2,r1,r
                         
 mesh_area = 0.5*sum([tgl_area{:}]);
 
-fprintf('Mesh total area computed in %d seconds.\n',toc);
+% fprintf('Mesh total area computed in %d seconds.\n',toc);
 
 
 end % compute_mesh_total_area
