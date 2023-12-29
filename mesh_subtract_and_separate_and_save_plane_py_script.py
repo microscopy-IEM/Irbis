@@ -2,7 +2,7 @@ import pymeshlab
 import numpy as np
 import os
 
-def mesh_subtract_and_separate(bigger = 'temp_meshNeuron.ply', smaller = 'temp_meshShaft.ply', output = 'temp_meshSpines.ply',temp_path ='C:\\Users\\Public\\MMP\\temp'):
+def mesh_subtract_and_separate(bigger = 'temp_meshParent1.ply', smaller = 'temp_meshParent2.ply', output = 'temp_meshDifference.ply',temp_path ='C:\\Users\\Public\\MMP\\temp'):
 
     os.chdir(temp_path)
 
@@ -29,7 +29,7 @@ def mesh_subtract_and_separate(bigger = 'temp_meshNeuron.ply', smaller = 'temp_m
     for i in range(n_complete,n_total):
         ms.set_current_mesh(new_curr_id = i)
         j = i + 1 - n_complete
-        ms.save_current_mesh(f'temp_{j}.ply')
+        ms.save_current_mesh(f'temp_subtract_{j}.ply')
 
         spine = ms.mesh(i).vertex_matrix()
         spine_normal = ms.mesh(i).vertex_normal_matrix()
@@ -55,8 +55,8 @@ def mesh_subtract_and_separate(bigger = 'temp_meshNeuron.ply', smaller = 'temp_m
         file.write('\n')
     file.close()
 
-    n_spines = n_total - n_complete
+    n_objects = n_total - n_complete
 
-    return(n_spines)
+    return(n_objects)
 
-n_spines = mesh_subtract_and_separate(temp_path=path)
+n_objects = mesh_subtract_and_separate(temp_path=path)
