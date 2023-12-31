@@ -91,9 +91,9 @@ imshow(binaryImage,[])
 r = drawcircle("Center",[sizeIm/2,sizeIm/2],'Radius',10,'Visible','on');
 mask = createMask(r);
 
-tic
+% tic
 bw = activecontour(binaryImage,mask,Iterations,'edge','ContractionBias',ContractionBias,'SmoothFactor',SmoothFactor);
-toc
+% toc
 
 hold on
 visboundaries(bw,'Color','r')
