@@ -157,7 +157,7 @@ function planes = importPlanes(figureH)
         % Set default z-projection depth
         actualPlane = round(numOfZPlanes/2); % in default, the middle plane of z-stack is seelcted
         if numOfZPlanes >= 7 
-            refDepth = 3;   % default number of planes fot z-projection (number of planes above end below the selected middle plane)
+            refDepth = 1;   % default number of planes fot z-projection (number of planes above end below the selected middle plane)
         else
             refDepth = 0;
         end
