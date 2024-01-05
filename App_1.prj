@@ -1,0 +1,144 @@
+<deployment-project plugin="plugin.apptool" plugin-version="1.0">
+  <configuration build-checksum="337491891" file="D:\git_folder\MMpack\App_1.prj" location="D:\git_folder\MMpack" name="App_1" target="target.mlapps" target-name="Package App">
+    <param.appname>App_1</param.appname>
+    <param.authnamewatermark />
+    <param.email />
+    <param.company />
+    <param.icon />
+    <param.icons />
+    <param.summary />
+    <param.description />
+    <param.screenshot>C:\Users\SK\AppData\Local\Temp\tp92fd69eb_6fcd_49cc_a96c_9c3bbfba11f9.png</param.screenshot>
+    <param.version>1.0</param.version>
+    <param.products.name />
+    <param.products.id />
+    <param.products.version />
+    <param.platforms />
+    <param.output>${PROJECT_ROOT}</param.output>
+    <param.guid>5c5697ed-49b5-4ed4-8f64-5288e2c65748</param.guid>
+    <unset>
+      <param.authnamewatermark />
+      <param.email />
+      <param.company />
+      <param.icon />
+      <param.icons />
+      <param.summary />
+      <param.description />
+      <param.version />
+      <param.products.name />
+      <param.products.id />
+      <param.products.version />
+      <param.platforms />
+      <param.output />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\MMP_app_1_11.mlapp</file>
+    </fileset.main>
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}\@msdanalyzer\addAll.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\computeDrift.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\computeMSD.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\computeVCorr.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\errorShade.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\fitLogLogMSD.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\fitMeanMSD.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\fitMSD.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\getAllDelays.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\getCommonTimes.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\getMeanMSD.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\getMeanVCorr.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\getVelocities.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\labelPlotMSD.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\labelPlotTracks.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\labelPlotVCorr.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\msdanalyzer.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\plotDrift.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\plotMeanMSD.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\plotMeanVCorr.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\plotMSD.m</file>
+      <file>${PROJECT_ROOT}\@msdanalyzer\plotTracks.m</file>
+      <file>${PROJECT_ROOT}\dist2ROI.m</file>
+      <file>${PROJECT_ROOT}\find_intersection_volume_python.m</file>
+      <file>${PROJECT_ROOT}\frenet.m</file>
+      <file>${PROJECT_ROOT}\icons\color_palette.png</file>
+      <file>${PROJECT_ROOT}\icons\downArrow.png</file>
+      <file>${PROJECT_ROOT}\icons\home.png</file>
+      <file>${PROJECT_ROOT}\icons\leftArrow.png</file>
+      <file>${PROJECT_ROOT}\icons\play.png</file>
+      <file>${PROJECT_ROOT}\icons\Refresh_icon.png</file>
+      <file>${PROJECT_ROOT}\icons\rightArrow.png</file>
+      <file>${PROJECT_ROOT}\icons\step1.png</file>
+      <file>${PROJECT_ROOT}\icons\step2.png</file>
+      <file>${PROJECT_ROOT}\icons\upArrow.png</file>
+      <file>${PROJECT_ROOT}\ImportSMLM.m</file>
+      <file>${PROJECT_ROOT}\importTracks.m</file>
+      <file>${PROJECT_ROOT}\importWF.m</file>
+      <file>${PROJECT_ROOT}\inOutPlot.m</file>
+      <file>${PROJECT_ROOT}\IS_active_contour.m</file>
+      <file>${PROJECT_ROOT}\IS_active_contour_vocal.m</file>
+      <file>${PROJECT_ROOT}\IS_adding_toolboxes_to_path.m</file>
+      <file>${PROJECT_ROOT}\IS_getTrajectory_fast_marching.m</file>
+      <file>${PROJECT_ROOT}\mesh_cut_and_separate_python.m</file>
+      <file>${PROJECT_ROOT}\mesh_intersect_python.m</file>
+      <file>${PROJECT_ROOT}\mesh_separate_python.m</file>
+      <file>${PROJECT_ROOT}\MMP_jumpsRemoval.m</file>
+      <file>${PROJECT_ROOT}\MMP_LocalizationError.m</file>
+      <file>${PROJECT_ROOT}\MMP_MSD_analysis.m</file>
+      <file>${PROJECT_ROOT}\MMP_settings.mat</file>
+      <file>${PROJECT_ROOT}\MMP_TracksProccesing.m</file>
+      <file>${PROJECT_ROOT}\mosaicPeakFinder.m</file>
+      <file>${PROJECT_ROOT}\MyDragzoom.m</file>
+      <file>${PROJECT_ROOT}\newMMpackDialog.m</file>
+      <file>${PROJECT_ROOT}\p_poly_dist.m</file>
+      <file>${PROJECT_ROOT}\poisson_mesh_python.m</file>
+      <file>${PROJECT_ROOT}\poisson_plus_decimation_python.m</file>
+      <file>${PROJECT_ROOT}\singleTrackMSD.m</file>
+      <file>${PROJECT_ROOT}\spineList2ResultTable.m</file>
+      <file>${PROJECT_ROOT}\tubeplot.m</file>
+    </fileset.depfun>
+    <fileset.resources />
+    <fileset.package />
+    <build-deliverables>
+      <file location="D:\git_folder" name="MMpack" optional="false">D:\git_folder\MMpack</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2023a</root>
+      <toolboxes>
+        <toolbox name="matlabcoder" />
+        <toolbox name="gpucoder" />
+        <toolbox name="neuralnetwork" />
+      </toolboxes>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+      <toolbox>
+        <gpucoder>
+          <enabled>true</enabled>
+        </gpucoder>
+      </toolbox>
+      <toolbox>
+        <neuralnetwork>
+          <enabled>true</enabled>
+        </neuralnetwork>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>10.0</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>
