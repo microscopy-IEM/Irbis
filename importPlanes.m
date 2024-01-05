@@ -6,7 +6,7 @@
 
 % Script reads general info (num of channles, planes etc.) from the image metadata
 
-function planes = importPlanes(figureH)
+function planes = importPlanes(figureH,varargin)
 
     wb = uiprogressdlg(figureH,'Title','Importing file','Message','Importing file...','Cancelable','on');
     wb.Value = 0;
@@ -99,10 +99,15 @@ function planes = importPlanes(figureH)
         channels_desc{1} = 'R'; % Homer
         channels_desc{2} = 'G'; % GFP
         channels_desc{3} = 'B'; %
-             
-        % Save default colors to channels
-        channelColors = [{[1 0 0]}    {[0 1 0]}    {[0 0 1]}];
-        
+
+        % IS changed 240105 - default colors as varargin
+        if nargin == 2
+            channelColors = varargin{1};
+        else
+            % Save default colors to channels
+            channelColors = [{[1 0 0]}    {[0 1 0]}    {[0 0 1]}];
+        end
+
         % Save ranges for histogram
         channel_ranges = [{[0 1]}    {[0 1]}    {[0 1]}];
         
