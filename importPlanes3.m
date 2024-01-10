@@ -118,7 +118,7 @@ function planes = importPlanes3(figureH,varargin)
         end
   
         % Save default ranges for histogram
-        channel_ranges = repmat({[0 1]},1,numOfChannels);
+        channel_ranges = repmat({[0 2^16]},1,numOfChannels);
 
         % save resolition in pixels    
         yres = info(1).Width;
