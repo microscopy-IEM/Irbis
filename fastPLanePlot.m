@@ -69,7 +69,7 @@ toc
 
 %% getZprojection
 
-plotPlane = zstack_adjusted(:,:,Z_Range,currentTimePoint,activeChannels);
+% plotPlane = zstack_adjusted(:,:,Z_Range,currentTimePoint,activeChannels);
 mode = 'max';
 Zprojection = squeeze(getZProjection([],zstack_adjusted,activeChannels,Z_Range,currentTimePoint,mode));
 
@@ -110,6 +110,8 @@ toc
 %% test plot
 figure(1)
 imshow(rgbImage,"InitialMagnification",150)
+figure(2)
+imhist(Zprojection(:,:,1))
 
 %% Adjusted getZProjection function
 

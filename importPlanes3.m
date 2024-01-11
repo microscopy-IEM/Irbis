@@ -28,7 +28,7 @@ function planes = importPlanes3(figureH,varargin)
         V = tiffreadVolume([path fileName]);
 
         % get number of tiffs in multiple tiff file
-        numOfTiffs = size(info,1)
+        numOfTiffs = size(info,1);
         desc = info(1).ImageDescription;
             
         % read pixel size
