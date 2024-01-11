@@ -4,7 +4,6 @@
 % Supports Zstack
 % Supports timepoints
 
-
 % Script reads general info (num of channles, planes etc.) from the image metadata
 
 function planes = importPlanes3(figureH,varargin)
@@ -12,7 +11,7 @@ function planes = importPlanes3(figureH,varargin)
     wb = uiprogressdlg(figureH,'Title','Importing file','Message','Importing file...','Cancelable','on');
     wb.Value = 0;
     
-      % select files
+     % select files
     [fileName,path] = uigetfile('*.tif','MultiSelect','off');
 
     
@@ -29,10 +28,9 @@ function planes = importPlanes3(figureH,varargin)
         V = tiffreadVolume([path fileName]);
 
         % get number of tiffs in multiple tiff file
-        numOfTiffs = size(info,1);
+        numOfTiffs = size(info,1)
         desc = info(1).ImageDescription;
-    
-        
+            
         % read pixel size
         x_size = info(1).XResolution;
         
@@ -104,7 +102,7 @@ function planes = importPlanes3(figureH,varargin)
             colors = varargin{1};
         else
             % Save default colors to channels
-            colors = [{[1 0 0]}    {[0 1 0]}    {[0 0 1]}];
+            colors = [{[1 0 0]} {[0 1 0]} {[0 0 1]} {[1 1 0]}];
         end
 
         channelColors = cell(1,numOfChannels);
@@ -130,8 +128,10 @@ function planes = importPlanes3(figureH,varargin)
         % First run cycle for each channel
         frameNum = 0;
              
-        for channelNum = 1:numOfChannels
-           for timePoint = 1:numOfTimePoints
+        for timePoint = 1:numOfTimePoints
+
+            for channelNum = 1:numOfChannels
+           
                for slice = 1:numOfZPlanes
                                                         
                         tiffID = channelNum+numOfChannels*(slice-1)+numOfFramesPerTimepoint*(timePoint-1);                
@@ -142,7 +142,8 @@ function planes = importPlanes3(figureH,varargin)
                
                 wb.Value = frameNum/numOfTiffs;
 
-           end
+            end
+
         end
 
             
