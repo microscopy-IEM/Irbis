@@ -82,14 +82,27 @@ disp('RGB blend time:')
 tic
 
 % create empty array
-RBGplane = uint8.empty(xres,yres,3,0);
+% clear RBGplane
+
+RBGplane = double.empty(xres,yres,3,0);
+
+% or 10x faster with Mapping tolbox
+% RBGplane = uint8.empty(xres,yres,3,0);
 
 for ch_ind = 1:length(activeChannels)
     
-    % RBGplane(:,:,:,ch) = ind2rgb8(zstack_adjusted(:,:,Z_Range,currentTimePoint,ch),cmap{ch});
-    RBGplane(:,:,:,ch_ind) = ind2rgb8(Zprojection(:,:,ch_ind),cmap{activeChannels(ch_ind)});
+    RBGplane(:,:,:,ch_ind) = ind2rgb(Zprojection(:,:,ch_ind),cmap{activeChannels(ch_ind)});
+
+  
+    % RBGplane(:,:,:,ch_ind) = Zprojection(:,:,ch_ind).*cmap{activeChannels(ch_ind)};
+
+    % or 10x faster with Mapping tolbox
+    % RBGplane(:,:,:,ch_ind) = ind2rgb8(Zprojection(:,:,ch_ind),cmap{activeChannels(ch_ind)});
 
 end
+
+% convert back to 8bit
+RBGplane = uint8(round(RBGplane*256));
 
 rgbImage = sum(RBGplane,4,"native");
 toc
