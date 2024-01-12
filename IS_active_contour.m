@@ -56,6 +56,14 @@ for i=1:size(pointsInROI,1)
 
 end
 
+% disp('pointsRotated')
+% disp(size(pointsRotated))
+% disp(size(pointsInROI))
+if isempty(pointsRotated)
+    result = [];
+    return
+end
+
 % projecting the point cloud onto a plane and rescaling the dimensions:
 pointsRescaled(:,1) = (pointsRotated(:,1))*sizeIm/realCenterDim + sizeIm/2;
 pointsRescaled(:,2) = 0;
