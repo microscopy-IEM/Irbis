@@ -1,20 +1,24 @@
 function n_objects = reconstruct_mesh_python(depth,input_name,path,varargin)
 
+    disp('in matlab function')
     if nargin == 3
         fractionToKeep = 0.8;
         minVertexNum = 20;
         output_name = 'temp_mesh.ply';
+        disp('3 args')
         separate = 1;
     elseif nargin == 5
         fractionToKeep = 0.8;
         minVertexNum = 20;
         separate = varargin{1};
         output_name = varargin{2};
+        disp('5 args')
     else
-        separate = 0;
+        separate = 1;
         fractionToKeep = varargin{1};
         minVertexNum = varargin{2};
         output_name = varargin{3};
+        disp('else args')
     end
 
     pathAdapted = strrep(path,'\','/');

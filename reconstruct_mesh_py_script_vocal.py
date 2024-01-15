@@ -36,6 +36,7 @@ def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_pat
         end_time = time.time()
         print(f'Execution time for decimation: {end_time - start_time} s')
 
+    ms.save_current_mesh(str(output)) 
     if int(separate) == 1:
         n_complete = ms.number_meshes()
         print(n_complete)
@@ -51,13 +52,13 @@ def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_pat
         object_num = 1
         for i in range(n_complete,n_total):
             ms.set_current_mesh(new_curr_id = i)
-            print(f'Vertex num: {ms.current_mesh().vertex_number()}')
+            print(f'Vertex num {object_num}: {ms.current_mesh().vertex_number()}')
             if ms.current_mesh().vertex_number() >= int(min_vertex_num):
-                 
+                ms.save_current_mesh(f'temp_{object_num}.ply') 
                 object_num += 1
 
         n_objects = n_total - n_complete
-        return(n_objects)
+        return(object_num-1)
     else:
         return(1)
 

@@ -17,5 +17,6 @@ output_name = 'test.ply';
 % isWatertight(dendriticMesh)
 % toc
 
+n = reconstruct_mesh_python(depth,'temp_ptPrimary.ply',path,fractionToKeep,minVertexNum,'temp_meshPrimary.ply');
 
-n = reconstruct_mesh_python(depth,input_name,path,0)
+% n = reconstruct_mesh_python(depth,input_name,path,0,output_name)

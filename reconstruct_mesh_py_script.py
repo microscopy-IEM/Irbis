@@ -19,6 +19,7 @@ def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_pat
         face_num = int(ms.current_mesh().face_number() * fraction_to_keep)
         ms.meshing_decimation_quadric_edge_collapse(targetfacenum = face_num,preserveboundary = True, preservenormal = True, preservetopology = True, autoclean = True)
 
+    ms.save_current_mesh(str(output))         
     if int(separate) == 1:
         n_complete = ms.number_meshes()
 
@@ -34,7 +35,7 @@ def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_pat
                 object_num += 1
 
         n_objects = n_total - n_complete
-        return(n_objects)
+        return(object_num-1)
     else:
         return(1)
 
