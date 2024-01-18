@@ -11,8 +11,9 @@ function planes = importPlanes(figureH,varargin)
     wb = uiprogressdlg(figureH,'Title','Importing file','Message','Importing file...','Cancelable','on');
     wb.Value = 0;
     
-      % select files
+     % select files
     [fileName,path] = uigetfile('*.tif','MultiSelect','off');
+
     
     if isequal(fileName,0)
         disp('User selected Cancel');
@@ -22,19 +23,19 @@ function planes = importPlanes(figureH,varargin)
         
         % get tiff info from file
         info = imfinfo([path fileName]);
-        
+     
+        % read volumt tiff with support of >4GB images
+        V = tiffreadVolume([path fileName]);
+
         % get number of tiffs in multiple tiff file
         numOfTiffs = size(info,1);
         desc = info(1).ImageDescription;
-    
-        
+            
         % read pixel size
         x_size = info(1).XResolution;
         
         if isempty(x_size)
-            
             x_size = 1;
-        
         end
         
         pixelSize = round(1/x_size,5);
@@ -96,68 +97,55 @@ function planes = importPlanes(figureH,varargin)
         numOfFramesPerTimepoint = numOfZPlanes*numOfChannels;
         
         % Save default description to channels
-        channels_desc{1} = 'R'; % Homer
-        channels_desc{2} = 'G'; % GFP
-        channels_desc{3} = 'B'; %
-
-        % IS changed 240105 - default colors as varargin
+        
         if nargin == 2
-            channelColors = varargin{1};
+            colors = varargin{1};
         else
             % Save default colors to channels
-            channelColors = [{[1 0 0]}    {[0 1 0]}    {[0 0 1]}];
+            colors = [{[1 0 0]} {[0 1 0]} {[0 0 1]} {[1 1 0]}];
         end
 
-        % Save ranges for histogram
-        channel_ranges = [{[0 1]}    {[0 1]}    {[0 1]}];
+        channelColors = cell(1,numOfChannels);
+        channels_desc = cell(1,numOfChannels);
         
+        for i = 1:numOfChannels
+
+            channelColors{i} = colors{i};
+            channels_desc{i} = ['ch' num2str(i)];
+
+        end
+  
+        % Save default ranges for histogram
+        channel_ranges = repmat({[0 2^16]},1,numOfChannels);
+
+        % save resolition in pixels    
         yres = info(1).Width;
         xres = info(1).Height;
-        
-        zstack = nan(xres,yres,numOfZPlanes,3,numOfTimePoints,'single');
+              
+        % create empty uint16 array without specified number of channels (one dimension must be 0)
+        zstack = uint16.empty(xres,yres,numOfZPlanes,numOfTimePoints,0);
         
         % First run cycle for each channel
-        frameNum = 1;
-    
+        frameNum = 0;
+             
         for timePoint = 1:numOfTimePoints
-        
+
             for channelNum = 1:numOfChannels
-               
-                for slice = 1:numOfZPlanes
-                % Second run inner loop for each z-plane of the actual channel 
-                    
-                        % v = channelNum+nPerTimepoint*(timePoint-1):numOfChannels:nPerTimepoint*timePoint
-        
-                        tiffID = channelNum+numOfChannels*(slice-1)+numOfFramesPerTimepoint*(timePoint-1);
-                                        
-                        % for tiffID = channelNum+nPerTimepoint*(timePoint-1):numOfChannels:nPerTimepoint*timePoint
-                    
-                            % tiffID
-                            % read specific tiff from file
-                            im1 = imread([path fileName],tiffID);
-                    
-                            % convert to douple
-                            im1 = im2double(im1);    
-                    
-                            % slice
-                            zstack(:,:,slice,channelNum,timePoint) = im1;
-                    
-                        % end
-    
-                        wb.Value = frameNum/numOfTiffs;
+           
+               for slice = 1:numOfZPlanes
+                                                        
+                        tiffID = channelNum+numOfChannels*(slice-1)+numOfFramesPerTimepoint*(timePoint-1);                
+                        zstack(:,:,slice,timePoint,channelNum) = uint16(V(:,:,tiffID));
                         frameNum = frameNum+1;
             
-                 end
-        
+               end
+               
+                wb.Value = frameNum/numOfTiffs;
+
             end
+
         end
-        
-        % reduce to 3 channels in bigger
-        if numOfZPlanes > 3
-        
-            zstack = zstack(:,:,:,1:3,:);
-        
-        end
+
             
         % Set default z-projection depth
         actualPlane = round(numOfZPlanes/2); % in default, the middle plane of z-stack is seelcted
@@ -187,6 +175,7 @@ function planes = importPlanes(figureH,varargin)
         planes.refImParam.channel = referenceChannel;                % channel used as reference image (synaptic marker, membrane marker...)
     
   
+        % planes
     
     wb.Value = 1;
     pause(0.1)

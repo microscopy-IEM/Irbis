@@ -1,5 +1,5 @@
 % Function creates new empty MMpack with help of an input dialog
-function newMMpack = newMMpackDialog()
+function newMMpack = newMMpackDialog(ver)
 
     repeatDial = 1;
 
@@ -24,19 +24,19 @@ function newMMpack = newMMpackDialog()
     end
 
     if ~isempty(dial)   % does not continue if Cancel was pressed
-        newMMpack = createEmptyMMpack(dial);
+        newMMpack = createEmptyMMpack(dial,ver);
     else 
         newMMpack = {}; % something needs to be returned
     end
         
 end
 
-function MMpack = createEmptyMMpack(dial)
+function MMpack = createEmptyMMpack(dial,ver)
     %% Create MMPack structure
         
-    MMpack_version = '';
+    irbis_version = ver;
     
-    name = [dial{1} '_MMpack.mat'];
+    name = [dial{1} '.irbis'];
     description = '';   % Description of the experiment ('Mobility_2Avs2Bvs3A')
     groupName = '';               % Name of the experimental condition ('2A_cre' or '3A_wt'...)
     roundN = 1;                      % Number of round
@@ -53,19 +53,17 @@ function MMpack = createEmptyMMpack(dial)
     info.cell = cellN;                                                     % number identifying cell
     info.spaceUnits = 'µm';                                             % space units um, nm common for all modalities
     info.timeUnits = 'sec';                                              % time units 'sec','min' common for all modalitioes
-    info.MMpack_version = MMpack_version;                                  % version od MMpack 
+    info.irbis_version = irbis_version;                                  % version od MMpack 
     
     
     %% WF data (wide-field, confocal, SIM or other pixel-brightness based images)
     
     planes = [];
-    % planes = [];
-    
+       
     %% SMLM data (single molecule localizations)
     
     points = [];
-    % points = [];
-    
+        
     %% Tracks (data from single particle tracking input)
     
     tracks = [];
@@ -73,10 +71,6 @@ function MMpack = createEmptyMMpack(dial)
     %% Model
 
     model = [];
-    % model.soma = [];
-    % model.dendrites = [];
-    % model.spines = [];
-    % model.synapses = [];
 
     %% Timeline
 
