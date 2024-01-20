@@ -265,7 +265,7 @@ Initialize(varargin{:})
         % Zoom Options
         mZoomScroll = 'normal';     % 'normal', 'reverse'
         mZoomMinPow = 0;            % min zoom percent 10 ^ mZoomMinPow
-        mZoomMaxPow = 3;            % max zoom perzent 10 ^ mZoomMaxPow
+        mZoomMaxPow = 5;            % max zoom perzent 10 ^ mZoomMaxPow
         mZoomNum = 151;              % count steps of log zoom grid
         mZoomExtendNum = 301;       % count steps of log grid zoom extend for 2D
         mZoomKeysNum = 181;         % count steps of log grid zoom for keys for 2D
