@@ -1,4 +1,4 @@
-function varargout = gradient(f,varargin)
+function varargout = SKgradient(f,varargin)
 %GRADIENT Approximate gradient.
 %   [FX,FY] = GRADIENT(F) returns the numerical gradient of the matrix F.
 %   FX corresponds to dF/dx, the differences in x (horizontal) direction.
