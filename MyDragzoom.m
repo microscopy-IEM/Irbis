@@ -400,13 +400,16 @@ Initialize(varargin{:})
     function SetCallbacks()
         %SetCallbacks
         
-        if fIsAxes2D
-            % 2D mode
-            SetFigureCallbacks3D();
-        else
-            % 3D mode
-            SetFigureCallbacks3D();
-        end
+         SetFigureCallbacks3D();
+
+         % SK
+        % if fIsAxes2D
+        %     % 2D mode
+        %     SetFigureCallbacks3D();
+        % else
+        %     % 3D mode
+        %     SetFigureCallbacks3D();
+        % end
     end
 %--------------------------------------------------------------------------
 %==========================================================================
@@ -593,6 +596,9 @@ Initialize(varargin{:})
         %WindowButtonDownCallback3D
         
         if fIsMouseOnLegend, return; end
+
+        % SK
+        axi = GetAxesIndexUnderCursor();
         
         clickType = get(src, 'SelectionType');
         
@@ -601,10 +607,23 @@ Initialize(varargin{:})
                 % DragMouseBegin3D();
             % case 'open'
             %     ResetAxesToOrigView3D();
+          
+                    % DragMouseBegin
+                    % mAxesInfo(i).handle
+
+
             case 'alt'
-                RotateMouseBegin3D();
+        
+                % SK
+                if axi == 2
+                    return;
+                elseif axi == 1
+                    RotateMouseBegin3D();
+                end
+                
             case 'extend'
                 % ZoomMouseExtendBegin3D();
+                if axi == 2, return; end
                 DragMouseBegin3D();
         end
     end
@@ -616,6 +635,9 @@ Initialize(varargin{:})
         DragMouseEnd3D();
         ZoomMouseExtendEnd3D();
         RotateMouseEnd3D();
+
+        % SK
+        DragMouseEnd();
     end
 %--------------------------------------------------------------------------
 %==========================================================================
@@ -2562,13 +2584,29 @@ Initialize(varargin{:})
         %GetCurrentAxesIndex
         
         axi = [];
-        
+
+        % SK
+        k = [0 0];
         for i = 1:numel(mAxesInfo)
+            % i
             if (ishandle(mAxesInfo(i).handle) && mAxesInfo(i).iscurrent)
-                axi = i;
-                return;
+                k(i) = 1;
+                % SK
+                % axi(i) = i;
+                % axi = 1;
+                % return;
             end
         end
+
+        % SK
+        if sum(k) == 2
+            axi = 2;
+        else
+            axi = find(k == 1);
+        end
+
+        
+
     end
 %--------------------------------------------------------------------------
 %==========================================================================
@@ -2585,14 +2623,30 @@ Initialize(varargin{:})
             return;
         end
         
+        % SK
+        k = [0 0];
         for i = 1:numel(mAxesInfo)
             if (ishandle(mAxesInfo(i).handle) && IsInBoundsAxes(mAxesInfo(i).handle))
-                axi = i;
-                return;
+                % axi = i;
+                
+                k(i) = 1;
+                
+                % return;
             else
                 axi = 0; % without axes
             end
         end
+
+        % SK
+        if sum(k) == 2
+            axi = 2;
+        else
+            
+            axi = find(k == 1);
+        end
+
+        % k
+        return;
     end
 %--------------------------------------------------------------------------
 %==========================================================================
