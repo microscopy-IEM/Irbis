@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="3991658144" file="D:\git_folder2\Irbis4neuron.prj" location="D:\git_folder2" name="Irbis4neuron" preferred-package-location="D:\git_folder2\Irbis4neuron\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3991658144" file="C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis4neuron.prj" location="C:\Users\sveco\Documents\IEM_microscopy\MMPack" name="Irbis4neuron" preferred-package-location="D:\git_folder2\Irbis4neuron\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\Irbis4neuron_resources\icon.ico</param.icon>
     <param.icons>
@@ -169,21 +169,14 @@
       <file>${PROJECT_ROOT}\volume_histogram\volume_histogram.mlapp</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\Irbis4neuron\for_testing" name="splash.png" optional="false">D:\git_folder2\Irbis4neuron\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\Irbis4neuron\for_testing" name="readme.txt" optional="true">D:\git_folder2\Irbis4neuron\for_testing\readme.txt</file>
-      <file location="${PROJECT_ROOT}\Irbis4neuron\for_testing" name="Irbis.exe" optional="false">D:\git_folder2\Irbis4neuron\for_testing\Irbis.exe</file>
+      <file location="${PROJECT_ROOT}\Irbis4neuron\for_testing" name="Irbis.exe" optional="false">C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis4neuron\for_testing\Irbis.exe</file>
+      <file location="${PROJECT_ROOT}\Irbis4neuron\for_testing" name="readme.txt" optional="true">C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis4neuron\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\Irbis4neuron\for_testing" name="splash.png" optional="false">C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis4neuron\for_testing\splash.png</file>
     </build-deliverables>
     <workflow />
     <matlab>
       <root>C:\Program Files\MATLAB\R2023a</root>
-      <toolboxes>
-        <toolbox name="neuralnetwork" />
-      </toolboxes>
-      <toolbox>
-        <neuralnetwork>
-          <enabled>true</enabled>
-        </neuralnetwork>
-      </toolbox>
+      <toolboxes />
     </matlab>
     <platform>
       <unix>false</unix>

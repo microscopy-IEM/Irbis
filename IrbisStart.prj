@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="1658123820" file="D:\git_folder2\IrbisStart.prj" location="D:\git_folder2" name="IrbisStart" preferred-package-location="D:\git_folder2\IrbisStart\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="1658123820" file="C:\Users\sveco\Documents\IEM_microscopy\MMPack\IrbisStart.prj" location="C:\Users\sveco\Documents\IEM_microscopy\MMPack" name="IrbisStart" preferred-package-location="D:\git_folder2\IrbisStart\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\IrbisStart_resources\icon.ico</param.icon>
     <param.icons>
@@ -183,21 +183,14 @@
       <file>${PROJECT_ROOT}\tubeplot.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="readme.txt" optional="true">D:\git_folder2\IrbisStart\for_testing\readme.txt</file>
-      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="Irbis.exe" optional="false">D:\git_folder2\IrbisStart\for_testing\Irbis.exe</file>
-      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="splash.png" optional="false">D:\git_folder2\IrbisStart\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="splash.png" optional="false">C:\Users\sveco\Documents\IEM_microscopy\MMPack\IrbisStart\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="readme.txt" optional="true">C:\Users\sveco\Documents\IEM_microscopy\MMPack\IrbisStart\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="Irbis.exe" optional="false">C:\Users\sveco\Documents\IEM_microscopy\MMPack\IrbisStart\for_testing\Irbis.exe</file>
     </build-deliverables>
     <workflow />
     <matlab>
       <root>C:\Program Files\MATLAB\R2023a</root>
-      <toolboxes>
-        <toolbox name="neuralnetwork" />
-      </toolboxes>
-      <toolbox>
-        <neuralnetwork>
-          <enabled>true</enabled>
-        </neuralnetwork>
-      </toolbox>
+      <toolboxes />
     </matlab>
     <platform>
       <unix>false</unix>
