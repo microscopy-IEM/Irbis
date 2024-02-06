@@ -5,7 +5,7 @@ function newMMpack = newMMpackDialog(ver)
 
     while repeatDial
     
-        dial = inputdlg('Name','New MMpack',[1 50],{'test'}); 
+        dial = inputdlg('Name','New Irbis file',[1 50],{'test'}); 
 
         waitfor(dial);
         if ~isempty(dial)

@@ -537,8 +537,9 @@ Initialize(varargin{:})
         modifier = evnt.Modifier;
         
         switch evnt.Key
-            case '0'
-                ResetAxesToOrigView();
+            % IS adjusted 240206 adjusted - rotation using keys switched off - activated when filling in values to spinners
+            % case '0'
+            %     ResetAxesToOrigView();
             case {'equal', 'add'}
                 ZoomKeys('plus');
             case {'hyphen', 'subtract'}
@@ -734,14 +735,15 @@ Initialize(varargin{:})
                 else
                     RotateKeys3D('el+');
                 end
-            case '0'
-                ResetAxesToOrigView3D();
-            case '1'
-                RotateKeys3D('xy');
-            case '2'
-                RotateKeys3D('xz');
-            case '3'
-                RotateKeys3D('yz');
+            % IS adjusted 240206 adjusted - rotation using keys switched off - activated when filling in values to spinners
+            % case '0'
+            %     ResetAxesToOrigView3D();
+            % case '1'
+            %     RotateKeys3D('xy');
+            % case '2'
+            %     RotateKeys3D('xz');
+            % case '3'
+            %     RotateKeys3D('yz');
             % case 'v'
             %     VisibleAxesKeys3D();
             % case 'f'
