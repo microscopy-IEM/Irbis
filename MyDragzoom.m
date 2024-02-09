@@ -662,7 +662,7 @@ Initialize(varargin{:})
         
         if fIsMouseOnLegend, return; end
 
-        %SK act only cursor is above main axis
+        %SK act only if cursor is above main axis
         axi = GetAxesIndexUnderCursor();
         % mAxesInfo(axi)
         if axi == 0
@@ -1404,6 +1404,15 @@ Initialize(varargin{:})
         zoomPct = GetZoomPercent(mZoom3DIndex, mZoomGrid);
 
         axPos = GetObjPos(hAx, 'pixels');
+        % disp(round(axPos))
+        % hAx.Parent
+
+        % SK
+        % save zoomPct to axis UserData to access it from Irbis
+        hAx.UserData.zoomPct = zoomPct;
+        % hAx.UserData
+
+        % get(hAx)
        
         
         [axPos(1), axPos(3)] = RecalcZoomAxesPos3D(axPos(1), axPos(3), ...
