@@ -61,8 +61,8 @@ function tracks = importTracks(figH)
     %     end
     
         % Define table
-        varNames = {'id';'group';'roundN';'xyz';'frame_i';'length';'numOfNaN';'longestGap';'meanDisp';'ovArea';'ovDist';'meanX';'meanY';'MSD5';'MSDr2';'zone';'type'};
-        varTypes = {'double','string','double','cell','cell','double','double','double','double','double','double','double','double','double','double','double','string'};
+        varNames = {'id';'group';'roundN';'xyz';'frame_i';'color';'length';'numOfNaN';'longestGap';'meanDisp';'ovArea';'ovDist';'meanX';'meanY';'MSD5';'MSDr2';'zone';'type'};
+        varTypes = {'double','string','double','cell','cell','cell','double','double','double','double','double','double','double','double','double','double','double','string'};
             
         
         % get size of the table
@@ -78,6 +78,7 @@ function tracks = importTracks(figH)
             T.roundN(tr) = roundN;
             T.xyz(tr) = coordinates(tr); 
             T.frame_i(tr) = frame_indexes(tr);
+            T.color(tr) = {rand(1,3)};
             T.length(tr) = size(coordinates{tr},1);
     
         end
