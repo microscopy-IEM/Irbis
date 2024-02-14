@@ -6,34 +6,29 @@ function tracks = importTracks(figH)
     % import TrackMate XML
     [imported_tracks, md] = importTrackMateTracks([path fileName],figH);
     
-    
+    % read frame interval
     frameInterval = md.frameInterval;
     
-    numOfTrajectories = size(imported_tracks,1);
+    % get number of tracks
+    nTracks = size(imported_tracks,1);
     
     % get number of frames
     stat = cell2mat(cellfun(@max, imported_tracks, 'UniformOutput', false));
-    numOfFrames = max(stat(:,1));
+    nFrames = max(stat(:,1));
     
-    % create arrays to for trajectory coordinates 
-    coordinates = cell(numOfTrajectories,1);
-    frame_indexes = cell(numOfTrajectories,1);
-    
-    % User input
-    groupName = 'importTest';
-%     description = 'desc';
-    roundN = 1;
-%     cellN = 0;
-    
-    
-    for trackID = 1:numOfTrajectories
+    % create arrays for trajectory coordinates 
+    coordinates = cell(nTracks,1);
+    frameIndexes = cell(nTracks,1);
+        
+    % convert to Irbis tracks format
+    for trackID = 1:nTracks
     
         coordinates{trackID,1} = imported_tracks{trackID}(:,2:4);
-        frame_indexes{trackID,1} = imported_tracks{trackID}(:,1);
+        frameIndexes{trackID,1} = imported_tracks{trackID}(:,1);
     
         % fill gaps with nan
         coor = coordinates{trackID,1};
-        fi = frame_indexes{trackID,1};
+        fi = frameIndexes{trackID,1};
         
         new_fi = (fi(1):fi(end))';
         duration = fi(end)-fi(1);
@@ -41,7 +36,7 @@ function tracks = importTracks(figH)
         new_coor(fi-fi(1)+1,:) = coor;
     
         coordinates{trackID,1} = new_coor;
-        frame_indexes{trackID,1} = new_fi;
+        frameIndexes{trackID,1} = new_fi;
                        
     
     end
@@ -51,35 +46,34 @@ function tracks = importTracks(figH)
 
         
         tracks.tracksOrigFileName = fileName;
-    %     tracks.spots = TRS.spots;                                               % localization of particles (QDs) without linking htem to trajectories
-        tracks.numOfTracks = numOfTrajectories;
-        tracks.numOfFrames = numOfFrames;
-        tracks.frame_interval = frameInterval;                         % frame interval in defined units (sec)
-        
-    %     if isfield(tracks,'driftCorrection')
-    %         tracks.driftCorrection = TRS.driftCorrection;                           % drift correction metedata
-    %     end
+    %     tracks.spots = TRS.spots;                                               % localizations of particles (QDs) without linking them to trajectories
+        tracks.nTracks = nTracks;
+        tracks.nFrames = nFrames;
+        tracks.frameInterval = frameInterval;                         % frame interval in defined units (sec)
+        tracks.group = '';
+        tracks.description = '';
+        tracks.driftCorrection = zeros(1,nFrames);
+        tracks.timeRange = [0 frameInterval*nFrames];
     
         % Define table
-        varNames = {'id';'group';'roundN';'xyz';'frame_i';'color';'length';'numOfNaN';'longestGap';'meanDisp';'ovArea';'ovDist';'meanX';'meanY';'MSD5';'MSDr2';'zone';'type'};
-        varTypes = {'double','string','double','cell','cell','cell','double','double','double','double','double','double','double','double','double','double','double','string'};
+        varNames = {'id';'xyz';'frame_i';'color';'length';'nOfNaN';'maxGap';'meanDisp';'ovArea';'ovDist';'meanX';'meanY';'MSD5';'MSDr2';'zone';'type'};
+        varTypes = {'double','cell','cell','cell','double','double','double','double','double','double','double','double','double','double','double','string'};
             
         
         % get size of the table
-        sz = [numOfTrajectories size(varTypes,2)];
+        sz = [nTracks size(varTypes,2)];
     
         % create table
         T = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
      
-        for tr = 1:numOfTrajectories
+        for trackId = 1:nTracks
     
-            T.id(tr) = tr;
-            T.group(tr) = groupName;
-            T.roundN(tr) = roundN;
-            T.xyz(tr) = coordinates(tr); 
-            T.frame_i(tr) = frame_indexes(tr);
-            T.color(tr) = {rand(1,3)};
-            T.length(tr) = size(coordinates{tr},1);
+            T.id(trackId) = trackId;
+            T.xyz(trackId) = coordinates(trackId); 
+            T.frame_i(trackId) = frameIndexes(trackId);
+            T.color(trackId) = {rand(1,3)};
+            T.length(trackId) = size(coordinates{trackId},1);
+
     
         end
     
@@ -87,6 +81,7 @@ function tracks = importTracks(figH)
 
 end
 
+%% Function importing TrackMate trajectories
 
 function [tracks, metadata] = importTrackMateTracks(file, figH)
 %%IMPORTTRACKMATETRACKS Import linear tracks from TrackMate
@@ -188,7 +183,7 @@ function [tracks, metadata] = importTrackMateTracks(file, figH)
     tracks = cell(nTracks, 1);
     trackNodes = root.getElementsByTagName('particle');
 
-    
+    % Update progress bar
     wb = uiprogressdlg(figH,'Title','Importing TrackMate tracks','Message','Sorting data...','Cancelable','off');
     wb.Value = 0/nTracks;
     wb.Message = sprintf(['Importing track ' num2str(1) '/' num2str(nTracks)]);    
@@ -197,7 +192,7 @@ function [tracks, metadata] = importTrackMateTracks(file, figH)
 
         wb.Value = i/nTracks;
         wb.Message = sprintf(['Importing track ' num2str(i) '/' num2str(nTracks)]); 
-        drawnow
+        % drawnow
        
         trackNode = trackNodes.item(i-1);
         nSpots = str2double( trackNode.getAttribute('nSpots') );
@@ -220,6 +215,7 @@ function [tracks, metadata] = importTrackMateTracks(file, figH)
         
     end
 
+    % close progress bar
     close(wb)
 
 end

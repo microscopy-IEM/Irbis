@@ -38,8 +38,8 @@ function MMpack = createEmptyMMpack(dial,ver)
     
     name = [dial{1} '.irbis'];
     description = '';   % Description of the experiment ('Mobility_2Avs2Bvs3A')
-    groupName = '';               % Name of the experimental condition ('2A_cre' or '3A_wt'...)
-    roundN = 1;                      % Number of round
+    groupName = '';     % Name of the experimental condition ('2A_cre' or '3A_wt'...)
+    roundN = 1;         % Number of round
     cellN = 1;   
     
     
@@ -51,9 +51,9 @@ function MMpack = createEmptyMMpack(dial,ver)
     info.description = description;                                        % general description of the experiment
     info.round = roundN;                                                   % numbe of experimental round
     info.cell = cellN;                                                     % number identifying cell
-    info.spaceUnits = 'µm';                                             % space units um, nm common for all modalities
-    info.timeUnits = 'sec';                                              % time units 'sec','min' common for all modalitioes
-    info.irbis_version = irbis_version;                                  % version od MMpack 
+    info.spaceUnits = 'µm';                                                % space units um, nm common for all modalities
+    info.timeUnits = 'sec';                                                % time units 'sec','min' common for all modalitioes
+    info.irbis_version = irbis_version;                                    % version od MMpack 
     
     
     %% WF data (wide-field, confocal, SIM or other pixel-brightness based images)
