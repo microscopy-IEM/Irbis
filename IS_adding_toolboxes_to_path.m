@@ -9,5 +9,5 @@ for folderNum = 1:length(subfoldersToAdd)
     folderToAdd = fullfile(appDirectory, subfolder);
     allSubfolders = genpath(folderToAdd);
     addpath(allSubfolders);
-    disp(['added: ',subfolder])
+    % disp(['added: ',subfolder])
 end
