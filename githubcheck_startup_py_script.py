@@ -7,6 +7,7 @@ except ImportError:
     # If plyer is not installed, print a message and install it
     print("Plyer library is not installed. Installing now...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "plyer"])
+    from plyer import notification
 import random
 import datetime
 
