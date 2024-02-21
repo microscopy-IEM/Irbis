@@ -1,5 +1,12 @@
 import subprocess
-from plyer import notification
+import sys
+try:
+    # Try to import the plyer library
+    from plyer import notification
+except ImportError:
+    # If plyer is not installed, print a message and install it
+    print("Plyer library is not installed. Installing now...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "plyer"])
 import random
 import datetime
 
@@ -32,7 +39,7 @@ def check_for_uncommitted_changes(repo_path):
                 ''
             ]
         else:
-            timespec = ''
+            timespec = ['']
         subprocess.call(["git", "-C", repo_path, "fetch"])
         status_output = subprocess.check_output(["git", "-C", repo_path, "status"], universal_newlines=True)
         if 'Your branch is up to date' not in status_output and 'nothing to commit' not in status_output:

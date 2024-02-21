@@ -1,4 +1,13 @@
 import subprocess
+import sys
+try:
+    # Try to import the plyer library
+    from plyer import notification
+except ImportError:
+    # If plyer is not installed, print a message and install it
+    print("Plyer library is not installed. Installing now...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "plyer"])
+
 from plyer import notification
 import random
 import datetime
@@ -14,18 +23,18 @@ def check_for_uncommitted_changes(repo_path):
             timespec = [
                 'Also, don\'t forget to mark when you leave work;)',
                 'Enjoy your evening!',
-                ''
+                ' '
             ]
         elif now.hour >= 23 or now.hour < 4:
             timespec = [
                 'Also, what are you doing up so late?',
                 'Also, shouldn\'t you go to sleep;)?',
                 'Good night!',
-                '',
-                ''
+                ' ',
+                ' '
             ]
         else:
-            timespec = ''
+            timespec = ['']
         subprocess.call(["git", "-C", repo_path, "fetch"])
         status_output = subprocess.check_output(["git", "-C", repo_path, "status"], universal_newlines=True)
         if 'Your branch is up to date' not in status_output and 'nothing to commit' not in status_output:
@@ -68,4 +77,5 @@ def check_for_uncommitted_changes(repo_path):
 
 # Example repository path, change to your actual repository path
 # repo_path = 'C:/Users/sveco/Documents/IEM_microscopy/MMPack'
+# repo_path = 'C:/Users/iva.svecova/Documents/MMPack'
 check_for_uncommitted_changes(repo_path)
