@@ -107,11 +107,13 @@ function planes = importPlanes(figureH,varargin)
 
         channelColors = cell(1,numOfChannels);
         channels_desc = cell(1,numOfChannels);
+        channelColormaps = cell(1,numOfChannels);
         
         for i = 1:numOfChannels
 
             channelColors{i} = colors{i};
             channels_desc{i} = ['ch' num2str(i)];
+            channelColormaps{i} = 'gray';
 
         end
   
@@ -156,13 +158,14 @@ function planes = importPlanes(figureH,varargin)
         end
         
         % Sort data for the MMpack format
-        
+
         planes.refOrigFileName = fileName;
         planes.zstack = zstack;                                      % raw image data (multiple tiff of zstack or single tiff per channel)
         planes.pixel_size = pixelSize;                               % pixel size in defined units (micrometeres)
         planes.z_spacing = z_spacing;                                % step in Z-stack data
         planes.channel_names = channels_desc;                        % channel specification {'GFP','Homer','DIC'}
         planes.channelColors = channelColors;
+        planes.channelColormaps = channelColormaps;                  % default colormap is gray for all channels
         planes.channel_ranges = channel_ranges;                      % histogram ranges for plotting
         planes.imSize = [xres,yres];                                 % single plane xy size in pixels 
         planes.nPlanes = numOfZPlanes;
