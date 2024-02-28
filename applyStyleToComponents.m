@@ -4,8 +4,8 @@ function applyStyleToComponents(fig)
     subsectionButtons = findobj(fig.Children,'Tag','subsectionButton');
     set(subsectionButtons,'BackgroundColor',[0.8745,0.9412,0.9765]);
 
-    objectsWithFont = findobj(fig,'-property', 'FontSize');
-    set(objectsWithFont,'FontSize',11);
+    % objectsWithFont = findobj(fig,'-property', 'FontSize');
+    % set(objectsWithFont,'FontSize',11);
 
     % color setting of whole app GUI
     % colorh = findobj(app.LeftPanel, '-property', 'BackgroundColor');
