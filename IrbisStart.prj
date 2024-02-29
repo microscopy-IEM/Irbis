@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="1658123820" file="D:\git_folder\Irbis\IrbisStart.prj" location="D:\git_folder\Irbis" name="IrbisStart" preferred-package-location="D:\git_folder2\IrbisStart\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3597241401" file="D:\git_folder\Irbis\IrbisStart.prj" location="D:\git_folder\Irbis" name="IrbisStart" preferred-package-location="D:\git_folder\Irbis\IrbisStart\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis4neuron</param.appname>
     <param.icon>${PROJECT_ROOT}\IrbisStart_resources\icon.ico</param.icon>
     <param.icons>
@@ -80,6 +80,7 @@
       <file>${PROJECT_ROOT}\find_closest_and_close_holes_py_script.py</file>
       <file>${PROJECT_ROOT}\find_intersection_volume_py_script.py</file>
       <file>${PROJECT_ROOT}\icons\icon.png</file>
+      <file>${PROJECT_ROOT}\IrbisApp 1.0 manual.pdf</file>
       <file>${PROJECT_ROOT}\IrbisPreProcess.mlapp</file>
       <file>${PROJECT_ROOT}\IS_getTrajectory_fast_marching.m</file>
       <file>${PROJECT_ROOT}\mesh_cut_and_separate_and_save_plane_py_script.py</file>
@@ -188,18 +189,6 @@
       <file>${PROJECT_ROOT}\SKisonormals.m</file>
       <file>${PROJECT_ROOT}\spineList2ResultTable.m</file>
       <file>${PROJECT_ROOT}\submesh_selection.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\compute_geodesic.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.mexw64</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d_slow.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\clamp.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_distance_to_points.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_grad.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\getoptions.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\mmax.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\nb_dims.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\perform_vf_normalization.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\prod_vf_sf.m</file>
       <file>${PROJECT_ROOT}\tubeplot.m</file>
     </fileset.depfun>
     <build-deliverables>
