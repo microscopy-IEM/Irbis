@@ -1,6 +1,6 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="1658123820" file="D:\git_folder\Irbis\IrbisStart.prj" location="D:\git_folder\Irbis" name="IrbisStart" preferred-package-location="D:\git_folder2\IrbisStart\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
-    <param.appname>Irbis4neuron</param.appname>
+  <configuration build-checksum="1658123820" file="C:\Users\iva.svecova\Documents\MMPack\IrbisStart.prj" location="C:\Users\iva.svecova\Documents\MMPack" name="IrbisStart" preferred-package-location="D:\git_folder2\IrbisStart\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\IrbisStart_resources\icon.ico</param.icon>
     <param.icons>
       <file>${PROJECT_ROOT}\IrbisStart_resources\icon_48.png</file>
@@ -10,13 +10,13 @@
     </param.icons>
     <param.version>1.0</param.version>
     <param.authnamewatermark>Stepan Kortus, Iva Svecova</param.authnamewatermark>
-    <param.email>stepan.kortus@iem.cas.cz</param.email>
+    <param.email />
     <param.company>Institute of Experimental Medicine CAS</param.company>
     <param.summary>Testing version</param.summary>
     <param.description />
     <param.screenshot>${PROJECT_ROOT}\icons\icon.png</param.screenshot>
     <param.guid />
-    <param.installpath.string>\Institute of Experimental Medicine CAS\Irbis4neuron\</param.installpath.string>
+    <param.installpath.string>\Institute of Experimental Medicine CAS\Irbis\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
     <param.logo />
     <param.install.notes />
@@ -80,6 +80,7 @@
       <file>${PROJECT_ROOT}\find_closest_and_close_holes_py_script.py</file>
       <file>${PROJECT_ROOT}\find_intersection_volume_py_script.py</file>
       <file>${PROJECT_ROOT}\icons\icon.png</file>
+      <file>${PROJECT_ROOT}\IrbisApp 1.0 manual.pdf</file>
       <file>${PROJECT_ROOT}\IrbisPreProcess.mlapp</file>
       <file>${PROJECT_ROOT}\IS_getTrajectory_fast_marching.m</file>
       <file>${PROJECT_ROOT}\mesh_cut_and_separate_and_save_plane_py_script.py</file>
@@ -203,9 +204,9 @@
       <file>${PROJECT_ROOT}\tubeplot.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="splash.png" optional="false">D:\git_folder\Irbis\IrbisStart\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="Irbis4neuron.exe" optional="false">D:\git_folder\Irbis\IrbisStart\for_testing\Irbis4neuron.exe</file>
-      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="readme.txt" optional="true">D:\git_folder\Irbis\IrbisStart\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="Irbis.exe" optional="false">C:\Users\iva.svecova\Documents\MMPack\IrbisStart\for_testing\Irbis.exe</file>
+      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="splash.png" optional="false">C:\Users\iva.svecova\Documents\MMPack\IrbisStart\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="readme.txt" optional="true">C:\Users\iva.svecova\Documents\MMPack\IrbisStart\for_testing\readme.txt</file>
     </build-deliverables>
     <workflow />
     <matlab>

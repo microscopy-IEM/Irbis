@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="3991658144" file="D:\git_folder\Irbis\Irbis4neuron.prj" location="D:\git_folder\Irbis" name="Irbis4neuron" preferred-package-location="D:\git_folder2\Irbis4neuron\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3754233817" file="C:\Users\iva.svecova\Documents\MMPack\Irbis4neuron.prj" location="C:\Users\iva.svecova\Documents\MMPack" name="Irbis4neuron" preferred-package-location="C:\Users\iva.svecova\Documents\MMPack\Irbis4neuron\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\Irbis4neuron_resources\icon.ico</param.icon>
     <param.icons>
@@ -10,21 +10,21 @@
     </param.icons>
     <param.version>1.0</param.version>
     <param.authnamewatermark>Stepan Kortus, Iva Svecova</param.authnamewatermark>
-    <param.email>stepan.kortus@iem.cas.cz</param.email>
-    <param.company>InstitueOfExperimantalMedicineCAS</param.company>
+    <param.email />
+    <param.company />
     <param.summary>First release</param.summary>
     <param.description>Microscopy image processing software</param.description>
     <param.screenshot>${PROJECT_ROOT}\icons\icon.png</param.screenshot>
     <param.guid />
-    <param.installpath.string>\InstitueOfExperimantalMedicineCAS\Irbis\</param.installpath.string>
+    <param.installpath.string>\Irbis\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
     <param.logo />
     <param.install.notes />
     <param.target.install.notes />
-    <param.intermediate>${PROJECT_ROOT}\Irbis4neuron\for_testing</param.intermediate>
-    <param.files.only>${PROJECT_ROOT}\Irbis4neuron\for_redistribution_files_only</param.files.only>
-    <param.output>${PROJECT_ROOT}\Irbis4neuron\for_redistribution</param.output>
-    <param.logdir>${PROJECT_ROOT}\Irbis4neuron</param.logdir>
+    <param.intermediate>C:\Users\Public\IrbisApp\Irbis4neuron\for_testing</param.intermediate>
+    <param.files.only>C:\Users\Public\IrbisApp\Irbis4neuron\for_redistribution_files_only</param.files.only>
+    <param.output>C:\Users\Public\IrbisApp\Irbis4neuron\for_redistribution</param.output>
+    <param.logdir>C:\Users\Public\IrbisApp\Irbis4neuron</param.logdir>
     <param.enable.clean.build>false</param.enable.clean.build>
     <param.user.defined.mcr.options />
     <param.target.type>subtarget.standalone</param.target.type>
@@ -57,10 +57,6 @@
       <param.logo />
       <param.install.notes />
       <param.target.install.notes />
-      <param.intermediate />
-      <param.files.only />
-      <param.output />
-      <param.logdir />
       <param.enable.clean.build />
       <param.user.defined.mcr.options />
       <param.target.type />
@@ -79,6 +75,7 @@
       <file>${PROJECT_ROOT}\IrbisApp.mlapp</file>
     </fileset.main>
     <fileset.resources>
+      <file>${PROJECT_ROOT}\IrbisApp 1.0 manual.pdf</file>
       <file>${PROJECT_ROOT}\perform_fast_marching.m</file>
       <file>${PROJECT_ROOT}\perform_front_propagation_3d.mexmaci</file>
       <file>${PROJECT_ROOT}\perform_front_propagation_3d.mexw64</file>
@@ -107,17 +104,34 @@
       <file>${PROJECT_ROOT}\@msdanalyzer\plotMeanVCorr.m</file>
       <file>${PROJECT_ROOT}\@msdanalyzer\plotMSD.m</file>
       <file>${PROJECT_ROOT}\@msdanalyzer\plotTracks.m</file>
+      <file>${PROJECT_ROOT}\applyStyleToComponents.m</file>
+      <file>${PROJECT_ROOT}\attach_objects_python.m</file>
+      <file>${PROJECT_ROOT}\changeSectionButtonTooltip.m</file>
       <file>${PROJECT_ROOT}\compute_mesh_total_area.m</file>
       <file>${PROJECT_ROOT}\compute_mesh_volume.m</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\animationTimeline.mlapp</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\icons\downArrow.png</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\icons\leftArrow.png</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\icons\rightArrow.png</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\icons\upArrow.png</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\objectListComponent.mlapp</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\positionAdjustment.mlapp</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\surfaceReconstructionTab.mlapp</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\ValueChangedEventData.m</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\volumeHistogram.mlapp</file>
       <file>${PROJECT_ROOT}\delete_gizmo_app.m</file>
       <file>${PROJECT_ROOT}\divide_mesh_python.m</file>
       <file>${PROJECT_ROOT}\find_closest_and_close_holes_python.m</file>
       <file>${PROJECT_ROOT}\find_intersection_volume_python.m</file>
       <file>${PROJECT_ROOT}\frenet.m</file>
+      <file>${PROJECT_ROOT}\generateRandomText.m</file>
+      <file>${PROJECT_ROOT}\getDefaultSettings.m</file>
       <file>${PROJECT_ROOT}\gizmo_app.m</file>
       <file>${PROJECT_ROOT}\icons\color_palette.png</file>
       <file>${PROJECT_ROOT}\icons\downArrow.png</file>
+      <file>${PROJECT_ROOT}\icons\extendUp.png</file>
       <file>${PROJECT_ROOT}\icons\home.png</file>
+      <file>${PROJECT_ROOT}\icons\icon.png</file>
       <file>${PROJECT_ROOT}\icons\leftArrow.png</file>
       <file>${PROJECT_ROOT}\icons\logo.png</file>
       <file>${PROJECT_ROOT}\icons\logo_iem_abstract.png</file>
@@ -132,6 +146,7 @@
       <file>${PROJECT_ROOT}\importPlanes.m</file>
       <file>${PROJECT_ROOT}\ImportPoints.m</file>
       <file>${PROJECT_ROOT}\importTracks.m</file>
+      <file>${PROJECT_ROOT}\IrbisPreProcess.mlapp</file>
       <file>${PROJECT_ROOT}\IS_active_contour.m</file>
       <file>${PROJECT_ROOT}\IS_active_contour_vocal.m</file>
       <file>${PROJECT_ROOT}\IS_adding_toolboxes_to_path.m</file>
@@ -143,11 +158,14 @@
       <file>${PROJECT_ROOT}\MMP_MSD_analysis.m</file>
       <file>${PROJECT_ROOT}\MMP_TracksProccesing.m</file>
       <file>${PROJECT_ROOT}\mosaicPeakFinder.m</file>
+      <file>${PROJECT_ROOT}\moveCellItem.m</file>
       <file>${PROJECT_ROOT}\MyDragzoom.m</file>
       <file>${PROJECT_ROOT}\newMMpackDialog.m</file>
       <file>${PROJECT_ROOT}\point_to_line_distance.m</file>
       <file>${PROJECT_ROOT}\point_to_plane_distance.m</file>
+      <file>${PROJECT_ROOT}\predefinedFilterSettings.mat</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_python.m</file>
+      <file>${PROJECT_ROOT}\separateNumbersIntoConsecutiveGroups.m</file>
       <file>${PROJECT_ROOT}\singleTrackMSD.m</file>
       <file>${PROJECT_ROOT}\SKgradient.m</file>
       <file>${PROJECT_ROOT}\SKisonormals.m</file>
@@ -166,12 +184,11 @@
       <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\perform_vf_normalization.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\prod_vf_sf.m</file>
       <file>${PROJECT_ROOT}\tubeplot.m</file>
-      <file>${PROJECT_ROOT}\volume_histogram\volume_histogram.mlapp</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\Irbis4neuron\for_testing" name="readme.txt" optional="true">D:\git_folder\Irbis\Irbis4neuron\for_testing\readme.txt</file>
-      <file location="${PROJECT_ROOT}\Irbis4neuron\for_testing" name="Irbis.exe" optional="false">D:\git_folder\Irbis\Irbis4neuron\for_testing\Irbis.exe</file>
-      <file location="${PROJECT_ROOT}\Irbis4neuron\for_testing" name="splash.png" optional="false">D:\git_folder\Irbis\Irbis4neuron\for_testing\splash.png</file>
+      <file location="C:\Users\Public\IrbisApp\Irbis4neuron\for_testing" name="readme.txt" optional="true">C:\Users\Public\IrbisApp\Irbis4neuron\for_testing\readme.txt</file>
+      <file location="C:\Users\Public\IrbisApp\Irbis4neuron\for_testing" name="Irbis.exe" optional="false">C:\Users\Public\IrbisApp\Irbis4neuron\for_testing\Irbis.exe</file>
+      <file location="C:\Users\Public\IrbisApp\Irbis4neuron\for_testing" name="splash.png" optional="false">C:\Users\Public\IrbisApp\Irbis4neuron\for_testing\splash.png</file>
     </build-deliverables>
     <workflow />
     <matlab>
