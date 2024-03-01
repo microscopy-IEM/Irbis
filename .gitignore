@@ -5,4 +5,5 @@ MMP_settings.mat
 *.csv
 *.xlsx
 *.avi
-*.prj
+Irbis/
+python_for_irbis/

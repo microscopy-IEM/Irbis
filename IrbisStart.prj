@@ -1,6 +1,6 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="3597241401" file="D:\git_folder\Irbis\IrbisStart.prj" location="D:\git_folder\Irbis" name="IrbisStart" preferred-package-location="D:\git_folder\Irbis\IrbisStart\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
-    <param.appname>Irbis4neuron</param.appname>
+  <configuration build-checksum="3597241401" file="C:\Users\iva.svecova\Documents\MMPack\IrbisStart.prj" location="C:\Users\iva.svecova\Documents\MMPack" name="IrbisStart" preferred-package-location="D:\git_folder\Irbis\IrbisStart\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\IrbisStart_resources\icon.ico</param.icon>
     <param.icons>
       <file>${PROJECT_ROOT}\IrbisStart_resources\icon_48.png</file>
@@ -10,20 +10,20 @@
     </param.icons>
     <param.version>1.0</param.version>
     <param.authnamewatermark>Stepan Kortus, Iva Svecova</param.authnamewatermark>
-    <param.email>stepan.kortus@iem.cas.cz</param.email>
+    <param.email />
     <param.company>Institute of Experimental Medicine CAS</param.company>
     <param.summary>Testing version</param.summary>
     <param.description />
-    <param.screenshot>${PROJECT_ROOT}\icons\icon.png</param.screenshot>
+    <param.screenshot>C:\Users\iva.svecova\OneDrive - Ústav experimentální medicíny AV ČR, v. v. i\Microscopy Team\Irbis project\Logo\Navrhy\irbis_2_square.png</param.screenshot>
     <param.guid />
-    <param.installpath.string>\Institute of Experimental Medicine CAS\Irbis4neuron\</param.installpath.string>
+    <param.installpath.string>\Institute of Experimental Medicine CAS\Irbis\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
     <param.logo />
     <param.install.notes />
     <param.target.install.notes />
-    <param.intermediate>${PROJECT_ROOT}\IrbisStart\for_testing</param.intermediate>
-    <param.files.only>${PROJECT_ROOT}\IrbisStart\for_redistribution_files_only</param.files.only>
-    <param.output>${PROJECT_ROOT}\IrbisStart\for_redistribution</param.output>
+    <param.intermediate>${PROJECT_ROOT}\Irbis\for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}\Irbis\for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}\Irbis\for_redistribution</param.output>
     <param.logdir>${PROJECT_ROOT}\Irbis</param.logdir>
     <param.enable.clean.build>false</param.enable.clean.build>
     <param.user.defined.mcr.options />
@@ -57,9 +57,6 @@
       <param.logo />
       <param.install.notes />
       <param.target.install.notes />
-      <param.intermediate />
-      <param.files.only />
-      <param.output />
       <param.enable.clean.build />
       <param.user.defined.mcr.options />
       <param.target.type />
@@ -95,6 +92,7 @@
       <file>${PROJECT_ROOT}\perform_front_propagation_3d.mexw64</file>
       <file>${PROJECT_ROOT}\poisson_mesh_py_script.py</file>
       <file>${PROJECT_ROOT}\poisson_plus_decimation_py_script.py</file>
+      <file>${PROJECT_ROOT}\python_for_irbis</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_py_script.py</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_py_script_vocal.py</file>
     </fileset.resources>
@@ -189,12 +187,24 @@
       <file>${PROJECT_ROOT}\SKisonormals.m</file>
       <file>${PROJECT_ROOT}\spineList2ResultTable.m</file>
       <file>${PROJECT_ROOT}\submesh_selection.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\compute_geodesic.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.mexw64</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d_slow.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\clamp.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_distance_to_points.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_grad.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\getoptions.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\mmax.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\nb_dims.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\perform_vf_normalization.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\prod_vf_sf.m</file>
       <file>${PROJECT_ROOT}\tubeplot.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="splash.png" optional="false">D:\git_folder\Irbis\IrbisStart\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="Irbis4neuron.exe" optional="false">D:\git_folder\Irbis\IrbisStart\for_testing\Irbis4neuron.exe</file>
-      <file location="${PROJECT_ROOT}\IrbisStart\for_testing" name="readme.txt" optional="true">D:\git_folder\Irbis\IrbisStart\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\Irbis.exe</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\readme.txt</file>
     </build-deliverables>
     <workflow />
     <matlab>
