@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="3648984491" file="C:\Users\iva.svecova\Documents\MMPack\IrbisStart.prj" location="C:\Users\iva.svecova\Documents\MMPack" name="IrbisStart" preferred-package-location="C:\Users\iva.svecova\Documents\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3648984491" file="C:\Users\sveco\Documents\IEM_microscopy\MMPack\IrbisStart.prj" location="C:\Users\sveco\Documents\IEM_microscopy\MMPack" name="IrbisStart" preferred-package-location="C:\Users\iva.svecova\Documents\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\IrbisStart_resources\icon.ico</param.icon>
     <param.icons>
@@ -14,7 +14,7 @@
     <param.company>Institute of Experimental Medicine CAS</param.company>
     <param.summary>Testing version</param.summary>
     <param.description />
-    <param.screenshot>C:\Users\iva.svecova\OneDrive - Ústav experimentální medicíny AV ČR, v. v. i\Microscopy Team\Irbis project\Logo\Navrhy\irbis_2_square.png</param.screenshot>
+    <param.screenshot />
     <param.guid />
     <param.installpath.string>\Institute of Experimental Medicine CAS\Irbis\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
@@ -51,6 +51,7 @@
       <param.version />
       <param.email />
       <param.description />
+      <param.screenshot />
       <param.guid />
       <param.installpath.string />
       <param.installpath.combo />
@@ -96,7 +97,6 @@
       <file>${PROJECT_ROOT}\perform_front_propagation_3d.mexw64</file>
       <file>${PROJECT_ROOT}\poisson_mesh_py_script.py</file>
       <file>${PROJECT_ROOT}\poisson_plus_decimation_py_script.py</file>
-      <file>${PROJECT_ROOT}\python_for_irbis</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_py_script.py</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_py_script_vocal.py</file>
     </fileset.resources>
@@ -192,48 +192,17 @@
       <file>${PROJECT_ROOT}\SKisonormals.m</file>
       <file>${PROJECT_ROOT}\spineList2ResultTable.m</file>
       <file>${PROJECT_ROOT}\submesh_selection.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\compute_geodesic.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.mexw64</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d_slow.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\clamp.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_distance_to_points.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_grad.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\getoptions.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\mmax.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\nb_dims.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\perform_vf_normalization.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\prod_vf_sf.m</file>
       <file>${PROJECT_ROOT}\tubeplot.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\Irbis.exe</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_testing\Irbis.exe</file>
     </build-deliverables>
     <workflow />
     <matlab>
       <root>C:\Program Files\MATLAB\R2023a</root>
-      <toolboxes>
-        <toolbox name="matlabcoder" />
-        <toolbox name="gpucoder" />
-        <toolbox name="neuralnetwork" />
-      </toolboxes>
-      <toolbox>
-        <matlabcoder>
-          <enabled>true</enabled>
-        </matlabcoder>
-      </toolbox>
-      <toolbox>
-        <gpucoder>
-          <enabled>true</enabled>
-        </gpucoder>
-      </toolbox>
-      <toolbox>
-        <neuralnetwork>
-          <enabled>true</enabled>
-        </neuralnetwork>
-      </toolbox>
+      <toolboxes />
     </matlab>
     <platform>
       <unix>false</unix>
