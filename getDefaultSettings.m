@@ -7,4 +7,5 @@ function settings = getDefaultSettings(appData)
     settings.version = appData.Version;
     settings.backgroundColor = [0 0 0];
     settings.predefinedFilterSettings = [];
+    settings.pythonPath = [];
 end

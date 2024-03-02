@@ -1,0 +1,45 @@
+function checkAndHandlePythonPackage(fig,settingsAppData,packageName)
+    % Check if a Python package is installed
+    try
+        py.importlib.import_module(packageName);
+        disp([packageName ' is installed.']);
+        uialert(fig,'Pymeshlab is already installed.','success');
+    catch
+        choice = questdlg([packageName ' is not installed. Would you like to install it, change the Python executable, or cancel?'], ...
+            'Package Not Found', ...
+            'Install', 'Change Python Executable', 'Cancel', ...
+            'Cancel');
+        
+        switch choice
+            case 'Install'
+                % Attempt to install the package using pip
+                % pyrunfile('install_pymeshlab_py_script.py')
+                % disp([packageName ' has been installed.']);
+                [v,e] = pyversion; system([e,' -m pip install pymeshlab'])  
+                % commandStr = sprintf('py -m pip install pymeshlab');
+                % [status, cmdout] = system(commandStr);
+                % if status == 0
+                %     disp([packageName ' has been installed successfully.']);
+                % else
+                %     disp('Failed to install the package. Please check the error message:');
+                % end
+                % disp(cmdout);
+                uialert(fig,'You need to reset the app to apply the changes.','Warning');
+            case 'Change Python Executable'
+                % Prompt the user to select a new Python executable
+                [file, path] = uigetfile({'python.exe'}, 'Select Python Executable');
+                if isequal(file, 0) || isequal(path, 0)
+                    disp('Operation cancelled. Python executable not changed.');
+                else
+                    pythonExecutablePath = fullfile(path, file);
+                    settingsAppData.pythonPath = pythonExecutablePath;
+                    disp(['Python environment will be updated to use: ', pythonExecutablePath]);
+                    uialert(fig,'You need to reset the app to apply the changes.','Warning')
+                    % pyenv('Version', pythonExecutablePath);
+                    % disp(['Python environment updated to use: ', pythonExecutablePath]);
+                end
+            case 'Cancel'
+                disp('Operation cancelled.');
+        end
+    end
+end

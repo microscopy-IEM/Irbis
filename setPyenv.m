@@ -1,4 +1,4 @@
-function setPyenv()
+function pythonPath = setPyenv()
     % if isdeployed
         desiredVersion = '3.10'; % Specify the Python version you're looking for
         try
@@ -7,7 +7,6 @@ function setPyenv()
             
             % Split the output by newlines to get individual paths
             pythonExecutables = strsplit(cmdout, '\n');
-            disp(numel(pythonExecutables))
             
             % Initialize pythonPath
             pythonPath = '';
@@ -15,8 +14,6 @@ function setPyenv()
             % Loop through the executables to find the desired version
             for i = 1:length(pythonExecutables)
                 executable = pythonExecutables{i};
-                disp(i)
-                disp(executable)
                 if contains(executable, '.exe')
                     % Check the version of each executable
                     [~, versionOut] = system(['"' executable '" --version']);

@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="3597241401" file="C:\Users\iva.svecova\Documents\MMPack\IrbisStart.prj" location="C:\Users\iva.svecova\Documents\MMPack" name="IrbisStart" preferred-package-location="D:\git_folder\Irbis\IrbisStart\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3648984491" file="C:\Users\iva.svecova\Documents\MMPack\IrbisStart.prj" location="C:\Users\iva.svecova\Documents\MMPack" name="IrbisStart" preferred-package-location="C:\Users\iva.svecova\Documents\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\IrbisStart_resources\icon.ico</param.icon>
     <param.icons>
@@ -29,8 +29,8 @@
     <param.user.defined.mcr.options />
     <param.target.type>subtarget.standalone</param.target.type>
     <param.support.packages />
-    <param.web.mcr>false</param.web.mcr>
-    <param.package.mcr>true</param.package.mcr>
+    <param.web.mcr>true</param.web.mcr>
+    <param.package.mcr>false</param.package.mcr>
     <param.no.mcr>false</param.no.mcr>
     <param.web.mcr.name>Irbis4neuron</param.web.mcr.name>
     <param.package.mcr.name>Irbis4neuron</param.package.mcr.name>
@@ -61,6 +61,8 @@
       <param.user.defined.mcr.options />
       <param.target.type />
       <param.support.packages />
+      <param.web.mcr />
+      <param.package.mcr />
       <param.no.mcr />
       <param.no.mcr.name />
       <param.native.matlab />
@@ -71,12 +73,14 @@
       <file>${PROJECT_ROOT}\IrbisStart.mlapp</file>
     </fileset.main>
     <fileset.resources>
+      <file>${PROJECT_ROOT}\checkAndHandlePythonPackage.m</file>
       <file>${PROJECT_ROOT}\close_holes_py_script.py</file>
       <file>${PROJECT_ROOT}\divide_mesh_py_script.py</file>
       <file>${PROJECT_ROOT}\divide_mesh_py_script_vocal.py</file>
       <file>${PROJECT_ROOT}\find_closest_and_close_holes_py_script.py</file>
       <file>${PROJECT_ROOT}\find_intersection_volume_py_script.py</file>
       <file>${PROJECT_ROOT}\icons\icon.png</file>
+      <file>${PROJECT_ROOT}\install_pymeshlab_py_script.py</file>
       <file>${PROJECT_ROOT}\IrbisApp 1.0 manual.pdf</file>
       <file>${PROJECT_ROOT}\IrbisPreProcess.mlapp</file>
       <file>${PROJECT_ROOT}\IS_getTrajectory_fast_marching.m</file>
@@ -182,6 +186,7 @@
       <file>${PROJECT_ROOT}\predefinedFilterSettings.mat</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_python.m</file>
       <file>${PROJECT_ROOT}\separateNumbersIntoConsecutiveGroups.m</file>
+      <file>${PROJECT_ROOT}\setPyenv.m</file>
       <file>${PROJECT_ROOT}\singleTrackMSD.m</file>
       <file>${PROJECT_ROOT}\SKgradient.m</file>
       <file>${PROJECT_ROOT}\SKisonormals.m</file>
