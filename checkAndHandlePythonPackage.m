@@ -15,16 +15,16 @@ function checkAndHandlePythonPackage(fig,settingsAppData,packageName)
                 % Attempt to install the package using pip
                 % pyrunfile('install_pymeshlab_py_script.py')
                 % disp([packageName ' has been installed.']);
-                [v,e] = pyversion; system([e,' -m pip install pymeshlab'])  
-                % commandStr = sprintf('py -m pip install pymeshlab');
-                % [status, cmdout] = system(commandStr);
-                % if status == 0
-                %     disp([packageName ' has been installed successfully.']);
-                % else
-                %     disp('Failed to install the package. Please check the error message:');
-                % end
-                % disp(cmdout);
-                uialert(fig,'You need to reset the app to apply the changes.','Warning');
+                % [v,e] = pyversion; system([e,' -m pip install pymeshlab'])  
+                commandStr = sprintf('"%s" -m pip install %s', pyenv().Executable, packageName);
+                [status, cmdout] = system(commandStr);
+                if status == 0
+                    disp([packageName ' has been installed successfully.']);
+                else
+                    disp('Failed to install the package. Please check the error message:');
+                end
+                disp(cmdout);
+                % uialert(fig,'You need to reset the app to apply the changes.','Warning');
             case 'Change Python Executable'
                 % Prompt the user to select a new Python executable
                 [file, path] = uigetfile({'python.exe'}, 'Select Python Executable');
