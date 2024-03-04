@@ -21,11 +21,11 @@ def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_pat
 
     ms.save_current_mesh(str(output))         
     if int(separate) == 1:
-        n_complete = ms.mesh_number()
+        n_complete = ms.number_meshes()
 
         ms.generate_splitting_by_connected_components()
 
-        n_total = ms.mesh_number()
+        n_total = ms.number_meshes()
 
         object_num = 1
         for i in range(n_complete,n_total):

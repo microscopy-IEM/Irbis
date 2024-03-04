@@ -16,7 +16,8 @@ function checkAndHandlePythonPackage(fig,settingsAppData,packageName)
                 % pyrunfile('install_pymeshlab_py_script.py')
                 % disp([packageName ' has been installed.']);
                 % [v,e] = pyversion; system([e,' -m pip install pymeshlab'])  
-                commandStr = sprintf('"%s" -m pip install %s', pyenv().Executable, packageName);
+                version = '2022.2.post4';
+                commandStr = sprintf('"%s" -m pip install %s==%s', pyenv().Executable, packageName, version);
                 [status, cmdout] = system(commandStr);
                 if status == 0
                     disp([packageName ' has been installed successfully.']);

@@ -3,7 +3,11 @@ function gizmo_app(ax,fig,stickyPoints,pointA,pointB)
 
             % disable selectivity for all currently plotted components  
             h = ax.Children;
-            set(h,'PickableParts','none')
+            for i = 1:length(h)
+                if isprop(h(i), 'PickableParts')
+                    set(h(i), 'PickableParts', 'none');
+                end
+            end
             
             x0 = 0;
             y0 = 0;

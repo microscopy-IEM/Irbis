@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="3648984491" file="C:\Users\iva.svecova\Documents\MMPack\IrbisStart.prj" location="C:\Users\iva.svecova\Documents\MMPack" name="IrbisStart" preferred-package-location="C:\Users\iva.svecova\Documents\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3900593063" file="C:\Users\iva.svecova\Documents\MMPack\IrbisStart.prj" location="C:\Users\iva.svecova\Documents\MMPack" name="IrbisStart" preferred-package-location="C:\Users\iva.svecova\Documents\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\IrbisStart_resources\icon.ico</param.icon>
     <param.icons>
@@ -12,7 +12,7 @@
     <param.authnamewatermark>Stepan Kortus, Iva Svecova</param.authnamewatermark>
     <param.email />
     <param.company>Institute of Experimental Medicine CAS</param.company>
-    <param.summary>Testing version</param.summary>
+    <param.summary>Testing version of Irbis4Neuron software</param.summary>
     <param.description />
     <param.screenshot>C:\Users\iva.svecova\OneDrive - Ústav experimentální medicíny AV ČR, v. v. i\Microscopy Team\Irbis project\Logo\Navrhy\irbis_2_square.png</param.screenshot>
     <param.guid />
@@ -73,7 +73,7 @@
       <file>${PROJECT_ROOT}\IrbisStart.mlapp</file>
     </fileset.main>
     <fileset.resources>
-      <file>${PROJECT_ROOT}\checkAndHandlePythonPackage.m</file>
+      <file>${PROJECT_ROOT}\attach_objects_py_script.py</file>
       <file>${PROJECT_ROOT}\close_holes_py_script.py</file>
       <file>${PROJECT_ROOT}\divide_mesh_py_script.py</file>
       <file>${PROJECT_ROOT}\divide_mesh_py_script_vocal.py</file>
@@ -82,7 +82,9 @@
       <file>${PROJECT_ROOT}\icons\icon.png</file>
       <file>${PROJECT_ROOT}\install_pymeshlab_py_script.py</file>
       <file>${PROJECT_ROOT}\IrbisApp 1.0 manual.pdf</file>
+      <file>${PROJECT_ROOT}\IrbisApp.mlapp</file>
       <file>${PROJECT_ROOT}\IrbisPreProcess.mlapp</file>
+      <file>${PROJECT_ROOT}\IrbisStart.mlapp</file>
       <file>${PROJECT_ROOT}\IS_getTrajectory_fast_marching.m</file>
       <file>${PROJECT_ROOT}\mesh_cut_and_separate_and_save_plane_py_script.py</file>
       <file>${PROJECT_ROOT}\mesh_cut_and_separate_py_script.py</file>
@@ -126,6 +128,7 @@
       <file>${PROJECT_ROOT}\applyStyleToComponents.m</file>
       <file>${PROJECT_ROOT}\attach_objects_python.m</file>
       <file>${PROJECT_ROOT}\changeSectionButtonTooltip.m</file>
+      <file>${PROJECT_ROOT}\checkAndHandlePythonPackage.m</file>
       <file>${PROJECT_ROOT}\compute_mesh_total_area.m</file>
       <file>${PROJECT_ROOT}\compute_mesh_volume.m</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\animationTimeline.mlapp</file>
@@ -166,7 +169,6 @@
       <file>${PROJECT_ROOT}\importPlanes.m</file>
       <file>${PROJECT_ROOT}\ImportPoints.m</file>
       <file>${PROJECT_ROOT}\importTracks.m</file>
-      <file>${PROJECT_ROOT}\IrbisApp.mlapp</file>
       <file>${PROJECT_ROOT}\IS_active_contour.m</file>
       <file>${PROJECT_ROOT}\IS_active_contour_vocal.m</file>
       <file>${PROJECT_ROOT}\IS_adding_toolboxes_to_path.m</file>
@@ -180,6 +182,7 @@
       <file>${PROJECT_ROOT}\moveCellItem.m</file>
       <file>${PROJECT_ROOT}\MyDragzoom.m</file>
       <file>${PROJECT_ROOT}\newMMpackDialog.m</file>
+      <file>${PROJECT_ROOT}\nnet.mat</file>
       <file>${PROJECT_ROOT}\point_to_line_distance.m</file>
       <file>${PROJECT_ROOT}\point_to_plane_distance.m</file>
       <file>${PROJECT_ROOT}\predefinedFilterSettings.mat</file>
@@ -191,18 +194,6 @@
       <file>${PROJECT_ROOT}\SKisonormals.m</file>
       <file>${PROJECT_ROOT}\spineList2ResultTable.m</file>
       <file>${PROJECT_ROOT}\submesh_selection.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\compute_geodesic.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.mexw64</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d_slow.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\clamp.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_distance_to_points.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_grad.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\getoptions.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\mmax.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\nb_dims.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\perform_vf_normalization.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\prod_vf_sf.m</file>
       <file>${PROJECT_ROOT}\tubeplot.m</file>
     </fileset.depfun>
     <build-deliverables>
