@@ -3,7 +3,7 @@ function checkAndHandlePythonPackage(fig,settingsAppData,packageName)
     try
         py.importlib.import_module(packageName);
         disp([packageName ' is installed.']);
-        uialert(fig,'Pymeshlab is already installed.','success');
+        % uialert(fig,'Pymeshlab is already installed.','success');
     catch
         choice = questdlg([packageName ' is not installed. Would you like to install it, change the Python executable, or cancel?'], ...
             'Package Not Found', ...
