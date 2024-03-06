@@ -53,6 +53,7 @@ function zstackCropped = planesCropFcn(zstack,ch)
     initPos = [1 1 size(preview,2), size(preview,1)];
     
     r1 = drawrectangle(ax,'Label','Crop area','Color',[1 0 0],'Rotatable',1,'Position',initPos,'Tag','CropArea');
+    r1.DrawingArea = initPos;
     r1.FaceAlpha = 0.05;
     r1.Deletable = 0;
 
