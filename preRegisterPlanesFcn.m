@@ -1,12 +1,46 @@
-% clear all
-% close all
+
 
 function registeredZstack = preRegisterPlanesFcn(zstack,ch)
 
-% load planes2.mat
-% zstack = planes2.zstack;
-% ch = 2
 targetTimePoint = 1;
+
+%% GUI
+h = findall(0, 'type', 'figure','Name','Estimate drift in planes');
+close(h)
+
+fig = uifigure("Name",'Estimate drift in planes','Position',[100 100 800 800],'Icon',[]);
+
+% fig.UserData.cropRect2D = [];
+
+customGrid = uigridlayout(fig,[2 3]);
+customGrid.RowHeight = {'1x','fit'};
+customGrid.ColumnWidth = {'1x','fit','fit'};
+
+pan = uipanel(customGrid);
+% ax = uiaxes(customGrid);
+
+t = tiledlayout(pan,'flow');
+t.TileSpacing = 'compact';
+t.Padding = 'compact';
+
+pan.Layout.Row = 1;
+pan.Layout.Column = [1 3];
+applyb = uibutton(customGrid, ...
+"Text","Accept", ...
+"ButtonPushedFcn", @(src,event) acceptButtonPushed(fig));
+applyb.Layout.Row = 2;
+applyb.Layout.Column = 2;
+
+cancelb = uibutton(customGrid, ...
+"Text","Cancel", ...
+"ButtonPushedFcn", @(src,event) cancelButtonPushed(fig));
+cancelb.Layout.Row = 2;
+cancelb.Layout.Column = 3;
+
+wb = uiprogressdlg(fig,'Title','Registrating plane ','Indeterminate','off');
+wb.Value = 0; 
+
+%% Prepare z projections
 
 nTimePoints = size(zstack,4);
 nChannels = size(zstack,5);
@@ -25,15 +59,15 @@ end
 
 
 %% Estimate drift
-f = 4;
+resizeFactor = 4;
 % reducedZprojections = imresize(zProjections(:,:,targetTimePoint),1/f)
-FIXED = imresize(zProjections(:,:,targetTimePoint),1/f);
+FIXED = imresize(zProjections(:,:,targetTimePoint),1/resizeFactor);
 tforms = cell(1,nTimePoints);
 
 for currentTimePoint = 1:nTimePoints
 
-    currentTimePoint
-    MOVING = imresize(zProjections(:,:,currentTimePoint),1/f);
+    % currentTimePoint
+    MOVING = imresize(zProjections(:,:,currentTimePoint),1/resizeFactor);
     tforms{currentTimePoint} = preRegister(FIXED, MOVING);
 
 end
@@ -46,8 +80,8 @@ FIXED_ = zProjections(:,:,targetTimePoint);
 % find biggest shifts
 for currentTimePoint = 2:nTimePoints
 
-    tforms{currentTimePoint}.Translation(1) = tforms{currentTimePoint}.Translation(1)*f;
-    tforms{currentTimePoint}.Translation(2) = tforms{currentTimePoint}.Translation(2)*f;
+    tforms{currentTimePoint}.Translation(1) = tforms{currentTimePoint}.Translation(1)*resizeFactor;
+    tforms{currentTimePoint}.Translation(2) = tforms{currentTimePoint}.Translation(2)*resizeFactor;
  
     xt(i) = tforms{currentTimePoint}.Translation(1);
     yt(i) = tforms{currentTimePoint}.Translation(2);
@@ -91,6 +125,9 @@ cropRect2D = [x0 y0 xsize-x0+xt ysize-y0+yt];
 %% Visual control
 zProjectionsRegistered = zProjections;
 for currentTimePoint = 2:nTimePoints
+
+    wb.Value = 0; 
+    wb.Message = ['Registrating time point ' num2str(currentTimePoint)];
  
     tform = tforms{currentTimePoint};
 
@@ -98,19 +135,33 @@ for currentTimePoint = 2:nTimePoints
 
     % zProjectionsRegistered(:,:,currentTimePoint) = imadjustn(zProjectionsRegistered(:,:,currentTimePoint),stretchlim(zProjectionsRegistered(:),0.0001));
 
-    figure(1)
-    nexttile
-    imshowpair(zProjections(:,:,targetTimePoint),zProjectionsRegistered(:,:,currentTimePoint),"Scaling","joint")
+    ax1 = nexttile(t);
+        
+    imshowpair(zProjections(:,:,targetTimePoint),zProjectionsRegistered(:,:,currentTimePoint),"Scaling","joint","Parent",ax1)
+    ax1.Title.String = ['Time point ' num2str(currentTimePoint) ' vs. ' num2str(targetTimePoint)];
 
-    h = drawrectangle('Position',cropRect2D,'StripeColor','r');
+    roi = drawrectangle(ax1,'Position',cropRect2D,'Color','r','FaceAlpha',0.1);
+    addlistener(roi,'ROIMoved',@roiMoved);
 
 end
 
-%% Register all planes
-registeredZstack = zstack;
-for currentTimePoint = 1:nTimePoints
+close(wb)
 
-    
+uiwait(fig)
+
+if ~isvalid(fig)
+    registeredZstack = [];
+    return
+end
+
+wb = uiprogressdlg(fig,'Title','Processing... ','Indeterminate','on');
+
+%% Register all planes
+
+wb.Message = 'Registering...';
+
+registeredZstack = zstack;
+for currentTimePoint = 1:nTimePoints   
 
     tform = tforms{currentTimePoint};
     movingZstack = zstack(:,:,:,currentTimePoint,:);
@@ -126,6 +177,8 @@ cropRect3D = [cropRect2D(1) cropRect2D(2) 1 cropRect2D(3) cropRect2D(4) nPlanes-
 initCrop = imcrop3(registeredZstack(:,:,:,1,1), cropRect3D);
 registeredZstackCropped = uint16(zeros(size(initCrop,1),size(initCrop,2),size(initCrop,3),nTimePoints,nChannels));
 
+wb.Message = 'Cropping...';
+
 for currentTimePoint = 1:nTimePoints
     for ch = 1:nChannels
 
@@ -138,48 +191,91 @@ end
 
 registeredZstack = registeredZstackCropped;
 
+disp('Registration done')
+
+    close(wb)
+    close(fig)
+
 
 end
 
 %% Estimate ragistration tform
 function tform = preRegister(FIXED, MOVING)
 
-    sigma = 1;
-    gaussFilter = 0;
+    % sigma = 1;
+    % gaussFilter = 0;
 
 
    % Default spatial referencing objects
-fixedRefObj = imref2d(size(FIXED));
-movingRefObj = imref2d(size(MOVING));
-
-% Intensity-based registration
-[optimizer, metric] = imregconfig('monomodal');
-optimizer.GradientMagnitudeTolerance = 1.00000e-04;
-optimizer.MinimumStepLength = 1.00000e-03;
-optimizer.MaximumStepLength = 1.00000e-01;
-optimizer.MaximumIterations = 1000;
-optimizer.RelaxationFactor = 0.100000;
-
-% Align centers
-[xFixed,yFixed] = meshgrid(1:size(FIXED,2),1:size(FIXED,1));
-[xMoving,yMoving] = meshgrid(1:size(MOVING,2),1:size(MOVING,1));
-sumFixedIntensity = sum(FIXED(:));
-sumMovingIntensity = sum(MOVING(:));
-fixedXCOM = (fixedRefObj.PixelExtentInWorldX .* (sum(xFixed(:).*double(FIXED(:))) ./ sumFixedIntensity)) + fixedRefObj.XWorldLimits(1);
-fixedYCOM = (fixedRefObj.PixelExtentInWorldY .* (sum(yFixed(:).*double(FIXED(:))) ./ sumFixedIntensity)) + fixedRefObj.YWorldLimits(1);
-movingXCOM = (movingRefObj.PixelExtentInWorldX .* (sum(xMoving(:).*double(MOVING(:))) ./ sumMovingIntensity)) + movingRefObj.XWorldLimits(1);
-movingYCOM = (movingRefObj.PixelExtentInWorldY .* (sum(yMoving(:).*double(MOVING(:))) ./ sumMovingIntensity)) + movingRefObj.YWorldLimits(1);
-translationX = fixedXCOM - movingXCOM;
-translationY = fixedYCOM - movingYCOM;
-
-% Coarse alignment
-initTform = affinetform2d();
-initTform.A(1:2,3) = [translationX ; translationY];
-
-% Apply transformation
-tform = imregtform(MOVING,movingRefObj,FIXED,fixedRefObj,'translation',optimizer,metric,'PyramidLevels',4,'InitialTransformation',initTform);
+    fixedRefObj = imref2d(size(FIXED));
+    movingRefObj = imref2d(size(MOVING));
+    
+    % Intensity-based registration
+    [optimizer, metric] = imregconfig('monomodal');
+    optimizer.GradientMagnitudeTolerance = 1.00000e-04;
+    optimizer.MinimumStepLength = 1.00000e-03;
+    optimizer.MaximumStepLength = 1.00000e-01;
+    optimizer.MaximumIterations = 500;
+    optimizer.RelaxationFactor = 0.100000;
+    
+    % Align centers
+    [xFixed,yFixed] = meshgrid(1:size(FIXED,2),1:size(FIXED,1));
+    [xMoving,yMoving] = meshgrid(1:size(MOVING,2),1:size(MOVING,1));
+    sumFixedIntensity = sum(FIXED(:));
+    sumMovingIntensity = sum(MOVING(:));
+    fixedXCOM = (fixedRefObj.PixelExtentInWorldX .* (sum(xFixed(:).*double(FIXED(:))) ./ sumFixedIntensity)) + fixedRefObj.XWorldLimits(1);
+    fixedYCOM = (fixedRefObj.PixelExtentInWorldY .* (sum(yFixed(:).*double(FIXED(:))) ./ sumFixedIntensity)) + fixedRefObj.YWorldLimits(1);
+    movingXCOM = (movingRefObj.PixelExtentInWorldX .* (sum(xMoving(:).*double(MOVING(:))) ./ sumMovingIntensity)) + movingRefObj.XWorldLimits(1);
+    movingYCOM = (movingRefObj.PixelExtentInWorldY .* (sum(yMoving(:).*double(MOVING(:))) ./ sumMovingIntensity)) + movingRefObj.YWorldLimits(1);
+    translationX = fixedXCOM - movingXCOM;
+    translationY = fixedYCOM - movingYCOM;
+    
+    % Coarse alignment
+    initTform = affinetform2d();
+    initTform.A(1:2,3) = [translationX ; translationY];
+    
+    % Apply transformation
+    tform = imregtform(MOVING,movingRefObj,FIXED,fixedRefObj,'translation',optimizer,metric,'PyramidLevels',4,'InitialTransformation',initTform);
 
     % tform = imregcorr(movingInit,movingRefObj,fixedInit,fixedRefObj,'transformtype','translation','Window',false);
 
+
+end
+
+
+function acceptButtonPushed(fig)
+  
+uiresume(fig)
+    % fig
+    % fig = ax.Parent.Parent;
+    % 
+    % rect = findobj(ax,'Tag','CropArea');
+    % cropRect2D = round(rect.Position);
+    % 
+    % if abs(rect.RotationAngle) > 0
+    % 
+    %     disp('has rotation - to be implemented')
+    % 
+    % else
+    % 
+    % 
+    %     cropRect2D = round(cropRect2D);
+    %     fig.UserData.cropRect2D = cropRect2D;
+    % 
+    %     uiresume(fig)
+    % 
+    % end
+
+
+end
+
+
+function cancelButtonPushed(fig)
+    close(fig)
+end
+
+function roiMoved(src,evt)
+
+    evt.CurrentPosition
 
 end
