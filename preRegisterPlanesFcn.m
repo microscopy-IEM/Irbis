@@ -141,6 +141,7 @@ for currentTimePoint = 2:nTimePoints
     ax1.Title.String = ['Time point ' num2str(currentTimePoint) ' vs. ' num2str(targetTimePoint)];
 
     roi = drawrectangle(ax1,'Position',cropRect2D,'Color','r','FaceAlpha',0.1);
+    roi.InteractionsAllowed = 'none';
     addlistener(roi,'ROIMoved',@roiMoved);
 
 end
