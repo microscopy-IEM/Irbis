@@ -163,7 +163,7 @@ function MyDragzoom(varargin)
 % -------------------------------------------------------------------------
 %TODO: Show Pixel Info (Pixel Value(s)) for Images
 %TODO: "Sticking to Data" PointerCross
-error(nargchk(0, 2, nargin));
+error(nargchk(0, 3, nargin));
 % handles
 hFig = [];
 hAx = [];
@@ -247,6 +247,9 @@ fIsMagnifierOn = false;
 fIsLinkAxesOn = false;
 fIsEnableControl = false;
 fIsMouseOnLegend = false;
+
+% IS 
+appInstance = [];
 % Initialize and Setup
 Initialize(varargin{:})
 %--------------------------------------------------------------------------
@@ -706,6 +709,13 @@ Initialize(varargin{:})
         
         isModifier = ~isempty(intersect(evnt.Modifier, {'control', 'command'}));
         
+        % IS 240309
+        % do not allow if histogram is in focus
+        axi = GetAxesIndexUnderCursor();
+        if axi == 2
+            return; 
+        end
+
         switch evnt.Key
             case {'equal', 'add'}
                 ZoomKeys3D('plus');
@@ -735,21 +745,9 @@ Initialize(varargin{:})
                 else
                     RotateKeys3D('el+');
                 end
-            % IS adjusted 240206 adjusted - rotation using keys switched off - activated when filling in values to spinners
-            % case '0'
-            %     ResetAxesToOrigView3D();
-            % case '1'
-            %     RotateKeys3D('xy');
-            % case '2'
-            %     RotateKeys3D('xz');
-            % case '3'
-            %     RotateKeys3D('yz');
-            % case 'v'
-            %     VisibleAxesKeys3D();
-            % case 'f'
-            %     SwitchAspectRatioKeys3D()
-            % case 'g'
-            %     SetAxesGridKeys();
+            otherwise   % IS 240309
+                % other keyboard shortcuts are defined in the app
+                appInstance.useKeyboardShortcut(src, evnt)
         end
     end
 %--------------------------------------------------------------------------
@@ -2722,6 +2720,13 @@ Initialize(varargin{:})
                 status = varargin{2};
                 ih = 1;
                 is = 2;
+            case 3
+                isWithStatus = true;
+                hObj = varargin{1};
+                status = varargin{2};
+                appInstance = varargin{3};
+                ih = 1;
+                is = 2;                
         end
         
         switch lower(status)
