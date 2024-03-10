@@ -706,10 +706,11 @@ Initialize(varargin{:})
 %==========================================================================
     function WindowKeyPressCallback3D(src, evnt)    %#ok
         %WindowKeyPressCallback3D
-        
         isModifier = ~isempty(intersect(evnt.Modifier, {'control', 'command'}));
         
         % IS 240309
+        % TO OPTIMIZE - enable as wide usage as possible, but prevent unwanted interactions with fill-in windows etc
+            % replace for KeyPressCallback?
         % do not allow if histogram is in focus
         axi = GetAxesIndexUnderCursor();
         if axi == 2
@@ -745,9 +746,14 @@ Initialize(varargin{:})
                 else
                     RotateKeys3D('el+');
                 end
+            case {'control','shift'}
+                % TO OPTIMIZE - use those as modifiers and stop responding unnecessarily to keypress, when scroling is done
+                appInstance.assignScrollCallback(evnt);
+                set(hFig,'WindowKeyPressFcn',{})
+
             otherwise   % IS 240309
                 % other keyboard shortcuts are defined in the app
-                appInstance.useKeyboardShortcut(src, evnt)
+                appInstance.useKeyboardShortcut(evnt);
         end
     end
 %--------------------------------------------------------------------------
@@ -760,6 +766,14 @@ Initialize(varargin{:})
                 SetDefaultZoomGrid3D();
             case {'leftarrow', 'rightarrow', 'uparrow', 'downarrow'}
                 mDrag3DShiftStep = mDragSave3DShiftStep;
+            case {'control','shift'}
+                % disp(hFig.WindowScrollWheelFcn)
+                set(hFig,'WindowScrollWheelFcn',{@WindowScrollWheelFcn3D});
+                % disp(hFig.WindowScrollWheelFcn)
+                set(hFig,'WindowKeyPressFcn',{@WindowKeyPressCallback3D});
+                appInstance.afterScrollAdjustment(evnt);
+            case 'd'
+                appInstance.hideDevelopmentCheckbox;
         end
     end
 %--------------------------------------------------------------------------
