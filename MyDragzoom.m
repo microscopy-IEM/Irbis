@@ -164,6 +164,7 @@ function MyDragzoom(varargin)
 %TODO: Show Pixel Info (Pixel Value(s)) for Images
 %TODO: "Sticking to Data" PointerCross
 error(nargchk(0, 3, nargin));
+
 % handles
 hFig = [];
 hAx = [];
@@ -250,6 +251,8 @@ fIsMouseOnLegend = false;
 
 % IS 
 appInstance = [];
+scrollingOn = 0;
+
 % Initialize and Setup
 Initialize(varargin{:})
 %--------------------------------------------------------------------------
@@ -302,7 +305,7 @@ Initialize(varargin{:})
         
         % Parse Input Arguments
         isWithStatus = ParseInputs(varargin{:});
-        
+
         if isempty(hAxes), return; end
         
         hAx = hAxes(1);
@@ -431,6 +434,8 @@ Initialize(varargin{:})
 %==========================================================================
     function SetFigureCallbacks3D()
         %SetFigureCallbacks3D set callback-functions for processing figure events in mode 3D
+
+        % IS changed 240312 - keyboard keypressfcn added, part moved there from windowkeypressfcn
         
         set(hFig, ...
             'WindowButtonDownFcn',      {@WindowButtonDownCallback3D}, ...
@@ -438,7 +443,10 @@ Initialize(varargin{:})
             'WindowButtonMotionFcn',    {@WindowButtonMotionCallback3D}, ...
             'WindowScrollWheelFcn',     {@WindowScrollWheelFcn3D}, ...
             'WindowKeyPressFcn',        {@WindowKeyPressCallback3D}, ...
-            'WindowKeyReleaseFcn',      {@WindowKeyReleaseCallback3D});
+            'WindowKeyReleaseFcn',      {@WindowKeyReleaseCallback3D}, ...
+            'KeyPressFcn',              {@KeyPressCallback3D});
+
+        %             'WindowKeyPressFcn',        {@WindowKeyPressCallback3D}, ...
     end
 %--------------------------------------------------------------------------
 %==========================================================================
@@ -704,13 +712,50 @@ Initialize(varargin{:})
     end
 %--------------------------------------------------------------------------
 %==========================================================================
-    function WindowKeyPressCallback3D(src, evnt)    %#ok
-        %WindowKeyPressCallback3D
-        isModifier = ~isempty(intersect(evnt.Modifier, {'control', 'command'}));
+    function WindowKeyPressCallback3D(src, evnt)
+        % only for specific moments when enter or escape is used
+        % correspondent callback in the figure empty for most of the time
+
+        % disp('in WindowKeyPressCallback3D')
+
+        % IS changed 240312
+
+        switch evnt.Key
+            case {'return','escape'}
+                appInstance.evaluateAfterEnterfcn(evnt);
+        end
+    end
+%--------------------------------------------------------------------------
+%==========================================================================
+    function WindowKeyReleaseCallback3D(src, evnt)
+        %WindowKeyReleaseCallback3D
         
-        % IS 240309
-        % TO OPTIMIZE - enable as wide usage as possible, but prevent unwanted interactions with fill-in windows etc
-            % replace for KeyPressCallback?
+        switch evnt.Key
+            case {'equal', 'add', 'hyphen', 'subtract'}
+                SetDefaultZoomGrid3D();
+            case {'leftarrow', 'rightarrow', 'uparrow', 'downarrow'}
+                mDrag3DShiftStep = mDragSave3DShiftStep;
+            case {'control','shift'}
+                % disp(hFig.WindowScrollWheelFcn)
+                set(hFig,'WindowScrollWheelFcn',{@WindowScrollWheelFcn3D});
+                % disp(hFig.WindowScrollWheelFcn)
+                scrollingOn = 0;
+                % set(hFig,'WindowKeyPressFcn',{@WindowKeyPressCallback3D});
+                appInstance.afterScrollAdjustment(evnt);
+            case 'd'
+                appInstance.hideDevelopmentCheckbox;
+        end
+    end
+%--------------------------------------------------------------------------
+%==========================================================================
+    function KeyPressCallback3D(src, evnt)
+
+        % disp('in KeyPressCallback3D')
+
+        % IS changed 240312
+
+        isModifier = ~isempty(intersect(evnt.Modifier, {'control', 'command'}));
+
         % do not allow if histogram is in focus
         axi = GetAxesIndexUnderCursor();
         if axi == 2
@@ -718,6 +763,16 @@ Initialize(varargin{:})
         end
 
         switch evnt.Key
+            case {'control','shift'}
+                % TO OPTIMIZE - use those as modifiers and stop responding unnecessarily to keypress, when scroling is done
+                if scrollingOn
+                    return
+                end
+                scrollingOn = 1;
+                appInstance.assignScrollCallback(evnt);
+                % set(hFig,'WindowKeyPressFcn',{})            
+            case {'return','escape'}
+                return
             case {'equal', 'add'}
                 ZoomKeys3D('plus');
             case {'hyphen', 'subtract'}
@@ -746,34 +801,10 @@ Initialize(varargin{:})
                 else
                     RotateKeys3D('el+');
                 end
-            case {'control','shift'}
-                % TO OPTIMIZE - use those as modifiers and stop responding unnecessarily to keypress, when scroling is done
-                appInstance.assignScrollCallback(evnt);
-                set(hFig,'WindowKeyPressFcn',{})
 
             otherwise   % IS 240309
                 % other keyboard shortcuts are defined in the app
                 appInstance.useKeyboardShortcut(evnt);
-        end
-    end
-%--------------------------------------------------------------------------
-%==========================================================================
-    function WindowKeyReleaseCallback3D(src, evnt)    %#ok
-        %WindowKeyReleaseCallback3D
-        
-        switch evnt.Key
-            case {'equal', 'add', 'hyphen', 'subtract'}
-                SetDefaultZoomGrid3D();
-            case {'leftarrow', 'rightarrow', 'uparrow', 'downarrow'}
-                mDrag3DShiftStep = mDragSave3DShiftStep;
-            case {'control','shift'}
-                % disp(hFig.WindowScrollWheelFcn)
-                set(hFig,'WindowScrollWheelFcn',{@WindowScrollWheelFcn3D});
-                % disp(hFig.WindowScrollWheelFcn)
-                set(hFig,'WindowKeyPressFcn',{@WindowKeyPressCallback3D});
-                appInstance.afterScrollAdjustment(evnt);
-            case 'd'
-                appInstance.hideDevelopmentCheckbox;
         end
     end
 %--------------------------------------------------------------------------
