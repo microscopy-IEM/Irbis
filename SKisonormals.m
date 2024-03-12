@@ -39,7 +39,7 @@ function nout=SKisonormals(varargin)
     
     %   Copyright 1984-2017 The MathWorks, Inc.
 
-    disp('run SKisonormals')
+    % disp('run SKisonormals')
 
     if nargin > 0
         [varargin{:}] = convertStringsToChars(varargin{:});
@@ -50,7 +50,7 @@ function nout=SKisonormals(varargin)
     % Take this out when other data types are handled
     data = single(data);
 
-    whos data
+    % whos data
     
     % [msg, x, y, z] = xyzvcheck(x,y,z,data);  error(msg);
     
@@ -80,6 +80,8 @@ function nout=SKisonormals(varargin)
         hz = z(1,1,:);
 
         data = gpuArray(data);
+        disp('Running on GPU')
+   
         [nx, ny, nz] = SKgradient(data, hx, hy, hz);
 
         clear data

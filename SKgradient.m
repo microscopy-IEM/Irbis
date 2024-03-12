@@ -98,9 +98,9 @@ elseif ndim > 2
         n = siz(k);
         newsiz = [prod(siz(1:k-1)) siz(k) prod(siz(k+1:end))];
         nf = reshape(f,newsiz);
-        clear f
+        % clear f
       
-        whos nf
+        % whos nf
         h = reshape(loc{k},1,[]);
         g = zeros(size(nf), 'like', prototype);
         
