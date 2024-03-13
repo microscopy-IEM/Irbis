@@ -680,7 +680,7 @@ function resetClb(src,~,f)
             ax = src;
                   
             f.WindowButtonMotionFcn = [];       
-            MyDragzoom(ax,'on');        
+            % MyDragzoom(ax,'on');        
 end
 
 % function rotateAndReset(src,evt,tool,moveHandles,rotHandles,pointA,pointB,f)

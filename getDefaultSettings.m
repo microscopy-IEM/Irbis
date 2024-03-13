@@ -8,4 +8,6 @@ function settings = getDefaultSettings(appData)
     settings.backgroundColor = [0 0 0];
     settings.predefinedFilterSettings = [];
     settings.pythonPath = [];
+    settings.askSaveBeforeClosing = 1;
+    settings.askSaveBeforeNew = 1;
 end
