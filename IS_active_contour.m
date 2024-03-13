@@ -112,7 +112,7 @@ ending = cont(1,2);
 
 % simplifying contour:
 simpCont = cont(2:ending,:);
-simpCont = reducepoly(simpCont,0.01);
+simpCont = reducepoly(simpCont,0.001);
 
 plot(simpCont(:,1),simpCont(:,2))
 % drawnow
