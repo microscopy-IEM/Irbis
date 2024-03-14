@@ -14,7 +14,7 @@ fig = uifigure("Name",'Estimate drift in planes','Position',[100 100 800 800],'I
 
 customGrid = uigridlayout(fig,[2 3]);
 customGrid.RowHeight = {'1x','fit'};
-customGrid.ColumnWidth = {'1x','fit','fit'};
+customGrid.ColumnWidth = {'1x','fit','fit','fit','fit'};
 
 pan = uipanel(customGrid);
 % ax = uiaxes(customGrid);
@@ -24,18 +24,33 @@ t.TileSpacing = 'compact';
 t.Padding = 'compact';
 
 pan.Layout.Row = 1;
-pan.Layout.Column = [1 3];
+pan.Layout.Column = [1 5];
+
+sensSlider = uislider(customGrid,"ValueChangedFcn", [],'Tag','sensSlider');
+sensSlider.Limits = [0 10];
+sensSlider.MajorTicks = [];
+sensSlider.MinorTicks = [];
+sensSlider.Value = 5;
+sensSlider.Layout.Row = 2;
+sensSlider.Layout.Column = 2;
+
+registb = uibutton(customGrid, ...
+"Text","Register", ...
+"ButtonPushedFcn", @(src,event) acceptButtonPushed(fig));
+registb.Layout.Row = 2;
+registb.Layout.Column = 3;
+
 applyb = uibutton(customGrid, ...
 "Text","Accept", ...
 "ButtonPushedFcn", @(src,event) acceptButtonPushed(fig));
 applyb.Layout.Row = 2;
-applyb.Layout.Column = 2;
+applyb.Layout.Column = 4;
 
 cancelb = uibutton(customGrid, ...
 "Text","Cancel", ...
 "ButtonPushedFcn", @(src,event) cancelButtonPushed(fig));
 cancelb.Layout.Row = 2;
-cancelb.Layout.Column = 3;
+cancelb.Layout.Column = 5;
 
 wb = uiprogressdlg(fig,'Title','Registrating plane ','Indeterminate','off');
 wb.Value = 0; 
@@ -131,6 +146,8 @@ for currentTimePoint = 2:nTimePoints
  
     tform = tforms{currentTimePoint};
 
+    tform.A = round(tform.A);
+
     zProjectionsRegistered(:,:,currentTimePoint) = imwarp(zProjections(:,:,currentTimePoint),tform,"OutputView",imref2d(size(FIXED_)));
 
     % zProjectionsRegistered(:,:,currentTimePoint) = imadjustn(zProjectionsRegistered(:,:,currentTimePoint),stretchlim(zProjectionsRegistered(:),0.0001));
@@ -216,8 +233,8 @@ function tform = preRegister(FIXED, MOVING)
     optimizer.GradientMagnitudeTolerance = 1.00000e-04;
     optimizer.MinimumStepLength = 1.00000e-03;
     optimizer.MaximumStepLength = 1.00000e-01;
-    optimizer.MaximumIterations = 500;
-    optimizer.RelaxationFactor = 0.100000;
+    optimizer.MaximumIterations = 1000;
+    optimizer.RelaxationFactor = 0.200000;
     
     % Align centers
     [xFixed,yFixed] = meshgrid(1:size(FIXED,2),1:size(FIXED,1));
