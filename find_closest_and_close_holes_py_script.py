@@ -30,14 +30,14 @@ def find_closest_and_close_holes(original = 'temp_originalSpine.ply',input = 'te
             matchProp = np.sum(matchList)/len(matchList)
             if matchProp > 0.1:
                 matchProp = 1.1
-        print(i)
-        print(matchProp)
+        # print(i)
+        # print(matchProp)
         matches.append(matchProp)
     
     max_match_n = matches.index(max(matches))
     max_match_i = max_match_n + 2
 
-    print(f'match found in {max_match_i} with match {max(matches)}')
+    # print(f'match found in {max_match_i} with match {max(matches)}')
     ms.set_current_mesh(new_curr_id = max_match_i)
     ms.meshing_close_holes(maxholesize = 1000,newfaceselected = False)
     ms.save_current_mesh(str(output),save_vertex_normal = True)
