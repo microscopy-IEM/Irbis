@@ -1,5 +1,7 @@
 function gizmo_app(ax,fig,stickyPoints,pointA,pointB)
-                        
+            
+            buttonMotionCallback = fig.WindowButtonMotionFcn;
+            buttonUpCallback = fig.WindowButtonUpFcn;
 
             % disable selectivity for all currently plotted components  
             h = ax.Children;
@@ -106,20 +108,20 @@ function gizmo_app(ax,fig,stickyPoints,pointA,pointB)
             % Assign ButtonDownFcn to elements
             % for central element only if there are sticky points
             if ~isempty(stickyPoints)
-                cBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig);
+                cBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
                 cBallPoint.UserData = stickyPoints;
             end
 
-            xBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig);
-            yBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig);
-            zBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig);
+            xBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
+            yBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
+            zBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
 
             xBallPoint.UserData = spacing;
             normSquare.UserData = radius;
 
-            normSquare.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig);
-            xyRot.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig);
-            xzRot.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig);
+            normSquare.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
+            xyRot.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
+            xzRot.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
 
 
             %% Mouse hover pre-selection highlight 
@@ -278,8 +280,8 @@ function PixelPos = MicroMToPixelPositionArray(MicroMArray,tool)
     xP4 = p4Pos(1);
     yP4 = p4Pos(2);
 
-    xParentPix = xP1 + xP2 + xP3 + xP4;
-    yParentPix = yP1 + yP2 + yP3 + yP4;
+    xParentPix = xP1 + xP2 + xP3 + xP4 -3;
+    yParentPix = yP1 + yP2 + yP3 + yP4 -1;
 
     elevation = ax.View(2);
     azimuth = wrapTo360(ax.View(1));
@@ -320,24 +322,42 @@ function PixelPos = MicroMToPixelPositionArray(MicroMArray,tool)
     % if sign(-cosd(azimuth)) < 0
     % yYratio = 1 + yYratio;
     % end
+    % 
+    % % calculating proportional movement contribution by x and y, depending on the rotation - old rotational system
+    % xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
+    % if sign(cosd(azimuth)) < 0
+    % xXratio = 1 + xXratio;
+    % end
+    % xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
+    % if sign(sind(azimuth)) < 0
+    % xYratio = 1 + xYratio;
+    % end
+    % yXratio = sign(-sind(azimuth))*yCMic/yLimMic;
+    % if sign(-sind(azimuth)) < 0
+    % yXratio = 1 + yXratio;
+    % end
+    % yYratio = sign(-cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
+    % if sign(-cosd(azimuth)) < 0
+    % yYratio = 1 + yYratio;
+    % end
 
-    % calculating proportional movement contribution by x and y, depending on the rotation - old rotational system
+    % calculating proportional movement contribution by x and y, depending on the rotation - new rotational system
     xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
     if sign(cosd(azimuth)) < 0
     xXratio = 1 + xXratio;
     end
     xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
-    if sign(-sind(azimuth)) < 0
+    if sign(-sind(azimuth))*sign(sind(elevation)) < 0
     xYratio = 1 + xYratio;
     end
-    yXratio = sign(-sind(azimuth))*yCMic/yLimMic;
-    if sign(-sind(azimuth)) < 0
+    yXratio = sign(sind(azimuth))*yCMic/yLimMic;
+    if sign(sind(azimuth)) < 0
     yXratio = 1 + yXratio;
     end
-    yYratio = sign(-cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
-    if sign(-cosd(azimuth)) < 0
+    yYratio = sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
+    if sign(cosd(azimuth))*sign(sind(elevation)) < 0
     yYratio = 1 + yYratio;
-    end
+    end    
 
     % calculating the position of point in pixel world relative to the origin in coordinates of the screen
     xCPix = x0Pix + xParentPix + xPix*cosRatio*xXratio + xPix*sinRatio*yXratio;
@@ -348,7 +368,7 @@ end
 
 
 % function set button callback when clicked on specific element
-function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig)
+function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback)
 
     tool = src;
     ax = src.Parent;
@@ -365,6 +385,8 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig)
     % initial position of the selected part in pixel world
     toolArray = [tool.XData,tool.YData,tool.ZData];
     startPositionToolPix = MicroMToPixelPositionArray(toolArray,tool);
+
+    % set(0,'PointerLocation',startPositionToolPix)
 
     startPositionRot = {};
     for i=1:length(rotHandles)
@@ -390,7 +412,7 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig)
     elseif evt.Button == 1      % this makes it translate only when left button is pressed
             
             figHandle.WindowButtonMotionFcn = @(src,evt)gizmoMove(src,evt,moveHandles,rotHandles,startPosition,startPositionRot,tool,startScreenPosition,startPositionPix,startPositionToolPix,pointA,pointB,fig);
-            figHandle.WindowButtonUpFcn = @(src,evt)resetClb(src,evt,figHandle);
+            figHandle.WindowButtonUpFcn = @(src,evt)resetClb(src,evt,figHandle,buttonMotionCallback,buttonUpCallback);
 
     end
 
@@ -491,8 +513,8 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig)
                 x0 = startScreenPosition(1);
                 y0 = startScreenPosition(2);
     
-                aL = -sind(azimuth);
-                bL = -cosd(azimuth)*sind(elevation);
+                aL = sind(azimuth);
+                bL = cosd(azimuth)*sind(elevation);
                 cL = -aL*x0 -bL*y0;
     
                 x1 = currentScreenPosition(1);
@@ -667,7 +689,7 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig)
                 v2 = currentScreenPosition - CPix;
     
                 thetaVect = atan2(cross([v1, 0], [v2, 0]), dot(v1, v2));
-                theta = sign(-sind(elevation))*thetaVect(3);
+                theta = sign(sind(elevation))*thetaVect(3);
     
                 updateDirection(vRot,theta,rotHandles,startPosition,startPositionRot,pointA,pointB)
              
@@ -675,11 +697,14 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig)
     end
 end
 
-function resetClb(src,~,f)
+function resetClb(src,~,f,buttonMotionCallback,buttonUpCallback)
          
             ax = src;
                   
-            f.WindowButtonMotionFcn = [];       
+            f.WindowButtonMotionFcn = buttonMotionCallback;
+            f.WindowButtonUpFcn = buttonUpCallback;
+
+            % TO FIX - return original WindowButtonMotionFcn after gizmo is switched off
             % MyDragzoom(ax,'on');        
 end
 
