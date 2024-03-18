@@ -1,7 +1,10 @@
-function gizmo_app(ax,fig,stickyPoints,pointA,pointB)
+function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
             
             buttonMotionCallback = fig.WindowButtonMotionFcn;
             buttonUpCallback = fig.WindowButtonUpFcn;
+            scrollWheelCallback = fig.WindowScrollWheelFcn;
+
+            originalCallbacks = {buttonMotionCallback,buttonUpCallback,scrollWheelCallback};
 
             % disable selectivity for all currently plotted components  
             h = ax.Children;
@@ -108,20 +111,20 @@ function gizmo_app(ax,fig,stickyPoints,pointA,pointB)
             % Assign ButtonDownFcn to elements
             % for central element only if there are sticky points
             if ~isempty(stickyPoints)
-                cBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
+                cBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback,scrollWheelCallback);
                 cBallPoint.UserData = stickyPoints;
             end
 
-            xBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
-            yBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
-            zBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
+            xBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback,scrollWheelCallback);
+            yBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback,scrollWheelCallback);
+            zBallPoint.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback,scrollWheelCallback);
 
             xBallPoint.UserData = spacing;
             normSquare.UserData = radius;
 
-            normSquare.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
-            xyRot.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
-            xzRot.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback);
+            normSquare.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback,scrollWheelCallback);
+            xyRot.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback,scrollWheelCallback);
+            xzRot.ButtonDownFcn = @(src,evt)gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback,scrollWheelCallback);
 
 
             %% Mouse hover pre-selection highlight 
@@ -368,7 +371,7 @@ end
 
 
 % function set button callback when clicked on specific element
-function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback)
+function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback,scrollWheelCallback)
 
     tool = src;
     ax = src.Parent;
@@ -411,8 +414,15 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
     
     elseif evt.Button == 1      % this makes it translate only when left button is pressed
             
-            figHandle.WindowButtonMotionFcn = @(src,evt)gizmoMove(src,evt,moveHandles,rotHandles,startPosition,startPositionRot,tool,startScreenPosition,startPositionPix,startPositionToolPix,pointA,pointB,fig);
-            figHandle.WindowButtonUpFcn = @(src,evt)resetClb(src,evt,figHandle,buttonMotionCallback,buttonUpCallback);
+        figHandle.WindowButtonMotionFcn = @(src,evt)gizmoMove(src,evt,moveHandles,rotHandles,startPosition,startPositionRot,tool,startScreenPosition,startPositionPix,startPositionToolPix,pointA,pointB,fig);
+        figHandle.WindowButtonUpFcn = @(src,evt)resetClb(src,evt,figHandle,buttonMotionCallback,buttonUpCallback,scrollWheelCallback);
+
+    elseif evt.Button == 2      % assings the scrollwheel callback
+
+        figHandle.WindowScrollWheelFcn = @(src,evt)scrollwheelMove(src,evt);
+        theta = 0;
+        dPos = 0;
+        scrolledElement = tool;
 
     end
 
@@ -490,7 +500,7 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
                 tighPos = ax.tightPosition;
                 xPix = tighPos(3);
        
-                % measure distanec "corner to corner" of % this calculation can be pre-calculated to speed up
+                % measure distance "corner to corner" of % this calculation can be pre-calculated to speed up
                 % axes (depends on axes azimuth)
                
                 a = ax.XLim(2);
@@ -695,14 +705,60 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
              
          end        
     end
+
+    function scrollwheelMove(~,evt)
+        % disp(['verticalScrollCount: ' num2str(evt.VerticalScrollCount)])
+
+        switch scrolledElement.Tag
+
+            case 'xBallPoint'
+                dPos = dPos + evt.VerticalScrollCount*0.1;
+                newPosition = [startPosition(1)+dPos startPosition(2) startPosition(3)];
+                updatePosition(newPosition,moveHandles,pointA,pointB)
+                % startPosition = newPosition;
+            case 'yBallPoint'
+                dPos = dPos + evt.VerticalScrollCount*0.1;
+                newPosition = [startPosition(1) startPosition(2)+dPos startPosition(3)];
+                updatePosition(newPosition,moveHandles,pointA,pointB)
+                % startPosition = newPosition;                
+            case 'zBallPoint'
+                dPos = dPos + evt.VerticalScrollCount*0.1;
+                newPosition = [startPosition(1) startPosition(2) startPosition(3)+dPos];
+                updatePosition(newPosition,moveHandles,pointA,pointB)
+                % startPosition = newPosition;                
+            case 'cBallPoint'
+            case 'normSquare'
+                dx = rotHandles(3).XData - moveHandles(1).XData;
+                dy = rotHandles(3).YData - moveHandles(1).YData;
+                dz = rotHandles(3).ZData - moveHandles(1).ZData;
+
+                % dv = sqrt(dx^2 + dy^2 + dz^2);
+                dPos = dPos + evt.VerticalScrollCount*0.1;
+                newPosition = [startPosition(1)+dx*dPos startPosition(2)+dy*dPos startPosition(3)+dz*dPos];
+                updatePosition(newPosition,moveHandles,pointA,pointB)
+
+            case 'xzRotLine'
+                vRot = [0 1 0];
+                theta = theta + evt.VerticalScrollCount*0.1;
+                updateDirection(vRot,theta,rotHandles,startPosition,startPositionRot,pointA,pointB)
+            case 'xyRotLine'
+                vRot = [0 0 1];
+                theta = theta + evt.VerticalScrollCount*0.1;
+                updateDirection(vRot,theta,rotHandles,startPosition,startPositionRot,pointA,pointB)                
+
+        end
+    end
+
 end
 
-function resetClb(src,~,f,buttonMotionCallback,buttonUpCallback)
+
+function resetClb(src,~,f,buttonMotionCallback,buttonUpCallback,scrollWheelCallback)
          
             ax = src;
                   
             f.WindowButtonMotionFcn = buttonMotionCallback;
             f.WindowButtonUpFcn = buttonUpCallback;
+            f.WindowScrollWheelFcn = scrollWheelCallback;
 
             % TO FIX - return original WindowButtonMotionFcn after gizmo is switched off
             % MyDragzoom(ax,'on');        

@@ -1,4 +1,4 @@
-function delete_gizmo_app(ax)
+function delete_gizmo_app(ax,fig,originalCallbacks)
     % clear old components
     delete(findobj(ax,'Tag','cBallPoint'))
     delete(findobj(ax,'Tag','xBallPoint'))
@@ -12,4 +12,9 @@ function delete_gizmo_app(ax)
     delete(findobj(ax,'Tag','normSquare'))
     delete(findobj(ax,'Tag','3dPlane'))
     delete(findobj(ax,'Tag','normLink'))
+
+    % reset callbacks
+    fig.WindowButtonMotionFcn = originalCallbacks{1};
+    fig.WindowButtonUpFcn = originalCallbacks{2};
+    fig.WindowScrollWheelFcn = originalCallbacks{3};
 end
