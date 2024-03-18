@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="1227680552" file="C:\Users\sveco\Documents\IEM_microscopy\MMPack\IrbisStart.prj" location="C:\Users\sveco\Documents\IEM_microscopy\MMPack" name="IrbisStart" preferred-package-location="C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="1227680552" file="C:\Users\iva.svecova\Documents\MMPack\IrbisStart.prj" location="C:\Users\iva.svecova\Documents\MMPack" name="IrbisStart" preferred-package-location="C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\IrbisStart_resources\icon.ico</param.icon>
     <param.icons>
@@ -14,7 +14,7 @@
     <param.company>Institute of Experimental Medicine CAS</param.company>
     <param.summary>Testing version of Irbis4Neuron software</param.summary>
     <param.description />
-    <param.screenshot>C:\Users\sveco\OneDrive - Ústav experimentální medicíny AV ČR, v. v. i\Microscopy Team\Irbis project\Logo\Navrhy\irbis_2_square.png</param.screenshot>
+    <param.screenshot>${PROJECT_ROOT}\icons\icon.png</param.screenshot>
     <param.guid />
     <param.installpath.string>\Institute of Experimental Medicine CAS\Irbis\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
@@ -211,14 +211,33 @@
       <file>${PROJECT_ROOT}\tubeplot.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_testing\readme.txt</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_testing\Irbis.exe</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\Irbis.exe</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\readme.txt</file>
     </build-deliverables>
     <workflow />
     <matlab>
       <root>C:\Program Files\MATLAB\R2023a</root>
-      <toolboxes />
+      <toolboxes>
+        <toolbox name="matlabcoder" />
+        <toolbox name="gpucoder" />
+        <toolbox name="neuralnetwork" />
+      </toolboxes>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+      <toolbox>
+        <gpucoder>
+          <enabled>true</enabled>
+        </gpucoder>
+      </toolbox>
+      <toolbox>
+        <neuralnetwork>
+          <enabled>true</enabled>
+        </neuralnetwork>
+      </toolbox>
     </matlab>
     <platform>
       <unix>false</unix>
