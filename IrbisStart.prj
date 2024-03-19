@@ -196,18 +196,6 @@
       <file>${PROJECT_ROOT}\SKisonormals.m</file>
       <file>${PROJECT_ROOT}\spineList2ResultTable.m</file>
       <file>${PROJECT_ROOT}\submesh_selection.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\compute_geodesic.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.mexw64</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d_slow.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\clamp.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_distance_to_points.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_grad.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\getoptions.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\mmax.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\nb_dims.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\perform_vf_normalization.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\prod_vf_sf.m</file>
       <file>${PROJECT_ROOT}\tubeplot.m</file>
     </fileset.depfun>
     <build-deliverables>
