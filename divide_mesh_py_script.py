@@ -9,35 +9,23 @@ def divide_mesh(pointA,pointB,depth=8,temp_path ='C:\\Users\\Public\\MMP\\temp')
     ms.load_new_mesh('temp_parent.ply')  
     for i in [1,2]:
         input = f'temp_cut_in_{i}.ply'
-        
-        # start_time = time.time()
         ms.load_new_mesh(str(input))  
-        # end_time = time.time()
-        # print(f'Execution time for loading: {end_time - start_time} s')
+
 
     ms.set_current_mesh(new_curr_id=1)
     n_complete = ms.number_meshes()
-    # print(n_complete)
 
-    # start_time = time.time()
     ms.generate_splitting_by_connected_components()
-    # end_time = time.time()
-    # print(f'Execution time for splitting: {end_time - start_time} s')
 
     n_total = ms.number_meshes()
-    # print(n_total)    
 
     n_objects = n_total - n_complete
-    # print(n_objects)
 
     min_distances = []
 
-    # start_time = time.time()
     # find the mesh closest to pointA
     pointA = np.array(pointA)
-    # print(f'pointA: {pointA}')
     pointB = np.array(pointB)
-    # print(f'pointB: {pointB}')
     for i in range(n_complete,n_total):
         ms.set_current_mesh(new_curr_id = i)
         mesh_vertices = ms.current_mesh().vertex_matrix()
@@ -45,28 +33,18 @@ def divide_mesh(pointA,pointB,depth=8,temp_path ='C:\\Users\\Public\\MMP\\temp')
         min_dist = np.min(distances)
         min_distances.append(min_dist)
 
-    # closest_dist = np.min(min_distances)
-    # closest = closest_dist.index(closest_dist)
     closest = np.argmin(min_distances)
-    #closest = 1
     closest = closest + n_complete
-    # print(f'closest: {closest}')
 
     closest_mesh = ms.mesh(id = closest)
-    # print(f'closest mesh: {closest_mesh.vertex_number()}')
     closest_mesh_vertices = closest_mesh.vertex_matrix()
-    # print(len(closest_mesh_vertices))
     closest_mesh_normals = closest_mesh.vertex_normal_matrix()
     original_mesh = ms.mesh(id = 0)
     original_mesh_vertices = original_mesh.vertex_matrix()
     original_mesh_normals = original_mesh.vertex_normal_matrix()
-    # print(len(original_mesh_vertices))
-    # print(f'original mesh: {original_mesh.vertex_number()}')
 
-    #ms.show_polyscope()
 
     ms.set_current_mesh(new_curr_id = closest)
-    # print(ms.current_mesh().vertex_number())
     '''
     ms.compute_selection_from_mesh_border()
     ms.generate_from_selected_vertices()
