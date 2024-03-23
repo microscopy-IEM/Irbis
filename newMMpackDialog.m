@@ -101,6 +101,6 @@ function MMpack = createEmptyMMpack(dial,ver)
     MMpack.results = results;
     MMpack.archive = archive;
     
-    disp(MMpack)
+    % disp(MMpack)
 
 end
