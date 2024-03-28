@@ -3,6 +3,8 @@ function [tracks] = MMP_TracksProccesing(tracks)
 
 % tracks = MMpack.tracks;
 
+tracks
+
 tracks.frame_interval = 0.05;
 
 dT = tracks.frame_interval;
@@ -26,6 +28,8 @@ dT = tracks.frame_interval;
      lengthsOfTrajectories = cell2mat(cellfun(@size, tracks.tracksList.xyz, 'UniformOutput', false));
      lengthsOfTrajectories = lengthsOfTrajectories(:,1);
      
+    tracks.ids = 1:size(T,1);
+
      for TrackNum = tracks.ids
 
         % length of trajectory
