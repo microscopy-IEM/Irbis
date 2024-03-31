@@ -266,108 +266,108 @@ function dir = getDirection(handles)
 
 end
 
-% function that gets uM position of an object and return its position in pixel coordinates of the screen
-function PixelPos = MicroMToPixelPositionArray(MicroMArray,tool)
-
-    ax = tool.Parent;
-    p1Pos = tool.Parent.Parent.Position;
-    xP1 = p1Pos(1);
-    yP1 = p1Pos(2);
-    p2Pos = tool.Parent.Parent.Parent.Position;
-    xP2 = p2Pos(1);
-    yP2 = p2Pos(2);
-    p3Pos = tool.Parent.Parent.Parent.Parent.Position;
-    xP3 = p3Pos(1);
-    yP3 = p3Pos(2);
-    p4Pos = tool.Parent.Parent.Parent.Parent.Parent.Position;
-    xP4 = p4Pos(1);
-    yP4 = p4Pos(2);
-
-    xParentPix = xP1 + xP2 + xP3 + xP4 -3;
-    yParentPix = yP1 + yP2 + yP3 + yP4 -1;
-
-    elevation = ax.View(2);
-    azimuth = wrapTo360(ax.View(1));
-    
-    % getting dimensions of the axes object
-    tighPos = ax.tightPosition;
-    x0Pix = tighPos(1);
-    y0Pix = tighPos(2);
-    xPix = tighPos(3);
-    yPix = tighPos(4);
-        
-    xLimMic = ax.XLim(2)-ax.XLim(1);
-    yLimMic = ax.YLim(2)-ax.YLim(1); 
-    zLimMic = ax.ZLim(2)-ax.ZLim(1);
-    
-    xCMic = MicroMArray(:,1);
-    yCMic = MicroMArray(:,2);
-    zCMic = MicroMArray(:,3);
-
-    % calculating ratio of x and y side, in respect to the bounding box
-    cosRatio = abs(cosd(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
-    sinRatio = abs(sind(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
-
-    % % calculating proportional movement contribution by x and y, depending on the rotation - new rotational system
-    % xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
-    % if sign(cosd(azimuth)) < 0
-    % xXratio = 1 + xXratio;
-    % end
-    % xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
-    % if sign(sind(azimuth)) < 0
-    % xYratio = 1 + xYratio;
-    % end
-    % yXratio = sign(-sind(azimuth))*yCMic/yLimMic;
-    % if sign(-sind(azimuth)) < 0
-    % yXratio = 1 + yXratio;
-    % end
-    % yYratio = sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
-    % if sign(-cosd(azimuth)) < 0
-    % yYratio = 1 + yYratio;
-    % end
-    % 
-    % % calculating proportional movement contribution by x and y, depending on the rotation - old rotational system
-    % xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
-    % if sign(cosd(azimuth)) < 0
-    % xXratio = 1 + xXratio;
-    % end
-    % xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
-    % if sign(sind(azimuth)) < 0
-    % xYratio = 1 + xYratio;
-    % end
-    % yXratio = sign(-sind(azimuth))*yCMic/yLimMic;
-    % if sign(-sind(azimuth)) < 0
-    % yXratio = 1 + yXratio;
-    % end
-    % yYratio = sign(-cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
-    % if sign(-cosd(azimuth)) < 0
-    % yYratio = 1 + yYratio;
-    % end
-
-    % calculating proportional movement contribution by x and y, depending on the rotation - new rotational system
-    xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
-    if sign(cosd(azimuth)) < 0
-    xXratio = 1 + xXratio;
-    end
-    xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
-    if sign(-sind(azimuth))*sign(sind(elevation)) < 0
-    xYratio = 1 + xYratio;
-    end
-    yXratio = sign(sind(azimuth))*yCMic/yLimMic;
-    if sign(sind(azimuth)) < 0
-    yXratio = 1 + yXratio;
-    end
-    yYratio = sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
-    if sign(cosd(azimuth))*sign(sind(elevation)) < 0
-    yYratio = 1 + yYratio;
-    end    
-
-    % calculating the position of point in pixel world relative to the origin in coordinates of the screen
-    xCPix = x0Pix + xParentPix + xPix*cosRatio*xXratio + xPix*sinRatio*yXratio;
-    yCPix = y0Pix + yParentPix + yPix*abs(sind(elevation))*sinRatio*xYratio + yPix*abs(sind(elevation))*cosRatio*yYratio + yPix*(1-abs(sind(elevation)))*(zCMic-ax.ZLim(1))/zLimMic;
-    
-    PixelPos = [xCPix,yCPix];
-end
+% % function that gets uM position of an object and return its position in pixel coordinates of the screen
+% function PixelPos = MicroMToPixelPositionArray(MicroMArray,tool)
+% 
+%     ax = tool.Parent;
+%     p1Pos = tool.Parent.Parent.Position;
+%     xP1 = p1Pos(1);
+%     yP1 = p1Pos(2);
+%     p2Pos = tool.Parent.Parent.Parent.Position;
+%     xP2 = p2Pos(1);
+%     yP2 = p2Pos(2);
+%     p3Pos = tool.Parent.Parent.Parent.Parent.Position;
+%     xP3 = p3Pos(1);
+%     yP3 = p3Pos(2);
+%     p4Pos = tool.Parent.Parent.Parent.Parent.Parent.Position;
+%     xP4 = p4Pos(1);
+%     yP4 = p4Pos(2);
+% 
+%     xParentPix = xP1 + xP2 + xP3 + xP4 -3;
+%     yParentPix = yP1 + yP2 + yP3 + yP4 -1;
+% 
+%     elevation = ax.View(2);
+%     azimuth = wrapTo360(ax.View(1));
+% 
+%     % getting dimensions of the axes object
+%     tighPos = ax.tightPosition;
+%     x0Pix = tighPos(1);
+%     y0Pix = tighPos(2);
+%     xPix = tighPos(3);
+%     yPix = tighPos(4);
+% 
+%     xLimMic = ax.XLim(2)-ax.XLim(1);
+%     yLimMic = ax.YLim(2)-ax.YLim(1); 
+%     zLimMic = ax.ZLim(2)-ax.ZLim(1);
+% 
+%     xCMic = MicroMArray(:,1);
+%     yCMic = MicroMArray(:,2);
+%     zCMic = MicroMArray(:,3);
+% 
+%     % calculating ratio of x and y side, in respect to the bounding box
+%     cosRatio = abs(cosd(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
+%     sinRatio = abs(sind(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
+% 
+%     % % calculating proportional movement contribution by x and y, depending on the rotation - new rotational system
+%     % xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
+%     % if sign(cosd(azimuth)) < 0
+%     % xXratio = 1 + xXratio;
+%     % end
+%     % xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
+%     % if sign(sind(azimuth)) < 0
+%     % xYratio = 1 + xYratio;
+%     % end
+%     % yXratio = sign(-sind(azimuth))*yCMic/yLimMic;
+%     % if sign(-sind(azimuth)) < 0
+%     % yXratio = 1 + yXratio;
+%     % end
+%     % yYratio = sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
+%     % if sign(-cosd(azimuth)) < 0
+%     % yYratio = 1 + yYratio;
+%     % end
+%     % 
+%     % % calculating proportional movement contribution by x and y, depending on the rotation - old rotational system
+%     % xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
+%     % if sign(cosd(azimuth)) < 0
+%     % xXratio = 1 + xXratio;
+%     % end
+%     % xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
+%     % if sign(sind(azimuth)) < 0
+%     % xYratio = 1 + xYratio;
+%     % end
+%     % yXratio = sign(-sind(azimuth))*yCMic/yLimMic;
+%     % if sign(-sind(azimuth)) < 0
+%     % yXratio = 1 + yXratio;
+%     % end
+%     % yYratio = sign(-cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
+%     % if sign(-cosd(azimuth)) < 0
+%     % yYratio = 1 + yYratio;
+%     % end
+% 
+%     % calculating proportional movement contribution by x and y, depending on the rotation - new rotational system
+%     xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
+%     if sign(cosd(azimuth)) < 0
+%     xXratio = 1 + xXratio;
+%     end
+%     xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
+%     if sign(-sind(azimuth))*sign(sind(elevation)) < 0
+%     xYratio = 1 + xYratio;
+%     end
+%     yXratio = sign(sind(azimuth))*yCMic/yLimMic;
+%     if sign(sind(azimuth)) < 0
+%     yXratio = 1 + yXratio;
+%     end
+%     yYratio = sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
+%     if sign(cosd(azimuth))*sign(sind(elevation)) < 0
+%     yYratio = 1 + yYratio;
+%     end    
+% 
+%     % calculating the position of point in pixel world relative to the origin in coordinates of the screen
+%     xCPix = x0Pix + xParentPix + xPix*cosRatio*xXratio + xPix*sinRatio*yXratio;
+%     yCPix = y0Pix + yParentPix + yPix*abs(sind(elevation))*sinRatio*xYratio + yPix*abs(sind(elevation))*cosRatio*yYratio + yPix*(1-abs(sind(elevation)))*(zCMic-ax.ZLim(1))/zLimMic;
+% 
+%     PixelPos = [xCPix,yCPix];
+% end
 
 
 % function set button callback when clicked on specific element
@@ -380,14 +380,14 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
     % position of the gizmo center in uM world and in pixel world
     startPosition = [moveHandles(1).XData;moveHandles(1).YData;moveHandles(1).ZData];
     cBallPointArray = [moveHandles(1).XData,moveHandles(1).YData,moveHandles(1).ZData];
-    startPositionPix = MicroMToPixelPositionArray(cBallPointArray,tool);
+    startPositionPix = MicroMToPixelPosition(cBallPointArray,ax);
 
     % initial position of the pointer in pixel world
     startScreenPosition = get(0,'Pointerlocation');
     
     % initial position of the selected part in pixel world
     toolArray = [tool.XData,tool.YData,tool.ZData];
-    startPositionToolPix = MicroMToPixelPositionArray(toolArray,tool);
+    startPositionToolPix = MicroMToPixelPosition(toolArray,ax);
 
     % set(0,'PointerLocation',startPositionToolPix)
 
@@ -429,7 +429,7 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
     % Assign ButtonDownFcn to elements
     % for central element only if there are sticky points
     if ~isempty(moveHandles(1).UserData)
-        stickyPoints2DArray = MicroMToPixelPositionArray(moveHandles(1).UserData,moveHandles(1));
+        stickyPoints2DArray = MicroMToPixelPosition(moveHandles(1).UserData,ax);
         moveHandles(4).UserData = stickyPoints2DArray;
     end
 

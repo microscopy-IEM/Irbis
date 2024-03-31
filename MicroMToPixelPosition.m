@@ -36,8 +36,11 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     zCMic = MicroMArray(:,3);
 
     % calculating ratio of x and y side, in respect to the bounding box
+    % cosRatio = abs(cosd(azimuth)*xLimMic)/(abs(cosd(azimuth)*xLimMic) + abs(sind(azimuth)*yLimMic));
+    % sinRatio = abs(sind(azimuth)*yLimMic)/(abs(cosd(azimuth)*yLimMic) + abs(sind(azimuth)*yLimMic));
     cosRatio = abs(cosd(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
     sinRatio = abs(sind(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
+    
 
     % calculating proportional movement contribution by x and y, depending on the rotation - new rotational system
     xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
@@ -58,8 +61,13 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     end    
 
     % calculating the position of point in pixel world relative to the origin in coordinates of the screen
-    xCPix = x0Pix + xParentPix + xPix*cosRatio*xXratio + xPix*sinRatio*yXratio;
-    yCPix = y0Pix + yParentPix + yPix*abs(sind(elevation))*sinRatio*xYratio + yPix*abs(sind(elevation))*cosRatio*yYratio + yPix*(1-abs(sind(elevation)))*(zCMic-ax.ZLim(1))/zLimMic;
+    % disp(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
+    % disp(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
+    xCPix = x0Pix + xParentPix + xPix*xXratio*(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio)) + xPix*yXratio*(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio));
+    yCPix = y0Pix + yParentPix + yPix*abs(sind(elevation))*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*abs(sind(elevation))*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*(1-abs(sind(elevation)))*(zCMic-ax.ZLim(1))/zLimMic;
+    % xCPix = x0Pix + xParentPix + xPix*cosRatio*xXratio + xPix*sinRatio*yXratio;
+    % yCPix = y0Pix + yParentPix + yPix*abs(sind(elevation))*sinRatio*xYratio + yPix*abs(sind(elevation))*cosRatio*yYratio + yPix*(1-abs(sind(elevation)))*(zCMic-ax.ZLim(1))/zLimMic;
     
+
     PixelPos = [xCPix,yCPix];
 end
