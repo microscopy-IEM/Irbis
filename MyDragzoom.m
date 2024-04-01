@@ -1622,12 +1622,12 @@ Initialize(varargin{:})
         switch lower(mode)
             case 'xy'
                 az = 0;
-                el = 90;                
+                el = 89.9;                
             case 'xz'
                 az = 0;
                 el = 0;
             case 'yz'
-                az = 90;
+                az = 89.9;
                 el = 0;
             case 'az+'
                 az = az + mRot3DKeysInc;
@@ -1646,8 +1646,8 @@ Initialize(varargin{:})
     function SetView3D(az, el)
         %SetView3D
         
-        if (el > 90), el = 90; end
-        if (el < -90), el = -90; end
+        if (el > 89.9), el = 89.9; end
+        if (el < -89.9), el = -89.9; end
         
         view(hAx, [az, el]);
     end

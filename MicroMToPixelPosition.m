@@ -31,13 +31,11 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     yLimMic = ax.YLim(2)-ax.YLim(1); 
     zLimMic = ax.ZLim(2)-ax.ZLim(1);
     
-    xCMic = MicroMArray(:,1);
-    yCMic = MicroMArray(:,2);
-    zCMic = MicroMArray(:,3);
+    xCMic = MicroMArray(:,1)-ax.XLim(1);
+    yCMic = MicroMArray(:,2)-ax.YLim(1);
+    zCMic = MicroMArray(:,3)-ax.ZLim(1);
 
     % calculating ratio of x and y side, in respect to the bounding box
-    % cosRatio = abs(cosd(azimuth)*xLimMic)/(abs(cosd(azimuth)*xLimMic) + abs(sind(azimuth)*yLimMic));
-    % sinRatio = abs(sind(azimuth)*yLimMic)/(abs(cosd(azimuth)*yLimMic) + abs(sind(azimuth)*yLimMic));
     cosRatio = abs(cosd(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
     sinRatio = abs(sind(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
     
@@ -61,13 +59,18 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     end    
 
     % calculating the position of point in pixel world relative to the origin in coordinates of the screen
-    % disp(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
-    % disp(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
+    sinRE = abs(sind(elevation))/(abs(sind(elevation))+abs(cosd(elevation)));
+    cosRE = abs(cosd(elevation))/(abs(sind(elevation))+abs(cosd(elevation)));
+
+    sinREw = sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth)))/(cosRE*zLimMic+sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth))));
+    cosREw = cosRE*zLimMic/(cosRE*zLimMic+sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth))));
+
     xCPix = x0Pix + xParentPix + xPix*xXratio*(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio)) + xPix*yXratio*(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio));
-    yCPix = y0Pix + yParentPix + yPix*abs(sind(elevation))*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*abs(sind(elevation))*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*(1-abs(sind(elevation)))*(zCMic-ax.ZLim(1))/zLimMic;
-    % xCPix = x0Pix + xParentPix + xPix*cosRatio*xXratio + xPix*sinRatio*yXratio;
-    % yCPix = y0Pix + yParentPix + yPix*abs(sind(elevation))*sinRatio*xYratio + yPix*abs(sind(elevation))*cosRatio*yYratio + yPix*(1-abs(sind(elevation)))*(zCMic-ax.ZLim(1))/zLimMic;
-    
+    yCPix = y0Pix + yParentPix + yPix*sinREw*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*sinREw*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*cosREw*(zCMic)/zLimMic;
+
+    set(ax,'PlotBoxAspectRatio',[1,1,1]);
 
     PixelPos = [xCPix,yCPix];
+
+
 end

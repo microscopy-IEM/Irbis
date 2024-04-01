@@ -61,7 +61,7 @@ function PixelPos = MicroMToPixelPosition_testing(MicroMArray,ax)
     yYratio = sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
     if sign(cosd(azimuth))*sign(sind(elevation)) < 0
     yYratio = 1 + yYratio;
-    end   
+    end
 
     sinRE = abs(sind(elevation))/(abs(sind(elevation))+abs(cosd(elevation)));
     cosRE = abs(cosd(elevation))/(abs(sind(elevation))+abs(cosd(elevation)));
@@ -71,6 +71,16 @@ function PixelPos = MicroMToPixelPosition_testing(MicroMArray,ax)
 
     xCPix = x0Pix + xParentPix + xPix*xXratio*(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio)) + xPix*yXratio*(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio));
     yCPix = y0Pix + yParentPix + yPix*sinREw*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*sinREw*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*cosREw*(zCMic-ax.ZLim(1))/zLimMic;
+    
+
+    % sinRE = abs(sind(elevation))/(abs(sind(elevation))+abs(cosd(elevation)));
+    % cosRE = abs(cosd(elevation))/(abs(sind(elevation))+abs(cosd(elevation)));
+    % 
+    % sinREw = sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth)))/(cosRE*zLimMic+sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth))));
+    % cosREw = cosRE*zLimMic/(cosRE*zLimMic+sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth))));
+    % 
+    % xCPix = x0Pix + xParentPix + xPix*xXratio*(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio)) + xPix*yXratio*(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio));
+    % yCPix = y0Pix + yParentPix + yPix*sinREw*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*sinREw*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*cosREw*(zCMic-ax.ZLim(1))/zLimMic;
 
     % xCPix = x0Pix + xParentPix + xPix*xXratio*(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio)) + xPix*yXratio*(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio));
     % yCPix = y0Pix + yParentPix + yPix*abs(sind(elevation))*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*abs(sind(elevation))*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*(1-abs(sind(elevation)))*(zCMic-ax.ZLim(1))/zLimMic;
