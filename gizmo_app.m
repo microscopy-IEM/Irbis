@@ -256,126 +256,48 @@ function updateDirection(vRot,theta,handles,startPosition,startPositionRot,~,poi
     pointB.ZData = handles(3).ZData;    
 end
 
-% function to return currert position of gizmo defined  by centre element
-function pos = getPosition(handles)
-
-end
-
-% function to reture current direction (normal) od the gizmo
-function dir = getDirection(handles)
-
-end
-
-% % function that gets uM position of an object and return its position in pixel coordinates of the screen
-% function PixelPos = MicroMToPixelPositionArray(MicroMArray,tool)
-% 
-%     ax = tool.Parent;
-%     p1Pos = tool.Parent.Parent.Position;
-%     xP1 = p1Pos(1);
-%     yP1 = p1Pos(2);
-%     p2Pos = tool.Parent.Parent.Parent.Position;
-%     xP2 = p2Pos(1);
-%     yP2 = p2Pos(2);
-%     p3Pos = tool.Parent.Parent.Parent.Parent.Position;
-%     xP3 = p3Pos(1);
-%     yP3 = p3Pos(2);
-%     p4Pos = tool.Parent.Parent.Parent.Parent.Parent.Position;
-%     xP4 = p4Pos(1);
-%     yP4 = p4Pos(2);
-% 
-%     xParentPix = xP1 + xP2 + xP3 + xP4 -3;
-%     yParentPix = yP1 + yP2 + yP3 + yP4 -1;
-% 
-%     elevation = ax.View(2);
-%     azimuth = wrapTo360(ax.View(1));
-% 
-%     % getting dimensions of the axes object
-%     tighPos = ax.tightPosition;
-%     x0Pix = tighPos(1);
-%     y0Pix = tighPos(2);
-%     xPix = tighPos(3);
-%     yPix = tighPos(4);
-% 
-%     xLimMic = ax.XLim(2)-ax.XLim(1);
-%     yLimMic = ax.YLim(2)-ax.YLim(1); 
-%     zLimMic = ax.ZLim(2)-ax.ZLim(1);
-% 
-%     xCMic = MicroMArray(:,1);
-%     yCMic = MicroMArray(:,2);
-%     zCMic = MicroMArray(:,3);
-% 
-%     % calculating ratio of x and y side, in respect to the bounding box
-%     cosRatio = abs(cosd(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
-%     sinRatio = abs(sind(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
-% 
-%     % % calculating proportional movement contribution by x and y, depending on the rotation - new rotational system
-%     % xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
-%     % if sign(cosd(azimuth)) < 0
-%     % xXratio = 1 + xXratio;
-%     % end
-%     % xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
-%     % if sign(sind(azimuth)) < 0
-%     % xYratio = 1 + xYratio;
-%     % end
-%     % yXratio = sign(-sind(azimuth))*yCMic/yLimMic;
-%     % if sign(-sind(azimuth)) < 0
-%     % yXratio = 1 + yXratio;
-%     % end
-%     % yYratio = sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
-%     % if sign(-cosd(azimuth)) < 0
-%     % yYratio = 1 + yYratio;
-%     % end
-%     % 
-%     % % calculating proportional movement contribution by x and y, depending on the rotation - old rotational system
-%     % xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
-%     % if sign(cosd(azimuth)) < 0
-%     % xXratio = 1 + xXratio;
-%     % end
-%     % xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
-%     % if sign(sind(azimuth)) < 0
-%     % xYratio = 1 + xYratio;
-%     % end
-%     % yXratio = sign(-sind(azimuth))*yCMic/yLimMic;
-%     % if sign(-sind(azimuth)) < 0
-%     % yXratio = 1 + yXratio;
-%     % end
-%     % yYratio = sign(-cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
-%     % if sign(-cosd(azimuth)) < 0
-%     % yYratio = 1 + yYratio;
-%     % end
-% 
-%     % calculating proportional movement contribution by x and y, depending on the rotation - new rotational system
-%     xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
-%     if sign(cosd(azimuth)) < 0
-%     xXratio = 1 + xXratio;
-%     end
-%     xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
-%     if sign(-sind(azimuth))*sign(sind(elevation)) < 0
-%     xYratio = 1 + xYratio;
-%     end
-%     yXratio = sign(sind(azimuth))*yCMic/yLimMic;
-%     if sign(sind(azimuth)) < 0
-%     yXratio = 1 + yXratio;
-%     end
-%     yYratio = sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
-%     if sign(cosd(azimuth))*sign(sind(elevation)) < 0
-%     yYratio = 1 + yYratio;
-%     end    
-% 
-%     % calculating the position of point in pixel world relative to the origin in coordinates of the screen
-%     xCPix = x0Pix + xParentPix + xPix*cosRatio*xXratio + xPix*sinRatio*yXratio;
-%     yCPix = y0Pix + yParentPix + yPix*abs(sind(elevation))*sinRatio*xYratio + yPix*abs(sind(elevation))*cosRatio*yYratio + yPix*(1-abs(sind(elevation)))*(zCMic-ax.ZLim(1))/zLimMic;
-% 
-%     PixelPos = [xCPix,yCPix];
-% end
-
 
 % function set button callback when clicked on specific element
 function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotionCallback,buttonUpCallback,scrollWheelCallback)
 
     tool = src;
     ax = src.Parent;
-    figHandle = fig; %src.Parent.Parent;
+    figHandle = fig;
+
+    azimuth = wrapTo360(ax.View(1));
+    elevation = ax.View(2);    
+
+    % precalculate parameters depending just on system rotation 
+    % micMetrToPix conversions
+    if isequal(elevation,0) && isequal(mod(azimuth+90,180),0)
+        XmicMetrPerPix = 0;
+    else
+        p1 = MicroMToPixelPosition([ax.XLim(1),0,0],ax);
+        p2 = MicroMToPixelPosition([ax.XLim(2),0,0],ax);
+        pix = norm(p2-p1);                
+        microM = ax.XLim(2) - ax.XLim(1);
+        XmicMetrPerPix = microM/pix;
+    end
+
+    if isequal(elevation,0) && isequal(mod(azimuth,180),0)
+        XmicMetrPerPix = 0;
+    else
+        p1 = MicroMToPixelPosition([0,ax.YLim(1),0],ax);
+        p2 = MicroMToPixelPosition([0,ax.YLim(2),0],ax);
+        pix = norm(p2-p1);                
+        microM = ax.YLim(2) - ax.YLim(1);
+        YmicMetrPerPix = microM/pix;
+    end
+    
+    if isequal(elevation,90) || isequal(elevation,-90)
+        ZmicMetrPerPix = 0;
+    else
+        p1 = MicroMToPixelPosition([0,0,ax.ZLim(1)],ax);
+        p2 = MicroMToPixelPosition([0,0,ax.ZLim(2)],ax);
+        pix = norm(p2-p1);  
+        microM = ax.ZLim(2) - ax.ZLim(1);
+        ZmicMetrPerPix = microM/pix;   
+    end
 
     % position of the gizmo center in uM world and in pixel world
     startPosition = [moveHandles(1).XData;moveHandles(1).YData;moveHandles(1).ZData];
@@ -413,11 +335,13 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
             end
     
     elseif evt.Button == 1      % this makes it translate only when left button is pressed
+
+        % TO OPTIMIZE - precalculate line equations       
             
         figHandle.WindowButtonMotionFcn = @(src,evt)gizmoMove(src,evt,moveHandles,rotHandles,startPosition,startPositionRot,tool,startScreenPosition,startPositionPix,startPositionToolPix,pointA,pointB,fig);
         figHandle.WindowButtonUpFcn = @(src,evt)resetClb(src,evt,figHandle,buttonMotionCallback,buttonUpCallback,scrollWheelCallback);
 
-    elseif evt.Button == 2      % assings the scrollwheel callback
+    elseif evt.Button == 2      % assigns the scrollwheel callback
 
         figHandle.WindowScrollWheelFcn = @(src,evt)scrollwheelMove(src,evt);
         theta = 0;
@@ -469,15 +393,11 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
                 
         end
 
-        azimuth = wrapTo360(ax.View(1));
-        elevation = ax.View(2);
 
          switch tool.Tag
                 
             case 'xBallPoint'
-                
-                % clc;
-            
+
                 % line equation - this calculation can be pre-calculated to speed up
                 x0 = startScreenPosition(1);
                 y0 = startScreenPosition(2);
@@ -496,30 +416,14 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
     
                 D = (aLn*x1 + bLn*y1 + cLn)/sqrt(aLn^2 + bLn^2);
     
-                % get axes size in pixels
-                tighPos = ax.tightPosition;
-                xPix = tighPos(3);
-       
-                % measure distance "corner to corner" of % this calculation can be pre-calculated to speed up
-                % axes (depends on axes azimuth)
-               
-                a = ax.XLim(2);
-                b0 = ax.YLim(2);
-    
-                xDiagMic = abs(a*sind(azimuth)) + abs(b0*cosd(azimuth));
-    
-            
-                % calculate micrometer to pixel ratio
-                micMetrPerPix = xDiagMic/xPix;
-    
-                dx = D*micMetrPerPix;
+                dx = D*XmicMetrPerPix;
     
                 newPosition = [startPosition(1)+dx startPosition(2) startPosition(3)];
                 updatePosition(newPosition,moveHandles,pointA,pointB)
     
                 
             case 'yBallPoint'
-                % clc
+
                 x0 = startScreenPosition(1);
                 y0 = startScreenPosition(2);
     
@@ -532,22 +436,7 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
     
                 D = (aL*x1 + bL*y1 + cL)/sqrt(aL^2 + bL^2);
     
-                % get axes size in pixels
-                tighPos = ax.tightPosition;
-                xPix = tighPos(3);
-       
-                % measure distanec "corner to corner" of % this calculation can be pre-calculated to speed up
-                % axes (depends on axes azimuth)
-               
-                a = ax.XLim(2);
-                b0 = ax.YLim(2);
-                xDiagMic = abs(a*sind(azimuth)) + abs(b0*cosd(azimuth));
-    
-    
-                % calculate micrometer to pixel ratio
-                micMetrPerPix = xDiagMic/xPix;
-    
-                dy = D*micMetrPerPix;    
+                dy = D*YmicMetrPerPix;    
     
                 newPosition = [startPosition(1) startPosition(2)+dy  startPosition(3)];
                 updatePosition(newPosition,moveHandles,pointA,pointB)                         
@@ -561,30 +450,9 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
                     % get movement distance in pixels
                     z0 = startScreenPosition(2);
                     zc = currentScreenPosition(2);
-                    mouseDist = z0-zc;
-    
-                    % Deal with axis orientation in two steps:
-                    % First step deals with azimuth
-                    % get axes size in pixels
-                    tighPos = ax.tightPosition;
-                    xPix = tighPos(3);
-           
-                    % measure distanec "corner to corner" of
-                    % axes (depends on axes azimuth)
-                    % xMic = sqrt(ax.XLim(2)^2 + ax.YLim(2)^2);  % this calculation can be pre-calculated to speed up
-    
-                    a = ax.XLim(2);
-                    b0 = ax.YLim(2);
-                    % xMic = a*sind(azimuth) + b*cosd(azimuth);
-                    xDiagMic = abs(a*sind(azimuth)) + abs(b0*cosd(azimuth));
-                
-                    % calculate micrometer to pixel ratio
-                    micMetrPerPix = xDiagMic/xPix;
-    
-                    % Second step deals with elevation
-                    dz = mouseDist/sind(90-elevation);
+                    dz = z0-zc;
                       
-                    newPosition = [startPosition(1) startPosition(2) startPosition(3) - dz*micMetrPerPix];
+                    newPosition = [startPosition(1) startPosition(2) startPosition(3) - dz*ZmicMetrPerPix];
                     updatePosition(newPosition,moveHandles,pointA,pointB)
     
                 end
@@ -650,30 +518,15 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
                 y1 = currentScreenPosition(2);                
 
                 D = (vLine(1)*x1 + vLine(2)*y1 + cL)/sqrt(vLine(1)^2 + vLine(2)^2);
-    
-                % get axes size in pixels
-                tighPos = ax.tightPosition;
-                xPix = tighPos(3);
-       
-                % measure distanec "corner to corner" of % this calculation can be pre-calculated to speed up
-                % axes (depends on axes azimuth)
-               
-                a = ax.XLim(2);
-                b0 = ax.YLim(2);
-    
-                xDiagMic = abs(a*sind(azimuth)) + abs(b0*cosd(azimuth));
-    
-            
-                % calculate micrometer to pixel ratio
-                micMetrPerPix = xDiagMic/xPix;
-
+ 
                 vMicroM = - startPosition + startPositionRot{3};
-
                 vMicroMnorm = vMicroM/norm(vMicroM);
 
-                dx = vMicroMnorm(1)*micMetrPerPix*D;
-                dy = vMicroMnorm(2)*micMetrPerPix*D;
-                dz = vMicroMnorm(3)*micMetrPerPix*D;
+                % TO OPTIMIZE - here, it is probably needed to take into account the different pixToMicroM values
+
+                dx = vMicroMnorm(1)*XmicMetrPerPix*D;
+                dy = vMicroMnorm(2)*YmicMetrPerPix*D;
+                dz = vMicroMnorm(3)*ZmicMetrPerPix*D;
                 newPosition = [startPosition(1)+dx startPosition(2)+dy startPosition(3)+dz];
                 updatePosition(newPosition,moveHandles,pointA,pointB)    
 
@@ -707,7 +560,6 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
     end
 
     function scrollwheelMove(~,evt)
-        % disp(['verticalScrollCount: ' num2str(evt.VerticalScrollCount)])
 
         switch scrolledElement.Tag
 
@@ -715,24 +567,20 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
                 dPos = dPos + evt.VerticalScrollCount*0.1;
                 newPosition = [startPosition(1)+dPos startPosition(2) startPosition(3)];
                 updatePosition(newPosition,moveHandles,pointA,pointB)
-                % startPosition = newPosition;
             case 'yBallPoint'
                 dPos = dPos + evt.VerticalScrollCount*0.1;
                 newPosition = [startPosition(1) startPosition(2)+dPos startPosition(3)];
-                updatePosition(newPosition,moveHandles,pointA,pointB)
-                % startPosition = newPosition;                
+                updatePosition(newPosition,moveHandles,pointA,pointB)             
             case 'zBallPoint'
                 dPos = dPos + evt.VerticalScrollCount*0.1;
                 newPosition = [startPosition(1) startPosition(2) startPosition(3)+dPos];
-                updatePosition(newPosition,moveHandles,pointA,pointB)
-                % startPosition = newPosition;                
+                updatePosition(newPosition,moveHandles,pointA,pointB)          
             case 'cBallPoint'
             case 'normSquare'
                 dx = rotHandles(3).XData - moveHandles(1).XData;
                 dy = rotHandles(3).YData - moveHandles(1).YData;
                 dz = rotHandles(3).ZData - moveHandles(1).ZData;
 
-                % dv = sqrt(dx^2 + dy^2 + dz^2);
                 dPos = dPos + evt.VerticalScrollCount*0.1;
                 newPosition = [startPosition(1)+dx*dPos startPosition(2)+dy*dPos startPosition(3)+dz*dPos];
                 updatePosition(newPosition,moveHandles,pointA,pointB)
@@ -752,45 +600,10 @@ function gizmoClick(src,evt,moveHandles,rotHandles,pointA,pointB,fig,buttonMotio
 end
 
 
-function resetClb(src,~,f,buttonMotionCallback,buttonUpCallback,scrollWheelCallback)
-         
-            ax = src;
-                  
-            f.WindowButtonMotionFcn = buttonMotionCallback;
-            f.WindowButtonUpFcn = buttonUpCallback;
-            f.WindowScrollWheelFcn = scrollWheelCallback;
+function resetClb(~,~,f,buttonMotionCallback,buttonUpCallback,scrollWheelCallback)
 
-            % TO FIX - return original WindowButtonMotionFcn after gizmo is switched off
-            % MyDragzoom(ax,'on');        
+    f.WindowButtonMotionFcn = buttonMotionCallback;
+    f.WindowButtonUpFcn = buttonUpCallback;
+    f.WindowScrollWheelFcn = scrollWheelCallback;
+  
 end
-
-% function rotateAndReset(src,evt,tool,moveHandles,rotHandles,pointA,pointB,f)
-% 
-%         ax = src;
-%         f.WindowButtonMotionFcn = [];     
-% 
-%          % rotation:
-% 
-%          pA = [pointA.XData;pointA.YData;pointA.ZData];
-%          pB = [pointB.XData;pointB.YData;pointB.ZData];
-%          pC = [rotHandles(3).XData;rotHandles(3).YData;rotHandles(3).ZData];
-% 
-%          v1 = (pB - pA)/norm(pB - pA);
-%          v2 = (pC - pA)/norm(pC - pA);
-% 
-%          vRot = cross(v1,v2)/norm(cross(v1,v2));
-% 
-%          theta = acos(-dot(v1,v2)/(norm(v1)*norm(v2)));
-% 
-%          startPosition = pA;
-% 
-% 
-%         startPositionRot = {};
-%         for i=1:length(rotHandles)
-%             startPositionRot{i} = [rotHandles(i).XData;rotHandles(i).YData;rotHandles(i).ZData];
-%         end
-%         updateDirection(vRot,theta,rotHandles,startPosition,startPositionRot,pointA,pointB)
-% 
-%         MyDragzoom(ax,'on');  
-% 
-% end
