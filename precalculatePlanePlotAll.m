@@ -40,7 +40,9 @@ function rgbMatrix = precalculatePlanePlotAll(zstack,activeChannels,planesLimits
         for currentPlane = minUsed:maxUsed
     
             Z_Range = currentPlane-focalRange:currentPlane+focalRange;   
-            Zprojection = squeeze(getZProjection(zstack,activeChannels,Z_Range,currentTimePoint,mode));
+            % Zprojection = squeeze(getZProjection(zstack,activeChannels,Z_Range,currentTimePoint,mode));
+            Zprojection = (getZProjection(zstack,activeChannels,Z_Range,currentTimePoint,mode));
+            Zprojection = permute(Zprojection,[1,2,5,3,4,6]);
     
             if mappingToolboxYes
                 for ch_ind = 1:nChannels
@@ -63,6 +65,6 @@ function rgbMatrix = precalculatePlanePlotAll(zstack,activeChannels,planesLimits
     temp = (sum(rgbPlane,4,"native"));
 
     temp = permute(temp,[1 2 3 5 6 4]);
-    rgbMatrix(:,:,1:3,:,currentTimePoint) = temp;
+    rgbMatrix = temp;
 
 end
