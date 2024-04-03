@@ -2,6 +2,7 @@ function rgbMatrix = precalculatePlanePlotAll(zstack,activeChannels,planesLimits
 
     % zstack dimensions: x - y - z - t - ch
     % rgbMatrix dimensions: x - y - 3 (RGB) - z - t
+    % rgbPlane dimensions: x - y - 3 (RGB) - ch - z - t
 
     xdim = size(zstack,1);
     ydim = size(zstack,2);
@@ -57,6 +58,11 @@ function rgbMatrix = precalculatePlanePlotAll(zstack,activeChannels,planesLimits
             end
         end
     end
-    rgbMatrix = squeeze(sum(rgbPlane,4,"native"));
+    % rgbMatrix = squeeze(sum(rgbPlane,4,"native"));
+
+    temp = (sum(rgbPlane,4,"native"));
+
+    temp = permute(temp,[1 2 3 5 6 4]);
+    rgbMatrix(:,:,1:3,:,currentTimePoint) = temp;
 
 end
