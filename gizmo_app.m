@@ -6,19 +6,6 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
     scrollWheelCallback = fig.WindowScrollWheelFcn;
     
     originalCallbacks = {buttonMotionCallback,buttonUpCallback,scrollWheelCallback};
-    
-    % disable selectivity for all currently plotted components  
-    h = ax.Children;
-    for i = 1:length(h)
-        if isprop(h(i), 'PickableParts')
-            set(h(i), 'PickableParts', 'none');
-        end
-    end
-    
-    x0 = 0;
-    y0 = 0;
-    z0 = 0;
-    p0 = [x0 y0 z0];
 
     % clear old components
     delete(findobj(ax,'Tag','cBallPoint'))
@@ -32,8 +19,27 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
     delete(findobj(ax,'Tag','xyRotLine'))
     delete(findobj(ax,'Tag','normBallPoint'))
     delete(findobj(ax,'Tag','3dPlane'))
-    delete(findobj(ax,'Tag','normLink'))
+    delete(findobj(ax,'Tag','normLink'))    
     
+    % disable selectivity for all currently plotted components  
+    h = ax.Children;
+    for compN = 1:length(h)
+        if isprop(h(compN), 'PickableParts')
+            set(h(compN), 'PickableParts', 'none');
+        end
+    end
+
+    % define default position
+    x0 = 0;
+    y0 = 0;
+    z0 = 0;
+    p0 = [x0 y0 z0];
+
+    % define gizmo size
+    spacing = 1.2;
+    ballSize = 12;
+    planeEdgeSize = 3;    
+
     % set default colors and transparency
     edgeCol = [0.3 0.3 0.3];
     % linkCol = [0.3 0.3 0.3];
@@ -43,26 +49,27 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
     xCol = [0.4660 0.7740 0.1880];
     yCol = [0.7350 0.0780 0.1840];
     zCol = [0.3010 0.6450 0.9930];
+
+    normCol = [0.4 0.4 0.4];
+
+    lineWidth = 1;
     
-    planeTansparency = 0.4;
-    
-    % gizmo size
-    spacing = 1.2;
-    ballSize = 12;
-    planeEdgeSize = 3;
-    
+    planeTansparency = 0.6;
+    planeCData = [1 0.6 0.3 0];
+    planeEdgeColor = [0.9 0.9 0.9];
+
     %% Translation elements
     
-    lx = line(ax,[x0,x0+spacing],[y0 y0],[z0 z0],'Tag','xlineLink','Color',xCol,'LineWidth',1);
-    ly = line(ax,[x0,x0],[y0 y0+spacing],[z0 z0],'Tag','xlineLink','Color',yCol,'LineWidth',1);
-    lz = line(ax,[x0,x0],[y0 y0],[z0 z0+spacing],'Tag','xlineLink','Color',[0.3010 0.7450 0.9330],'LineWidth',1);
+    lx = line(ax,[x0,x0+spacing],[y0 y0],[z0 z0],'Tag','xlineLink','Color',xCol,'LineWidth',lineWidth);
+    ly = line(ax,[x0,x0],[y0 y0+spacing],[z0 z0],'Tag','xlineLink','Color',yCol,'LineWidth',lineWidth);
+    lz = line(ax,[x0,x0],[y0 y0],[z0 z0+spacing],'Tag','xlineLink','Color',zCol,'LineWidth',lineWidth);
     
-    cBallPoint = plot3(ax,x0,y0,z0,'k','Marker','o','MarkerFaceColor','k','MarkerSize',ballSize,'Tag','cBallPoint','MarkerEdgeColor',edgeCol,'LineWidth',1);
+    cBallPoint = plot3(ax,x0,y0,z0,'k','Marker','o','MarkerFaceColor','k','MarkerSize',ballSize,'Tag','cBallPoint','MarkerEdgeColor',edgeCol,'LineWidth',lineWidth);
     
-    xBallPoint = plot3(ax,x0+spacing,y0,z0,'r','Marker','o','MarkerFaceColor',xCol,'MarkerSize',ballSize,'Tag','xBallPoint','MarkerEdgeColor',edgeCol);
-    yBallPoint = plot3(ax,x0,y0+spacing,z0,'g','Marker','o','MarkerFaceColor',yCol,'MarkerSize',ballSize,'Tag','yBallPoint','MarkerEdgeColor',edgeCol);
-    zBallPoint = plot3(ax,x0,y0,z0+spacing,'b','Marker','o','MarkerFaceColor',zCol,'MarkerSize',ballSize,'Tag','zBallPoint','MarkerEdgeColor',edgeCol);
-          
+    xBallPoint = plot3(ax,x0+spacing,y0,z0,'Marker','o','MarkerFaceColor',xCol,'MarkerSize',ballSize,'Tag','xBallPoint','MarkerEdgeColor',edgeCol);
+    yBallPoint = plot3(ax,x0,y0+spacing,z0,'Marker','o','MarkerFaceColor',yCol,'MarkerSize',ballSize,'Tag','yBallPoint','MarkerEdgeColor',edgeCol);
+    zBallPoint = plot3(ax,x0,y0,z0+spacing,'Marker','o','MarkerFaceColor',zCol,'MarkerSize',ballSize,'Tag','zBallPoint','MarkerEdgeColor',edgeCol);
+
     %% Rotation elements
     
     normal = [0 1 0];
@@ -81,8 +88,7 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
     v=null(normal);
     points=repmat(center',1,size(theta,2))+radius*(v(:,1)*cos(theta)+v(:,2)*sin(theta));
     xyRot = plot3(ax,points(1,:),points(2,:),points(3,:),'Color',zCol,'LineWidth',5,'Tag','xyRotLine');
-    
-               
+           
     % plane 
     A = planeEdgeSize/2;
     
@@ -90,10 +96,11 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
     x = [0 0 0 0];
     y = [-A A A -A];
     z = [-A -A A A];
+
     
-    normPlane = fill3(ax,x,y,z,planeCol,'FaceAlpha',planeTansparency,'Tag','3dPlane');
-    normLine = line(ax,[0 1.2*spacing],[0 0],[0 0],'LineWidth',1,'Color','k','Tag','normLink');
-    normBallPoint = line(ax,1.25*spacing,0,0,'Marker','o','MarkerFaceColor',[0.4 0.4 0.4],'MarkerSize',15,'Tag','normBallPoint','LineWidth',1);
+    normPlane = fill3(ax,x,y,z,planeCol,'CData',planeCData,'FaceColor','interp','FaceAlpha',planeTansparency,'EdgeColor',planeEdgeColor,'Tag','3dPlane');
+    normLine = line(ax,[0 1.2*spacing],[0 0],[0 0],'LineWidth',lineWidth,'Color','k','Tag','normLink');
+    normBallPoint = plot3(ax,x0+1.25*spacing,y0,z0,'Marker','o','MarkerFaceColor',normCol,'MarkerSize',ballSize,'Tag','normBallPoint','MarkerEdgeColor',edgeCol);
     
     %% Interactivity settings
     
@@ -166,11 +173,13 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
     iptPointerManager(fig, 'enable');
     
     
-    %% MOVE TO SET POSITION
+    %% move gizmo to starting position - defined by pointA (position) and pointB (rotation)
     
+    % position
     newPosition = [pointA.XData,pointA.YData,pointA.ZData];
     updatePosition(newPosition,moveHandles)            
     
+    % rotation
     v1 = [normBallPoint.XData;normBallPoint.YData;normBallPoint.ZData] - [pointA.XData;pointA.YData;pointA.ZData];
     v2 = - [pointA.XData;pointA.YData;pointA.ZData] + [pointB.XData;pointB.YData;pointB.ZData];
     
@@ -182,9 +191,9 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
     theta = acos(dot(v1,v2)/(norm(v1)*norm(v2)));
     
     startPositionI = [moveHandles(1).XData;moveHandles(1).YData;moveHandles(1).ZData];
-    startPositionRotI = {};
-    for i=1:length(rotHandles)
-        startPositionRotI{i} = [rotHandles(i).XData;rotHandles(i).YData;rotHandles(i).ZData];
+    startPositionRotI = cell(1, length(rotHandles));
+    for rotN=1:length(rotHandles)
+        startPositionRotI{rotN} = [rotHandles(rotN).XData;rotHandles(rotN).YData;rotHandles(rotN).ZData];
     end
     
     updateDirection(vRot,theta,rotHandles,startPositionI,startPositionRotI,pointA,pointB)
@@ -197,22 +206,24 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
         azimuth = wrapTo360(ax.View(1));
         elevation = ax.View(2);    
     
-        % position of the gizmo center in uM world and in pixel world
+        % get position of the gizmo center in uM world and in pixel world
         startPosition = [moveHandles(1).XData;moveHandles(1).YData;moveHandles(1).ZData];
         cBallPointArray = [moveHandles(1).XData,moveHandles(1).YData,moveHandles(1).ZData];
         startPositionPix = MicroMToPixelPosition(cBallPointArray,ax); 
     
-        % initial position of the selected part in pixel world
+        % get initial position of the selected part in pixel world
         srcArray = [src.XData,src.YData,src.ZData];
         startPositionSrcPix = MicroMToPixelPosition(srcArray,ax);    
 
-        % initial position of the pointer in pixel world
+        % get initial position of the pointer in pixel world
         startScreenPosition = get(0,'Pointerlocation');
     
-        startPositionRot = {};
-        for i=1:length(rotHandles)
-            startPositionRot{i} = [rotHandles(i).XData;rotHandles(i).YData;rotHandles(i).ZData];
+        % get starting position of rotational elements
+        startPositionRot = cell(1, length(rotHandles));
+        for rotN2=1:length(rotHandles)
+            startPositionRot{rotN2} = [rotHandles(rotN2).XData;rotHandles(rotN2).YData;rotHandles(rotN2).ZData];
         end
+
     
         if evt.Button == 3      % rotates the axes into a specific view
            
@@ -311,12 +322,8 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
 
                 case 'cBallPoint'
 
-                    % if stickyPoints are not empty, get the 2D projection
-                    if ~isempty(stickyPoints)
-                        stickyPoints2D = MicroMToPixelPosition(stickyPoints,ax);
-                    else
-                        return
-                    end
+                    % get the 2D projection (the code gets here only if sticky points exist)
+                    stickyPoints2D = MicroMToPixelPosition(stickyPoints,ax);
 
             end     
         
@@ -331,7 +338,7 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
     
         end
 
-        % define the callback function for button motion
+        %% callback function called when left button is used - enables translation or rotation via button motion
         function gizmoMove(~,~)
     
             currentScreenPosition = get(0,'Pointerlocation');
@@ -378,7 +385,7 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
 
         
                 case 'cBallPoint'
-                    % stick to points code + follow normal
+                    % stick to points + follow normal
        
                     % find the index in 2D...
                     csp = [currentScreenPosition(1) currentScreenPosition(2)];
@@ -416,10 +423,9 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
                     
                     startPosition = pA;
             
-                    
-                    startPositionRot = {};
-                    for i=1:length(rotHandles)
-                        startPositionRot{i} = [rotHandles(i).XData;rotHandles(i).YData;rotHandles(i).ZData];
+                    startPositionRot = cell(1, length(rotHandles));
+                    for rotN3=1:length(rotHandles)
+                        startPositionRot{rotN3} = [rotHandles(rotN3).XData;rotHandles(rotN3).YData;rotHandles(rotN3).ZData];
                     end
                     updateDirection(vRot,theta,rotHandles,startPosition,startPositionRot,pointA,pointB)
     
@@ -466,6 +472,7 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
              end        
         end
     
+        %% callback function called when scrollwheel is used - enables translation or rotation via scrolling
         function scrollwheelMove(~,evt)
     
             switch src.Tag
@@ -506,6 +513,7 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
     
     end
 
+    %% callback function called upon button release - resets default callbacks
     function resetClb(~,~)
     
         fig.WindowButtonMotionFcn = buttonMotionCallback;
@@ -516,6 +524,7 @@ function originalCallbacks = gizmo_app(ax,fig,stickyPoints,pointA,pointB)
 
 end
 
+%% function calculating new position via translation
 function updatePosition(newPosition,handles,pointA,pointB)
 
     dX = newPosition(1) - handles(1).XData(1);
@@ -530,7 +539,7 @@ function updatePosition(newPosition,handles,pointA,pointB)
 
     end
 
-    % saving current position for output
+    % save position of centre of the plane (pointA) and point on the normal (pointB)
     pointA.XData = handles(1).XData;
     pointA.YData = handles(1).YData;
     pointA.ZData = handles(1).ZData;
@@ -540,14 +549,17 @@ function updatePosition(newPosition,handles,pointA,pointB)
     pointB.ZData = handles(10).ZData;
 end
 
+%% function calculating new position via rotation
 function updateDirection(vRot,theta,handles,startPosition,startPositionRot,~,pointB)
-    u = vRot;
 
-    R = [cos(theta) + (u(1))^2 * (1 - cos(theta))      (u(1)) * (u(2)) * (1 - cos(theta)) - (u(3)) * sin(theta)    (u(1)) * (u(3)) * (1 - cos(theta)) + (u(2)) * sin(theta);
-        (u(2)) * (u(1)) * (1 - cos(theta)) + (u(3)) * sin(theta)    cos(theta) + (u(2))^2 * (1 - cos(theta))    (u(2)) * (u(3)) * (1 - cos(theta)) - (u(1)) * sin(theta);
-        (u(3)) * (u(1)) * (1 - cos(theta)) - (u(2)) * sin(theta)    (u(3)) * (u(2)) * (1 - cos(theta)) + (u(1)) * sin(theta)    cos(theta) + (u(3))^2 * (1 - cos(theta))];
+    % calculate rotational matrix considering the input vector of rotation
+    R = [cos(theta) + (vRot(1))^2 * (1 - cos(theta))      (vRot(1)) * (vRot(2)) * (1 - cos(theta)) - (vRot(3)) * sin(theta)    (vRot(1)) * (vRot(3)) * (1 - cos(theta)) + (vRot(2)) * sin(theta);
+        (vRot(2)) * (vRot(1)) * (1 - cos(theta)) + (vRot(3)) * sin(theta)    cos(theta) + (vRot(2))^2 * (1 - cos(theta))    (vRot(2)) * (vRot(3)) * (1 - cos(theta)) - (vRot(1)) * sin(theta);
+        (vRot(3)) * (vRot(1)) * (1 - cos(theta)) - (vRot(2)) * sin(theta)    (vRot(3)) * (vRot(2)) * (1 - cos(theta)) + (vRot(1)) * sin(theta)    cos(theta) + (vRot(3))^2 * (1 - cos(theta))];
 
 
+
+    % adapt position of all elements affected by rotation
     for i=1:(length(handles))
 
         if isequal(handles(i).Type,'line')
@@ -570,7 +582,7 @@ function updateDirection(vRot,theta,handles,startPosition,startPositionRot,~,poi
         end
     end
 
-    % saving current position for output - point A doesn't move by rotation
+    % save position of point on the normal (pointB) - centre of the plane (pointA) is not affected by rotation
     pointB.XData = handles(3).XData;
     pointB.YData = handles(3).YData;
     pointB.ZData = handles(3).ZData;    

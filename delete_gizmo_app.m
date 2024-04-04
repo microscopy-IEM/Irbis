@@ -9,7 +9,7 @@ function delete_gizmo_app(ax,fig,originalCallbacks)
 
     delete(findobj(ax,'Tag','xzRotLine'))
     delete(findobj(ax,'Tag','xyRotLine'))
-    delete(findobj(ax,'Tag','normSquare'))
+    delete(findobj(ax,'Tag','normBallPoint'))
     delete(findobj(ax,'Tag','3dPlane'))
     delete(findobj(ax,'Tag','normLink'))
 
