@@ -66,7 +66,7 @@ MSD.MSD5_r2 = ma.lfit.r2fit;
 MSD.ma = ma;
 
 % save complete MSD analysis 
-tracks.MSD = MSD;
+% tracks.MSD = MSD;
 
 % add crucial numbers to tracksList
 tracks.tracksList.MSD5(ids) = tracks.MSD.MSD5;
