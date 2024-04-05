@@ -79,6 +79,15 @@ function MMpack = createEmptyMMpack(dial,ver)
     %% Archive
     
     archive = [];
+
+    %% Tools
+    tools = [];
+    % To store:
+    % Peaks
+    % Areas
+    % Zones
+    % Masks
+    % ROIs
     
     %% Results
     
@@ -97,6 +106,7 @@ function MMpack = createEmptyMMpack(dial,ver)
     MMpack.points = points;
     MMpack.tracks = tracks;
     MMpack.model = model;
+    MMpack.tools = tools;
     MMpack.timeline = timeline;
     MMpack.results = results;
     MMpack.archive = archive;

@@ -69,7 +69,7 @@ MSD.ma = ma;
 % tracks.MSD = MSD;
 
 % add crucial numbers to tracksList
-tracks.tracksList.MSD5(ids) = tracks.MSD.MSD5;
+tracks.tracksList.MSD5(ids) = MSD.MSD5;
 tracks.tracksList.MSDr2(ids) = MSD.MSD5_r2;
 tracks.tracksList.MSDcurve(ids) = ma.msd;
 

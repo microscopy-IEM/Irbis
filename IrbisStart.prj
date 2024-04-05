@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="1227680552" file="C:\Users\iva.svecova\Documents\MMPack\IrbisStart.prj" location="C:\Users\iva.svecova\Documents\MMPack" name="IrbisStart" preferred-package-location="C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="1227680552" file="D:\git_folder\Irbis\IrbisStart.prj" location="D:\git_folder\Irbis" name="IrbisStart" preferred-package-location="C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\IrbisStart_resources\icon.ico</param.icon>
     <param.icons>
@@ -10,7 +10,7 @@
     </param.icons>
     <param.version>1.0</param.version>
     <param.authnamewatermark>Stepan Kortus, Iva Svecova</param.authnamewatermark>
-    <param.email />
+    <param.email>stepan.kortus@iem.cas.cz</param.email>
     <param.company>Institute of Experimental Medicine CAS</param.company>
     <param.summary>Testing version of Irbis4Neuron software</param.summary>
     <param.description />
@@ -175,11 +175,11 @@
       <file>${PROJECT_ROOT}\IS_adding_toolboxes_to_path.m</file>
       <file>${PROJECT_ROOT}\mesh_intersect_and_separate_python.m</file>
       <file>${PROJECT_ROOT}\mesh_subtract_and_separate_and_save_plane_python.m</file>
+      <file>${PROJECT_ROOT}\MicroMToPixelPosition.m</file>
       <file>${PROJECT_ROOT}\MMP_jumpsRemoval.m</file>
       <file>${PROJECT_ROOT}\MMP_LocalizationError.m</file>
       <file>${PROJECT_ROOT}\MMP_MSD_analysis.m</file>
       <file>${PROJECT_ROOT}\MMP_TracksProccesing.m</file>
-      <file>${PROJECT_ROOT}\mosaicPeakFinder.m</file>
       <file>${PROJECT_ROOT}\moveCellItem.m</file>
       <file>${PROJECT_ROOT}\MyDragzoom.m</file>
       <file>${PROJECT_ROOT}\newMMpackDialog.m</file>
@@ -196,16 +196,28 @@
       <file>${PROJECT_ROOT}\SKisonormals.m</file>
       <file>${PROJECT_ROOT}\spineList2ResultTable.m</file>
       <file>${PROJECT_ROOT}\submesh_selection.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\compute_geodesic.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.mexw64</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d_slow.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\clamp.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_distance_to_points.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_grad.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\getoptions.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\mmax.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\nb_dims.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\perform_vf_normalization.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\prod_vf_sf.m</file>
       <file>${PROJECT_ROOT}\tubeplot.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\Irbis.exe</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">D:\git_folder\Irbis\Irbis\for_testing\Irbis.exe</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">D:\git_folder\Irbis\Irbis\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">D:\git_folder\Irbis\Irbis\for_testing\readme.txt</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>C:\Program Files\MATLAB\R2023a</root>
+      <root>C:\Program Files\MATLAB\R2024a</root>
       <toolboxes>
         <toolbox name="matlabcoder" />
         <toolbox name="gpucoder" />
