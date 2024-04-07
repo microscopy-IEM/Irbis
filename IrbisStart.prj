@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="1227680552" file="D:\git_folder\Irbis\IrbisStart.prj" location="D:\git_folder\Irbis" name="IrbisStart" preferred-package-location="C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="1227680552" file="D:\git_folder2\IrbisStart.prj" location="D:\git_folder2" name="IrbisStart" preferred-package-location="C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\IrbisStart_resources\icon.ico</param.icon>
     <param.icons>
@@ -10,7 +10,7 @@
     </param.icons>
     <param.version>1.0</param.version>
     <param.authnamewatermark>Stepan Kortus, Iva Svecova</param.authnamewatermark>
-    <param.email>stepan.kortus@iem.cas.cz</param.email>
+    <param.email />
     <param.company>Institute of Experimental Medicine CAS</param.company>
     <param.summary>Testing version of Irbis4Neuron software</param.summary>
     <param.description />
@@ -211,9 +211,9 @@
       <file>${PROJECT_ROOT}\tubeplot.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">D:\git_folder\Irbis\Irbis\for_testing\Irbis.exe</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">D:\git_folder\Irbis\Irbis\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">D:\git_folder\Irbis\Irbis\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">D:\git_folder2\Irbis\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">D:\git_folder2\Irbis\for_testing\Irbis.exe</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">D:\git_folder2\Irbis\for_testing\readme.txt</file>
     </build-deliverables>
     <workflow />
     <matlab>
