@@ -21,7 +21,7 @@ function points = ImportPoints()
         disp(['User selected ', fullFileName]);
     
 
-        coor = readtable(fullFileName,'VariableNamingRule','preserve')
+        coor = readtable(fullFileName,'VariableNamingRule','preserve');
 
         switch origin
             case 'ThunderStorm'
@@ -31,7 +31,7 @@ function points = ImportPoints()
                 coor.Properties.VariableNames = regexprep(coor.Properties.VariableNames, ']', '');
                 coor.Properties.VariableNames = regexprep(coor.Properties.VariableNames, 'nm', '');
 
-                ff = isfield(coor,'id')
+                % ff = isfield(coor,'id')
 
                 if isfield(coor,'id')
                     pointList = coor(:,["id","frame",'x','y','z','uncertainty_xy','uncertainty_z']);
