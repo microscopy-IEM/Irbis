@@ -60,11 +60,17 @@ function points = ImportPoints()
             % pointList.uncertainty_z = pointList.uncertainty_z./1000;
 
         end
+
+    manualAlignment.x = 0;
+    manualAlignment.y = 0;
+    manualAlignment.z = 0;
+    manualAlignment.zScale = 1;
       
     %% Create points structure
 
     points.pointsList = pointList;
     points.fileName = coor_fileName;
     points.registration = [];
+    points.manualAlignment = manualAlignment;
 
 end
