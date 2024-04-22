@@ -1648,8 +1648,20 @@ Initialize(varargin{:})
         
         if (el > 89.9), el = 89.9; end
         if (el < -89.9), el = -89.9; end
+        % if (el == 90), el = 89.9; end
+        % if (el == -90), el = -89.9; end  
+
+        % if (el > 90), hAx.CameraUpVector = [0 0 -1]; end
+        % if (el < 90), hAx.CameraUpVector = [0 0 1]; end
+        % if (el < -90), hAx.CameraUpVector = [0 0 -1]; end
+
+        % el
+        % hAx.CameraUpVector
+        % hAx.XAxisLocation
         
         view(hAx, [az, el]);
+        % hAx.CameraPosition
+        % hAx.CameraPosition = -hAx.CameraPosition
     end
 %--------------------------------------------------------------------------
 %==========================================================================
