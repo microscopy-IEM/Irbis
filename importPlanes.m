@@ -160,7 +160,7 @@ function planes = importPlanes(figureH,varargin)
         % Sort data for the MMpack format
 
         planes.refOrigFileName = fileName;
-        planes.zstack = zstack;                                      % raw image data (multiple tiff of zstack or single tiff per channel)
+        planes.zstack = zstack;                                      % raw image data (multiple tiff of zstack or single tiff per channel) - dimensions x*y*z*t*ch
         planes.pixel_size = pixelSize;                               % pixel size in defined units (micrometeres)
         planes.z_spacing = z_spacing;                                % step in Z-stack data
         planes.channel_names = channels_desc;                        % channel specification {'GFP','Homer','DIC'}
