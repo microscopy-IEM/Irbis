@@ -1,12 +1,37 @@
 import pymeshlab
 import os
+import numpy as np
 
-def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_path ='C:\\Users\\Public\\MMP\\temp',fraction_to_keep=0.8,min_vertex_num=20,separate=1):
+def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_path ='C:\\Users\\Public\\MMP\\temp',fraction_to_keep=0.8,min_vertex_num=20,separate=1,pt_vertices = [],pt_normals = []):
 
     os.chdir(temp_path)
 
+    print('in python')
+    
+    pt_vertices = np.array(pt_vertices)
+    pt_normals = np.array(pt_normals)
+    print(pt_vertices)
+    print(type(pt_vertices))
+    print(pt_vertices.dtype)
+    print(pt_vertices.shape)
+    print(type(pt_normals))
+    print(pt_normals.dtype)
+    print(pt_normals.shape)
+
+
     ms = pymeshlab.MeshSet()
-    ms.load_new_mesh(str(input))  
+
+    m = pymeshlab.Mesh(vertex_matrix = pt_vertices,v_normals_matrix = pt_normals)
+    ms.add_mesh(m)
+    # ms.load_new_mesh(str(input))  
+
+    cm = ms.current_mesh()
+    print(len(cm.vertex_matrix()))
+    print(len(cm.face_matrix()))
+    print(len(cm.edge_matrix()))
+    print(cm.vertex_normal_matrix())
+    print(cm.face_normal_matrix())
+    print(cm.vertex_color_matrix())
 
     ms.generate_surface_reconstruction_screened_poisson(depth=int(depth),preclean=True)
 
@@ -28,15 +53,46 @@ def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_pat
         n_total = ms.number_meshes()
 
         object_num = 1
+        vertices = dict()
+        faces = dict()
+        vertex_normals = dict()
+        face_normals = dict()
+
         for i in range(n_complete,n_total):
             ms.set_current_mesh(new_curr_id = i)
             if ms.current_mesh().vertex_number() >= int(min_vertex_num):
                 ms.save_current_mesh(f'temp_{object_num}.ply')
+                cm = ms.current_mesh()
+
+                # assign the relevant measures to corresponding dicitionaries
+                vertices[object_num] = cm.vertex_matrix()
+                faces[object_num] = cm.face_matrix()
+                vertex_normals[object_num] = cm.vertex_normal_matrix()
+                face_normals[object_num] = cm.face_normal_matrix()
+
                 object_num += 1
+            # print('mesh attributes')
+            # cm = ms.current_mesh()
+            # print(dir(cm))
+            # 
+            # print(len(cm.vertex_matrix()))
+            # print(len(cm.face_matrix()))
+            # print(len(cm.edge_matrix()))
+            # print(cm.vertex_normal_matrix())
+            # print(cm.face_normal_matrix())
+            # print(cm.vertex_color_matrix())
+
 
         n_objects = n_total - n_complete
-        return(object_num-1)
+        
+        return((object_num-1),vertices,faces,vertex_normals,face_normals)
     else:
-        return(1)
+        cm = ms.current_mesh()
+        vertices[1] = cm.vertex_matrix()
+        faces[1] = cm.face_matrix()
+        vertex_normals[1] = cm.vertex_normal_matrix()
+        face_normals[1] = cm.face_normal_matrix()
 
-n_objects = reconstruct_mesh(depth=d,input=input_name,output=output_name,temp_path=path,fraction_to_keep=f,min_vertex_num=nVer,separate=separate)
+        return(1,vertices,faces,vertex_normals,face_normals)
+
+n_objects,vertices,faces,vertex_normals,face_normals = reconstruct_mesh(depth=d,input=input_name,output=output_name,temp_path=path,fraction_to_keep=f,min_vertex_num=nVer,separate=separate,pt_vertices=pt_vertices,pt_normals=pt_normals)
