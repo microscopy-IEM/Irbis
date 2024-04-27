@@ -1,10 +1,7 @@
 import pymeshlab
-import os
 import numpy as np
 
-def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_path ='C:\\Users\\Public\\MMP\\temp',fraction_to_keep=0.8,min_vertex_num=20,separate=1,pt_vertices = [],pt_normals = []):
-
-    os.chdir(temp_path)
+def reconstruct_mesh(depth=8,fraction_to_keep=0.8,min_vertex_num=20,separate=1,pt_vertices = [],pt_normals = []):
 
     print('in python')
     
@@ -23,7 +20,6 @@ def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_pat
 
     m = pymeshlab.Mesh(vertex_matrix = pt_vertices,v_normals_matrix = pt_normals)
     ms.add_mesh(m)
-    # ms.load_new_mesh(str(input))  
 
     cm = ms.current_mesh()
     print(len(cm.vertex_matrix()))
@@ -44,7 +40,11 @@ def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_pat
         face_num = int(ms.current_mesh().face_number() * fraction_to_keep)
         ms.meshing_decimation_quadric_edge_collapse(targetfacenum = face_num,preserveboundary = True, preservenormal = True, preservetopology = True, autoclean = True)
 
-    ms.save_current_mesh(str(output))         
+    vertices = dict()
+    faces = dict()
+    vertex_normals = dict()
+    face_normals = dict()
+
     if int(separate) == 1:
         n_complete = ms.number_meshes()
 
@@ -53,10 +53,6 @@ def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_pat
         n_total = ms.number_meshes()
 
         object_num = 1
-        vertices = dict()
-        faces = dict()
-        vertex_normals = dict()
-        face_normals = dict()
 
         for i in range(n_complete,n_total):
             ms.set_current_mesh(new_curr_id = i)
@@ -95,4 +91,4 @@ def reconstruct_mesh(depth=8,input='temp_pt.ply',output='temp_mesh.ply',temp_pat
 
         return(1,vertices,faces,vertex_normals,face_normals)
 
-n_objects,vertices,faces,vertex_normals,face_normals = reconstruct_mesh(depth=d,input=input_name,output=output_name,temp_path=path,fraction_to_keep=f,min_vertex_num=nVer,separate=separate,pt_vertices=pt_vertices,pt_normals=pt_normals)
+n_objects,vertices,faces,vertex_normals,face_normals = reconstruct_mesh(depth=d,fraction_to_keep=f,min_vertex_num=nVer,separate=separate,pt_vertices=pt_vertices,pt_normals=pt_normals)
