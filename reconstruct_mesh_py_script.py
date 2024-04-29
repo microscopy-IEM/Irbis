@@ -57,7 +57,7 @@ def reconstruct_mesh(depth=8,fraction_to_keep=0.8,min_vertex_num=20,separate=1,p
         for i in range(n_complete,n_total):
             ms.set_current_mesh(new_curr_id = i)
             if ms.current_mesh().vertex_number() >= int(min_vertex_num):
-                ms.save_current_mesh(f'temp_{object_num}.ply')
+                # ms.save_current_mesh(f'temp_{object_num}.ply')
                 cm = ms.current_mesh()
 
                 # assign the relevant measures to corresponding dicitionaries

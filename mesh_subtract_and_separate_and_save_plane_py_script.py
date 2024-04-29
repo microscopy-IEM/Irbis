@@ -5,12 +5,12 @@ def mesh_subtract_and_separate(vertices_big,faces_big,vertex_normals_big,face_no
 
     ms = pymeshlab.MeshSet()
 
-    if not(vertex_normals_big) or not(face_normals_big):
+    if len(vertex_normals_big)==0 or len(face_normals_big)==0:
         m_big = pymeshlab.Mesh(vertex_matrix = vertices_big,face_matrix=faces_big)
     else:
         m_big = pymeshlab.Mesh(vertex_matrix = vertices_big,face_matrix=faces_big,v_normals_matrix=vertex_normals_big,f_normals_matrix=face_normals_big)
 
-    if not(vertex_normals_small) or not(face_normals_small):
+    if len(vertex_normals_small)==0 or len(face_normals_small)==0:
         m_small = pymeshlab.Mesh(vertex_matrix = vertices_small,face_matrix=faces_small)
     else:
         m_small = pymeshlab.Mesh(vertex_matrix = vertices_small,face_matrix=faces_small,v_normals_matrix=vertex_normals_small,f_normals_matrix=face_normals_small)
@@ -32,14 +32,14 @@ def mesh_subtract_and_separate(vertices_big,faces_big,vertex_normals_big,face_no
     n_total = ms.number_meshes()
     print(n_total)
 
-    file = open('temp_cuttingPlaneList.csv','w')
+    # file = open('temp_cuttingPlaneList.csv','w')
 
     vertices_dict = dict()
     faces_dict = dict()
     vertex_normals_dict = dict()
     face_normals_dict = dict()
 
-    means = [];
+    base_points = [];
 
     for i in range(n_complete,n_total):
         ms.set_current_mesh(new_curr_id = i)
@@ -72,16 +72,19 @@ def mesh_subtract_and_separate(vertices_big,faces_big,vertex_normals_big,face_no
 
         mean_list = [np.mean(av),np.mean(bv),np.mean(cv),np.mean(an),np.mean(bn),np.mean(cn)]
         
-        means.append(mean_list)
-
-        for mean in mean_list:
-            file.write(str(mean) + ';')    
-        file.write('\n')
-    file.close()
+        base_points.append(mean_list)
+    
+    #     for mean in mean_list:
+    #         file.write(str(mean) + ';')    
+    #     file.write('\n')
+    # file.close()
 
     n_objects = n_total - n_complete
 
-    print(means)
-    return(n_objects,vertices_dict,faces_dict,vertex_normals_dict,face_normals_dict)
+    base_points = np.array(base_points)
+    
+    # print('base_points lenght')
+    # print(len(base_points))
+    return(n_objects,vertices_dict,faces_dict,vertex_normals_dict,face_normals_dict,base_points)
 
-n_objects,vertices,faces,vertex_normals,face_normals = mesh_subtract_and_separate(vertices_big,faces_big,vertex_normals_big,face_normals_big,vertices_small,faces_small,vertex_normals_small,face_normals_small)
+n_objects,vertices,faces,vertex_normals,face_normals,base_points = mesh_subtract_and_separate(vertices_big,faces_big,vertex_normals_big,face_normals_big,vertices_small,faces_small,vertex_normals_small,face_normals_small)

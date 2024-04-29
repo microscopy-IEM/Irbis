@@ -5,12 +5,12 @@ def mesh_intersect_and_separate(vertices_big,faces_big,vertex_normals_big,face_n
 
     ms = pymeshlab.MeshSet()
 
-    if not(vertex_normals_big) or not(face_normals_big):
+    if len(vertex_normals_big)==0 or len(face_normals_big)==0:
         m_big = pymeshlab.Mesh(vertex_matrix = vertices_big,face_matrix=faces_big)
     else:
         m_big = pymeshlab.Mesh(vertex_matrix = vertices_big,face_matrix=faces_big,v_normals_matrix=vertex_normals_big,f_normals_matrix=face_normals_big)
 
-    if not(vertex_normals_small) or not(face_normals_small):
+    if len(vertex_normals_small)==0 or len(face_normals_small)==0:
         m_small = pymeshlab.Mesh(vertex_matrix = vertices_small,face_matrix=faces_small)
     else:
         m_small = pymeshlab.Mesh(vertex_matrix = vertices_small,face_matrix=faces_small,v_normals_matrix=vertex_normals_small,f_normals_matrix=face_normals_small)
