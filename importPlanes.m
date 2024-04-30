@@ -27,9 +27,20 @@ function planes = importPlanes(figureH,varargin)
         % read volumt tiff with support of >4GB images
         V = tiffreadVolume([path fileName]);
 
-        % get number of tiffs in multiple tiff file
-        numOfTiffs = size(info,1);
+        % whos V
+
+        
         desc = info(1).ImageDescription;
+
+        % get number of tiffs in multiple tiff file
+        % numOfTiffs = size(info,1);
+        Key   = 'images=';
+        Index = strfind(desc, Key);
+        if ~isempty(Index)
+            numOfTiffs = sscanf(desc(Index(1) + length(Key):end), '%g', 1);
+        else
+            numOfTiffs = 1;
+        end
             
         % read pixel size
         x_size = info(1).XResolution;
