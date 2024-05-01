@@ -1,33 +1,35 @@
 % Function creates new empty MMpack with help of an input dialog
 function newMMpack = newMMpackDialog(ver)
 
-    repeatDial = 1;
+    % repeatDial = 1;
+    % 
+    % while repeatDial
+    % 
+    %     dial = inputdlg('Name','New Irbis file',[1 50],{'test'}); 
+    % 
+    %     waitfor(dial);
+    %     if ~isempty(dial)
+    % 
+    %         if isempty(dial{1})
+    %             f = warndlg('Name must be filled','Warning');
+    %             waitfor(f);
+    %         else
+    %             repeatDial = 0;
+    %         end
+    %     else    
+    %         break   % enable to exit using Cancel - returns empty {}
+    % 
+    %     end
+    % 
+    % end
+    % 
+    % if ~isempty(dial)   % does not continue if Cancel was pressed
+    %     newMMpack = createEmptyMMpack(dial,ver);
+    % else 
+    %     newMMpack = {}; % something needs to be returned
+    % end
 
-    while repeatDial
-    
-        dial = inputdlg('Name','New Irbis file',[1 50],{'test'}); 
-
-        waitfor(dial);
-        if ~isempty(dial)
-             
-            if isempty(dial{1})
-                f = warndlg('Name must be filled','Warning');
-                waitfor(f);
-            else
-                repeatDial = 0;
-            end
-        else    
-            break   % enable to exit using Cancel - returns empty {}
-
-        end
-
-    end
-
-    if ~isempty(dial)   % does not continue if Cancel was pressed
-        newMMpack = createEmptyMMpack(dial,ver);
-    else 
-        newMMpack = {}; % something needs to be returned
-    end
+    newMMpack = createEmptyMMpack([],ver);
         
 end
 
@@ -36,7 +38,8 @@ function MMpack = createEmptyMMpack(dial,ver)
         
     irbis_version = ver;
     
-    name = [dial{1} '.irbis'];
+    % name = [dial{1} '.irbis'];
+    name = 'test.irbis';
     description = '';   % Description of the experiment ('Mobility_2Avs2Bvs3A')
     groupName = '';     % Name of the experimental condition ('2A_cre' or '3A_wt'...)
     roundN = 1;         % Number of round
