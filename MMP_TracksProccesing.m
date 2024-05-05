@@ -1,30 +1,13 @@
 
 function [tracks] = MMP_TracksProccesing(tracks)
 
-% tracks = MMpack.tracks;
-
-tracks
-
 tracks.frame_interval = 0.05;
 
 dT = tracks.frame_interval;
 
-% 
-% % Define table
-%     varNames = {'id';'Length';'MeanDisp';'NumOfNaN';'NumOfGaps';'LongestGap';'VisArea';'MeanVel';'OvVel';'Type';'meanX';'meanY'};
-%     varTypes = {'double','double','double','double','double','double','double','double','double','string','double','double'};
-%         
-%     % get size of the table
-%     sz = [tracks.numOfTracks size(varTypes,2)];
-% 
-%     % create table
-%     T = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
-
     T = tracks.tracksList;
 
      % calculate length of each trajectory
-%     lengthsOfTrajectories = cell2mat(cellfun(@length, tracks.xyz, 'UniformOutput', false));    
-
      lengthsOfTrajectories = cell2mat(cellfun(@size, tracks.tracksList.xyz, 'UniformOutput', false));
      lengthsOfTrajectories = lengthsOfTrajectories(:,1);
      
@@ -46,7 +29,7 @@ dT = tracks.frame_interval;
 
          % count Nan values
         Nan_values = (isnan(coor_nan(:,1)))'; % find NaN values
-        numOfNaN = sum(Nan_values); % num of nan in trajectory
+        nOfNaN = sum(Nan_values); % num of nan in trajectory
 
         % gap analysis
         valid_frame_ind = tracks.tracksList.frame_i{TrackNum}(~Nan_values);
@@ -62,11 +45,11 @@ dT = tracks.frame_interval;
         end
         
         % find the longest gap
-        if numOfNaN == 0
-            longestGap = 0; % num of missing frames in longest gap
+        if nOfNaN == 0
+            maxGap = 0; % num of missing frames in longest gap
 %             numOfGaps = 0; % number of gaps    
         else
-            longestGap = max(gap_lengths); % num of missing frames in longest gap
+            maxGap = max(gap_lengths); % num of missing frames in longest gap
 %             numOfGaps = size(gap_ind,1);
         end
 
@@ -126,8 +109,8 @@ dT = tracks.frame_interval;
 
 %         T.Length(TrackNum) = TrLength;
         T.length(TrackNum) = TrDuration;
-        T.numOfNaN(TrackNum) = numOfNaN;
-        T.longestGap(TrackNum) = longestGap;
+        T.nOfNaN(TrackNum) = nOfNaN;
+        T.maxGap(TrackNum) = maxGap;
         T.meanDisp(TrackNum) = mean_disp;
 
         
