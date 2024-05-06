@@ -12,7 +12,7 @@ coordinates = tracks.tracksList.xyz;
 frame_indexes = tracks.tracksList.frame_i;
 
 % default parameteres
-dt = round(tracks.frame_interval,3);
+dt = round(tracks.frameInterval,3);
 
 % pixel_size = TRS.info.pixel_size;
 pixel_size = 1;
