@@ -2,6 +2,12 @@ function tracks = importTracks(figH)
 
      % select files
      [fileName,path] = uigetfile('*.xml','MultiSelect','off');
+
+     if ~fileName
+     
+         tracks = [];
+         return
+     end
     
     % import TrackMate XML
     [imported_tracks, md] = importTrackMateTracks([path fileName],figH);
