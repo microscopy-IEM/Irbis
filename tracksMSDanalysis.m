@@ -1,4 +1,6 @@
-function [tracks] = tracksMSDanalysis(tracks)
+function [tracks] = tracksMSDanalysis(tracks,currentTimePoint)
+
+T = tracks.tracksList{currentTimePoint};
 
 % default parameters
 conf_thres = 0.7;
@@ -8,21 +10,21 @@ conf_thres = 0.7;
 fit_points = 0.25;
 
 %% Prepare format of trajectories for MSDanalyzer tool
-coordinates = tracks.tracksList.xyz;
-frame_indexes = tracks.tracksList.frame_i;
+coordinates = T.xyz;
+frame_indexes = T.frame_i;
 
 % default parameteres
-dt = round(tracks.frameInterval,3);
+dt = round(tracks.frameInterval{currentTimePoint},3);
 
 % pixel_size = TRS.info.pixel_size;
 pixel_size = 1;
 
 % get ids of tracks to be analyzed
-ids = tracks.ids;
+ids = T.id;
 
 
 % format trajectories for MSDtool
-for i = 1:size(ids,2)
+for i = 1:numel(ids)
 
     tr = ids(i);
     ind = ~isnan(coordinates{tr}(:,1));
@@ -69,9 +71,11 @@ MSD.ma = ma;
 % tracks.MSD = MSD;
 
 % add crucial numbers to tracksList
-tracks.tracksList.MSD5(ids) = MSD.MSD5;
-tracks.tracksList.MSDr2(ids) = MSD.MSD5_r2;
-tracks.tracksList.MSDcurve(ids) = ma.msd;
+T.MSD5(ids) = MSD.MSD5;
+T.MSDr2(ids) = MSD.MSD5_r2;
+T.MSDcurve(ids) = ma.msd;
+
+tracks.tracksList{currentTimePoint} = T;
 
 end
 

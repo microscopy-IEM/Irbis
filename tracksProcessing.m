@@ -1,28 +1,32 @@
 
-function [tracks] = tracksProcessing(tracks)
+function [tracks] = tracksProcessing(tracks,currentTimePoint)
 
-    T = tracks.tracksList;
+    T = tracks.tracksList{currentTimePoint};
     
     % calculate length of each trajectory
-    lengthsOfTrajectories = cell2mat(cellfun(@size, tracks.tracksList.xyz, 'UniformOutput', false));
+    lengthsOfTrajectories = cell2mat(cellfun(@size, T.xyz, 'UniformOutput', false));
     lengthsOfTrajectories = lengthsOfTrajectories(:,1);
-    
-    tracks.ids = 1:size(T,1);
-    
-    for TrackNum = tracks.ids
+
+    % T.xyz
+    % array = T.xyz{1}
+    % array(:,1:2)
+
+    for TrackNum = T.id.'
     
         % length of trajectory
         TrLength = lengthsOfTrajectories(TrackNum);
         
         % get coordinates
-        coor_nan = tracks.tracksList.xyz{TrackNum}(:,1:2);
+        coor_nan = T.xyz{TrackNum};
+        coor_nan = coor_nan(:,1:2);
         
         % count Nan values
         Nan_values = (isnan(coor_nan(:,1)))'; % find NaN values
         nOfNaN = sum(Nan_values); % num of nan in trajectory
         
         % gap analysis
-        valid_frame_ind = tracks.tracksList.frame_i{TrackNum}(~Nan_values);
+        valid_frame_ind = T.frame_i{TrackNum};
+        valid_frame_ind = valid_frame_ind(~Nan_values);
         
         TrDuration = valid_frame_ind(end)-valid_frame_ind(1)+1;
         
@@ -47,16 +51,16 @@ function [tracks] = tracksProcessing(tracks)
     
         % type asignment
         
-        switch  tracks.tracksList.zone(TrackNum)
-        
-            case 0
-                T.type{TrackNum} = 'syn';
-            case 1
-                T.type{TrackNum} = 'ext';
-            case 2
-                T.type{TrackNum} = 'sur';
-        
-        end
+        % switch  T.zone(TrackNum)
+        % 
+        %     case 0
+        %         T.type{TrackNum} = 'syn';
+        %     case 1
+        %         T.type{TrackNum} = 'ext';
+        %     case 2
+        %         T.type{TrackNum} = 'sur';
+        % 
+        % end
     
         % tracks witnout NaN
         coor = coor_nan(~isnan(coor_nan(:,1)),:);
@@ -105,7 +109,8 @@ function [tracks] = tracksProcessing(tracks)
         T.ovDist(TrackNum) = ovDist;
         
         % XY means
-        XYmean(TrackNum,:) = mean(T.xyz{TrackNum}(:,1:2),'omitnan');
+        mean(coor_nan,'omitnan')
+        XYmean(TrackNum,:) = mean(coor_nan,'omitnan');
         
         % distanceMatrix = pdist2(XYmean(TrackNum,:),roiCentres);
         % 
@@ -131,9 +136,9 @@ function [tracks] = tracksProcessing(tracks)
     % T
     % tracks.statTable = T;
     
-    tracks.tracksList = T;
+    tracks.tracksList{currentTimePoint} = T;
     
-    [tracks] = tracksMSDanalysis(tracks);
+    [tracks] = tracksMSDanalysis(tracks,currentTimePoint);
 
 end
 
