@@ -1,107 +1,122 @@
 
 
-function registeredZstack = preRegisterPlanesFcn(zstack,ch)
+function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
 
+    %% GUI
+    h = findall(0, 'type', 'figure','Name','Estimate drift in planes');
+    close(h)
+    
+    fig = uifigure("Name",'Estimate drift in planes','Position',[100 100 800 800],'Icon',[]);
 
-%% GUI
-h = findall(0, 'type', 'figure','Name','Estimate drift in planes');
-close(h)
+    
+    customGrid = uigridlayout(fig,[2 3]);
+    customGrid.RowHeight = {'1x','fit'};
+    customGrid.ColumnWidth = {'1x','fit','fit','fit','fit'};
+    
+    pan = uipanel(customGrid);
+        
+    t = tiledlayout(pan,'flow');
+    t.Tag = 'figLayout';
+    t.TileSpacing = 'compact';
+    t.Padding = 'compact';
+    
+    pan.Layout.Row = 1;
+    pan.Layout.Column = [1 5];
+    
+    sensSlider = uislider(customGrid,"ValueChangedFcn", [],'Tag','sensSlider');
+    sensSlider.Limits = [0 10];
+    sensSlider.MajorTicks = [];
+    sensSlider.MinorTicks = [];
+    sensSlider.Value = 2;
+    sensSlider.Layout.Row = 2;
+    sensSlider.Layout.Column = 2;
+    
+    registb = uibutton(customGrid, ...
+    "Text","Register", ...
+    "ButtonPushedFcn", @(src,event) runRegistration(fig));
+    registb.Layout.Row = 2;
+    registb.Layout.Column = 3;
+    
+    applyb = uibutton(customGrid, ...
+    "Text","Accept", ...
+    "ButtonPushedFcn", @(src,event) acceptButtonPushed(fig));
+    applyb.Layout.Row = 2;
+    applyb.Layout.Column = 4;
+    
+    cancelb = uibutton(customGrid, ...
+    "Text","Cancel", ...
+    "ButtonPushedFcn", @(src,event) cancelButtonPushed(fig));
+    cancelb.Layout.Row = 2;
+    cancelb.Layout.Column = 5;
+    
+    % wb = uiprogressdlg(fig,'Title','Registrating plane ','Indeterminate','off');
+    % wb.Value = 0; 
+    
+    %% Prepare z projections
+    
+    nTimePoints = size(zstack,4);
+    
+    % Calcultate z projections
+    zProjections = uint16(zeros(size(zstack,1),size(zstack,2),nTimePoints));
+    
+    for currentTimePoint = 1:nTimePoints
+    
+        zProjections(:,:,currentTimePoint) = max(zstack(:,:,:,currentTimePoint,ch),[],3);
+        % saturate contrast
+        % zProjections(:,:,currentTimePoint) = imadjustn(zProjections(:,:,currentTimePoint),stretchlim(zProjections(:),0.0001));
+    
+    end
 
-fig = uifigure("Name",'Estimate drift in planes','Position',[100 100 800 800],'Icon',[]);
+    zProjectionsRegistered = zProjections;
 
-% fig.UserData.cropRect2D = [];
+    % 2D cropr ectangle for preview
+    xsize = size(zProjections,2);
+    ysize = size(zProjections,1);
+    cropRect2D = [0 0 xsize ysize];
 
-customGrid = uigridlayout(fig,[2 3]);
-customGrid.RowHeight = {'1x','fit'};
-customGrid.ColumnWidth = {'1x','fit','fit','fit','fit'};
+    fig.UserData.cropRect2D = cropRect2D;
+    
+    fig.UserData.zProjections = zProjections;
+    fig.UserData.zProjectionsRegistered = zProjectionsRegistered;
+    fig.UserData.zstack = zstack;
+    fig.UserData.ch = ch;
+    fig.UserData.targetTimePoint = 1;
 
-pan = uipanel(customGrid);
-% ax = uiaxes(customGrid);
+    updatePlot(fig)
+    
+    % close(wb)
+    
+    % wair for the "Acctept buttun pushed"
+    uiwait(fig)
+    
+    if ~isvalid(fig)
+        registeredZstack = [];
+        driftVect = [];
+        return
+    end
+    
+    % wb = uiprogressdlg(fig,'Title','Processing... ','Indeterminate','on');
+    
+    
+    registeredZstack = fig.UserData.registeredZstack;
+    driftVect = fig.UserData.driftVect;
+    
+    disp('Registration done')
 
-t = tiledlayout(pan,'flow');
-t.Tag = 'figLayout';
-t.TileSpacing = 'compact';
-t.Padding = 'compact';
-
-pan.Layout.Row = 1;
-pan.Layout.Column = [1 5];
-
-sensSlider = uislider(customGrid,"ValueChangedFcn", [],'Tag','sensSlider');
-sensSlider.Limits = [0 10];
-sensSlider.MajorTicks = [];
-sensSlider.MinorTicks = [];
-sensSlider.Value = 5;
-sensSlider.Layout.Row = 2;
-sensSlider.Layout.Column = 2;
-
-registb = uibutton(customGrid, ...
-"Text","Register", ...
-"ButtonPushedFcn", @(src,event) runRegistration(fig));
-registb.Layout.Row = 2;
-registb.Layout.Column = 3;
-
-applyb = uibutton(customGrid, ...
-"Text","Accept", ...
-"ButtonPushedFcn", @(src,event) acceptButtonPushed(fig));
-applyb.Layout.Row = 2;
-applyb.Layout.Column = 4;
-
-cancelb = uibutton(customGrid, ...
-"Text","Cancel", ...
-"ButtonPushedFcn", @(src,event) cancelButtonPushed(fig));
-cancelb.Layout.Row = 2;
-cancelb.Layout.Column = 5;
-
-% wb = uiprogressdlg(fig,'Title','Registrating plane ','Indeterminate','off');
-% wb.Value = 0; 
-
-%% Prepare z projections
-
-nTimePoints = size(zstack,4);
-
-% Calcultate z projections
-zProjections = uint16(zeros(size(zstack,1),size(zstack,2),nTimePoints));
-
-for currentTimePoint = 1:nTimePoints
-
-    zProjections(:,:,currentTimePoint) = max(zstack(:,:,:,currentTimePoint,ch),[],3);
-    % saturate contrast
-    % zProjections(:,:,currentTimePoint) = imadjustn(zProjections(:,:,currentTimePoint),stretchlim(zProjections(:),0.0001));
-
-end
-
-fig.UserData.zProjections = zProjections;
-fig.UserData.zstack = zstack;
-fig.UserData.ch = ch;
-
-% close(wb)
-
-uiwait(fig)
-
-if ~isvalid(fig)
-    registeredZstack = [];
-    return
-end
-
-% wb = uiprogressdlg(fig,'Title','Processing... ','Indeterminate','on');
-
-
-registeredZstack = fig.UserData.registeredZstack
-
-disp('Registration done')
-
-    close(wb)
+    % close(wb)
     close(fig)
 
 
 end
 
 %% Estimate ragistration tform
-function tform = preRegister(FIXED, MOVING)
+function tform = preRegister(FIXED, MOVING,sigma)
 
-    % sigma = 1;
+    % sigma
     % gaussFilter = 0;
 
+    FIXED = imgaussfilt(FIXED,sigma);
+    MOVING = imgaussfilt(MOVING,sigma);
 
    % Default spatial referencing objects
     fixedRefObj = imref2d(size(FIXED));
@@ -134,55 +149,55 @@ function tform = preRegister(FIXED, MOVING)
     % Apply transformation
     tform = imregtform(MOVING,movingRefObj,FIXED,fixedRefObj,'translation',optimizer,metric,'PyramidLevels',4,'InitialTransformation',initTform);
 
-    % tform = imregcorr(movingInit,movingRefObj,fixedInit,fixedRefObj,'transformtype','translation','Window',false);
-
 
 end
 
 function runRegistration(fig)
 
+    wb = uiprogressdlg(fig,'Title','Registrating plane ','Indeterminate','off');
+    wb.Value = 0; 
+
     zstack = fig.UserData.zstack;
     ch = fig.UserData.ch;
-    targetTimePoint = 1
-    
-    % get(fig)
-    
-    t = findobj(fig,'Tag','figLayout');
-    delete(t.Children)
-    get(t)
-%% Prepare z projections
+    targetTimePoint = fig.UserData.targetTimePoint;
+
+    %% Prepare z projections
 
     nTimePoints = size(zstack,4);
-    nChannels = size(zstack,5);
-    nPlanes = size(zstack,3);
 
     % Calcultate z projections
     zProjections = uint16(zeros(size(zstack,1),size(zstack,2),nTimePoints));
 
     for currentTimePoint = 1:nTimePoints
 
-        zProjections(:,:,currentTimePoint) = max(zstack(:,:,:,currentTimePoint,ch),[],3);
-        % saturate contrast
-        % zProjections(:,:,currentTimePoint) = imadjustn(zProjections(:,:,currentTimePoint),stretchlim(zProjections(:),0.0001));
+        wb.Value = currentTimePoint/nTimePoints;
+        wb.Message = 'Z projections... ';
 
+        zProjections(:,:,currentTimePoint) = max(zstack(:,:,:,currentTimePoint,ch),[],3);
+      
     end    
 
     %% Estimate drift
-    resizeFactor = 4;
-    % reducedZprojections = imresize(zProjections(:,:,targetTimePoint),1/f)
+    resizeFactor = 2;
     FIXED = imresize(zProjections(:,:,targetTimePoint),1/resizeFactor);
     tforms = cell(1,nTimePoints);
 
+    h = findobj(fig,'Tag','sensSlider');
+    sigma = h.Value;
+
     for currentTimePoint = 1:nTimePoints
 
-        % currentTimePoint
+        wb.Value = currentTimePoint/nTimePoints;
+        wb.Message = ['Registrating time point ' num2str(currentTimePoint)];
         MOVING = imresize(zProjections(:,:,currentTimePoint),1/resizeFactor);
-        tforms{currentTimePoint} = preRegister(FIXED, MOVING);
+        tforms{currentTimePoint} = preRegister(FIXED, MOVING, sigma);
 
     end
 
     %% Calculate Crop area
     i = 1;
+
+    wb.Message = 'Crop area... ';
 
     FIXED_ = zProjections(:,:,targetTimePoint);
 
@@ -233,7 +248,8 @@ function runRegistration(fig)
     fig.UserData.cropRect2D = cropRect2D;
 
 
-    %% Visual control
+    wb.Message = 'Preview results... ';
+    %% Apply tform to zProjecions and plot result
     zProjectionsRegistered = zProjections;
     for currentTimePoint = 2:nTimePoints
 
@@ -241,36 +257,26 @@ function runRegistration(fig)
         % wb.Message = ['Registrating time point ' num2str(currentTimePoint)];
 
         tform = tforms{currentTimePoint};
-
         tform.A = round(tform.A);
-
         zProjectionsRegistered(:,:,currentTimePoint) = imwarp(zProjections(:,:,currentTimePoint),tform,"OutputView",imref2d(size(FIXED_)));
-
-        % zProjectionsRegistered(:,:,currentTimePoint) = imadjustn(zProjectionsRegistered(:,:,currentTimePoint),stretchlim(zProjectionsRegistered(:),0.0001));
-
-        ax1 = nexttile(t);
-
-        imshowpair(zProjections(:,:,targetTimePoint),zProjectionsRegistered(:,:,currentTimePoint),"Scaling","joint","Parent",ax1)
-        ax1.Title.String = ['Time point ' num2str(currentTimePoint) ' vs. ' num2str(targetTimePoint)];
-
-        roi = drawrectangle(ax1,'Position',cropRect2D,'Color','r','FaceAlpha',0.1);
-        roi.InteractionsAllowed = 'none';
-        addlistener(roi,'ROIMoved',@roiMoved);
-
+       
     end
 
-
     fig.UserData.tforms = tforms;
+    fig.UserData.zProjectionsRegistered = zProjectionsRegistered;
 
+    updatePlot(fig)  
 
     disp('done')
+
+    close(wb)
 
 end
 
 
 function acceptButtonPushed(fig)
 
-    targetTimePoint = 1;
+    targetTimePoint = fig.UserData.targetTimePoint;
 
     wb = uiprogressdlg(fig,'Title','Processing... ','Indeterminate','on');
 
@@ -298,6 +304,13 @@ function acceptButtonPushed(fig)
         movingZstack = zstack(:,:,:,currentTimePoint,:);
         movingRegistered = imwarp(movingZstack,tform,"OutputView",imref2d(size(FIXED_)));
         registeredZstack(:,:,:,currentTimePoint,:) = movingRegistered;
+
+
+        xt = tform.Translation(1);
+        yt = tform.Translation(2);
+
+        driftVect{currentTimePoint} = [xt,yt];
+
     
     end
     
@@ -323,16 +336,14 @@ function acceptButtonPushed(fig)
     registeredZstack = registeredZstackCropped;
 
     fig.UserData.registeredZstack = registeredZstack;
+    fig.UserData.driftVect = driftVect;
     
     disp('Registration done')
 
     close(wb)
-    % close(fig)
-  
+ 
 
-% uiresume(fig)
-
-
+    uiresume(fig)
 
 
 end
@@ -343,6 +354,44 @@ function registerButtonPushed(fig)
 
 end
 
+function updatePlot(fig)
+
+    t = findobj(fig,'Tag','figLayout');
+    delete(t.Children)
+    targetTimePoint = fig.UserData.targetTimePoint;
+
+    zProjections = fig.UserData.zProjections;
+    zProjectionsRegistered = fig.UserData.zProjectionsRegistered;
+    zstack = fig.UserData.zstack;
+
+    nTimePoints = size(zstack,4);
+    allAx = [];
+
+    cropRect2D = fig.UserData.cropRect2D;
+    
+    for currentTimePoint = 2:nTimePoints
+       
+        ax1 = nexttile(t);
+
+        allAx = [allAx ax1];
+
+        orig = zProjections(:,:,targetTimePoint);
+        registered = zProjectionsRegistered(:,:,currentTimePoint);
+        registered = imadjust(registered);
+        orig = imadjust(orig);
+
+        imshowpair(orig,registered,"Scaling","joint","Parent",ax1)
+        ax1.Title.String = ['Time point ' num2str(currentTimePoint) ' vs. ' num2str(targetTimePoint)];
+
+        roi = drawrectangle(ax1,'Position',cropRect2D,'Color','r','FaceAlpha',0.1);
+        roi.InteractionsAllowed = 'none';
+        addlistener(roi,'ROIMoved',@roiMoved);
+
+    end
+
+     linkaxes(allAx,'xy')
+
+end
 
 function cancelButtonPushed(fig)
     close(fig)
