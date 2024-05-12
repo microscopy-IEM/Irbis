@@ -109,7 +109,7 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         T.ovDist(TrackNum) = ovDist;
         
         % XY means
-        mean(coor_nan,'omitnan')
+        % mean(coor_nan,'omitnan')
         XYmean(TrackNum,:) = mean(coor_nan,'omitnan');
         
         % distanceMatrix = pdist2(XYmean(TrackNum,:),roiCentres);
