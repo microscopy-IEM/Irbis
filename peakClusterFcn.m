@@ -7,7 +7,7 @@ peak2BcgRatioThres = 3;
 
 thFun = @(mx,mn)((mx-mn)/2 + mn);          
 
-nDimensions = ndims(greyMap)
+nDimensions = ndims(greyMap);
 
 %% Pre-process by gaussian filtering
 
@@ -15,14 +15,14 @@ nDimensions = ndims(greyMap)
 greyMap = imgaussfilt3(greyMap,0.3);
 
 % binary operators
-searchDiam = round(1.5*expectedPeakDiamPx)
+searchDiam = round(1.5*expectedPeakDiamPx);
 searchOffset = strel('sphere',searchDiam);
 peakOffset = strel("sphere",1);
 
-expectedVol = 4/3*pi*(expectedPeakDiamPx/2)^2
+expectedVol = 4/3*pi*(expectedPeakDiamPx/2)^2;
 
-minVol = round(4/3*pi*(expectedPeakDiamPx/2/2)^2)
-maxVol = round(4/3*pi*(4*expectedPeakDiamPx/2)^2)
+minVol = round(4/3*pi*(expectedPeakDiamPx/2/2)^2);
+maxVol = round(4/3*pi*(4*expectedPeakDiamPx/2)^2);
 
 % minVol = round(expectedVol/5) % in pixels
 % maxVol = round(expectedVol*100) % in pixels
@@ -101,7 +101,7 @@ sz = size(greyMap);
         % thIdx = greyMap(peakArea) > th_low & greyMap(peakArea) <= th_max;
         thIdx = greyMap(peakSearchArea) >= th_low;
     
-        Vol = sum(thIdx)
+        Vol = sum(thIdx);
     
         % keep only peaks with minimal volume
         if Vol >= minVol && Vol <= maxVol && peak2BcgRatio >= peak2BcgRatioThres
@@ -228,7 +228,7 @@ sz = size(greyMap);
     
     end
     
-    nObjects =  max(finalMap,[],'all')  
+    nObjects =  max(finalMap,[],'all'); 
     
     %% Result plot
     

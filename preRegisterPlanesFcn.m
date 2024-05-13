@@ -309,9 +309,11 @@ function acceptButtonPushed(fig)
         xt = tform.Translation(1);
         yt = tform.Translation(2);
 
-        driftVect{currentTimePoint} = [xt,yt];
+        % adding zero z component;
+        zt = 0;
 
-    
+        driftVect{currentTimePoint} = [xt,yt,zt];
+
     end
     
      
