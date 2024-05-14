@@ -9,9 +9,9 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     fig = uifigure("Name",'Estimate drift in planes','Position',[100 100 800 800],'Icon',[]);
 
     
-    customGrid = uigridlayout(fig,[2 3]);
+    customGrid = uigridlayout(fig,[2 7]);
     customGrid.RowHeight = {'1x','fit'};
-    customGrid.ColumnWidth = {'1x','fit','fit','fit','fit'};
+    customGrid.ColumnWidth = {'1x','fit','fit','fit','fit','fit','fit','fit'};
     
     pan = uipanel(customGrid);
         
@@ -21,7 +21,12 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     t.Padding = 'compact';
     
     pan.Layout.Row = 1;
-    pan.Layout.Column = [1 5];
+    pan.Layout.Column = [1 8];
+    
+     sliderLabel = uilabel(customGrid, ...
+        "Text","Sigma");
+    sliderLabel.Layout.Row = 2;
+    sliderLabel.Layout.Column = 2;
     
     sensSlider = uislider(customGrid,"ValueChangedFcn", [],'Tag','sensSlider');
     sensSlider.Limits = [0 10];
@@ -29,25 +34,38 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     sensSlider.MinorTicks = [];
     sensSlider.Value = 2;
     sensSlider.Layout.Row = 2;
-    sensSlider.Layout.Column = 2;
+    sensSlider.Layout.Column = 3;
     
+   
+    methodDropDown = uidropdown(customGrid,"Items",["Cross-correlation","Intensity"],'Tag','regMethod');
+    methodDropDown.Layout.Row = 2;
+    methodDropDown.Layout.Column = 4;
+
     registb = uibutton(customGrid, ...
     "Text","Register", ...
     "ButtonPushedFcn", @(src,event) runRegistration(fig));
     registb.Layout.Row = 2;
-    registb.Layout.Column = 3;
+    registb.Layout.Column = 5;
+
+    resetb = uibutton(customGrid, ...
+    "Text","Reset", ...
+    "ButtonPushedFcn", @(src,event) resetButtonPushed(fig));
+    resetb.Layout.Row = 2;
+    resetb.Layout.Column = 6;
     
     applyb = uibutton(customGrid, ...
     "Text","Accept", ...
     "ButtonPushedFcn", @(src,event) acceptButtonPushed(fig));
     applyb.Layout.Row = 2;
-    applyb.Layout.Column = 4;
+    applyb.Layout.Column = 7;
     
     cancelb = uibutton(customGrid, ...
     "Text","Cancel", ...
     "ButtonPushedFcn", @(src,event) cancelButtonPushed(fig));
     cancelb.Layout.Row = 2;
-    cancelb.Layout.Column = 5;
+    cancelb.Layout.Column = 8;
+
+    % ax = uiaxes(customGrid);
     
     % wb = uiprogressdlg(fig,'Title','Registrating plane ','Indeterminate','off');
     % wb.Value = 0; 
@@ -62,14 +80,12 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     for currentTimePoint = 1:nTimePoints
     
         zProjections(:,:,currentTimePoint) = max(zstack(:,:,:,currentTimePoint,ch),[],3);
-        % saturate contrast
-        % zProjections(:,:,currentTimePoint) = imadjustn(zProjections(:,:,currentTimePoint),stretchlim(zProjections(:),0.0001));
-    
+          
     end
 
     zProjectionsRegistered = zProjections;
 
-    % 2D cropr ectangle for preview
+    % 2D cropp rectangle for preview
     xsize = size(zProjections,2);
     ysize = size(zProjections,1);
     cropRect2D = [0 0 xsize ysize];
@@ -81,6 +97,12 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     fig.UserData.zstack = zstack;
     fig.UserData.ch = ch;
     fig.UserData.targetTimePoint = 1;
+    fig.UserData.tforms = [];
+
+    for currentTimePoint = 1:nTimePoints   
+        driftVect{currentTimePoint} = [0,0,0];
+    end
+    fig.UserData.driftVect = driftVect;
 
     updatePlot(fig)
     
@@ -110,50 +132,79 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
 end
 
 %% Estimate ragistration tform
-function tform = preRegister(FIXED, MOVING,sigma)
-
-    % sigma
-    % gaussFilter = 0;
+function tform = preRegister(FIXED, MOVING,sigma,method)
 
     FIXED = imgaussfilt(FIXED,sigma);
     MOVING = imgaussfilt(MOVING,sigma);
 
-   % Default spatial referencing objects
-    fixedRefObj = imref2d(size(FIXED));
-    movingRefObj = imref2d(size(MOVING));
-    
-    % Intensity-based registration
-    [optimizer, metric] = imregconfig('monomodal');
-    optimizer.GradientMagnitudeTolerance = 1.00000e-04;
-    optimizer.MinimumStepLength = 1.00000e-03;
-    optimizer.MaximumStepLength = 1.00000e-01;
-    optimizer.MaximumIterations = 1000;
-    optimizer.RelaxationFactor = 0.200000;
-    
-    % Align centers
-    [xFixed,yFixed] = meshgrid(1:size(FIXED,2),1:size(FIXED,1));
-    [xMoving,yMoving] = meshgrid(1:size(MOVING,2),1:size(MOVING,1));
-    sumFixedIntensity = sum(FIXED(:));
-    sumMovingIntensity = sum(MOVING(:));
-    fixedXCOM = (fixedRefObj.PixelExtentInWorldX .* (sum(xFixed(:).*double(FIXED(:))) ./ sumFixedIntensity)) + fixedRefObj.XWorldLimits(1);
-    fixedYCOM = (fixedRefObj.PixelExtentInWorldY .* (sum(yFixed(:).*double(FIXED(:))) ./ sumFixedIntensity)) + fixedRefObj.YWorldLimits(1);
-    movingXCOM = (movingRefObj.PixelExtentInWorldX .* (sum(xMoving(:).*double(MOVING(:))) ./ sumMovingIntensity)) + movingRefObj.XWorldLimits(1);
-    movingYCOM = (movingRefObj.PixelExtentInWorldY .* (sum(yMoving(:).*double(MOVING(:))) ./ sumMovingIntensity)) + movingRefObj.YWorldLimits(1);
-    translationX = fixedXCOM - movingXCOM;
-    translationY = fixedYCOM - movingYCOM;
-    
-    % Coarse alignment
-    initTform = affinetform2d();
-    initTform.A(1:2,3) = [translationX ; translationY];
-    
-    % Apply transformation
-    tform = imregtform(MOVING,movingRefObj,FIXED,fixedRefObj,'translation',optimizer,metric,'PyramidLevels',4,'InitialTransformation',initTform);
+    % h = findobj()
+    % method = 'cross-correlation';
+    % method = 'imreg'
 
+    switch method
+        case 'Cross-correlation'
+    %% Cross-correlation method
+            FIXED = imadjust(FIXED);
+            MOVING = imadjust(MOVING);
+        
+            c = normxcorr2(FIXED,MOVING);
+            % figure
+            % surf(c) 
+            % shading flat
+        
+            % offset found by correlation
+            [~,imax] = max(abs(c(:)));
+            [ypeak,xpeak] = ind2sub(size(c),imax(1));
+            corr_offset = [(xpeak-size(MOVING,2)) 
+                           (ypeak-size(MOVING,1))];
+        
+            % total offset
+            translationX = -corr_offset(1);
+            translationY = -corr_offset(2);
+        
+            tform = transltform2d(translationX,translationY);
 
+        case 'Intensity'
+           % Default spatial referencing objects
+            fixedRefObj = imref2d(size(FIXED));
+            movingRefObj = imref2d(size(MOVING));
+    
+            % Intensity-based registration
+            [optimizer, metric] = imregconfig('monomodal');
+            optimizer.GradientMagnitudeTolerance = 1.00000e-04;
+            optimizer.MinimumStepLength = 1.00000e-03;
+            optimizer.MaximumStepLength = 1.00000e-01;
+            optimizer.MaximumIterations = 1000;
+            optimizer.RelaxationFactor = 0.200000;
+    
+            % Align centers
+            [xFixed,yFixed] = meshgrid(1:size(FIXED,2),1:size(FIXED,1));
+            [xMoving,yMoving] = meshgrid(1:size(MOVING,2),1:size(MOVING,1));
+            sumFixedIntensity = sum(FIXED(:));
+            sumMovingIntensity = sum(MOVING(:));
+            fixedXCOM = (fixedRefObj.PixelExtentInWorldX .* (sum(xFixed(:).*double(FIXED(:))) ./ sumFixedIntensity)) + fixedRefObj.XWorldLimits(1);
+            fixedYCOM = (fixedRefObj.PixelExtentInWorldY .* (sum(yFixed(:).*double(FIXED(:))) ./ sumFixedIntensity)) + fixedRefObj.YWorldLimits(1);
+            movingXCOM = (movingRefObj.PixelExtentInWorldX .* (sum(xMoving(:).*double(MOVING(:))) ./ sumMovingIntensity)) + movingRefObj.XWorldLimits(1);
+            movingYCOM = (movingRefObj.PixelExtentInWorldY .* (sum(yMoving(:).*double(MOVING(:))) ./ sumMovingIntensity)) + movingRefObj.YWorldLimits(1);
+            translationX = fixedXCOM - movingXCOM;
+            translationY = fixedYCOM - movingYCOM;
+    
+            % Coarse alignment
+            initTform = affinetform2d();
+            initTform.A(1:2,3) = [translationX ; translationY];
+    
+            % Apply transformation
+            tform = imregtform(MOVING,movingRefObj,FIXED,fixedRefObj,'translation',optimizer,metric,'PyramidLevels',4,'InitialTransformation',initTform);
+    
+            % tform
+
+    end
 end
 
 function runRegistration(fig)
 
+    resetButtonPushed(fig)
+    
     wb = uiprogressdlg(fig,'Title','Registrating plane ','Indeterminate','off');
     wb.Value = 0; 
 
@@ -182,17 +233,30 @@ function runRegistration(fig)
     FIXED = imresize(zProjections(:,:,targetTimePoint),1/resizeFactor);
     tforms = cell(1,nTimePoints);
 
-    h = findobj(fig,'Tag','sensSlider');
-    sigma = h.Value;
+    sliderH = findobj(fig,'Tag','sensSlider');
+    sigma = sliderH.Value;
+
+    methodH = findobj(fig,'Tag','regMethod');
+    method = methodH.Value;
 
     for currentTimePoint = 1:nTimePoints
 
         wb.Value = currentTimePoint/nTimePoints;
         wb.Message = ['Registrating time point ' num2str(currentTimePoint)];
         MOVING = imresize(zProjections(:,:,currentTimePoint),1/resizeFactor);
-        tforms{currentTimePoint} = preRegister(FIXED, MOVING, sigma);
+        tforms{currentTimePoint} = preRegister(FIXED, MOVING, sigma, method);
+
+        xt = round(tforms{currentTimePoint}.Translation(1));
+        yt = round(tforms{currentTimePoint}.Translation(2));
+
+        % adding zero z component;
+        zt = 0;
+
+        driftVect{currentTimePoint} = [xt,yt,zt];
 
     end
+
+    fig.UserData.driftVect = driftVect;
 
     %% Calculate Crop area
     i = 1;
@@ -281,7 +345,7 @@ function acceptButtonPushed(fig)
     wb = uiprogressdlg(fig,'Title','Processing... ','Indeterminate','on');
 
     zstack = fig.UserData.zstack;
-    ch = fig.UserData.ch;
+    % ch = fig.UserData.ch;
     tforms = fig.UserData.tforms;
 
     nTimePoints = size(zstack,4);
@@ -315,6 +379,8 @@ function acceptButtonPushed(fig)
         driftVect{currentTimePoint} = [xt,yt,zt];
 
     end
+
+    fig.UserData.driftVect = driftVect;
     
      
     %% Cropping
@@ -343,16 +409,22 @@ function acceptButtonPushed(fig)
     disp('Registration done')
 
     close(wb)
- 
-
     uiresume(fig)
-
 
 end
 
-function registerButtonPushed(fig)
+function resetButtonPushed(fig)
+    
+    fig.UserData.zProjectionsRegistered = fig.UserData.zProjections;
 
-    fig.UserData
+    % 2D cropp rectangle for preview
+    xsize = size(fig.UserData.zProjections,2);
+    ysize = size(fig.UserData.zProjections,1);
+    cropRect2D = [0 0 xsize ysize];
+
+    fig.UserData.cropRect2D = cropRect2D;
+  
+    updatePlot(fig)
 
 end
 
@@ -370,6 +442,8 @@ function updatePlot(fig)
     allAx = [];
 
     cropRect2D = fig.UserData.cropRect2D;
+
+    driftVect = fig.UserData.driftVect;
     
     for currentTimePoint = 2:nTimePoints
        
@@ -384,12 +458,15 @@ function updatePlot(fig)
 
         imshowpair(orig,registered,"Scaling","joint","Parent",ax1)
         ax1.Title.String = ['Time point ' num2str(currentTimePoint) ' vs. ' num2str(targetTimePoint)];
+        ax1.XLabel.String = ['correction = x:' num2str(driftVect{currentTimePoint}(1)), ' y:' num2str(driftVect{currentTimePoint}(1))];
+
 
         roi = drawrectangle(ax1,'Position',cropRect2D,'Color','r','FaceAlpha',0.1);
         roi.InteractionsAllowed = 'none';
         addlistener(roi,'ROIMoved',@roiMoved);
 
     end
+
 
      linkaxes(allAx,'xy')
 
