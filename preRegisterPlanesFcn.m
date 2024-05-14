@@ -423,6 +423,14 @@ function resetButtonPushed(fig)
     cropRect2D = [0 0 xsize ysize];
 
     fig.UserData.cropRect2D = cropRect2D;
+
+    % reset the calculated drift correction
+    zstack = fig.UserData.zstack;
+    nTimePoints = size(zstack,4);
+    for currentTimePoint = 1:nTimePoints
+        driftVect{currentTimePoint} = [0,0,0];
+    end
+    fig.UserData.driftVect = driftVect;
   
     updatePlot(fig)
 
@@ -458,7 +466,7 @@ function updatePlot(fig)
 
         imshowpair(orig,registered,"Scaling","joint","Parent",ax1)
         ax1.Title.String = ['Time point ' num2str(currentTimePoint) ' vs. ' num2str(targetTimePoint)];
-        ax1.XLabel.String = ['correction = x:' num2str(driftVect{currentTimePoint}(1)), ' y:' num2str(driftVect{currentTimePoint}(1))];
+        ax1.XLabel.String = ['correction [pix] = x: ' num2str(driftVect{currentTimePoint}(1)), ' , y: ' num2str(driftVect{currentTimePoint}(2))];
 
 
         roi = drawrectangle(ax1,'Position',cropRect2D,'Color','r','FaceAlpha',0.1);
