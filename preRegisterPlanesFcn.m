@@ -469,7 +469,7 @@ function updatePlot(fig)
         ax1.XLabel.String = ['correction [pix] = x: ' num2str(driftVect{currentTimePoint}(1)), ' , y: ' num2str(driftVect{currentTimePoint}(2))];
 
 
-        roi = drawrectangle(ax1,'Position',cropRect2D,'Color','r','FaceAlpha',0.1);
+        roi = drawrectangle(ax1,'Position',cropRect2D,'Color','r','FaceAlpha',0.05);
         roi.InteractionsAllowed = 'none';
         addlistener(roi,'ROIMoved',@roiMoved);
 
