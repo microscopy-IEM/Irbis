@@ -108,7 +108,7 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     
     % close(wb)
     
-    % wair for the "Acctept buttun pushed"
+    %% wait for the "Acctept buttun pushed"
     uiwait(fig)
     
     if ~isvalid(fig)
@@ -122,6 +122,18 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     
     registeredZstack = fig.UserData.registeredZstack;
     driftVect = fig.UserData.driftVect;
+    cropRect2D = fig.UserData.cropRect2D;
+
+    xCropOffset = cropRect2D(1);
+    yCropOffset = cropRect2D(2);
+
+    for currentTimePoint = 1:nTimePoints
+        
+        driftVect{currentTimePoint}(1) = driftVect{currentTimePoint}(1) - xCropOffset;
+        driftVect{currentTimePoint}(2) = driftVect{currentTimePoint}(2) - yCropOffset;
+
+    end
+
     
     disp('Registration done')
 
