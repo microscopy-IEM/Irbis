@@ -9,9 +9,9 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     fig = uifigure("Name",'Estimate drift in planes','Position',[100 100 800 800],'Icon',[]);
 
     
-    customGrid = uigridlayout(fig,[2 7]);
+    customGrid = uigridlayout(fig,[2 9]);
     customGrid.RowHeight = {'1x','fit'};
-    customGrid.ColumnWidth = {'1x','fit','fit','fit','fit','fit','fit','fit'};
+    customGrid.ColumnWidth = {'1x','fit','fit','fit','fit','fit','fit','fit','fit'};
     
     pan = uipanel(customGrid);
         
@@ -21,12 +21,18 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     t.Padding = 'compact';
     
     pan.Layout.Row = 1;
-    pan.Layout.Column = [1 8];
+    pan.Layout.Column = [1 9];
+
+    methodDropDown = uidropdown(customGrid,"Items",["first","previous"],'Tag','targetTimePoint');
+    methodDropDown.ValueChangedFcn = @(~,~)updatePlot(fig);
+    methodDropDown.Value = 'previous';
+    methodDropDown.Layout.Row = 2;
+    methodDropDown.Layout.Column =  2;
     
      sliderLabel = uilabel(customGrid, ...
         "Text","Sigma");
     sliderLabel.Layout.Row = 2;
-    sliderLabel.Layout.Column = 2;
+    sliderLabel.Layout.Column = 3;
     
     sensSlider = uislider(customGrid,"ValueChangedFcn", [],'Tag','sensSlider');
     sensSlider.Limits = [0 10];
@@ -34,41 +40,37 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     sensSlider.MinorTicks = [];
     sensSlider.Value = 2;
     sensSlider.Layout.Row = 2;
-    sensSlider.Layout.Column = 3;
+    sensSlider.Layout.Column = 4;
     
    
     methodDropDown = uidropdown(customGrid,"Items",["Cross-correlation","Intensity"],'Tag','regMethod');
     methodDropDown.Layout.Row = 2;
-    methodDropDown.Layout.Column = 4;
+    methodDropDown.Layout.Column = 5;
 
     registb = uibutton(customGrid, ...
     "Text","Register", ...
     "ButtonPushedFcn", @(src,event) runRegistration(fig));
     registb.Layout.Row = 2;
-    registb.Layout.Column = 5;
+    registb.Layout.Column = 6;
 
     resetb = uibutton(customGrid, ...
     "Text","Reset", ...
     "ButtonPushedFcn", @(src,event) resetButtonPushed(fig));
     resetb.Layout.Row = 2;
-    resetb.Layout.Column = 6;
+    resetb.Layout.Column = 7;
     
     applyb = uibutton(customGrid, ...
     "Text","Accept", ...
     "ButtonPushedFcn", @(src,event) acceptButtonPushed(fig));
     applyb.Layout.Row = 2;
-    applyb.Layout.Column = 7;
+    applyb.Layout.Column = 8;
     
     cancelb = uibutton(customGrid, ...
     "Text","Cancel", ...
     "ButtonPushedFcn", @(src,event) cancelButtonPushed(fig));
     cancelb.Layout.Row = 2;
-    cancelb.Layout.Column = 8;
+    cancelb.Layout.Column = 9;
 
-    % ax = uiaxes(customGrid);
-    
-    % wb = uiprogressdlg(fig,'Title','Registrating plane ','Indeterminate','off');
-    % wb.Value = 0; 
     
     %% Prepare z projections
     
@@ -84,6 +86,8 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     end
 
     zProjectionsRegistered = zProjections;
+
+    % targetTimePoint
 
     % 2D cropp rectangle for preview
     xsize = size(zProjections,2);
@@ -102,11 +106,10 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     for currentTimePoint = 1:nTimePoints   
         driftVect{currentTimePoint} = [0,0,0];
     end
+    
     fig.UserData.driftVect = driftVect;
 
     updatePlot(fig)
-    
-    % close(wb)
     
     %% wait for the "Acctept buttun pushed"
     uiwait(fig)
@@ -117,9 +120,7 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
         return
     end
     
-    % wb = uiprogressdlg(fig,'Title','Processing... ','Indeterminate','on');
-    
-    
+        
     registeredZstack = fig.UserData.registeredZstack;
     driftVect = fig.UserData.driftVect;
     cropRect2D = fig.UserData.cropRect2D;
@@ -133,13 +134,10 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
         driftVect{currentTimePoint}(2) = driftVect{currentTimePoint}(2) - yCropOffset;
 
     end
-
     
     disp('Registration done')
 
-    % close(wb)
     close(fig)
-
 
 end
 
@@ -149,13 +147,10 @@ function tform = preRegister(FIXED, MOVING,sigma,method)
     FIXED = imgaussfilt(FIXED,sigma);
     MOVING = imgaussfilt(MOVING,sigma);
 
-    % h = findobj()
-    % method = 'cross-correlation';
-    % method = 'imreg'
-
     switch method
+        
         case 'Cross-correlation'
-    %% Cross-correlation method
+            % Cross-correlation method
             FIXED = imadjust(FIXED);
             MOVING = imadjust(MOVING);
         
@@ -177,7 +172,7 @@ function tform = preRegister(FIXED, MOVING,sigma,method)
             tform = transltform2d(translationX,translationY);
 
         case 'Intensity'
-           % Default spatial referencing objects
+            % Default spatial referencing objects
             fixedRefObj = imref2d(size(FIXED));
             movingRefObj = imref2d(size(MOVING));
     
@@ -224,6 +219,8 @@ function runRegistration(fig)
     ch = fig.UserData.ch;
     targetTimePoint = fig.UserData.targetTimePoint;
 
+    
+
     %% Prepare z projections
 
     nTimePoints = size(zstack,4);
@@ -240,9 +237,29 @@ function runRegistration(fig)
       
     end    
 
+    %% Method of pairing target and registering time points
+    tragetDropDownH = findobj(fig,'Tag','targetTimePoint');
+    targetMethod = tragetDropDownH.Value;
+
+     % create vector to pair target and resgistrating time points
+    switch targetMethod
+        
+        case 'first'
+
+            TPvect = ones(1,nTimePoints);
+            toPrevious = 0;
+
+        case 'previous'
+
+            TPvect = (1:nTimePoints)-1;
+            toPrevious = 1;
+
+    end
+
     %% Estimate drift
+    
     resizeFactor = 2;
-    FIXED = imresize(zProjections(:,:,targetTimePoint),1/resizeFactor);
+    % FIXED = imresize(zProjections(:,:,targetTimePoint),1/resizeFactor);
     tforms = cell(1,nTimePoints);
 
     sliderH = findobj(fig,'Tag','sensSlider');
@@ -251,15 +268,37 @@ function runRegistration(fig)
     methodH = findobj(fig,'Tag','regMethod');
     method = methodH.Value;
 
-    for currentTimePoint = 1:nTimePoints
+    % set zero shift for target timePoint
+    tforms{targetTimePoint} = transltform2d(0,0);
+    
+
+    temp = zProjections;
+    FIXED_ = zProjections(:,:,targetTimePoint);
+
+    driftVect = fig.UserData.driftVect;
+
+
+    for currentTimePoint = 2:nTimePoints
+
+        targetTimePoint = TPvect(currentTimePoint);
+
+        disp(['Registering TP ' num2str(currentTimePoint) ' to TP ' num2str(targetTimePoint)])
 
         wb.Value = currentTimePoint/nTimePoints;
-        wb.Message = ['Registrating time point ' num2str(currentTimePoint)];
-        MOVING = imresize(zProjections(:,:,currentTimePoint),1/resizeFactor);
-        tforms{currentTimePoint} = preRegister(FIXED, MOVING, sigma, method);
+        % wb.Message = ['Registrating time point ' num2str(currentTimePoint)];
+        wb.Message = ['Registering TP ' num2str(currentTimePoint) ' to TP ' num2str(targetTimePoint)];
+        FIXED = imresize(temp(:,:,targetTimePoint),1/resizeFactor);
+        MOVING = imresize(temp(:,:,currentTimePoint),1/resizeFactor);
 
-        xt = round(tforms{currentTimePoint}.Translation(1));
-        yt = round(tforms{currentTimePoint}.Translation(2));
+        tform = preRegister(FIXED, MOVING, sigma, method);
+
+        tforms{currentTimePoint} = tform;
+        
+        tform.A = round(tform.A);
+        % temp(:,:,currentTimePoint) = imwarp(temp(:,:,currentTimePoint),tform,"OutputView",imref2d(size(FIXED_)));
+
+        xt = tform.Translation(1);
+        yt = tform.Translation(2);
 
         % adding zero z component;
         zt = 0;
@@ -275,13 +314,13 @@ function runRegistration(fig)
 
     wb.Message = 'Crop area... ';
 
-    FIXED_ = zProjections(:,:,targetTimePoint);
-
+    
     % find biggest shifts
     for currentTimePoint = 2:nTimePoints
 
         tforms{currentTimePoint}.Translation(1) = tforms{currentTimePoint}.Translation(1)*resizeFactor;
         tforms{currentTimePoint}.Translation(2) = tforms{currentTimePoint}.Translation(2)*resizeFactor;
+        
 
         xt(i) = tforms{currentTimePoint}.Translation(1);
         yt(i) = tforms{currentTimePoint}.Translation(2);
@@ -319,26 +358,56 @@ function runRegistration(fig)
     end
 
     % 2D cropr ectangle for preview
-    cropRect2D = [x0 y0 xsize-x0+xt ysize-y0+yt];
+    cropRect2D = [x0 y0 xsize-x0+xt ysize-y0+yt]
+
+    xCropOffset = cropRect2D(1);
+    yCropOffset = cropRect2D(2);
+
+    % driftVect
 
     fig.UserData.cropRect2D = cropRect2D;
 
 
     wb.Message = 'Preview results... ';
-    %% Apply tform to zProjecions and plot result
+    %% Apply tform to zProjections and plot result
     zProjectionsRegistered = zProjections;
+
+    
+    transSum = tforms{1}.Translation;
+    finalTforms = tforms;
+
     for currentTimePoint = 2:nTimePoints
 
         % wb.Value = 0; 
         % wb.Message = ['Registrating time point ' num2str(currentTimePoint)];
 
-        tform = tforms{currentTimePoint};
-        tform.A = round(tform.A);
+        % creare trsnformation matrix based on targeting method
+        if toPrevious
+                    
+            % sum translations from previous time points and 
+            transSum = transSum + tforms{currentTimePoint}.Translation;
+            
+            %create new transformation matrix                
+            tform = transltform2d(transSum(1),transSum(2));
+
+        else
+
+           tform = tforms{currentTimePoint};
+
+        end
+
+
+        finalTforms{currentTimePoint} = tform;
+
         zProjectionsRegistered(:,:,currentTimePoint) = imwarp(zProjections(:,:,currentTimePoint),tform,"OutputView",imref2d(size(FIXED_)));
-       
+
     end
 
-    fig.UserData.tforms = tforms;
+    
+
+    % zProjectionsRegistered = temp;
+
+    fig.UserData.tforms = finalTforms;
     fig.UserData.zProjectionsRegistered = zProjectionsRegistered;
 
     updatePlot(fig)  
@@ -374,13 +443,13 @@ function acceptButtonPushed(fig)
     wb.Message = 'Registering...';
     
     registeredZstack = zstack;
+
     for currentTimePoint = 1:nTimePoints   
     
         tform = tforms{currentTimePoint};
         movingZstack = zstack(:,:,:,currentTimePoint,:);
         movingRegistered = imwarp(movingZstack,tform,"OutputView",imref2d(size(FIXED_)));
         registeredZstack(:,:,:,currentTimePoint,:) = movingRegistered;
-
 
         xt = tform.Translation(1);
         yt = tform.Translation(2);
@@ -393,8 +462,7 @@ function acceptButtonPushed(fig)
     end
 
     fig.UserData.driftVect = driftVect;
-    
-     
+         
     %% Cropping
     % [xmin ymin zmin width height depth]
     cropRect3D = [cropRect2D(1) cropRect2D(2) 1 cropRect2D(3) cropRect2D(4) nPlanes-1];
@@ -452,13 +520,34 @@ function updatePlot(fig)
 
     t = findobj(fig,'Tag','figLayout');
     delete(t.Children)
-    targetTimePoint = fig.UserData.targetTimePoint;
+    
+
+    % targetTimePoint = fig.UserData.targetTimePoint;
 
     zProjections = fig.UserData.zProjections;
     zProjectionsRegistered = fig.UserData.zProjectionsRegistered;
     zstack = fig.UserData.zstack;
 
     nTimePoints = size(zstack,4);
+
+     % create vector to pair target and resgistrating time points
+     tragetDropDownH = findobj(fig,'Tag','targetTimePoint');
+    targetMethod = tragetDropDownH.Value;
+    switch targetMethod
+        
+        case 'first'
+
+            TPvect = ones(1,nTimePoints);
+            % toPrevious = 0;
+
+        case 'previous'
+
+            TPvect = (1:nTimePoints)-1;
+            % toPrevious = 1;
+
+    end
+    % TPvect = (1:nTimePoints)-1;
+    
     allAx = [];
 
     cropRect2D = fig.UserData.cropRect2D;
@@ -466,13 +555,17 @@ function updatePlot(fig)
     driftVect = fig.UserData.driftVect;
     
     for currentTimePoint = 2:nTimePoints
+
+        targetTimePoint = TPvect(currentTimePoint);
        
         ax1 = nexttile(t);
 
         allAx = [allAx ax1];
 
-        orig = zProjections(:,:,targetTimePoint);
+        % orig = zProjections(:,:,targetTimePoint);
+        orig = zProjectionsRegistered(:,:,targetTimePoint);
         registered = zProjectionsRegistered(:,:,currentTimePoint);
+        
         registered = imadjust(registered);
         orig = imadjust(orig);
 
@@ -487,8 +580,7 @@ function updatePlot(fig)
 
     end
 
-
-     linkaxes(allAx,'xy')
+    linkaxes(allAx,'xy')
 
 end
 
