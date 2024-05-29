@@ -7,3 +7,5 @@ MMP_settings.mat
 *.avi
 Irbis/
 python_for_irbis/
+check_git_status.m
+startup.m
