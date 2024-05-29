@@ -11,7 +11,11 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
     % array = T.xyz{1}
     % array(:,1:2)
 
-    for TrackNum = T.id.'
+
+    height(T)
+
+    % for TrackNum = T.id.'
+     for TrackNum = 1:height(T)
     
         % length of trajectory
         TrLength = lengthsOfTrajectories(TrackNum);
