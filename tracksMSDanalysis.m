@@ -20,7 +20,9 @@ dt = round(tracks.frameInterval{currentTimePoint},3);
 pixel_size = 1;
 
 % get ids of tracks to be analyzed
-ids = T.id;
+% ids = T.id;
+
+ids = 1:height(T);
 
 
 % format trajectories for MSDtool
