@@ -1,4 +1,4 @@
-classdef CategoryManagerList
+classdef CategoryManagerList < handle
     properties
         CategoryManagers % Cell array to store instances of CategoryManager
     end
@@ -12,6 +12,7 @@ classdef CategoryManagerList
         function addCategoryManager(obj, categoryManager)
             % Method to add a new CategoryManager instance to the list
             obj.CategoryManagers{end+1} = categoryManager;
+            disp(obj.CategoryManagers)
         end
         
         function displayCategories(obj)
