@@ -29,7 +29,7 @@ function CompoundGroupingApp(varargin)
     categoryScrollPanel.UserData.CategoryPanels = {};
 
     % Create a grid layout for buttons
-    buttonGrid = uigridlayout(mainGrid, [1, 2]);
+    buttonGrid = uigridlayout(mainGrid, [1, 3]);
     buttonGrid.Layout.Row = 2;
     buttonGrid.Layout.Column = 1;
 
@@ -44,19 +44,24 @@ function CompoundGroupingApp(varargin)
     saveButton.Layout.Row = 1;
     saveButton.Layout.Column = 2;
     saveButton.ButtonPushedFcn = @(btn,event) saveCategories(categoryScrollPanel);
+
+    % Add a delete all categories button
+    deleteAllButton = uibutton(buttonGrid, 'push', 'Text', 'Delete All Categories');
+    deleteAllButton.Layout.Row = 1;
+    deleteAllButton.Layout.Column = 3;
+    deleteAllButton.ButtonPushedFcn = @(btn,event) deleteAllCategories(categoryGrid, categoryScrollPanel);
 end
 
 function addCategoryPanel(categoryGrid, tableData, scrollPanel)
     % Create a panel for the new category
-    % categoryPanel = uipanel(categoryGrid, 'Title', 'New Category');
     categoryPanel = uipanel(categoryGrid);
     categoryPanel.Layout.Row = numel(categoryGrid.Children) + 1;
     categoryPanel.Layout.Column = 1;
 
     % Create a grid layout inside the category panel
-    panelGrid = uigridlayout(categoryPanel, [2, 1]);
+    panelGrid = uigridlayout(categoryPanel, [2, 2]);
     panelGrid.RowHeight = {30, 'fit'};
-    panelGrid.ColumnWidth = {'1x'};
+    panelGrid.ColumnWidth = {'1x', 70};
 
     % Create a text field for the category name
     categoryNameField = uieditfield(panelGrid, 'text');
@@ -64,10 +69,16 @@ function addCategoryPanel(categoryGrid, tableData, scrollPanel)
     categoryNameField.Layout.Column = 1;
     categoryNameField.Value = num2str(numel(categoryGrid.Children));
 
+    % Create a delete button for the category
+    deleteCategoryButton = uibutton(panelGrid, 'push', 'Text', 'Delete Category');
+    deleteCategoryButton.Layout.Row = 1;
+    deleteCategoryButton.Layout.Column = 2;
+    deleteCategoryButton.ButtonPushedFcn = @(btn,event) deleteCategoryPanel(categoryPanel, categoryGrid, scrollPanel);
+
     % Create a grid layout for criteria
     criteriaGrid = uigridlayout(panelGrid);
     criteriaGrid.Layout.Row = 2;
-    criteriaGrid.Layout.Column = 1;
+    criteriaGrid.Layout.Column = [1 2];
     criteriaGrid.RowHeight = {'fit'};
     criteriaGrid.ColumnWidth = {'1x', 100, 100, 100, 70};
 
@@ -120,45 +131,64 @@ function addCriteriaRow(criteriaGrid, tableData, categoryPanel)
 end
 
 function deleteRow(btn, criteriaGrid, categoryPanel)
-
     row = btn.Layout.Row;
     % Remove the row from the stored components
     criteriaComponents = categoryPanel.UserData.CriteriaComponents;
     for i = length(criteriaComponents):-1:1
         if criteriaComponents{i}{1}.Layout.Row == row
             for j = 1:4
-                delete(criteriaComponents{i}{j})
+                delete(criteriaComponents{i}{j});
             end
             criteriaComponents(i) = [];
             break;
         end
     end
 
-
-    % % Delete the row components
-    % children = criteriaGrid.Children;
-    % for i = 1:length(children)
-    %     if children(i).Layout.Row == row
-    %         delete(children(i));
-    %     end
-    % end
-
     categoryPanel.UserData.CriteriaComponents = criteriaComponents;
 
     % Adjust row numbers for the remaining components
     for i = 1:length(criteriaComponents)
-        % i
-        % rowN = criteriaComponents{i}{1}.Layout.Row
         for j = 1:4
             if criteriaComponents{i}{j}.Layout.Row > row
                 criteriaComponents{i}{j}.Layout.Row = criteriaComponents{i}{j}.Layout.Row - 1;
             end
         end
-        % rowN2 = criteriaComponents{i}{1}.Layout.Row
     end
 
     % Update grid layout row heights
     criteriaGrid.RowHeight = repmat({30}, 1, size(criteriaGrid.RowHeight, 2) - 1);
+end
+
+function deleteCategoryPanel(categoryPanel, categoryGrid, scrollPanel)
+    % Delete the category panel
+    delete(categoryPanel);
+    % Remove the panel from the stored components
+    categoryPanels = scrollPanel.UserData.CategoryPanels;
+    index = find(cellfun(@(c) c == categoryPanel, categoryPanels));
+    if ~isempty(index)
+        categoryPanels(index) = [];
+    end
+    scrollPanel.UserData.CategoryPanels = categoryPanels;
+
+    % Adjust row numbers for the remaining panels
+    for i = 1:length(categoryPanels)
+        categoryPanels{i}.Layout.Row = i;
+    end
+
+    % Update grid layout row heights
+    categoryGrid.RowHeight = repmat({'fit'}, 1, length(categoryPanels));
+end
+
+function deleteAllCategories(categoryGrid, scrollPanel)
+    % Delete all category panels
+    categoryPanels = scrollPanel.UserData.CategoryPanels;
+    for i = 1:length(categoryPanels)
+        delete(categoryPanels{i});
+    end
+    % Clear the stored panels
+    scrollPanel.UserData.CategoryPanels = {};
+    % Update grid layout row heights
+    categoryGrid.RowHeight = {'fit'};
 end
 
 function saveCategories(scrollPanel)
@@ -172,16 +202,16 @@ function saveCategories(scrollPanel)
             column = rowComponents{1}.Value;
             operator = rowComponents{2}.Value;
             value = rowComponents{3}.Value;
-            operatorValueDict = dictionary(operator,value);
+            operatorValueDict = dictionary(operator, value);
             if isKey(conditionsDict, column)
                 innerDict = conditionsDict(column);
-                if isKey(innerDict,operator)
-                    disp('overwriting the same condition')
+                if isKey(innerDict, operator)
+                    disp('overwriting the same condition');
                 end
                 innerDict(operator) = value;
                 conditionsDict(column) = innerDict;
             else
-                conditionsDict(column) = operatorValueDict; 
+                conditionsDict(column) = operatorValueDict;
             end
         end
         categoryStruct.name = categoryName;
@@ -191,59 +221,3 @@ function saveCategories(scrollPanel)
     assignin('base', 'categories', categories); % Save to workspace for further use
     disp(categories);
 end
-
-
-
-
-
-% function compoundFilterMenu(T)
-%     % Create a new figure for grouping window
-%     groupingFig = uifigure('Name', 'Define Grouping Parameters');
-%     groupingFig.Position = [100 100 600 400];
-% 
-%     % Add a plus button to add dropdown menus
-%     plusButton = uibutton(groupingFig, 'push', 'Text', '+');
-%     plusButton.Position = [10 350 30 30];
-%     plusButton.ButtonPushedFcn = @(btn,event) addDropdown(groupingFig, T);
-% 
-%     % Store UI components for dynamic management
-%     groupingFig.UserData.DropdownY = 300;
-%     groupingFig.UserData.ComponentHeight = 40;
-% end
-% 
-% function addDropdown(fig, T)
-%     % Get the current Y position for the new components
-%     dropdownY = fig.UserData.DropdownY;
-% 
-%     % Create a dropdown for column names
-%     columnDropdown = uidropdown(fig);
-%     columnDropdown.Position = [10 dropdownY 150 30];
-%     columnDropdown.Items = T.Properties.VariableNames;
-% 
-%     % Create a dropdown for operators
-%     operatorDropdown = uidropdown(fig);
-%     operatorDropdown.Position = [170 dropdownY 100 30];
-%     operatorDropdown.Items = {'equal', 'less', 'more'};
-% 
-%     % Create a text field for user input
-%     valueField = uieditfield(fig, 'numeric');
-%     valueField.Position = [280 dropdownY 100 30];
-% 
-%     % Create a delete button
-%     deleteButton = uibutton(fig, 'push', 'Text', 'Delete');
-%     deleteButton.Position = [390 dropdownY 70 30];
-%     deleteButton.ButtonPushedFcn = @(btn,event) deleteRow(columnDropdown, operatorDropdown, valueField, deleteButton, fig);
-% 
-%     % Update the Y position for the next set of components
-%     fig.UserData.DropdownY = dropdownY - fig.UserData.ComponentHeight;
-% end
-% 
-% function deleteRow(columnDropdown, operatorDropdown, valueField, deleteButton, fig)
-%     % Delete the row components
-%     delete(columnDropdown);
-%     delete(operatorDropdown);
-%     delete(valueField);
-%     delete(deleteButton);
-% 
-%     % Optionally, you can adjust the position of other rows here
-% end

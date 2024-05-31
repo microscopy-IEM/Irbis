@@ -11,33 +11,19 @@ classdef CategoryManager < handle
         end
         
         function listArray = updateTable(obj, listArray, timePoints)
-            for tp = timePoints
-                table = listArray{tp};
+            if istable(listArray)
+                table = listArray;
                 category = obj.evaluateConditions(table);
                 table.(obj.CategoryName) = categorical(category);
-                listArray{tp} = table;
-            end
-        end
-        
-        function plotCategories(obj, tables, colX, colY)
-            figure;
-            hold on;
-            colors = lines(length(unique(tables{1}.(obj.CategoryName))));
-            for i = 1:numel(tables)
-                table = tables{i};
-                uniqueCategories = unique(table.(obj.CategoryName));
-                for j = 1:numel(uniqueCategories)
-                    category = uniqueCategories(j);
-                    indices = table.(obj.CategoryName) == category;
-                    color = colors(j, :);
-                    plot(table.(colX)(indices), table.(colY)(indices), 'o', 'Color', color, 'DisplayName', char(category));
+                listArray = table;
+            else
+                for tp = timePoints
+                    table = listArray{tp};
+                    category = obj.evaluateConditions(table);
+                    table.(obj.CategoryName) = categorical(category);
+                    listArray{tp} = table;
                 end
             end
-            hold off;
-            legend('show');
-            xlabel(colX);
-            ylabel(colY);
-            title(['Category: ', obj.CategoryName]);
         end
         
         function obj = renameGroup(obj)

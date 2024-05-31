@@ -26,14 +26,6 @@ classdef CategoryManagerList < handle
             end
         end
         
-        function plotAllCategories(obj, tables, colX, colY)
-            % Method to plot all categories
-            for i = 1:numel(obj.CategoryManagers)
-                cm = obj.CategoryManagers{i};
-                cm.plotCategories(tables, colX, colY);
-            end
-        end
-        
         function updateAllTables(obj, tables, timePoints)
             % Method to update all tables for all CategoryManagers
             for i = 1:numel(obj.CategoryManagers)
@@ -47,6 +39,31 @@ classdef CategoryManagerList < handle
             for i = 1:numel(obj.CategoryManagers)
                 cm = obj.CategoryManagers{i};
                 cm.promptAndUpdateConditions(tables, timePoints);
+            end
+        end
+
+        function deleteCategoryManager(obj, categoryName)
+            % Method to delete a CategoryManager instance by category name
+            idx = obj.findCategoryManagerIndexByName(categoryName);
+            if idx > 0
+                % Explicitly delete the CategoryManager instance
+                delete(obj.CategoryManagers{idx});
+                % Remove the reference from the cell array
+                obj.CategoryManagers(idx) = [];
+                fprintf('CategoryManager with name "%s" has been deleted.\n', categoryName);
+            else
+                fprintf('CategoryManager with name "%s" not found.\n', categoryName);
+            end
+        end
+
+        function idx = findCategoryManagerIndexByName(obj, categoryName)
+            % Helper method to find the index of a CategoryManager by its name
+            idx = -1;
+            for i = 1:numel(obj.CategoryManagers)
+                if strcmp(obj.CategoryManagers{i}.CategoryName, categoryName)
+                    idx = i;
+                    return;
+                end
             end
         end
     end
