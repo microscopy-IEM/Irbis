@@ -1,12 +1,12 @@
-classdef CategoryManager < handle
+classdef Categorization < handle
     properties
-        CategoryName
+        CategorizationName
         Conditions
     end
     
     methods
-        function obj = CategoryManager(categoryName, conditions)
-            obj.CategoryName = categoryName;
+        function obj = Categorization(categoryName, conditions)
+            obj.CategorizationName = categoryName;
             obj.Conditions = conditions;
         end
         
@@ -14,13 +14,13 @@ classdef CategoryManager < handle
             if istable(listArray)
                 table = listArray;
                 category = obj.evaluateConditions(table);
-                table.(obj.CategoryName) = categorical(category);
+                table.(obj.CategorizationName) = categorical(category);
                 listArray = table;
             else
                 for tp = timePoints
                     table = listArray{tp};
                     category = obj.evaluateConditions(table);
-                    table.(obj.CategoryName) = categorical(category);
+                    table.(obj.CategorizationName) = categorical(category);
                     listArray{tp} = table;
                 end
             end
