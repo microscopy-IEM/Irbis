@@ -34,7 +34,7 @@ end
 resultTable(1,:) = num2cell(nan(size(labels)));
 resultTable.Properties.VariableNames = labels;
 
-resultTable
+% resultTable
 
 %% Fill table with data
 
@@ -86,7 +86,7 @@ uniqueIds = uniqueIds(uniqueIds~=0);
                 % assembe txt identifier
                 txt = [attributes{currentAttribute} num2str(tp)];
  
-                currentValue
+                % currentValue
                 resultTable{currentRow,txt} = currentValue(1);
 
             end
