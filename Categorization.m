@@ -155,7 +155,7 @@ classdef Categorization < handle
                             end
                         end
                     else
-                        match = match & ismember(table.(condFields{j}), condValue);
+                        match = match & ismember(table.(condFields{j}), condValue{1});
                     end
                 end
                 categories(match) = groupName;
