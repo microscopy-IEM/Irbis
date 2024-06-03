@@ -304,7 +304,7 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
             for j = 1:length(categoryPanel.UserData.CriteriaComponents)
                 rowComponents = categoryPanel.UserData.CriteriaComponents{j};
                 column = rowComponents{1}.Value;
-                operator = rowComponents{2}.Value;
+                operator = rowComponents{2}.Value
 
                 % Check if the value field is a uitree (for categorical variables)
                 if strcmp(rowComponents{3}.Type, 'uicheckboxtree')
@@ -316,6 +316,10 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
                     operatorValueDict = dictionary(operator, value);
                     if isKey(conditionsDict, column)
                         innerDict = conditionsDict(column);
+                        innerDict = innerDict{1};
+                        innerDict
+                        isConfigured(innerDict)
+                        operator
                         if isKey(innerDict, operator)
                             disp('overwriting the same condition');
                         end
