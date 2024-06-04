@@ -3,16 +3,18 @@
 function finalMap = peakClusterFcn(peaks,greyMap,expectedPeakDiamPx)
 
 conn = 6; % 3D case
-peak2BcgRatioThres = 3;
+peak2BcgRatioThres = 1;
 
-thFun = @(mx,mn)((mx-mn)/2 + mn);          
+% thFun = @(mx,mn)((mx-mn)/2 + mn);          
+thFun = @(mx,mn)((mx)/3 + mn);    
+
 
 nDimensions = ndims(greyMap);
 
 %% Pre-process by gaussian filtering
 
 % smooth to suppress pixel-pixel variations
-greyMap = imgaussfilt3(greyMap,0.3);
+greyMap = imgaussfilt3(greyMap,0.5);
 
 % binary operators
 searchDiam = round(1.5*expectedPeakDiamPx);
@@ -87,7 +89,8 @@ sz = size(greyMap);
         peakSearchArea = imdilate(peakSearchArea,searchOffset);
         
         mn = min(greyMap(peakSearchArea));
-        mx = mean(greyMap(peakAbs));
+        % mx = mean(greyMap(peakAbs));
+        mx = max(greyMap(peakAbs));
         % th_max = max(greyMap(peakAbs)); % max threshold - in region can be present pixels with higher value from another lokal peak maxime 
     
         % calculate local threshold by selected function
@@ -104,7 +107,9 @@ sz = size(greyMap);
         Vol = sum(thIdx);
     
         % keep only peaks with minimal volume
-        if Vol >= minVol && Vol <= maxVol && peak2BcgRatio >= peak2BcgRatioThres
+        % if Vol >= minVol && Vol <= maxVol && peak2BcgRatio >= peak2BcgRatioThres
+
+        if peak2BcgRatio >= peak2BcgRatioThres
     
             peakDetectedArea(peakSearchArea) = thIdx;
               
