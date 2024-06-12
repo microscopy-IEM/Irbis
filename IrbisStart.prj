@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="1227680552" file="D:\git_folder2\IrbisStart.prj" location="D:\git_folder2" name="IrbisStart" preferred-package-location="C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="1227680552" file="C:\Users\stepan.kortus\Documents\Irbis\IrbisStart.prj" location="C:\Users\stepan.kortus\Documents\Irbis" name="IrbisStart" preferred-package-location="C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\IrbisStart_resources\icon.ico</param.icon>
     <param.icons>
@@ -127,17 +127,22 @@
       <file>${PROJECT_ROOT}\@msdanalyzer\plotTracks.m</file>
       <file>${PROJECT_ROOT}\applyStyleToComponents.m</file>
       <file>${PROJECT_ROOT}\attach_objects_python.m</file>
+      <file>${PROJECT_ROOT}\Categorization.m</file>
+      <file>${PROJECT_ROOT}\categorizationDefinitionWindow.m</file>
+      <file>${PROJECT_ROOT}\CategorizationStorage.m</file>
       <file>${PROJECT_ROOT}\changeSectionButtonTooltip.m</file>
       <file>${PROJECT_ROOT}\checkAndHandlePythonPackage.m</file>
       <file>${PROJECT_ROOT}\compute_mesh_total_area.m</file>
       <file>${PROJECT_ROOT}\compute_mesh_volume.m</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\animationTimeline.mlapp</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\histogramFilterComp.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\icons\downArrow.png</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\icons\leftArrow.png</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\icons\rightArrow.png</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\icons\upArrow.png</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\objectListComponent.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\positionAdjustment.mlapp</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\surfaceReconstructionComp.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\surfaceReconstructionTab.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\ValueChangedEventData.m</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\volumeHistogram.mlapp</file>
@@ -152,6 +157,8 @@
       <file>${PROJECT_ROOT}\gizmo_app.m</file>
       <file>${PROJECT_ROOT}\icons\color_palette.png</file>
       <file>${PROJECT_ROOT}\icons\downArrow.png</file>
+      <file>${PROJECT_ROOT}\icons\draw_area.png</file>
+      <file>${PROJECT_ROOT}\icons\draw_bcg_area.png</file>
       <file>${PROJECT_ROOT}\icons\extendUp.png</file>
       <file>${PROJECT_ROOT}\icons\home.png</file>
       <file>${PROJECT_ROOT}\icons\leftArrow.png</file>
@@ -163,6 +170,7 @@
       <file>${PROJECT_ROOT}\icons\redo-arrow.png</file>
       <file>${PROJECT_ROOT}\icons\Refresh_icon.png</file>
       <file>${PROJECT_ROOT}\icons\rightArrow.png</file>
+      <file>${PROJECT_ROOT}\icons\ruler.png</file>
       <file>${PROJECT_ROOT}\icons\transp1.png</file>
       <file>${PROJECT_ROOT}\icons\undo-arrow.png</file>
       <file>${PROJECT_ROOT}\icons\upArrow.png</file>
@@ -170,6 +178,8 @@
       <file>${PROJECT_ROOT}\importPlanes.m</file>
       <file>${PROJECT_ROOT}\ImportPoints.m</file>
       <file>${PROJECT_ROOT}\importTracks.m</file>
+      <file>${PROJECT_ROOT}\intriangulation.m</file>
+      <file>${PROJECT_ROOT}\IrbisResultsViewer.mlapp</file>
       <file>${PROJECT_ROOT}\IS_active_contour.m</file>
       <file>${PROJECT_ROOT}\IS_active_contour_vocal.m</file>
       <file>${PROJECT_ROOT}\IS_adding_toolboxes_to_path.m</file>
@@ -178,11 +188,10 @@
       <file>${PROJECT_ROOT}\MicroMToPixelPosition.m</file>
       <file>${PROJECT_ROOT}\MMP_jumpsRemoval.m</file>
       <file>${PROJECT_ROOT}\MMP_LocalizationError.m</file>
-      <file>${PROJECT_ROOT}\MMP_MSD_analysis.m</file>
-      <file>${PROJECT_ROOT}\MMP_TracksProccesing.m</file>
       <file>${PROJECT_ROOT}\moveCellItem.m</file>
       <file>${PROJECT_ROOT}\MyDragzoom.m</file>
       <file>${PROJECT_ROOT}\newMMpackDialog.m</file>
+      <file>${PROJECT_ROOT}\peakClusterFcn.m</file>
       <file>${PROJECT_ROOT}\planesCropFcn.m</file>
       <file>${PROJECT_ROOT}\point_to_line_distance.m</file>
       <file>${PROJECT_ROOT}\point_to_plane_distance.m</file>
@@ -208,36 +217,19 @@
       <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\nb_dims.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\perform_vf_normalization.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\prod_vf_sf.m</file>
+      <file>${PROJECT_ROOT}\tracksMSDanalysis.m</file>
+      <file>${PROJECT_ROOT}\tracksProcessing.m</file>
       <file>${PROJECT_ROOT}\tubeplot.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">D:\git_folder2\Irbis\for_testing\splash.png</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">D:\git_folder2\Irbis\for_testing\Irbis.exe</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">D:\git_folder2\Irbis\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">C:\Users\stepan.kortus\Documents\Irbis\Irbis\for_testing\Irbis.exe</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">C:\Users\stepan.kortus\Documents\Irbis\Irbis\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">C:\Users\stepan.kortus\Documents\Irbis\Irbis\for_testing\splash.png</file>
     </build-deliverables>
     <workflow />
     <matlab>
       <root>C:\Program Files\MATLAB\R2024a</root>
-      <toolboxes>
-        <toolbox name="matlabcoder" />
-        <toolbox name="gpucoder" />
-        <toolbox name="neuralnetwork" />
-      </toolboxes>
-      <toolbox>
-        <matlabcoder>
-          <enabled>true</enabled>
-        </matlabcoder>
-      </toolbox>
-      <toolbox>
-        <gpucoder>
-          <enabled>true</enabled>
-        </gpucoder>
-      </toolbox>
-      <toolbox>
-        <neuralnetwork>
-          <enabled>true</enabled>
-        </neuralnetwork>
-      </toolbox>
+      <toolboxes />
     </matlab>
     <platform>
       <unix>false</unix>
