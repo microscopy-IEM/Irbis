@@ -297,6 +297,8 @@ Initialize(varargin{:})
         
         % Rotate Options
         mRot3DKeysInc = 3;          % rotate increase for keys
+
+        
     end
 %--------------------------------------------------------------------------
 %==========================================================================
@@ -310,6 +312,9 @@ Initialize(varargin{:})
         
         hAx = hAxes(1);
         set(hFig, 'CurrentAxes', hAx);
+
+        % SK
+        hFig.UserData.dragZoomResFcn = @UpdateCurrentZoomAxes;
         
         % setup tool
         Setup();
@@ -328,7 +333,7 @@ Initialize(varargin{:})
             end
             
             if isfield(UserData, 'origcallbacks')
-                mOrigCallbacks = UserData.origcallbacks;
+                mOrigCallbacks = UserData.origcallbacks;mZoomIndexX
                 SetOriginalCallbacks();
             end
             
@@ -680,7 +685,7 @@ Initialize(varargin{:})
             return; 
         end
         
-        UpdateCurrentZoomAxes3D();
+        % UpdateCurrentZoomAxes3D();
         
         switch mZoomScroll
             case 'normal'
@@ -705,8 +710,10 @@ Initialize(varargin{:})
 
         % SK
         if axi == 2
+            UpdateCurrentZoomAxes();
             ZoomMouse(direction);
         elseif axi == 1
+            UpdateCurrentZoomAxes3D();
             ZoomMouse3D(direction);
         end
     end
