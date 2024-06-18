@@ -1,4 +1,4 @@
-Irbis Executable
+Irbis4neuron Executable
 
 1. Prerequisites for Deployment 
 
@@ -24,7 +24,7 @@ in the MathWorks Documentation Center.
 
 Files to Package for Standalone 
 ================================
--Irbis.exe
+-Irbis4neuron.exe
 -MCRInstaller.exe 
     Note: if end users are unable to download the MATLAB Runtime using the
     instructions in the previous section, include it when building your 
