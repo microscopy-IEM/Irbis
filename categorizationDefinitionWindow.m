@@ -19,29 +19,36 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
     mainGrid.RowHeight = {40, 40, '1x', 40};
     mainGrid.ColumnWidth = {'1x'};
 
-    % Create a panel for save/load options
+    % Create a panel for load options
     saveLoadGrid = uigridlayout(mainGrid, [1, 3]);
-    saveLoadGrid.ColumnWidth = {120, 120, '1x'};
+    saveLoadGrid.ColumnWidth = {'1x', 120, 120};
     saveLoadGrid.Layout.Row = 1;
     saveLoadGrid.Layout.Column = 1;
 
-    % Add Save and Load buttons
-    saveButton = uibutton(saveLoadGrid, 'push', 'Text', 'Save Settings');
-    saveButton.Layout.Row = 1;
-    saveButton.Layout.Column = 1;
-    saveButton.ButtonPushedFcn = @(btn, event) saveSettings(nameField.Value, categoryScrollPanel.UserData.CategoryPanels);
+    % Add dropdown to select saved settings
+    loadDropdown = uidropdown(saveLoadGrid, 'Items', {'No settings to choose from'});
+    loadDropdown.Layout.Row = 1;
+    loadDropdown.Layout.Column = 1;
+    loadDropdown.Tooltip = 'Select saved settings to load.';
+    loadedItems = storedCategorizations.returnCategorizationNames;
+    % loadedItems{end+1} = 'Select settings to load...';
+    loadDropdown.Items = loadedItems;
+    % loadDropdown.Value = 'Select settings to load...';
+    % loadDropdown.ValueChangedFcn = @(src,event) loadDropdownValueChanged(src);
+
+    % Add Delete and Load buttons
 
     loadButton = uibutton(saveLoadGrid, 'push', 'Text', 'Load Settings');
     loadButton.Layout.Row = 1;
     loadButton.Layout.Column = 2;
     loadButton.ButtonPushedFcn = @(btn, event) loadSettings();
+    loadButton.Tooltip = 'Load the currently selected settings.';
 
-    % Add dropdown to select saved settings
-    loadDropdown = uidropdown(saveLoadGrid, 'Items', {'Select saved setting...'});
-    loadDropdown.Layout.Row = 1;
-    loadDropdown.Layout.Column = 3;
-    loadDropdown.Tooltip = 'Select a saved setting to load.';
-    loadDropdown.Items = storedCategorizations.returnCategorizationNames;
+    deleteSavedSettingsButton = uibutton(saveLoadGrid, 'push', 'Text', 'Delete Settings');
+    deleteSavedSettingsButton.Layout.Row = 1;
+    deleteSavedSettingsButton.Layout.Column = 3;
+    deleteSavedSettingsButton.ButtonPushedFcn = @(btn, event) deleteSavedSettings();
+    deleteSavedSettingsButton.Tooltip = 'Delete the currently selected settings from the stored settings.';
 
     % Create a panel for naming the categorization
     namingGrid = uigridlayout(mainGrid, [1, 2]);
@@ -330,7 +337,7 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
             for j = 1:length(categoryPanel.UserData.CriteriaComponents)
                 rowComponents = categoryPanel.UserData.CriteriaComponents{j};
                 column = rowComponents{1}.Value;
-                operator = rowComponents{2}.Value
+                operator = rowComponents{2}.Value;
 
                 % Check if the value field is a uitree (for categorical variables)
                 if strcmp(rowComponents{3}.Type, 'uicheckboxtree')
@@ -425,6 +432,12 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
 
     end
 
+    function deleteSavedSettings()
+        storedCategorizations.deleteCategorization(loadDropdown.Value);
+        idToDelete = strcmp(loadDropdown.Items,loadDropdown.Value);
+        loadDropdown.Items(idToDelete) = [];
+    end
+
     function checkNodesByName(tree, nodeNames)
         checkedNodes = [];
         for i = 1:length(nodeNames)
@@ -442,5 +455,19 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
         end
         tree.CheckedNodes = checkedNodes;
     end
+
+    % function loadDropdownValueChanged(src)
+    %     % Get the selected value
+    %     selectedValue = src.Value;
+    % 
+    %     % Check if the selected value is not 'Select settings to load...'
+    %     if ~strcmp(selectedValue, 'Select settings to load...')
+    %         % Process the selected value
+    %         loadSettings
+    % 
+    %         % Reset the dropdown value back to 'Select settings to load...'
+    %         src.Value = 'Select settings to load...';
+    %     end
+    % end
 
 end

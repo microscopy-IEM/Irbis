@@ -63,8 +63,8 @@ classdef CategorizationStorage < handle
             % Method to delete a Categorization instance by category name
             idx = obj.findCategorizationIndexByName(categorizationName);
             if idx > 0
-                % Explicitly delete the Categorization instance
-                delete(obj.Categorizations{idx});
+                % % Explicitly delete the Categorization instance
+                % delete(obj.Categorizations{idx});
                 % Remove the reference from the cell array
                 obj.Categorizations(idx) = [];
                 fprintf('Categorization with name "%s" has been deleted.\n', categorizationName);
