@@ -3,9 +3,11 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
     if isempty(varargin)
         tableData = table({'A'; 'B'; 'C'}, [1; 2; 3], [4; 5; 6], 'VariableNames', {'Col1', 'Col2', 'Col3'});
         numberOfExistingCategorizations = 0;
+        storedCategorizations = CategorizationStorage();
     else
         tableData = varargin{1};
         numberOfExistingCategorizations = varargin{2};
+        storedCategorizations = varargin{3};
     end
 
     % Create a new figure for grouping window
@@ -13,14 +15,38 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
     groupingFig.Position = [100 100 600 500];
 
     % Create a main grid layout
-    mainGrid = uigridlayout(groupingFig, [3, 1]);
-    mainGrid.RowHeight = {40, '1x', 40};
+    mainGrid = uigridlayout(groupingFig, [4, 1]);
+    mainGrid.RowHeight = {40, 40, '1x', 40};
     mainGrid.ColumnWidth = {'1x'};
+
+    % Create a panel for save/load options
+    saveLoadGrid = uigridlayout(mainGrid, [1, 3]);
+    saveLoadGrid.ColumnWidth = {120, 120, '1x'};
+    saveLoadGrid.Layout.Row = 1;
+    saveLoadGrid.Layout.Column = 1;
+
+    % Add Save and Load buttons
+    saveButton = uibutton(saveLoadGrid, 'push', 'Text', 'Save Settings');
+    saveButton.Layout.Row = 1;
+    saveButton.Layout.Column = 1;
+    saveButton.ButtonPushedFcn = @(btn, event) saveSettings(nameField.Value, categoryScrollPanel.UserData.CategoryPanels);
+
+    loadButton = uibutton(saveLoadGrid, 'push', 'Text', 'Load Settings');
+    loadButton.Layout.Row = 1;
+    loadButton.Layout.Column = 2;
+    loadButton.ButtonPushedFcn = @(btn, event) loadSettings();
+
+    % Add dropdown to select saved settings
+    loadDropdown = uidropdown(saveLoadGrid, 'Items', {'Select saved setting...'});
+    loadDropdown.Layout.Row = 1;
+    loadDropdown.Layout.Column = 3;
+    loadDropdown.Tooltip = 'Select a saved setting to load.';
+    loadDropdown.Items = storedCategorizations.returnCategorizationNames;
 
     % Create a panel for naming the categorization
     namingGrid = uigridlayout(mainGrid, [1, 2]);
     namingGrid.ColumnWidth = {120,'1x'};
-    namingGrid.Layout.Row = 1;
+    namingGrid.Layout.Row = 2;
     namingGrid.Layout.Column = 1;
 
     % Add the field for category name
@@ -35,7 +61,7 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
 
     % Create a panel for category panels
     categoryScrollPanel = uipanel(mainGrid,'Scrollable','on');
-    categoryScrollPanel.Layout.Row = 2;
+    categoryScrollPanel.Layout.Row = 3;
     categoryScrollPanel.Layout.Column = 1;
 
     % Create a grid layout inside the scrollable panel
@@ -49,7 +75,7 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
 
     % Create a grid layout for buttons
     buttonGrid = uigridlayout(mainGrid, [1, 2]);
-    buttonGrid.Layout.Row = 3;
+    buttonGrid.Layout.Row = 4;
     buttonGrid.Layout.Column = 1;
 
     % Add a plus button to add categories
@@ -70,7 +96,7 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
     addCategoryPanel(categoryGrid, tableData, categoryScrollPanel);
     uiwait(groupingFig)
 
-    function addCategoryPanel(categoryGrid, tableData, scrollPanel)
+    function [categoryPanel,criteriaGrid] = addCategoryPanel(categoryGrid, tableData, scrollPanel)
         % Create a panel for the new category
         categoryPanel = uipanel(categoryGrid);
         categoryPanel.Layout.Row = numel(categoryGrid.Children) + 1;
@@ -317,9 +343,9 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
                     if isKey(conditionsDict, column)
                         innerDict = conditionsDict(column);
                         innerDict = innerDict{1};
-                        innerDict
+                        % innerDict
                         isConfigured(innerDict)
-                        operator
+                        % operator
                         if isKey(innerDict, operator)
                             disp('overwriting the same condition');
                         end
@@ -342,4 +368,79 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
         uiresume(groupingFig);
         delete(groupingFig);
     end
+
+    function loadSettings()
+            categorizations = storedCategorizations.Categorizations;
+            disp(categorizations);
+
+            % Clear existing category panels
+            for i = length(categoryScrollPanel.UserData.CategoryPanels):-1:1
+                delete(categoryScrollPanel.UserData.CategoryPanels{i});
+            end
+            categoryScrollPanel.UserData.CategoryPanels = {};
+
+            id = storedCategorizations.findCategorizationIndexByName(loadDropdown.Value);
+            category = categorizations{id};
+            fields = fieldnames(category.Conditions);
+            for i = 1:numel(fields)
+                [categoryPanel,criteriaGrid] = addCategoryPanel(categoryGrid, tableData, categoryScrollPanel);
+
+                group = fields{i};
+                groupName = category.Conditions.(group).name;
+                conds = category.Conditions.(group).conditions;
+                condFields = keys(conds);
+
+                categoryPanel.Children(1).Children(1).Value = groupName; % Set the category name
+
+                criteriaNum = 1;
+                for j = 1:numel(condFields)
+                    condValue = conds(condFields{j});
+                    column = condFields{j};
+                    if isequal(class(condValue{1}),'dictionary')
+                        condDict = condValue{1};
+                        condKeys = keys(condDict);
+                        for k = 1:numel(condKeys)
+                            comparator = condKeys{k};
+                            value = condDict(comparator);
+                            categoryPanel.UserData.CriteriaComponents{criteriaNum}{1}.Value = column;
+                            categoryPanel.UserData.CriteriaComponents{criteriaNum}{2}.Value = comparator;
+                            categoryPanel.UserData.CriteriaComponents{criteriaNum}{3}.Value = value;
+                            if ~isequal(k,numel(condKeys))
+                                addCriteriaRow(criteriaGrid, tableData, categoryPanel);
+                            end
+                            criteriaNum = criteriaNum + 1;
+                        end
+                    else
+                        categoryPanel.UserData.CriteriaComponents{criteriaNum}{1}.Value = column;
+                        dd = categoryPanel.UserData.CriteriaComponents{criteriaNum}{1};
+                        updateCriteriaRow(dd,criteriaGrid,tableData,criteriaNum,categoryPanel);
+                        checkNodesByName(categoryPanel.UserData.CriteriaComponents{criteriaNum}{3},condValue{1});
+                        criteriaNum = criteriaNum + 1;
+                    end
+                    if ~isequal(j,numel(condFields))
+                        addCriteriaRow(criteriaGrid, tableData, categoryPanel);
+                    end
+                end
+            end
+
+    end
+
+    function checkNodesByName(tree, nodeNames)
+        checkedNodes = [];
+        for i = 1:length(nodeNames)
+            % Find the node with the specific name
+            nodeName = nodeNames{i};
+            node = findobj(tree.Children, 'Text', nodeName);
+            % get(node)
+            
+            % Check if the node is found and check the box
+            if ~isempty(node)
+                checkedNodes = [checkedNodes,node];
+            else
+                warning('Node with name "%s" not found.', nodeName);
+            end
+        end
+        tree.CheckedNodes = checkedNodes;
+    end
+
 end
