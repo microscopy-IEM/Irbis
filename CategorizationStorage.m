@@ -33,6 +33,11 @@ classdef CategorizationStorage < handle
                 categorizationNames{i} = char(cm.CategorizationName);
             end
         end
+
+        function categorization = returnCategorization(obj,categorizationName)
+            idx = obj.findCategorizationIndexByName(categorizationName);
+            categorization = obj.Categorizations{idx};
+        end
         
         function listArray = updateAllTables(obj, listArray, timePoints)
             % Method to update all tables for all Categorizations
