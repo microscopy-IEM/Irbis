@@ -14,6 +14,12 @@ classdef CategorizationStorage < handle
             obj.Categorizations{end+1} = categorization;
             disp(obj.Categorizations)
         end
+
+        function replaceCategorization(obj, categorization)
+            idx = obj.findCategorizationIndexByName(categorization.CategorizationName);
+            obj.Categorizations{idx} = categorization;
+            disp(obj.Categorizations)
+        end
         
         function displayCategories(obj)
             % Method to display all categories

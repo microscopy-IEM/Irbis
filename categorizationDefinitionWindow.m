@@ -101,6 +101,13 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
 
     addCategoryPanel(categoryGrid, tableData, categoryScrollPanel);
     addCategoryPanel(categoryGrid, tableData, categoryScrollPanel);
+
+    if nargin > 3
+        disp('there are more')
+        currentCategorization = varargin{4};
+        loadConditionsForRedefinition;
+    end
+
     uiwait(groupingFig)
 
     function [categoryPanel,criteriaGrid] = addCategoryPanel(categoryGrid, tableData, scrollPanel)
@@ -368,9 +375,9 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
             conditions.(['group' num2str(i)]) = categoryStruct;
         end
         assignin('base', 'cats', conditions); % Save to workspace for further use
-        disp(conditions)
+        % disp(conditions)
 
-        name = nameField.Value;
+        name = string(nameField.Value);
 
         uiresume(groupingFig);
         delete(groupingFig);
@@ -436,6 +443,63 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
         storedCategorizations.deleteCategorization(loadDropdown.Value);
         idToDelete = strcmp(loadDropdown.Items,loadDropdown.Value);
         loadDropdown.Items(idToDelete) = [];
+    end
+
+    function loadConditionsForRedefinition()
+
+            categorization = currentCategorization;
+
+            % Load the name of the categorization
+            nameField.Value = categorization.CategorizationName;
+
+            % Clear existing category panels
+            for i = length(categoryScrollPanel.UserData.CategoryPanels):-1:1
+                delete(categoryScrollPanel.UserData.CategoryPanels{i});
+            end
+            categoryScrollPanel.UserData.CategoryPanels = {};
+
+            fields = fieldnames(categorization.Conditions);
+            for i = 1:numel(fields)
+                [categoryPanel,criteriaGrid] = addCategoryPanel(categoryGrid, tableData, categoryScrollPanel);
+
+                group = fields{i};
+                groupName = categorization.Conditions.(group).name;
+                conds = categorization.Conditions.(group).conditions;
+                condFields = keys(conds);
+
+                categoryPanel.Children(1).Children(1).Value = groupName; % Set the category name
+
+                criteriaNum = 1;
+                for j = 1:numel(condFields)
+                    condValue = conds(condFields{j});
+                    column = condFields{j};
+                    if isequal(class(condValue{1}),'dictionary')
+                        condDict = condValue{1};
+                        condKeys = keys(condDict);
+                        for k = 1:numel(condKeys)
+                            comparator = condKeys{k};
+                            value = condDict(comparator);
+                            categoryPanel.UserData.CriteriaComponents{criteriaNum}{1}.Value = column;
+                            categoryPanel.UserData.CriteriaComponents{criteriaNum}{2}.Value = comparator;
+                            categoryPanel.UserData.CriteriaComponents{criteriaNum}{3}.Value = value;
+                            if ~isequal(k,numel(condKeys))
+                                addCriteriaRow(criteriaGrid, tableData, categoryPanel);
+                            end
+                            criteriaNum = criteriaNum + 1;
+                        end
+                    else
+                        categoryPanel.UserData.CriteriaComponents{criteriaNum}{1}.Value = column;
+                        dd = categoryPanel.UserData.CriteriaComponents{criteriaNum}{1};
+                        updateCriteriaRow(dd,criteriaGrid,tableData,criteriaNum,categoryPanel);
+                        checkNodesByName(categoryPanel.UserData.CriteriaComponents{criteriaNum}{3},condValue{1});
+                        criteriaNum = criteriaNum + 1;
+                    end
+                    if ~isequal(j,numel(condFields))
+                        addCriteriaRow(criteriaGrid, tableData, categoryPanel);
+                    end
+                end
+            end
+
     end
 
     % function checkNodesByName(tree, nodeNames)
