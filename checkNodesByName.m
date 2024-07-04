@@ -10,7 +10,8 @@ function checkNodesByName(tree, nodeNames)
         if ~isempty(node)
             checkedNodes = [checkedNodes,node];
         else
-            warning('Node with name "%s" not found.', nodeName);
+            % warning('Node with name "%s" not found.', nodeName);
+            disp('Node with name "%s" not found.', nodeName);
         end
     end
     tree.CheckedNodes = checkedNodes;
