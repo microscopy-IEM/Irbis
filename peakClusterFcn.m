@@ -5,7 +5,9 @@ function finalMap = peakClusterFcn(peaks,greyMap,expectedPeakDiamPx)
 conn = 6; % 3D case
 peak2BcgRatioThres = 1;
 
-% thFun = @(mx,mn)((mx-mn)/2 + mn);          
+% thFun = @(mx,mn)((mx-mn)/2 + mn);      
+
+% Local threshold function
 thFun = @(mx,mn)((mx)/3 + mn);    
 
 
@@ -83,7 +85,7 @@ sz = size(greyMap);
         peakSearchArea(y,x,z) = 1;
         % peakSearchArea(x,y,z) = 1
         
-        % define close pixels next to locla maxima to calculate "mean" peak maxima value
+        % define close pixels next to local maxima to calculate "mean" peak maxima value
         peakAbs = imdilate(peakSearchArea,peakOffset);
         % define neiburhood of maxima to search for connected pixels
         peakSearchArea = imdilate(peakSearchArea,searchOffset);
@@ -114,7 +116,7 @@ sz = size(greyMap);
             peakDetectedArea(peakSearchArea) = thIdx;
               
             [~,nAreas]  = bwlabeln(peakDetectedArea);
-            %% if the more than one separetd areaa, keep only the one below current peak
+            %% if there is more than one separetd area, keep only the one below current peak
             % typically when few pixels in the corner of search area have higer values
             % from leaking other peak
             
