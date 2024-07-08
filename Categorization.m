@@ -23,9 +23,11 @@ classdef Categorization < handle
                 disp(obj.CategorizationName)
                 for tp = timePoints
                     table = listArray{tp};
-                    category = obj.evaluateConditions(table);
-                    table.(obj.CategorizationName) = categorical(category);
-                    listArray{tp} = table;
+                    if istable(table)
+                        category = obj.evaluateConditions(table);
+                        table.(obj.CategorizationName) = categorical(category);
+                        listArray{tp} = table;
+                    end
                 end
             end
         end
