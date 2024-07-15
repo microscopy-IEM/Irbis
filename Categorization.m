@@ -163,7 +163,12 @@ classdef Categorization < handle
                             end
                         end
                     else
-                        match = match & ismember(table.(condFields{j}), condValue{1});
+                        % class(table.(condFields{j}))
+                        % class(condValue{1})
+                        condValue{1} = categorical(condValue{1});
+                        % class(table.(condFields{j}))
+                        % class(condValue{1})
+                        match = match & ismember(categorical(table.(condFields{j})), condValue{1});
                     end
                 end
                 categories(match) = groupName;
