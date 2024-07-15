@@ -45,6 +45,9 @@ classdef GroupingBaseClass < handle
                 filterTable.(obj.Name) = logical(category);
                 filterArray = filterTable;
             else
+                if isempty(listArray)
+                    return
+                end
                 for tp = timePoints
                     listTable = listArray{tp};
                     filterTable = filterArray{tp};
@@ -84,7 +87,8 @@ classdef GroupingBaseClass < handle
                             end
                         end
                     else
-                        match = match & ismember(table.(condFields{j}), condValue{1});
+                        condValue{1} = categorical(condValue{1});
+                        match = match & ismember(categorical(table.(condFields{j})), condValue{1});
                     end
                 end
                 groups(match) = groupName;
