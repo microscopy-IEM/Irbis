@@ -11,6 +11,8 @@ function points = ImportPoints()
     units = 'nm';
     
     fullFileName = fullfile(path,coor_fileName);
+
+    coor_fileName
     
     if isequal(coor_fileName,0)
        disp('User selected Cancel');
