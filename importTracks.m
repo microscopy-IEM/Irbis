@@ -14,8 +14,13 @@ if ~fileName{1}
     return
 end
 
+
+
 % Reorder the filenames and get time points using the GUI
 fileNameWithTimePoints = reorderFileNames(fileName);
+
+profile on
+tic
 
 nOfFiles = numel(fileNameWithTimePoints(:, 1));
 importedTracks = dictionary();
@@ -88,14 +93,20 @@ for currentFile = 1:nOfFiles
     
         % create table
         T = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
+
+        T.id = (1:nTracks)';
+        T.xyz = coordinates;
+        T.frame_i = frameIndexes;
+        T.color = num2cell(rand(nTracks, 3), 2);
+        T.length = cellfun(@(x) size(x, 1), coordinates);
      
-        for trackId = 1:nTracks
-            T.id(trackId) = trackId;
-            T.xyz(trackId) = coordinates(trackId); 
-            T.frame_i(trackId) = frameIndexes(trackId);
-            T.color(trackId) = {rand(1,3)};
-            T.length(trackId) = size(coordinates{trackId},1);
-        end
+        % for trackId = 1:nTracks
+        %     T.id(trackId) = trackId;
+        %     T.xyz(trackId) = coordinates(trackId); 
+        %     T.frame_i(trackId) = frameIndexes(trackId);
+        %     T.color(trackId) = {rand(1,3)};
+        %     T.length(trackId) = size(coordinates{trackId},1);
+        % end
     
         tracks.tracksList = T;
         importedTracks(tp) = tracks;
@@ -107,98 +118,8 @@ end
 
 close(wb);
 
-% % if nOfFiles > 1
-%     tracks = allTracks;
-% % end
-
-
-
-
-
-    %  % select files
-    %  [fileName,path] = uigetfile('*.xml','MultiSelect','off');
-    % 
-    %  if ~fileName
-    % 
-    %      tracks = [];
-    %      return
-    %  end
-    % 
-    % % import TrackMate XML
-    % [imported_tracks, md] = importTrackMateTracks([path fileName],figH);
-    % 
-    % % read frame interval
-    % frameInterval = md.frameInterval;
-    % 
-    % % get number of tracks
-    % nTracks = size(imported_tracks,1);
-    % 
-    % % get number of frames
-    % stat = cell2mat(cellfun(@max, imported_tracks, 'UniformOutput', false));
-    % nFrames = max(stat(:,1));
-    % 
-    % % create arrays for trajectory coordinates 
-    % coordinates = cell(nTracks,1);
-    % frameIndexes = cell(nTracks,1);
-    % 
-    % % convert to Irbis tracks format
-    % for trackID = 1:nTracks
-    % 
-    %     coordinates{trackID,1} = imported_tracks{trackID}(:,2:4);
-    %     frameIndexes{trackID,1} = imported_tracks{trackID}(:,1);
-    % 
-    %     % fill gaps with nan
-    %     coor = coordinates{trackID,1};
-    %     fi = frameIndexes{trackID,1};
-    % 
-    %     new_fi = (fi(1):fi(end))';
-    %     duration = fi(end)-fi(1);
-    %     new_coor = nan(duration,3);
-    %     new_coor(fi-fi(1)+1,:) = coor;
-    % 
-    %     coordinates{trackID,1} = new_coor;
-    %     frameIndexes{trackID,1} = new_fi;
-    % 
-    % 
-    % end
-    % 
-    % 
-    %  %% Organize trajectories into structuret file
-    % 
-    % 
-    %     tracks.tracksOrigFileName = fileName;
-    % %     tracks.spots = TRS.spots;                                               % localizations of particles (QDs) without linking them to trajectories
-    %     tracks.nTracks = nTracks;
-    %     tracks.nFrames = nFrames;
-    %     tracks.frameInterval = frameInterval;                         % frame interval in defined units (sec)
-    %     tracks.group = '';
-    %     tracks.description = '';
-    %     tracks.driftCorrection = zeros(1,nFrames);
-    %     tracks.timeRange = [0 frameInterval*nFrames];
-    % 
-    %     % Define table
-    %     varNames = {'id';'xyz';'frame_i';'color';'length';'nOfNaN';'maxGap';'meanDisp';'ovArea';'ovDist';'meanX';'meanY';'MSD5';'MSDr2';'zone';'type'};
-    %     varTypes = {'double','cell','cell','cell','double','double','double','double','double','double','double','double','double','double','double','string'};
-    % 
-    % 
-    %     % get size of the table
-    %     sz = [nTracks size(varTypes,2)];
-    % 
-    %     % create table
-    %     T = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
-    % 
-    %     for trackId = 1:nTracks
-    % 
-    %         T.id(trackId) = trackId;
-    %         T.xyz(trackId) = coordinates(trackId); 
-    %         T.frame_i(trackId) = frameIndexes(trackId);
-    %         T.color(trackId) = {rand(1,3)};
-    %         T.length(trackId) = size(coordinates{trackId},1);
-    % 
-    % 
-    %     end
-    % 
-    %     tracks.tracksList = T;
+disp(['time to run importTracks old: ' num2str(toc)])
+profile off
 
 end
 
