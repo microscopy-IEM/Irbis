@@ -14,6 +14,10 @@ function newIrbisStruct = createNewIrbisStruct()
     info.notes = '';
     info.spaceUnits = 'µm'; 
     info.timeUnits = 'sec';
+    info.path = [pwd '\'];                      % rewritten during saving
+    info.filename = '';                         % rewritten during saving
+    info.createTimestamp = datetime();
+    info.saveTimestamp = datetime();            % rewritten during saving
     
     %% tools
     tools = struct();
