@@ -6,7 +6,7 @@
 
 % Script reads general info (num of channles, planes etc.) from the image metadata
 
-function planes = importPlanes(figureH,varargin)
+function [planes,nTimePoints] = importPlanes(figureH,colors,nTimePoints)
 
     wb = uiprogressdlg(figureH,'Title','Importing file','Message','Importing file...','Cancelable','on');
     wb.Value = 0;
@@ -108,13 +108,6 @@ function planes = importPlanes(figureH,varargin)
         numOfFramesPerTimepoint = numOfZPlanes*numOfChannels;
         
         % Save default description to channels
-        
-        if nargin == 2
-            colors = varargin{1};
-        else
-            % Save default colors to channels
-            colors = [{[1 0 0]} {[0 1 0]} {[0 0 1]} {[1 1 0]}];
-        end
 
         channelColors = cell(1,numOfChannels);
         channels_desc = cell(1,numOfChannels);
@@ -169,6 +162,7 @@ function planes = importPlanes(figureH,varargin)
         end
         
         % Sort data for the MMpack format
+        nTimePoints = numOfTimePoints;
 
         planes.refOrigFileName = fileName;
         planes.zstack = zstack;                                      % raw image data (multiple tiff of zstack or single tiff per channel) - dimensions x*y*z*t*ch
