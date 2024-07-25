@@ -19,7 +19,7 @@ function baseStructs = getBaseStruct(varargin)
         end
         nTimePoints = varargin{3};
     else
-        timeDependencyType = {'timeDepedent','timeIndependent'};
+        timeDependencyType = {'timeDependent','timeIndependent'};
         nTimePoints = 1;
     end
 
@@ -56,7 +56,9 @@ function baseStructs = getBaseStruct(varargin)
         
                 timeline.nTimePoints = 1;
                 timeline.currentTimePoint = 1;
-                timeline.currentIndex = struct();
+                timeline.currentIndex.planes = [];
+                timeline.currentIndex.tracks = [];
+                timeline.currentIndex.points = [];
         
                 baseStructs.timeline = timeline;
         
@@ -127,6 +129,7 @@ function baseStructs = getBaseStruct(varargin)
                 tracks = struct();
 
                 if ismember('timeDependent',timeDependencyType)
+                    disp('timeDependent in')
 
                     tracks.tracksOrigFileName = arrayfun(@(x) '', 1:nTimePoints, 'UniformOutput', false);
                     tracks.nTracks = arrayfun(@(x) [], 1:nTimePoints, 'UniformOutput', false);
@@ -151,6 +154,7 @@ function baseStructs = getBaseStruct(varargin)
 
                 % tracks time-independent
                 if ismember('timeIndependent',timeDependencyType)
+                    disp('timeIndependent in')
                     tracks.storedFilters = FilteringStorage();
                     tracks.storedCategorizations = CategorizationStorage();
                     

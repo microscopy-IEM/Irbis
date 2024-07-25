@@ -1,13 +1,125 @@
 function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct)
+
+    % planes
+    if isfield(loadedStruct,'planes')
+        % back-compatibility
+        if isfield(loadedStruct.planes,'channel_names') && ~isfield(loadedStruct.planes,'channelNames')
+            disp('there are channel_names but not channelNames')
+            loadedStruct.planes.channelNames = loadedStruct.planes.channel_names;
+        end
+        % /back-compatibility
+
+        loadedStruct.timeline.currentIndex.planes = 1:loadedStruct.planes.nTimePoints;
+        loadedStruct.timeline.nTimePoints = loadedStruct.planes.nTimePoints;
+    end
+
+    % tracks
+    if isfield(loadedStruct,'tracks')
+        % back-compatibility
+        if iscell(loadedStruct.tracks) % the old structure
+            if ~isempty(loadedStruct.tracks)
+                % Get the number of time points
+                numTimePoints = numel(loadedStruct.tracks);
+                
+                % List all variables (assuming all time points have the same structure)
+                fieldNames = fieldnames(loadedStruct.tracks{1});
+                
+                % Initialize the new structure to hold variables across time points
+                for i = 1:numel(fieldNames)
+                    loadedStruct.tracks.(fieldNames{i}) = cell(1, numTimePoints);
+                end
+                
+                % Fill the new structure with the reorganized data
+                for t = 1:numTimePoints
+                    for i = 1:numel(fieldNames)
+                        variableName = fieldNames{i};
+                        loadedStruct.tracks.(variableName){t} = loadedStruct.tracks{t}.(variableName);
+                    end
+                end
+            end
+            % /back-compatibility
+        end
+
+        % back-compatibility
+        if ~isfield(loadedStruct.tracks,'tracksList')
+            % this is for when there was only loadedStruct.tracks.timePointPresent - generated in planes
+            loadedStruct = rmfield(loadedStruct,'tracks');
+        end
+        % /back-compatibility   
+        % back-compatibility
+        if isfield(loadedStruct.tracks,'filterRanges')
+            % convert the old filter storage to the new version
+            if ~isempty(loadedStruct.tracks.filterRanges)
+                columnNames = fieldnames(loadedStruct.tracks.filterRanges);
+                storedFilterNames = loadedStruct.tracks.storedFilters.returnGroupingNames;
+                for i = 1:numel(columnNames)
+                    columnName = columnNames{i};
+                    range = loadedStruct.tracks.filterRanges.(columnName);
+
+                    if ismember(columnName,storedFilterNames)
+                        loadedStruct.tracks.storedFilters.deleteGrouping(columnName);
+                    end
+                    loadedStruct.tracks.storedFilters.addRangeFilter(columnName,range);
+                end
+            end
+            loadedStruct.tracks = rmfield(loadedStruct.tracks,'filterRanges');
+        end
+
+        if isfield(loadedStruct.tracks,'groupThresholds')
+            loadedStruct.tracks = createCategorizationsFromThresholds(loadedStruct.tracks);
+        end
+        % /back-compatibility
+
+        % check missing positions in tracks and remove them
+        isValid = cellfun(@(x) istable(x), loadedStruct.tracks.tracksList);
+
+        if any(isValid == false)
+            % Get the field names of the tracks structure
+            trackFields = fieldnames(loadedStruct.tracks);
+            
+            % Loop through each field
+            for i = 1:length(trackFields)
+                field = trackFields{i};
+                % Check if the field is a cell array
+                if iscell(loadedStruct.tracks.(field))
+                    % Filter the cell array based on valid positions
+                    loadedStruct.tracks.(field) = loadedStruct.tracks.(field)(isValid);
+                end
+            end
+        end
+            
+        planesPresent = 0;
+        if isfield(loadedStruct,'planes')
+            if ~isempty(loadedStruct.planes)
+                prep = zeros(1,loadedStruct.planes.nTimePoints);
+                planesPresent = 1;
+            end
+        end
+        if ~planesPresent
+            prep = zeros(1,numel(isValid));
+        end
+        prep(isValid) = 1:sum(isValid);
+        loadedStruct.timeline.currentIndex.tracks = prep;
+    end
+
+    assignin('base','loadedStruct',loadedStruct)
+
+    updatedStruct = unifyStruct(loadedStruct,baseStruct);
+
+end
+
+function loadedStruct = unifyStruct(loadedStruct,baseStruct)
     % Add missing fields from baseStruct to loadedStruct
     baseFields = fieldnames(baseStruct);
     for i = 1:length(baseFields)
         field = baseFields{i};
         if ~isfield(loadedStruct, field)
+            disp([field '    missing in:'])
+            disp(loadedStruct)
             loadedStruct.(field) = baseStruct.(field);
         elseif isstruct(baseStruct.(field)) && isstruct(loadedStruct.(field))
             % Recursively validate and update sub-structures
-            loadedStruct.(field) = validateAndUpdateStruct(loadedStruct.(field), baseStruct.(field));
+            loadedStruct.(field) = unifyStruct(loadedStruct.(field), baseStruct.(field));
         end
     end
 
@@ -16,9 +128,78 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct)
     for i = 1:length(loadedFields)
         field = loadedFields{i};
         if ~isfield(baseStruct, field)
+            disp([field '    surplus in:'])
+            disp(loadedStruct)
             loadedStruct = rmfield(loadedStruct, field);
         end
     end
 
-    updatedStruct = loadedStruct;
+end
+
+
+
+function tracks = createCategorizationsFromThresholds(tracks)
+    % back-compatibility function
+
+    % Initialize the CategorizationStorage if it does not exist
+    if ~isfield(tracks, 'storedCategorizations') || isempty(tracks.storedCategorizations)
+        tracks.storedCategorizations = CategorizationStorage();
+    else
+        % Check whether the column names in storedCategorizations correspond to groupThresholds
+        storedCategorizationNames = tracks.storedCategorizations.returnCategorizationNames;
+        groupThresholdFields = fieldnames(tracks.groupThresholds);
+        groupThresholdNames = cellfun(@(x) [x, 'Groups'], groupThresholdFields, 'UniformOutput', false);
+
+
+        if all(ismember(groupThresholdNames,storedCategorizationNames))
+            tracks = rmfield(tracks,"groupThresholds");
+        end
+
+    end
+
+    % Iterate over each column in groupThresholds
+    groupThresholdFields = fieldnames(tracks.groupThresholds);
+    for i = 1:numel(groupThresholdFields)
+        columnName = groupThresholdFields{i};
+        thresholds = tracks.groupThresholds.(columnName);
+        
+        % Determine group names from the categorical column
+        tracksList = tracks.tracksList{1};
+        if ismember([columnName 'Groups'], tracksList.Properties.VariableNames)
+            categoriesInColumn = categories(tracksList.([columnName 'Groups']));
+        else
+            error('Categorical column %sGroups not found in tracksList.', columnName);
+        end
+
+        % Create conditions dictionary
+        conditions = struct();
+        for j = 1:length(thresholds) + 1
+            groupName = categoriesInColumn{j};
+            groupConditions = dictionary();
+
+            if j == 1
+                % Handle values less than the first threshold
+                operatorValueDict = dictionary('lessThan', thresholds(1));
+            elseif j == length(thresholds) + 1
+                % Handle values greater than or equal to the last threshold
+                operatorValueDict = dictionary('greaterThan', thresholds(end));
+            else
+                % Values between current and previous threshold
+                operatorValueDict = dictionary(...
+                    'greaterThan', thresholds(j-1), ...
+                    'lessThan', thresholds(j));
+            end
+
+            groupConditions(columnName) = {operatorValueDict};
+            conditions.(['group' num2str(j-1)]) = struct('name', groupName, 'conditions', groupConditions);
+        end
+
+        % Create the Categorization object
+        categorizationName = [columnName 'Groups'];
+        categorizationObj = Categorization(categorizationName, conditions);
+
+        % Add the Categorization object to the CategorizationStorage
+        tracks.storedCategorizations.addCategorization(categorizationObj);
+    end
+    tracks = rmfield(tracks,"groupThresholds");
 end
