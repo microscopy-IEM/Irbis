@@ -23,9 +23,9 @@ classdef GroupingStorageBaseClass < handle
                 % delete(obj.Groupings{idx});
                 % Remove the reference from the cell array
                 obj.Groupings(idx) = [];
-                fprintf('Grouping with name "%s" has been deleted.\n', name);
+                % fprintf('Grouping with name "%s" has been deleted.\n', name);
             else
-                fprintf('Grouping with name "%s" not found.\n', name);
+                % fprintf('Grouping with name "%s" not found.\n', name);
             end
         end
 

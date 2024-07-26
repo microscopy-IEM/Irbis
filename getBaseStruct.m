@@ -31,6 +31,14 @@ function baseStructs = getBaseStruct(varargin)
         switch structType
 
             case 'info'
+
+                % what to store into info
+                    % Irbis version - creating new
+                    % Matlab version - creating new
+                    % date created - creating/storing? 
+                    % Irbis name - storing
+                    % something like processing notes? 
+                        % any way how to store multiple versions? 
         
                 info = struct();
         

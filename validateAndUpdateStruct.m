@@ -1,4 +1,41 @@
-function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct)
+function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loadedIrbisVersion)
+
+    presentRootFields = fieldnames(loadedStruct);
+    emptyRootFields = {};
+    for i = 1:length(presentRootFields)
+        field = presentRootFields{i};
+        loadedStruct.(field)
+        if isempty(loadedStruct.(field))
+            emptyRootFields{end+1} = field;
+        elseif isstruct(loadedStruct.(field))
+            if isempty(fieldnames(loadedStruct.(field)))
+                emptyRootFields{end+1} = field;
+            end
+        end
+    end
+
+    emptyRootFields
+
+    % info 
+    % include also other newly added fields
+    if ~isfield(loadedStruct.info,'path')
+        if isfield(loadedStruct,'results')
+            if isfield(loadedStruct.results,'path')
+                loadedStruct.info.path = loadedStruct.results.path;
+            end
+        end
+    end
+
+    if ~isfield(loadedStruct.info,'filename')
+        disp('no filename in loadedStruct.info')
+        if isfield(loadedStruct,'results')
+            disp(loadedStruct.results)
+            if isfield(loadedStruct.results,'fileName')
+                disp(['fileName: ' loadedStruct.results.fileName])
+                loadedStruct.info.filename = loadedStruct.results.fileName;
+            end
+        end
+    end
 
     % planes
     if isfield(loadedStruct,'planes')
@@ -44,67 +81,96 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct)
         if ~isfield(loadedStruct.tracks,'tracksList')
             % this is for when there was only loadedStruct.tracks.timePointPresent - generated in planes
             loadedStruct = rmfield(loadedStruct,'tracks');
-        end
+        else
         % /back-compatibility   
-        % back-compatibility
-        if isfield(loadedStruct.tracks,'filterRanges')
-            % convert the old filter storage to the new version
-            if ~isempty(loadedStruct.tracks.filterRanges)
-                columnNames = fieldnames(loadedStruct.tracks.filterRanges);
-                storedFilterNames = loadedStruct.tracks.storedFilters.returnGroupingNames;
-                for i = 1:numel(columnNames)
-                    columnName = columnNames{i};
-                    range = loadedStruct.tracks.filterRanges.(columnName);
-
-                    if ismember(columnName,storedFilterNames)
-                        loadedStruct.tracks.storedFilters.deleteGrouping(columnName);
+            % back-compatibility
+            if isfield(loadedStruct.tracks,'filterRanges')
+                if ~isfield(loadedStruct.tracks,'storedFilters')
+                    loadedStruct.tracks.storedFilters = FilteringStorage();
+                end
+                % convert the old filter storage to the new version
+                if ~isempty(loadedStruct.tracks.filterRanges)
+                    columnNames = fieldnames(loadedStruct.tracks.filterRanges);
+                    storedFilterNames = loadedStruct.tracks.storedFilters.returnGroupingNames;
+                    for i = 1:numel(columnNames)
+                        columnName = columnNames{i};
+                        range = loadedStruct.tracks.filterRanges.(columnName);
+    
+                        if ismember(columnName,storedFilterNames)
+                            loadedStruct.tracks.storedFilters.deleteGrouping(columnName);
+                        end
+                        loadedStruct.tracks.storedFilters.addRangeFilter(columnName,range);
                     end
-                    loadedStruct.tracks.storedFilters.addRangeFilter(columnName,range);
+                end
+                loadedStruct.tracks = rmfield(loadedStruct.tracks,'filterRanges');
+            end
+    
+            if isfield(loadedStruct.tracks,'groupThresholds')
+                loadedStruct.tracks = createCategorizationsFromThresholds(loadedStruct.tracks);
+            end
+            % /back-compatibility
+    
+            % check missing positions in tracks and remove them
+            isValid = cellfun(@(x) istable(x), loadedStruct.tracks.tracksList);
+    
+            if any(isValid == false)
+                % Get the field names of the tracks structure
+                trackFields = fieldnames(loadedStruct.tracks);
+                
+                % Loop through each field
+                for i = 1:length(trackFields)
+                    field = trackFields{i};
+                    % Check if the field is a cell array
+                    if iscell(loadedStruct.tracks.(field))
+                        % Filter the cell array based on valid positions
+                        loadedStruct.tracks.(field) = loadedStruct.tracks.(field)(isValid);
+                    end
+                end 
+            end
+                
+            planesPresent = 0;
+            if isfield(loadedStruct,'planes')
+                if ~isempty(loadedStruct.planes)
+                    prep = zeros(1,loadedStruct.planes.nTimePoints);
+                    planesPresent = 1;
                 end
             end
-            loadedStruct.tracks = rmfield(loadedStruct.tracks,'filterRanges');
-        end
-
-        if isfield(loadedStruct.tracks,'groupThresholds')
-            loadedStruct.tracks = createCategorizationsFromThresholds(loadedStruct.tracks);
-        end
-        % /back-compatibility
-
-        % check missing positions in tracks and remove them
-        isValid = cellfun(@(x) istable(x), loadedStruct.tracks.tracksList);
-
-        if any(isValid == false)
-            % Get the field names of the tracks structure
-            trackFields = fieldnames(loadedStruct.tracks);
-            
-            % Loop through each field
-            for i = 1:length(trackFields)
-                field = trackFields{i};
-                % Check if the field is a cell array
-                if iscell(loadedStruct.tracks.(field))
-                    % Filter the cell array based on valid positions
-                    loadedStruct.tracks.(field) = loadedStruct.tracks.(field)(isValid);
-                end
+            if ~planesPresent
+                prep = zeros(1,numel(isValid));
             end
+            prep(isValid) = 1:sum(isValid);
+            loadedStruct.timeline.currentIndex.tracks = prep;
         end
-            
-        planesPresent = 0;
-        if isfield(loadedStruct,'planes')
-            if ~isempty(loadedStruct.planes)
-                prep = zeros(1,loadedStruct.planes.nTimePoints);
-                planesPresent = 1;
-            end
-        end
-        if ~planesPresent
-            prep = zeros(1,numel(isValid));
-        end
-        prep(isValid) = 1:sum(isValid);
-        loadedStruct.timeline.currentIndex.tracks = prep;
     end
 
     assignin('base','loadedStruct',loadedStruct)
 
-    updatedStruct = unifyStruct(loadedStruct,baseStruct);
+    loadedStruct = unifyStruct(loadedStruct,baseStruct);
+
+
+    % Remove loadable modalities if they are not present in the loadedStruct at the beginning
+    loadableStructs = {'planes','tracks','points','model'};
+    for i = 1:length(loadableStructs)
+        field = loadableStructs{i};
+        if ismember(field,emptyRootFields)
+            field
+            loadedStruct = rmfield(loadedStruct, field);
+        end
+    end
+
+    % % remove empty root fields
+    % rootFields = fieldnames(loadedStruct)
+    % for i = 1:length(rootFields)
+    %     field = rootFields{i}
+    %     loadedStruct.(field)
+    %     if isempty(loadedStruct.(field))
+    %         loadedStruct = rmfield(loadedStruct,field);
+    %     elseif isempty(fieldnames(loadedStruct.(field)))
+    %         loadedStruct = rmfield(loadedStruct,field);
+    %     end
+    % end
+
+    updatedStruct = loadedStruct;
 
 end
 
