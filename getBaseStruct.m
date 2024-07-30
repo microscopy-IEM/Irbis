@@ -175,13 +175,19 @@ function baseStructs = getBaseStruct(varargin)
             case 'points'
         
                 points = struct();
+
+                sz = [0 10];
+                varTypes = ["double","double","double","double","double","double","double","double","double",'logical'];
+                varNames = ["id","frame","x","y","z","uncertainty_xy","uncertainty_z","height","maxIntensity",'inArea'];
+                pointsList = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
         
-                points.pointsList = table();
+                points.pointsList = pointsList;
                 points.fileName = '';
                 points.registration = [];
                 points.manualAlignment = [];
             
                 baseStructs.points = points;
+
             case 'model'
 
                 model = struct();
@@ -202,8 +208,8 @@ function baseStructs = getBaseStruct(varargin)
                         model.(branch).Show = 0;
                         model.(branch).PointCloud = cell(nTimePoints,1); 
                             
-                        for currentTimePoint = 1:nTimePoints
-                            model.(branch).List{currentTimePoint} = createEmptyList();
+                        for tp = 1:nTimePoints
+                            model.(branch).List{tp} = createEmptyList();
                         end
             
                         % adding properties specific for primary objects
@@ -221,15 +227,19 @@ function baseStructs = getBaseStruct(varargin)
         
                         % generating unique properties for derived object - shaft:
                         if ismember(branch,derivedObjectBranches)
-                            for currentTimePoint = 1:nTimePoints
-                                model.(branch).List{currentTimePoint}.CentreLine = cell(size(model.(branch).List{currentTimePoint},1),1);
-                                model.(branch).List{currentTimePoint}.RadiusVect = cell(size(model.(branch).List{currentTimePoint},1),1);
-                                model.(branch).List{currentTimePoint}.ZScale = cell(size(model.(branch).List{currentTimePoint},1),1);
-                                model.(branch).List{currentTimePoint}.Contours = cell(size(model.(branch).List{currentTimePoint},1),1);
-                                model.(branch).List{currentTimePoint}.MiddlePoints = cell(size(model.(branch).List{currentTimePoint},1),1);
+                            for tp = 1:nTimePoints
+                                model.(branch).List{tp}.CentreLine = cell(size(model.(branch).List{tp},1),1);
+                                model.(branch).List{tp}.RadiusVect = cell(size(model.(branch).List{tp},1),1);
+                                model.(branch).List{tp}.ZScale = cell(size(model.(branch).List{tp},1),1);
+                                model.(branch).List{tp}.Contours = cell(size(model.(branch).List{tp},1),1);
+                                model.(branch).List{tp}.MiddlePoints = cell(size(model.(branch).List{tp},1),1);
                             end
                             model.(branch).methodApplied = 'Constant diameter';
                         end
+
+                        model.(branch).storedFilters = FilteringStorage();
+                        model.(branch).storedCategorizations = CategorizationStorage();
+
         
                     end
             
