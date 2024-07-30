@@ -171,6 +171,8 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
     % end
 
     updatedStruct = loadedStruct;
+    % assignin('base','updatedStruct',updatedStruct)
+    % disp('updating finished')
 
 end
 

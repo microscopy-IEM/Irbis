@@ -183,7 +183,7 @@ function baseStructs = getBaseStruct(varargin)
             
                 baseStructs.points = points;
             case 'model'
-                nTimePoints = 1;
+
                 model = struct();
         
                     % lets introduce branches here - later we can have different model with different brach names
@@ -210,6 +210,13 @@ function baseStructs = getBaseStruct(varargin)
                         if ismember(branch,primaryObjectBranches)
                             model.(branch).threshold(1:nTimePoints) = 6000;
                             model.(branch).bleachCompensation = 0;
+                            model.(branch).channel = 1;
+                            model.(branch).poissonDepthValue = 9;
+                            model.(branch).gaussFilterSigma = 0.5;
+                            model.(branch).fractionToKeep = 0.8;
+                            model.(branch).minVertexNum = 1;
+                            model.(branch).scaleFactor = 0.75;
+                            model.(branch).zScaleFactor = 0.5;
                         end
         
                         % generating unique properties for derived object - shaft:
@@ -221,6 +228,7 @@ function baseStructs = getBaseStruct(varargin)
                                 model.(branch).List{currentTimePoint}.Contours = cell(size(model.(branch).List{currentTimePoint},1),1);
                                 model.(branch).List{currentTimePoint}.MiddlePoints = cell(size(model.(branch).List{currentTimePoint},1),1);
                             end
+                            model.(branch).methodApplied = 'Constant diameter';
                         end
         
                     end
