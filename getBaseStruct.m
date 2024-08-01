@@ -1,6 +1,30 @@
 % structure definition 
 function baseStructs = getBaseStruct(varargin)
 
+    % varargins: 
+    %     1: structTypes - which structures are being extracted from the base structure
+    %     2: timeDependencyType
+    %     3: nTimePoints
+
+
+    structTypes = {'info','timeline','tools','views','results','planes','tracks','points','model'};
+    timeDependencyType = {'timeDependent','timeIndependent'};
+    nTimePoints = 1;
+
+    % special case - generating just table instead of structure
+    if nargin > 0
+        if isequal(varargin{1},'table')
+            structType = varargin{2};
+            nRows = varargin{3};
+            branchTypes = {};
+            if nargin > 3
+                branchTypes = varargin{4};
+            end
+            baseStructs = createEmptyList(structType,nRows,branchTypes);
+            return
+        end
+    end
+
     if nargin > 0
         structTypes = varargin{1};
         if isequal(structTypes,'init')
@@ -8,8 +32,6 @@ function baseStructs = getBaseStruct(varargin)
         elseif ~iscell(structTypes)
             structTypes = {structTypes};
         end
-    else
-        structTypes = {'info','timeline','tools','views','results','planes','tracks','points','model'};
     end
 
     if nargin > 1
@@ -18,12 +40,11 @@ function baseStructs = getBaseStruct(varargin)
             timeDependencyType = {timeDependencyType};
         end
         nTimePoints = varargin{3};
-    else
-        timeDependencyType = {'timeDependent','timeIndependent'};
-        nTimePoints = 1;
     end
 
     irbisVersion = 1.1;
+
+    branches = {'fullVolume','shaft','dendrite','spines','synapses'};
 
     baseStructs = struct();
     for i = 1:length(structTypes)
@@ -67,6 +88,10 @@ function baseStructs = getBaseStruct(varargin)
                 timeline.currentIndex.planes = [];
                 timeline.currentIndex.tracks = [];
                 timeline.currentIndex.points = [];
+                for branchNum = 1:numel(branches)
+                    branch = branches{branchNum};
+                    timeline.currentIndex.model.(branch) = [];
+                end
         
                 baseStructs.timeline = timeline;
         
@@ -191,62 +216,64 @@ function baseStructs = getBaseStruct(varargin)
             case 'model'
 
                 model = struct();
+
+                availableColors = {[0.88,0.06,0.88],[0.39,0.83,0.07],[0.06,1.00,1.00],[0.72,0.27,1.00],[0.92,0.20,0.20],[1.00,1.00,0.00]};
         
-                    % lets introduce branches here - later we can have different model with different brach names
-                    branches = {'fullVolume','shaft','dendrite','spines','synapses'};
-                    model.branches = branches;
-                    model.selectableBranches = {'fullVolume'};
-        
-                    primaryObjectBranches = {'fullVolume','synapses'};
-                    derivedObjectBranches = {'shaft'};
-        
-                    % generating shared properties for all branches:
-                    for branchNum=1:size(branches,2)
-                        branch = branches{branchNum};
-                        model.(branch).Color = [];
+                % lets introduce branches here - later we can have different model with different brach names
+                model.branches = branches;
+                model.selectableBranches = {'fullVolume'};
+    
+                primaryObjectBranches = {'fullVolume','synapses'};
+                derivedObjectBranches = {'shaft'};
+    
+                % generating shared properties for all branches:
+                for branchNum=1:size(branches,2)
+                    branch = branches{branchNum};
+
+                        model.(branch).Color = availableColors{branchNum};
                         model.(branch).Transparency = 0.8;
                         model.(branch).Show = 0;
                         model.(branch).PointCloud = cell(nTimePoints,1); 
-                            
-                        for tp = 1:nTimePoints
-                            model.(branch).List{tp} = createEmptyList();
-                        end
-            
-                        % adding properties specific for primary objects
-                        if ismember(branch,primaryObjectBranches)
-                            model.(branch).threshold(1:nTimePoints) = 6000;
-                            model.(branch).bleachCompensation = 0;
-                            model.(branch).channel = 1;
-                            model.(branch).poissonDepthValue = 9;
-                            model.(branch).gaussFilterSigma = 0.5;
-                            model.(branch).fractionToKeep = 0.8;
-                            model.(branch).minVertexNum = 1;
-                            model.(branch).scaleFactor = 0.75;
-                            model.(branch).zScaleFactor = 0.5;
-                        end
-        
-                        % generating unique properties for derived object - shaft:
-                        if ismember(branch,derivedObjectBranches)
-                            for tp = 1:nTimePoints
-                                model.(branch).List{tp}.CentreLine = cell(size(model.(branch).List{tp},1),1);
-                                model.(branch).List{tp}.RadiusVect = cell(size(model.(branch).List{tp},1),1);
-                                model.(branch).List{tp}.ZScale = cell(size(model.(branch).List{tp},1),1);
-                                model.(branch).List{tp}.Contours = cell(size(model.(branch).List{tp},1),1);
-                                model.(branch).List{tp}.MiddlePoints = cell(size(model.(branch).List{tp},1),1);
-                            end
-                            model.(branch).methodApplied = 'Constant diameter';
-                        end
 
-                        model.(branch).storedFilters = FilteringStorage();
-                        model.(branch).storedCategorizations = CategorizationStorage();
-
-        
+                    % adding properties specific for primary objects
+                    if ismember(branch,primaryObjectBranches)
+                        model.(branch).threshold(1:nTimePoints) = 6000;
+                        model.(branch).bleachCompensation = 0;
+                        model.(branch).channel = 1;
+                        model.(branch).poissonDepthValue = 9;
+                        model.(branch).gaussFilterSigma = 0.5;
+                        model.(branch).fractionToKeep = 0.8;
+                        model.(branch).minVertexNum = 1;
+                        model.(branch).scaleFactor = 0.75;
+                        model.(branch).zScaleFactor = 0.5;
                     end
-            
-                    % General model features
-                    timeDrift = repmat({[0 0 0]},1,1);
-                    model.timeDrift = timeDrift;
-                    model.timeDriftCorrected = 0;
+
+                    for tp = 1:nTimePoints
+                        model.(branch).List{tp} = createEmptyList(structType);
+                    end
+    
+                    % generating unique properties for derived object - shaft:
+                    if ismember(branch,derivedObjectBranches)
+
+                        % for tp = 1:nTimePoints
+                        %     model.(branch).List{tp}.CentreLine = cell(size(model.(branch).List{tp},1),1);
+                        %     model.(branch).List{tp}.RadiusVect = cell(size(model.(branch).List{tp},1),1);
+                        %     model.(branch).List{tp}.ZScale = cell(size(model.(branch).List{tp},1),1);
+                        %     model.(branch).List{tp}.Contours = cell(size(model.(branch).List{tp},1),1);
+                        %     model.(branch).List{tp}.MiddlePoints = cell(size(model.(branch).List{tp},1),1);
+                        % end
+                        model.(branch).methodApplied = 'Constant diameter';
+                    end
+
+                    model.(branch).storedFilters = FilteringStorage();
+                    model.(branch).storedCategorizations = CategorizationStorage();
+
+                end
+
+                % General model features
+                timeDrift = repmat({[0 0 0]},1,1);
+                model.timeDrift = timeDrift;
+                model.timeDriftCorrected = 0;
         
                 baseStructs.model = model;
 
@@ -260,9 +287,60 @@ function baseStructs = getBaseStruct(varargin)
     end
 end
 
-function List = createEmptyList()
-    sz = [0 11];
-    varTypes = ["double","cell","cell","string","double","double","cell","cell","double","double","cell"];
-    varNames = ["groupId","Points","Mesh","name",'prevTPid','nextTPid','parent','children','volume','surface','positionShift'];
+function List = createEmptyList(structType,varargin)
+    nRows = 0;
+    specialTypes = {};
+    if nargin == 2
+        nRows = varargin{1};
+    elseif nargin == 3
+        nRows = varargin{1};
+        specialTypes = varargin{2};
+    end
+
+    switch structType
+        case 'tools'
+
+            varNames = ["areaId","x","y",'z',"type",'source'];
+            varTypes = ["double","cell","cell","cell","categorical","categorical"];
+
+        case 'views'
+
+            varNames = ["id","rotation","position","checkBoxValues",'selection','name'];  
+            varTypes = ["double","cell","cell","cell","cell","string"];
+
+        case 'tracks'
+
+            varNames = {'id';'xyz';'frame_i';'color';'length';'nOfNaN';'maxGap';'meanDisp';'ovArea';'ovDist';'meanX';'meanY';'MSD5';'MSDr2';'zone';'type'};
+            varTypes = {'double','cell','cell','cell','double','double','double','double','double','double','double','double','double','double','double','string'};
+
+        case 'points'
+
+            varNames = ["id","frame","x","y","z","uncertainty_xy","uncertainty_z","height","maxIntensity",'inArea'];
+            varTypes = ["double","double","double","double","double","double","double","double","double",'logical'];
+
+        case 'model'
+
+            varNames = ["groupId","Points","Mesh","name","prevTPid","nextTPid","parent","children","volume","surface","positionShift"];
+            varTypes = ["double","cell","cell","string","double","double","cell","cell","double","double","cell"];
+        
+            if ismember('derived',specialTypes)
+                addedNames = ["CentreLine","RadiusVect","ZScale","Contours","MiddlePoints","RadiusScale"];
+                addedTypes = ["cell","cell","cell","cell","cell","double"];
+        
+                varNames = [varNames,addedNames];
+                varTypes = [varTypes,addedTypes];
+            end
+        
+            if ismember('spines',specialTypes)
+                addedNames = ["cuttingPlaneCentre","cuttingPlaneNormal"];
+                addedTypes = ["cell","cell"];
+        
+                varNames = [varNames,addedNames];
+                varTypes = [varTypes,addedTypes];
+            end
+
+    end
+
+    sz = [nRows numel(varNames)];
     List = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 end
