@@ -271,8 +271,8 @@ function baseStructs = getBaseStruct(varargin)
                 end
 
                 % General model features
-                timeDrift = repmat({[0 0 0]},1,1);
-                model.timeDrift = timeDrift;
+                % timeDrift = repmat({[0 0 0]},1,nTimePoints);
+                model.timeDrift = zeros(nTimePoints,3);
                 model.timeDriftCorrected = 0;
         
                 baseStructs.model = model;
@@ -319,6 +319,8 @@ function List = createEmptyList(structType,varargin)
             varTypes = ["double","double","double","double","double","double","double","double","double",'logical'];
 
         case 'model'
+
+            % TO OPTIMIZE - add volume, surface, ... right away? 
 
             varNames = ["groupId","Points","Mesh","name","prevTPid","nextTPid","parent","children","volume","surface","positionShift"];
             varTypes = ["double","cell","cell","string","double","double","cell","cell","double","double","cell"];
