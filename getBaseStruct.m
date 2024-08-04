@@ -111,12 +111,9 @@ function baseStructs = getBaseStruct(varargin)
             case 'views'
 
                 views = struct();
-            
-                sz = [0 6];
-                varTypes = ["double","cell","cell","cell","cell","string"];
-                varNames = ["id","rotation","position","checkBoxValues",'selection','name'];      
-                views.storedViewsList = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
-            
+               
+                views.storedViewsList = createEmptyList('views');
+
                 baseStructs.views = views;
         
             case 'results'
@@ -174,10 +171,7 @@ function baseStructs = getBaseStruct(varargin)
                     tracks.timeRange = arrayfun(@(x) [], 1:nTimePoints, 'UniformOutput', false);
                 
                     % Define table
-                    varNames = {'id';'xyz';'frame_i';'color';'length';'nOfNaN';'maxGap';'meanDisp';'ovArea';'ovDist';'meanX';'meanY';'MSD5';'MSDr2';'zone';'type'};
-                    varTypes = {'double','cell','cell','cell','double','double','double','double','double','double','double','double','double','double','double','string'};
-                    sz = [0 numel(varNames)];
-                    T = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
+                    T = createEmptyList('tracks');
                 
                     tracks.tracksList = arrayfun(@(x) T, 1:nTimePoints, 'UniformOutput', false);
                 
@@ -335,7 +329,7 @@ function List = createEmptyList(structType,varargin)
         
             if ismember('spines',specialTypes)
                 addedNames = ["cuttingPlaneCentre","cuttingPlaneNormal"];
-                addedTypes = ["cell","cell"];
+                addedTypes = ["double","double"];
         
                 varNames = [varNames,addedNames];
                 varTypes = [varTypes,addedTypes];

@@ -144,24 +144,26 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
     end
 
     if isfield(loadedStruct,'model')
+        loadedStruct.model.timeDrift = cell2mat(loadedStruct.model.timeDrift');
+        timeDrift = loadedStruct.model.timeDrift;
         branches = loadedStruct.model.branches;
         for branchNum = 1:numel(branches)
             branch = branches{branchNum};
 
             % add positionShift column to the tables if missing
             disp('there was positionShift missing in a model table')
-            for timePoint = 1:numel(app.model.(branch).List)
-                List = app.model.(branch).List{timePoint};
+            for timePoint = 1:numel(loadedStruct.model.(branch).List)
+                List = loadedStruct.model.(branch).List{timePoint};
                 variableNames = string(List.Properties.VariableNames);
                 if ~ismember('positionShift',variableNames)
                     tableHeight = height(List);
-                    app.model.(branch).List{timePoint}.positionShift = repmat({[0,0,0]}, tableHeight, 1);
+                    loadedStruct.model.(branch).List{timePoint}.positionShift = repmat({[0,0,0]}, tableHeight, 1);
                 end
             end
 
             % remove missing fields and adjust currentIndexes
             % check missing positions in tracks and remove them
-            isValid = cellfun(@(x) isempty(x), loadedStruct.model.(model).List);
+            isValid = cellfun(@(x) ~isempty(x), loadedStruct.model.(branch).List);
     
             if any(isValid == false)
                 % Get the field names of the tracks structure
