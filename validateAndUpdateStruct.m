@@ -144,54 +144,57 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
     end
 
     if isfield(loadedStruct,'model')
-        loadedStruct.model.timeDrift = cell2mat(loadedStruct.model.timeDrift');
-        timeDrift = loadedStruct.model.timeDrift;
-        branches = loadedStruct.model.branches;
-        for branchNum = 1:numel(branches)
-            branch = branches{branchNum};
-
-            % add positionShift column to the tables if missing
-            disp('there was positionShift missing in a model table')
-            for timePoint = 1:numel(loadedStruct.model.(branch).List)
-                List = loadedStruct.model.(branch).List{timePoint};
-                variableNames = string(List.Properties.VariableNames);
-                if ~ismember('positionShift',variableNames)
-                    tableHeight = height(List);
-                    loadedStruct.model.(branch).List{timePoint}.positionShift = repmat({[0,0,0]}, tableHeight, 1);
-                end
+        if ~isempty(loadedStruct.model)
+            if isfield(loadedStruct.model,'timeDrift')
+                loadedStruct.model.timeDrift = cell2mat(loadedStruct.model.timeDrift');
             end
-
-            % remove missing fields and adjust currentIndexes
-            % check missing positions in tracks and remove them
-            isValid = cellfun(@(x) ~isempty(x), loadedStruct.model.(branch).List);
+            branches = loadedStruct.model.branches;
+            for branchNum = 1:numel(branches)
+                branch = branches{branchNum};
     
-            if any(isValid == false)
-                % Get the field names of the tracks structure
-                modelFields = fieldnames(loadedStruct.model.(branch));
-                
-                % Loop through each field
-                for i = 1:length(modelFields)
-                    field = modelFields{i};
-                    % Check if the field is a cell array
-                    if iscell(loadedStruct.model.(branch).(field))
-                        % Filter the cell array based on valid positions
-                        loadedStruct.model.(branch).(field) = loadedStruct.model.(branch).(field)(isValid);
+                % add positionShift column to the tables if missing
+                disp('there was positionShift missing in a model table')
+                for timePoint = 1:numel(loadedStruct.model.(branch).List)
+                    List = loadedStruct.model.(branch).List{timePoint};
+                    variableNames = string(List.Properties.VariableNames);
+                    if ~ismember('positionShift',variableNames)
+                        tableHeight = height(List);
+                        loadedStruct.model.(branch).List{timePoint}.positionShift = repmat({[0,0,0]}, tableHeight, 1);
                     end
-                end 
-            end
-                
-            planesPresent = 0;
-            if isfield(loadedStruct,'planes')
-                if ~isempty(loadedStruct.planes)
-                    prep = zeros(1,loadedStruct.planes.nTimePoints);
-                    planesPresent = 1;
                 end
+    
+                % remove missing fields and adjust currentIndexes
+                % check missing positions in tracks and remove them
+                isValid = cellfun(@(x) ~isempty(x), loadedStruct.model.(branch).List);
+        
+                if any(isValid == false)
+                    % Get the field names of the tracks structure
+                    modelFields = fieldnames(loadedStruct.model.(branch));
+                    
+                    % Loop through each field
+                    for i = 1:length(modelFields)
+                        field = modelFields{i};
+                        % Check if the field is a cell array
+                        if iscell(loadedStruct.model.(branch).(field))
+                            % Filter the cell array based on valid positions
+                            loadedStruct.model.(branch).(field) = loadedStruct.model.(branch).(field)(isValid);
+                        end
+                    end 
+                end
+                    
+                planesPresent = 0;
+                if isfield(loadedStruct,'planes')
+                    if ~isempty(loadedStruct.planes)
+                        prep = zeros(1,loadedStruct.planes.nTimePoints);
+                        planesPresent = 1;
+                    end
+                end
+                if ~planesPresent
+                    prep = zeros(1,numel(isValid));
+                end
+                prep(isValid) = 1:sum(isValid);
+                loadedStruct.timeline.currentIndex.model.(branch) = prep;
             end
-            if ~planesPresent
-                prep = zeros(1,numel(isValid));
-            end
-            prep(isValid) = 1:sum(isValid);
-            loadedStruct.timeline.currentIndex.model.(branch) = prep;
         end
     end
 

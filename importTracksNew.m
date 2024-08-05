@@ -162,7 +162,7 @@ function [tracks,currentIndex,nTimePoints] = importTracksNew(figH,existingTracks
             T.frame_i = frameIndexes;
             T.color = num2cell(rand(nTracks, 3), 2);
             T.length = cellfun(@(x) size(x, 1), coordinates);
-            T.timePoint = categorical(tp);
+            T.timePoint = categorical(repmat(tp, height(T), 1));
         
             tracks.tracksList{indexToWriteTo} = T;
 
