@@ -1,5 +1,25 @@
 function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loadedIrbisVersion)
 
+    %% Irbis version 1.11 changes
+    if isfield(loadedStruct,'tools')
+        if isfield(loadedStruct.tools,'areas')
+            if isfield(loadedStruct.tools.areas,'list')
+                loadedStruct.tools.areas.List{1} = loadedStruct.tools.areas.list;
+                loadedStruct.tools.areas = rmfield(loadedStruct.tools.areas,'list');
+                if ~isempty(loadedStruct.tools.areas.List{1})
+                    loadedStruct.timeline.currentIndex.tools.areas = 1;
+                end
+            end
+        end
+    end
+
+    if loadedIrbisVersion < 1.11 && loadedIrbisVersion >= 1.1
+        disp('updated Irbis version lower than 1.11 and same or higher than 1.1')
+        updatedStruct = loadedStruct;
+        return
+    end
+
+    %% Old Irbis versions
     presentRootFields = fieldnames(loadedStruct);
     emptyRootFields = {};
     for i = 1:length(presentRootFields)
@@ -62,6 +82,8 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
                 fieldNames = fieldnames(loadedStruct.tracks{1});
                 
                 % Initialize the new structure to hold variables across time points
+                cellTracks = loadedStruct.tracks;
+                loadedStruct.tracks = struct();
                 for i = 1:numel(fieldNames)
                     loadedStruct.tracks.(fieldNames{i}) = cell(1, numTimePoints);
                 end
@@ -70,7 +92,7 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
                 for t = 1:numTimePoints
                     for i = 1:numel(fieldNames)
                         variableName = fieldNames{i};
-                        loadedStruct.tracks.(variableName){t} = loadedStruct.tracks{t}.(variableName);
+                        loadedStruct.tracks.(variableName){t} = cellTracks{t}.(variableName);
                     end
                 end
             end

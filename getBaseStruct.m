@@ -6,6 +6,7 @@ function baseStructs = getBaseStruct(varargin)
     %     2: timeDependencyType
     %     3: nTimePoints
 
+    irbisVersion = 1.11;
 
     structTypes = {'info','timeline','tools','views','results','planes','tracks','points','model'};
     timeDependencyType = {'timeDependent','timeIndependent'};
@@ -22,6 +23,9 @@ function baseStructs = getBaseStruct(varargin)
             end
             baseStructs = createEmptyList(structType,nRows,branchTypes);
             return
+        elseif isequal(varargin{1},'irbisVersion')
+            baseStructs = irbisVersion;
+            returnx
         end
     end
 
@@ -41,8 +45,6 @@ function baseStructs = getBaseStruct(varargin)
         end
         nTimePoints = varargin{3};
     end
-
-    irbisVersion = 1.1;
 
     branches = {'fullVolume','shaft','dendrite','spines','synapses'};
 
@@ -92,6 +94,7 @@ function baseStructs = getBaseStruct(varargin)
                     branch = branches{branchNum};
                     timeline.currentIndex.model.(branch) = [];
                 end
+                timeline.currentIndex.tools.areas = [];
         
                 baseStructs.timeline = timeline;
         
@@ -100,11 +103,7 @@ function baseStructs = getBaseStruct(varargin)
                 tools = struct();
             
                 tools.areas = [];
-                sz = [0 6];
-                varTypes = ["double","cell","cell","cell","categorical","categorical"];
-                varNames = ["areaId","x","y",'z',"type",'source'];
-                AreasTable = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
-                tools.areas.list = AreasTable;
+                tools.areas.List{1} = createEmptyList('tools',0,{'areas'});
             
                 baseStructs.tools = tools;
         
@@ -195,12 +194,7 @@ function baseStructs = getBaseStruct(varargin)
         
                 points = struct();
 
-                sz = [0 10];
-                varTypes = ["double","double","double","double","double","double","double","double","double",'logical'];
-                varNames = ["id","frame","x","y","z","uncertainty_xy","uncertainty_z","height","maxIntensity",'inArea'];
-                pointsList = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
-        
-                points.pointsList = pointsList;
+                points.pointsList = createEmptyList('points');
                 points.fileName = '';
                 points.registration = [];
                 points.manualAlignment = [];
@@ -294,8 +288,10 @@ function List = createEmptyList(structType,varargin)
     switch structType
         case 'tools'
 
-            varNames = ["areaId","x","y",'z',"type",'source'];
-            varTypes = ["double","cell","cell","cell","categorical","categorical"];
+            if ismember('areas',specialTypes)
+                varNames = ["areaId","x","y",'z',"type",'source'];
+                varTypes = ["double","cell","cell","cell","categorical","categorical"];
+            end
 
         case 'views'
 
