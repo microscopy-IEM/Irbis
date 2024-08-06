@@ -14,6 +14,13 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
     end
 
     if loadedIrbisVersion < 1.11 && loadedIrbisVersion >= 1.1
+        if ~isfield('tools',loadedStruct.timeline.currentIndex)
+            loadedStruct.timeline.currentIndex.tools.areas = [];
+        end
+        % 
+        % if ~isfield('model',loadedStruct.timeline.currentIndex)
+        %     loadedStruct.timeline.currentIndex.model = baseStruct.timeline.currentIndex.model;
+        % end
         disp('updated Irbis version lower than 1.11 and same or higher than 1.1')
         updatedStruct = loadedStruct;
         return
@@ -162,6 +169,18 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
             end
             prep(isValid) = 1:sum(isValid);
             loadedStruct.timeline.currentIndex.tracks = prep;
+
+            for tp = 1:numel(loadedStruct.timeline.currentIndex.tracks)
+                tracksId = loadedStruct.timeline.currentIndex.tracks(tp);
+                if ~isequal(tracksId,0)
+                    List = loadedStruct.tracks.tracksList{tracksId};
+                    if istable(List)
+                        if ~ismember('timePoint',List.Properties.VariableNames)
+                            loadedStruct.tracks.tracksList{tracksId}.timePoint = categorical(repmat(tp,height(List),1));
+                        end
+                    end
+                end
+            end
         end
     end
 
@@ -295,9 +314,9 @@ function tracks = createCategorizationsFromThresholds(tracks)
         groupThresholdFields = fieldnames(tracks.groupThresholds);
         groupThresholdNames = cellfun(@(x) [x, 'Groups'], groupThresholdFields, 'UniformOutput', false);
 
-
         if all(ismember(groupThresholdNames,storedCategorizationNames))
             tracks = rmfield(tracks,"groupThresholds");
+            return
         end
 
     end
