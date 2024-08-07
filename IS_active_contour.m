@@ -10,6 +10,8 @@ addParameter(par,'radiusScaling',1.1,@isnumeric);
 addParameter(par,'sizeIm',100,@isnumeric);
 addParameter(par,'realCenterDim',1,@isnumeric);
 
+addParameter(par,'initialRadius',10,@isnumeric);
+
 parse(par,varargin{:});
 
 sizeIm = par.Results.sizeIm;
@@ -20,6 +22,8 @@ radiusScaling = par.Results.radiusScaling;
 Iterations = par.Results.Iterations;
 ContractionBias = par.Results.ContractionBias;
 SmoothFactor = par.Results.SmoothFactor;
+
+initialRadius = par.Results.initialRadius;
 
 % predefined lists:
 pointsRotated = [];
@@ -96,7 +100,7 @@ minDistance = sqrt(minDistanceSqrt);
 
 % figure
 imshow(binaryImage,[])
-r = drawcircle("Center",[sizeIm/2,sizeIm/2],'Radius',10,'Visible','on');
+r = drawcircle("Center",[sizeIm/2,sizeIm/2],'Radius',initialRadius,'Visible','on');
 mask = createMask(r);
 
 % tic
@@ -108,7 +112,15 @@ visboundaries(bw,'Color','r')
 
 % calculating contour from the activecontour mask:
 cont = contour(bw).';
-ending = cont(1,2);
+try
+    ending = cont(1,2);
+catch ME
+    disp(['cont: ' num2str(cont)])
+    disp(ME.message)
+    result = [];
+    hold off
+    return
+end
 
 % simplifying contour:
 simpCont = cont(2:ending,:);

@@ -10,6 +10,8 @@ addParameter(par,'radiusScaling',1.1,@isnumeric);
 addParameter(par,'sizeIm',100,@isnumeric);
 addParameter(par,'realCenterDim',1,@isnumeric);
 
+addParameter(par,'initialRadius',10,@isnumeric);
+
 parse(par,varargin{:});
 
 sizeIm = par.Results.sizeIm;
@@ -20,6 +22,8 @@ radiusScaling = par.Results.radiusScaling;
 Iterations = par.Results.Iterations;
 ContractionBias = par.Results.ContractionBias;
 SmoothFactor = par.Results.SmoothFactor;
+
+initialRadius = par.Results.initialRadius;
 
 % predefined lists:
 pointsRotated = [];
@@ -56,6 +60,14 @@ for i=1:size(pointsInROI,1)
 
 end
 
+% disp('pointsRotated')
+% disp(size(pointsRotated))
+% disp(size(pointsInROI))
+if isempty(pointsRotated)
+    result = [];
+    return
+end
+
 % projecting the point cloud onto a plane and rescaling the dimensions:
 pointsRescaled(:,1) = (pointsRotated(:,1))*sizeIm/realCenterDim + sizeIm/2;
 pointsRescaled(:,2) = 0;
@@ -88,23 +100,27 @@ minDistance = sqrt(minDistanceSqrt);
 
 % figure
 imshow(binaryImage,[])
-r = drawcircle("Center",[sizeIm/2,sizeIm/2],'Radius',10,'Visible','on');
+r = drawcircle("Center",[sizeIm/2,sizeIm/2],'Radius',initialRadius,'Visible','on');
 mask = createMask(r);
 
-tic
+% tic
 bw = activecontour(binaryImage,mask,Iterations,'edge','ContractionBias',ContractionBias,'SmoothFactor',SmoothFactor);
-toc
+% toc
 
 hold on
 visboundaries(bw,'Color','r')
 
 % calculating contour from the activecontour mask:
 cont = contour(bw).';
-ending = cont(1,2);
+try
+    ending = cont(1,2);
+catch ME
+    disp(['cont: ' num2str(cont)])
+    disp(E)
 
 % simplifying contour:
 simpCont = cont(2:ending,:);
-simpCont = reducepoly(simpCont,0.01);
+simpCont = reducepoly(simpCont,0.001);
 
 plot(simpCont(:,1),simpCont(:,2))
 % drawnow
