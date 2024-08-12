@@ -1,9 +1,15 @@
 
 
-function finalMap = points2masksFcn(peaks,greyMap,expectedPeakDiamPx)
+function finalMap = points2masksFcn(peaks,greyMap,expectedPeakDiamPx,pixel_size,z_spacing)
 
 conn = 6; % 3D case
 peak2BcgRatioThres = 1;
+
+% pixel_size = 0.0484;
+% z_scaling = 0.115;
+% 
+% pixel_size = 0.03385;
+% z_scaling = 0.2;
 
 % thFun = @(mx,mn)((mx-mn)/2 + mn);      
 
@@ -20,7 +26,8 @@ greyMap = imgaussfilt3(greyMap,0.5);
 % binary operators
 searchDiam = round(1.5*expectedPeakDiamPx);
 
-searchDiam = 10
+% searchDiam = 10
+searchDiam = 3
 
 searchOffset = strel('sphere',searchDiam);
 peakOffset = strel("sphere",1);
@@ -83,10 +90,10 @@ nPeaks = height(peaks);
         % y = round(peaks.y(currentAreaInd));
         % z = ceil(peaks.z(currentAreaInd));
 
-        pxSize = 0.0484; 
-        x = ceil(peaks.x(currentAreaInd)./pxSize);
-        y = ceil(peaks.y(currentAreaInd)./pxSize);
-        z = ceil(peaks.z(currentAreaInd)./0.116);
+       
+        x = ceil(peaks.x(currentAreaInd)./pixel_size);
+        y = ceil(peaks.y(currentAreaInd)./pixel_size);
+        z = ceil(peaks.z(currentAreaInd)./z_spacing);
         
         % create binary maxima map - all pixels with maxima = 1, otherwise 0
         peakSearchArea = false(sz);
