@@ -45,21 +45,23 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
 
     % info 
     % include also other newly added fields
-    if ~isfield(loadedStruct.info,'path')
-        if isfield(loadedStruct,'results')
-            if isfield(loadedStruct.results,'path')
-                loadedStruct.info.path = loadedStruct.results.path;
+    if isfield(loadedStruct,'info')
+        if ~isfield(loadedStruct.info,'path')
+            if isfield(loadedStruct,'results')
+                if isfield(loadedStruct.results,'path')
+                    loadedStruct.info.path = loadedStruct.results.path;
+                end
             end
         end
-    end
-
-    if ~isfield(loadedStruct.info,'filename')
-        disp('no filename in loadedStruct.info')
-        if isfield(loadedStruct,'results')
-            disp(loadedStruct.results)
-            if isfield(loadedStruct.results,'fileName')
-                disp(['fileName: ' loadedStruct.results.fileName])
-                loadedStruct.info.filename = loadedStruct.results.fileName;
+    
+        if ~isfield(loadedStruct.info,'filename')
+            disp('no filename in loadedStruct.info')
+            if isfield(loadedStruct,'results')
+                disp(loadedStruct.results)
+                if isfield(loadedStruct.results,'fileName')
+                    disp(['fileName: ' loadedStruct.results.fileName])
+                    loadedStruct.info.filename = loadedStruct.results.fileName;
+                end
             end
         end
     end
