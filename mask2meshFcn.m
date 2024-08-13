@@ -112,6 +112,8 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
         ptCloud = pointCloud(verts);
         ptCloud.Normal = normals;
 
+        verts = double(verts);
+     
                 
         % Run Poisson surface reconstruction in python
         pt_vertices = py.numpy.array(ptCloud.Location);
@@ -142,8 +144,6 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
             mesh = surfaceMesh(vertices,faces,"VertexNormals",vertexNormals,"FaceNormals",faceNormals);
             mesh = smoothSurfaceMesh(mesh,8);
                
-            
-
             
             T(meshObjInd,1:11) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]}};
             T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);
