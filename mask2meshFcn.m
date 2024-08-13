@@ -141,6 +141,10 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
             vertexNormals = double(vertexNormalsDict(py.int(regionID)));
             faceNormals = double(faceNormalsDict(py.int(regionID)));
             
+            if ~mode3D
+            vertices(:,3) = vertices(:,3) - mean(vertices(:,3))+z_spacing;
+            end
+            
             mesh = surfaceMesh(vertices,faces,"VertexNormals",vertexNormals,"FaceNormals",faceNormals);
             mesh = smoothSurfaceMesh(mesh,8);
                
