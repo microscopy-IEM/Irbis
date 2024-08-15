@@ -2,7 +2,7 @@
 close all
 
 % clear all;
-% load finalMap.mat
+load finalMap.mat
 
 
 % 2D case
@@ -11,7 +11,7 @@ close all
 % finalMap = padarray(finalMap,[padSize,padSize,padSize],0,'both');  
 
 
-LL = finalMap;
+LL = mask;
 
 CC = bwconncomp(LL)
 
