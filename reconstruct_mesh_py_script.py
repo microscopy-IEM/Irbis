@@ -3,17 +3,17 @@ import numpy as np
 
 def reconstruct_mesh(depth=8,fraction_to_keep=0.8,min_vertex_num=20,separate=1,pt_vertices = [],pt_normals = []):
 
-    print('in python')
+    # print('in python')
     
     pt_vertices = np.array(pt_vertices)
     pt_normals = np.array(pt_normals)
-    print(pt_vertices)
-    print(type(pt_vertices))
-    print(pt_vertices.dtype)
-    print(pt_vertices.shape)
-    print(type(pt_normals))
-    print(pt_normals.dtype)
-    print(pt_normals.shape)
+    # print(pt_vertices)
+    # print(type(pt_vertices))
+    # print(pt_vertices.dtype)
+    # print(pt_vertices.shape)
+    # print(type(pt_normals))
+    # print(pt_normals.dtype)
+    # print(pt_normals.shape)
 
 
     ms = pymeshlab.MeshSet()
@@ -22,12 +22,12 @@ def reconstruct_mesh(depth=8,fraction_to_keep=0.8,min_vertex_num=20,separate=1,p
     ms.add_mesh(m)
 
     cm = ms.current_mesh()
-    print(len(cm.vertex_matrix()))
-    print(len(cm.face_matrix()))
-    print(len(cm.edge_matrix()))
-    print(cm.vertex_normal_matrix())
-    print(cm.face_normal_matrix())
-    print(cm.vertex_color_matrix())
+    # print(len(cm.vertex_matrix()))
+    # print(len(cm.face_matrix()))
+    # print(len(cm.edge_matrix()))
+    # print(cm.vertex_normal_matrix())
+    # print(cm.face_normal_matrix())
+    # print(cm.vertex_color_matrix())
 
     ms.generate_surface_reconstruction_screened_poisson(depth=int(depth),preclean=True)
 
