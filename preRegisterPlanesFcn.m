@@ -333,32 +333,65 @@ function runRegistration(fig)
 
     % Find cropping boundaries 
 
-    if max(xt) > 0
-        x0 = ceil(max(xt));
-    else
-        x0 = 1;
-    end
 
-    if min(xt) < 0
-        xt = floor(min(xt));
-    else
-        xt = 0;
-    end
+    % this works for first time point as a reference
+    if isequal(targetMethod,'first')
+        if max(xt) > 0
+            x0 = ceil(max(xt));
+        else
+            x0 = 1;
+        end
+    
+        if min(xt) < 0
+            xt = floor(min(xt));
+        else
+            xt = 0;
+        end
+    
+        if max(yt) > 0
+            y0 = ceil(max(yt));
+        else
+            y0 = 1;
+        end
+    
+        if min(yt) < 0
+            yt = floor(min(yt));
+        else
+            yt = 0;
+        end
 
-    if max(yt) > 0
-        y0 = ceil(max(yt));
-    else
-        y0 = 1;
-    end
+    % using previous time point as a reference requires looking at summed shift
+    elseif isequal(targetMethod,'previous')
+        xtPartialSum = cumsum(xt);
+        ytPartialSum = cumsum(yt);
 
-    if min(yt) < 0
-        yt = floor(min(yt));
-    else
-        yt = 0;
+        if max(xtPartialSum) > 0
+            x0 = ceil(max(xtPartialSum));
+        else
+            x0 = 1;
+        end
+    
+        if min(xtPartialSum) < 0
+            xt = floor(min(xtPartialSum));
+        else
+            xt = 0;
+        end
+    
+        if max(ytPartialSum) > 0
+            y0 = ceil(max(ytPartialSum));
+        else
+            y0 = 1;
+        end
+    
+        if min(ytPartialSum) < 0
+            yt = floor(min(ytPartialSum));
+        else
+            yt = 0;
+        end
     end
 
     % 2D cropr ectangle for preview
-    cropRect2D = [x0 y0 xsize-x0+xt ysize-y0+yt]
+    cropRect2D = [x0 y0 xsize-x0+xt ysize-y0+yt];
 
     xCropOffset = cropRect2D(1);
     yCropOffset = cropRect2D(2);
