@@ -1,8 +1,8 @@
 function currentIndexStruct = makeCurrentIndexSameLength(currentIndexStruct, nTimePoints)
-    disp('in makeCurrentIndexSameLength function')
+    % disp('in makeCurrentIndexSameLength function')
     % Call the recursive function to process each level
     currentIndexStruct = processStruct(currentIndexStruct, nTimePoints);
-    assignin('base',"currentIndexStruct",currentIndexStruct)
+    % assignin('base',"currentIndexStruct",currentIndexStruct)
 end
 
 function structVar = processStruct(structVar, nTimePoints)

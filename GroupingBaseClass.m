@@ -23,6 +23,7 @@ classdef GroupingBaseClass < handle
 
         function listArray = updateTable(obj, listArray, timePoints)
             if istable(listArray)
+                disp('listArray is a table')
                 table = listArray;
                 category = obj.evaluateConditions(table);
                 table.(obj.Name) = categorical(category);

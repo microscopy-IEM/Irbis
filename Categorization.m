@@ -12,15 +12,11 @@ classdef Categorization < handle
         
         function listArray = updateTable(obj, listArray, timePoints)
             if istable(listArray)
-                disp('it is table')
-                disp(obj.CategorizationName)
                 table = listArray;
                 category = obj.evaluateConditions(table);
                 table.(obj.CategorizationName) = categorical(category);
                 listArray = table;
             else
-                disp('it is not a table')
-                disp(obj.CategorizationName)
                 for tp = timePoints
                     table = listArray{tp};
                     if istable(table)

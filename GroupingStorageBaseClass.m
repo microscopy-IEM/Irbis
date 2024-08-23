@@ -57,6 +57,7 @@ classdef GroupingStorageBaseClass < handle
 
         function listArray = updateAllTables(obj, listArray, timePoints)
             % Method to update all tables for all Groupings
+            disp('in updateAllTables')
             for i = 1:numel(obj.Groupings)
                 cm = obj.Groupings{i};
                 listArray = cm.updateTable(listArray, timePoints);
