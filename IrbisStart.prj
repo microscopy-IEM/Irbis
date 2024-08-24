@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="1227680552" file="C:\Users\stepan.kortus\Documents\Irbis\IrbisStart.prj" location="C:\Users\stepan.kortus\Documents\Irbis" name="IrbisStart" preferred-package-location="C:\Users\sveco\Documents\IEM_microscopy\MMPack\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="2536231265" file="C:\Users\sveco\Documents\Irbis\IrbisStart.prj" location="C:\Users\sveco\Documents\Irbis" name="IrbisStart" preferred-package-location="C:\Users\sveco\Documents\Irbis\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\IrbisStart_resources\icon.ico</param.icon>
     <param.icons>
@@ -100,6 +100,8 @@
       <file>${PROJECT_ROOT}\poisson_plus_decimation_py_script.py</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_py_script.py</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_py_script_vocal.py</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\compute_geodesic.m</file>
+      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\getoptions.m</file>
     </fileset.resources>
     <fileset.package />
     <fileset.depfun>
@@ -132,8 +134,10 @@
       <file>${PROJECT_ROOT}\CategorizationStorage.m</file>
       <file>${PROJECT_ROOT}\changeSectionButtonTooltip.m</file>
       <file>${PROJECT_ROOT}\checkAndHandlePythonPackage.m</file>
+      <file>${PROJECT_ROOT}\checkNodesByName.m</file>
       <file>${PROJECT_ROOT}\compute_mesh_total_area.m</file>
       <file>${PROJECT_ROOT}\compute_mesh_volume.m</file>
+      <file>${PROJECT_ROOT}\createEmptyListFcn.m</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\animationTimeline.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\histogramFilterComp.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\icons\downArrow.png</file>
@@ -143,26 +147,31 @@
       <file>${PROJECT_ROOT}\CustomUIComponents\objectListComponent.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\positionAdjustment.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\surfaceReconstructionComp.mlapp</file>
-      <file>${PROJECT_ROOT}\CustomUIComponents\surfaceReconstructionTab.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\ValueChangedEventData.m</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\volumeHistogram.mlapp</file>
       <file>${PROJECT_ROOT}\delete_gizmo_app.m</file>
       <file>${PROJECT_ROOT}\divide_mesh_python.m</file>
+      <file>${PROJECT_ROOT}\Filtering.m</file>
+      <file>${PROJECT_ROOT}\FilteringStorage.m</file>
       <file>${PROJECT_ROOT}\find_closest_and_close_holes_python.m</file>
       <file>${PROJECT_ROOT}\find_intersection_volume_python.m</file>
       <file>${PROJECT_ROOT}\frenet.m</file>
       <file>${PROJECT_ROOT}\generateRandomText.m</file>
+      <file>${PROJECT_ROOT}\getBaseStruct.m</file>
       <file>${PROJECT_ROOT}\getDefaultSettings.m</file>
+      <file>${PROJECT_ROOT}\getMaximumArrayLenFromStruct.m</file>
       <file>${PROJECT_ROOT}\getZProjection.m</file>
       <file>${PROJECT_ROOT}\gizmo_app.m</file>
+      <file>${PROJECT_ROOT}\GroupingBaseClass.m</file>
+      <file>${PROJECT_ROOT}\GroupingStorageBaseClass.m</file>
       <file>${PROJECT_ROOT}\icons\color_palette.png</file>
       <file>${PROJECT_ROOT}\icons\downArrow.png</file>
       <file>${PROJECT_ROOT}\icons\draw_area.png</file>
       <file>${PROJECT_ROOT}\icons\draw_bcg_area.png</file>
       <file>${PROJECT_ROOT}\icons\extendUp.png</file>
       <file>${PROJECT_ROOT}\icons\home.png</file>
+      <file>${PROJECT_ROOT}\icons\irbis logo vect.png</file>
       <file>${PROJECT_ROOT}\icons\leftArrow.png</file>
-      <file>${PROJECT_ROOT}\icons\logo.png</file>
       <file>${PROJECT_ROOT}\icons\logo_iem_abstract.png</file>
       <file>${PROJECT_ROOT}\icons\play.png</file>
       <file>${PROJECT_ROOT}\icons\progressLineBack.png</file>
@@ -177,54 +186,56 @@
       <file>${PROJECT_ROOT}\icons\wallpaper.png</file>
       <file>${PROJECT_ROOT}\importPlanes.m</file>
       <file>${PROJECT_ROOT}\ImportPoints.m</file>
-      <file>${PROJECT_ROOT}\importTracks.m</file>
+      <file>${PROJECT_ROOT}\importTracksNew.m</file>
       <file>${PROJECT_ROOT}\intriangulation.m</file>
       <file>${PROJECT_ROOT}\IrbisResultsViewer.mlapp</file>
       <file>${PROJECT_ROOT}\IS_active_contour.m</file>
       <file>${PROJECT_ROOT}\IS_active_contour_vocal.m</file>
       <file>${PROJECT_ROOT}\IS_adding_toolboxes_to_path.m</file>
+      <file>${PROJECT_ROOT}\makeCurrentIndexSameLength.m</file>
+      <file>${PROJECT_ROOT}\mask2meshFcn.m</file>
       <file>${PROJECT_ROOT}\mesh_intersect_and_separate_python.m</file>
       <file>${PROJECT_ROOT}\mesh_subtract_and_separate_and_save_plane_python.m</file>
       <file>${PROJECT_ROOT}\MicroMToPixelPosition.m</file>
       <file>${PROJECT_ROOT}\MMP_jumpsRemoval.m</file>
-      <file>${PROJECT_ROOT}\MMP_LocalizationError.m</file>
       <file>${PROJECT_ROOT}\moveCellItem.m</file>
       <file>${PROJECT_ROOT}\MyDragzoom.m</file>
-      <file>${PROJECT_ROOT}\newMMpackDialog.m</file>
       <file>${PROJECT_ROOT}\peakClusterFcn.m</file>
       <file>${PROJECT_ROOT}\planesCropFcn.m</file>
       <file>${PROJECT_ROOT}\point_to_line_distance.m</file>
       <file>${PROJECT_ROOT}\point_to_plane_distance.m</file>
+      <file>${PROJECT_ROOT}\points2masksFcn.m</file>
       <file>${PROJECT_ROOT}\precalculatePlanePlotAll.m</file>
       <file>${PROJECT_ROOT}\preRegisterPlanesFcn.m</file>
+      <file>${PROJECT_ROOT}\processDoubleArraysWithPaths.m</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_python.m</file>
+      <file>${PROJECT_ROOT}\reorderFileNames.m</file>
       <file>${PROJECT_ROOT}\separateNumbersIntoConsecutiveGroups.m</file>
       <file>${PROJECT_ROOT}\setPyenv.m</file>
-      <file>${PROJECT_ROOT}\singleTrackMSD.m</file>
       <file>${PROJECT_ROOT}\SKgradient.m</file>
       <file>${PROJECT_ROOT}\SKisonormals.m</file>
       <file>${PROJECT_ROOT}\spineList2ResultTable.m</file>
       <file>${PROJECT_ROOT}\submesh_selection.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\compute_geodesic.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.mexw64</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d_slow.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\clamp.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_distance_to_points.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\compute_grad.m</file>
-      <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\getoptions.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\mmax.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\nb_dims.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\perform_vf_normalization.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\toolbox\prod_vf_sf.m</file>
       <file>${PROJECT_ROOT}\tracksMSDanalysis.m</file>
       <file>${PROJECT_ROOT}\tracksProcessing.m</file>
+      <file>${PROJECT_ROOT}\tryAdaptiveShaftParameters.m</file>
       <file>${PROJECT_ROOT}\tubeplot.m</file>
+      <file>${PROJECT_ROOT}\validateAndUpdateStruct.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">C:\Users\stepan.kortus\Documents\Irbis\Irbis\for_testing\Irbis.exe</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">C:\Users\stepan.kortus\Documents\Irbis\Irbis\for_testing\readme.txt</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">C:\Users\stepan.kortus\Documents\Irbis\Irbis\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">C:\Users\sveco\Documents\Irbis\Irbis\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">C:\Users\sveco\Documents\Irbis\Irbis\for_testing\Irbis.exe</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">C:\Users\sveco\Documents\Irbis\Irbis\for_testing\splash.png</file>
     </build-deliverables>
     <workflow />
     <matlab>

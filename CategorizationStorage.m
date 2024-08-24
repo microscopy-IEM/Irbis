@@ -46,7 +46,7 @@ classdef CategorizationStorage < handle
         end
         
         function listArray = updateAllTables(obj, listArray, timePoints)
-            disp('in updateAllTables in CategorizationStorage')
+            % disp('in updateAllTables in CategorizationStorage')
             % Method to update all tables for all Categorizations
             for i = 1:numel(obj.Categorizations)
                 cm = obj.Categorizations{i};
