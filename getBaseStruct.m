@@ -158,7 +158,7 @@ function baseStructs = getBaseStruct(varargin)
                 tracks = struct();
 
                 if ismember('timeDependent',timeDependencyType)
-                    disp('timeDependent in')
+                    % disp('timeDependent in')
 
                     tracks.tracksOrigFileName = arrayfun(@(x) '', 1:nTimePoints, 'UniformOutput', false);
                     tracks.nTracks = arrayfun(@(x) [], 1:nTimePoints, 'UniformOutput', false);
@@ -180,7 +180,7 @@ function baseStructs = getBaseStruct(varargin)
 
                 % tracks time-independent
                 if ismember('timeIndependent',timeDependencyType)
-                    disp('timeIndependent in')
+                    % disp('timeIndependent in')
                     tracks.storedFilters = FilteringStorage();
                     tracks.storedCategorizations = CategorizationStorage();
                     
