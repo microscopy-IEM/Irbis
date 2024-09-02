@@ -27,7 +27,7 @@ greyMap = imgaussfilt3(greyMap,0.5);
 searchDiam = round(1.5*expectedPeakDiamPx);
 
 % searchDiam = 10
-searchDiam = 3
+searchDiam = 10
 
 searchOffset = strel('sphere',searchDiam);
 peakOffset = strel("sphere",1);

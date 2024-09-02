@@ -76,6 +76,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
                   
             % v = imresize3(v,[scaleF,scaleF,1],'method','cubic');
             v = imresize3(v,[sz(1)*scaleF sz(2)*scaleF 5],'method','cubic');
+            % v = imresize3(v,[sz(1)*scaleF sz(2)*scaleF 1],'method','cubic');
 
         end
 
