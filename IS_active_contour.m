@@ -103,6 +103,10 @@ imshow(binaryImage,[])
 r = drawcircle("Center",[sizeIm/2,sizeIm/2],'Radius',initialRadius,'Visible','on');
 mask = createMask(r);
 
+% Adjust the mask: remove areas with positive values in binaryImage
+    % this should avoid expansion to the white areas and formation of bubbles and bulges
+mask(binaryImage > 0) = 0;
+
 % tic
 bw = activecontour(binaryImage,mask,Iterations,'edge','ContractionBias',ContractionBias,'SmoothFactor',SmoothFactor);
 % toc
@@ -129,6 +133,9 @@ simpCont = reducepoly(simpCont,0.001);
 plot(simpCont(:,1),simpCont(:,2))
 % drawnow
 hold off
+
+% figure
+% imshow(mask)
 
 % rescaling contour back into the um within the plane:
 contourRescaled(:,1) = ((simpCont(:,1)-sizeIm/2)*(realCenterDim)/sizeIm)*radiusScaling;
