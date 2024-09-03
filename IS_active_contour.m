@@ -50,15 +50,19 @@ R = [cosTheta + u1^2 * (1 - cosTheta)      u1 * u2 * (1 - cosTheta) - u3 * sinTh
     u2 * u1 * (1 - cosTheta) + u3 * sinTheta    cosTheta + u2^2 * (1 - cosTheta)    u2 * u3 * (1 - cosTheta) - u1 * sinTheta;
     u3 * u1 * (1 - cosTheta) - u2 * sinTheta    u3 * u2 * (1 - cosTheta) + u1 * sinTheta    cosTheta + u3^2 * (1 - cosTheta)];
 
-% rotating the original point cloud to be parallel with a plane:
-for i=1:size(pointsInROI,1)
-    v = [pointsInROI(i,1)-pointA(1),pointsInROI(i,2)-pointA(2),pointsInROI(i,3)-pointA(3)];
-    vRot = v*R;
-    pointsRotated(i,1) = vRot(1);
-    pointsRotated(i,2) = vRot(2);
-    pointsRotated(i,3) = vRot(3);  
+% % rotating the original point cloud to be parallel with a plane:
+% for i=1:size(pointsInROI,1)
+%     v = [pointsInROI(i,1)-pointA(1),pointsInROI(i,2)-pointA(2),pointsInROI(i,3)-pointA(3)];
+%     vRot = v*R;
+%     pointsRotated(i,1) = vRot(1);
+%     pointsRotated(i,2) = vRot(2);
+%     pointsRotated(i,3) = vRot(3);  
+% 
+% end
 
-end
+% using matrix operations to perform the rotation instead
+v = pointsInROI - pointA;
+pointsRotated = v * R;
 
 % disp('pointsRotated')
 % disp(size(pointsRotated))
@@ -107,15 +111,30 @@ mask = createMask(r);
     % this should avoid expansion to the white areas and formation of bubbles and bulges
 mask(binaryImage > 0) = 0;
 
+% if the centre found by the centre line is off, return an empty contour
+if all(mask(:) == 0)
+    result = [];
+    return
+end
+
 % tic
 bw = activecontour(binaryImage,mask,Iterations,'edge','ContractionBias',ContractionBias,'SmoothFactor',SmoothFactor);
 % toc
+
+% if the active contour algorithm did not create any mask, return an empty contour
+if all(bw(:) == 0)
+    result = [];
+    return
+end
 
 hold on
 visboundaries(bw,'Color','r')
 
 % calculating contour from the activecontour mask:
 cont = contour(bw).';
+
+% try catch construct to catch some other unforseen problems
+    % now, it should mostly be solved by checking whether the bw mask has any true values
 try
     ending = cont(1,2);
 catch ME
@@ -142,17 +161,21 @@ contourRescaled(:,1) = ((simpCont(:,1)-sizeIm/2)*(realCenterDim)/sizeIm)*radiusS
 contourRescaled(:,2) = zeros(size(simpCont,1),1);
 contourRescaled(:,3) = ((simpCont(:,2)-sizeIm/2)*(realCenterDim)/sizeIm)*radiusScaling;
 
-contourFinal = [];
 R_inv = R';
 
 % rotating contour into the original position of the point cloud:
-for i=1:size(contourRescaled,1)
-    v_inv = [contourRescaled(i,1),contourRescaled(i,2),contourRescaled(i,3)];
-    vRotInv = v_inv*R_inv;
-    contourFinal(i,1) = vRotInv(1)+pointA(1);
-    contourFinal(i,2) = vRotInv(2)+pointA(2);
-    contourFinal(i,3) = vRotInv(3)+pointA(3);
-end
+% contourFinal = [];
+% for i=1:size(contourRescaled,1)
+%     v_inv = [contourRescaled(i,1),contourRescaled(i,2),contourRescaled(i,3)];
+%     vRotInv = v_inv*R_inv;
+%     contourFinal(i,1) = vRotInv(1)+pointA(1);
+%     contourFinal(i,2) = vRotInv(2)+pointA(2);
+%     contourFinal(i,3) = vRotInv(3)+pointA(3);
+% end
+
+% perform back-rotation by matrix operation instead
+contourFinal = contourRescaled * R_inv;
+contourFinal = contourFinal + pointA;
 
 % figure
 % scatter3(pointsInROI(:,1),pointsInROI(:,2),pointsInROI(:,3));
