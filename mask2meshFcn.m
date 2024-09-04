@@ -7,9 +7,9 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
     % default paramateres
     padSize = 4;
     sigma = 1.5;
-    scaleF = 2;
+    scaleF = 4;
         
-    isoThres = 0.05;
+    isoThres = 0.3;
 
     z_spacing = 0.05
         
@@ -73,28 +73,28 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
 
                 % vol = imgaussfilt(vol,sigma/2);
 
+                % vol = imresize(vol,[sz(1)*scaleF sz(2)*scaleF],'method','bilinear');
+                vol = imresize(vol,[sz(1)*scaleF sz(2)*scaleF],'method','nearest');
+
+                vol = padarray(vol,[padSize,padSize,padSize],min(vol,[],"all"),'both'); 
+
                 figure(2)
                 nexttile
-                imshow(vol,[],'InitialMagnification',1000)
-               
-                vol = padarray(vol,[padSize,padSize,padSize],min(vol,[],"all"),'both');  
+                % imshow(vol,[],'InitialMagnification',1000)
+                imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
                 % vol = padarray(vol,[0,0,padSize],0,'both');  
-                vol = imresize(vol,[sz(1)*scaleF sz(2)*scaleF],'method','bilinear');
+
+                vol(:,:,padSize+1) = imgaussfilt(vol(:,:,padSize+1),sigma*2);
                 
                 % pad current reguion with zeros so there is gradient from edge of array towards the edge of objects 
                 
-
-                vol(:,:,padSize+1) = imgaussfilt(vol(:,:,padSize+1),sigma/1);
                  
-                %  figure(2)
-                % nexttile
-                % imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
-
-                          
+                 figure(2)
+                nexttile
+                imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
 
 
-        end
-     
+        end     
             
         % run marching cubes to get vertices
         [~,verts] = extractIsosurface(vol,isoThres);
@@ -105,30 +105,45 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
         % move the region to its origin position
         % verts = verts + scaleF.*regions(regInd).Centroid;
 
-        dxy = regions(regInd).BoundingBox(1:3);
+        
         % dxy = regions(regInd).BoundingBox(1:2);
-        regions(regInd).BoundingBox
+        regions(regInd).BoundingBox;
 
         % verts = verts*scaleF;
 
         % verts = verts - padSize;
         % verts = verts - padSize*pixel_size/scaleF;
         % verts = verts - scaleF.*dxy - 0.0;
-        
-        
-        
+    
 
         % verts = verts;
 
-        verts(:,1) = verts(:,1)./scaleF;
-        verts(:,2) = verts(:,2)./scaleF;
-
-        verts = verts + dxy - 0.0;
+        
 
         switch mode
             case '3D'
+                verts(:,1) = verts(:,1)./scaleF;
+                verts(:,2) = verts(:,2)./scaleF;
                 verts(:,3) = verts(:,3)./scaleF;
+
+                verts = verts + dxyz - 0.0;
+
             case '2D'
+
+                dxyz = regions(regInd).BoundingBox(1:3)
+                
+                dxyz(:,3) = z_spacing;
+
+                verts(:,1) = verts(:,1) - padSize; 
+                verts(:,2) = verts(:,2) - padSize; 
+
+                verts(:,1) = verts(:,1)./scaleF;
+                verts(:,2) = verts(:,2)./scaleF;
+
+               
+                verts = verts + dxyz - 0.5;
+
+                
                 
         end
 
