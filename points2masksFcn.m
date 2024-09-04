@@ -17,25 +17,18 @@ nDimensions = ndims(greyMap);
 %% Pre-process by gaussian filtering
 
 % smooth to suppress pixel-pixel variations
-sigma = 1;
+sigma = 0.5;
 greyMap = imgaussfilt3(greyMap,sigma);
 
-% binary operators
 % searchDiam = round(1.5*expectedPeakDiamPx);
 searchDiamPx = ceil(expectedPeakDiam_um/pixel_size);
 
 % searchDiamPx = 5;
 
+% binary operators
 searchOffset = strel('sphere',searchDiamPx);
 peakOffset = strel("sphere",1);
 
-% expectedVol = 4/3*pi*(expectedPeakDiam_um/2)^2;
-% 
-% minVol = round(4/3*pi*(expectedPeakDiam_um/2/2)^2);
-% maxVol = round(4/3*pi*(4*expectedPeakDiam_um/2)^2);
-
-% minVol = round(expectedVol/5) % in pixels
-% maxVol = round(expectedVol*100) % in pixels
    
 sz = size(greyMap);
 
@@ -73,11 +66,11 @@ nPeaks = height(peaks);
     % figure
     % imshow(totalOffset,[],'InitialMagnification',5000)
     
+    %% Single peak processing
     
     % create empty map for storing detected peak areas
     peakAreas = false(sz);
-    
-    %% Single peak processing
+  
     
     for currentAreaInd = 1:nPeaks
     
@@ -86,7 +79,6 @@ nPeaks = height(peaks);
         % x = round(peaks.x(currentAreaInd));
         % y = round(peaks.y(currentAreaInd));
         % z = ceil(peaks.z(currentAreaInd));
-
        
         x = ceil(peaks.x(currentAreaInd)./pixel_size);
         y = ceil(peaks.y(currentAreaInd)./pixel_size);
@@ -96,9 +88,8 @@ nPeaks = height(peaks);
         peakSearchArea = false(sz);
         peakDetectedArea = false(sz);
         peakSearchArea(y,x,z) = 1;
-        % peakSearchArea(x,y,z) = 1
-        
-        % define close pixels next to local maxima to calculate "mean" peak maxima value
+                
+        % define close pixels next to the local maxima to calculate "mean" peak maxima value
         peakAbs = imdilate(peakSearchArea,peakOffset);
         % define neiburhood of maxima to search for connected pixels
         peakSearchArea = imdilate(peakSearchArea,searchOffset);
@@ -129,9 +120,8 @@ nPeaks = height(peaks);
             peakDetectedArea(peakSearchArea) = thIdx;
               
             [~,nAreas]  = bwlabeln(peakDetectedArea);
-            %% if there is more than one separetd area, keep only the one below current peak
-            % typically when few pixels in the corner of search area have higer values
-            % from leaking other peak
+            %% if there is more than one separated area, keep only the one below current peak
+            % typically when few pixels in the corner of search area have higer values from leaking other peak
             
             if nAreas > 1
             
@@ -163,13 +153,12 @@ nPeaks = height(peaks);
     
     end
     
-    %% Check each peak area if contains only one peak or if more peaks merged into one connected area
-        
+    %% Check each peak area if contains only one peak or if more peaks merged into one connected area      
     
     CC = bwconncomp(peakAreas,conn);
-    singleRegProbs = regionprops3(CC,greyMap,"Centroid","VoxelIdxList","VoxelList")
+    singleRegProbs = regionprops3(CC,greyMap,"Centroid","VoxelIdxList","VoxelList");
     
-    nAreas = size(singleRegProbs,1)
+    nAreas = size(singleRegProbs,1);
     
     mask = false(sz);
     mask = bwlabeln(mask);
@@ -179,34 +168,30 @@ nPeaks = height(peaks);
     
     for currentAreaInd = 1:nAreas
 
-        peaks
+     
+        % get all voxels of current area
+        voxels = singleRegProbs.VoxelIdxList{currentAreaInd};
+            
+        x = round(peaks.x./pixel_size);
+        y = round(peaks.y./pixel_size);
+        z = ceil(peaks.z./z_spacing);
+               
+        peakVoxels = sub2ind(sz,y,x,z);
     
-    % get all voxels of current area
-    voxels = singleRegProbs.VoxelIdxList{currentAreaInd};
-    
-
-    x = round(peaks.x./pixel_size);
-    y = round(peaks.y./pixel_size);
-    z = round(peaks.z./pixel_size);
-    z(:) = 0;
-
-    
-    peakVoxels = sub2ind(sz,y,x)
-
-    % get positions of all peaks
-    % maximaIdx = cell2mat(peaks.VoxelIdxList)
-    maximaIdx = cell2mat(singleRegProbs.VoxelIdxList);
-    % maximaIdx = cell2mat(peaks.VoxelIdxList)
-    
-    % determinet how many peaks fell into current area
-    % nMaximaInRegion = sum(ismember(maximaIdx,voxels))
-    nMaximaInRegion = sum(ismember(peakVoxels,voxels))
-
-    if ~clusterMask
-        nMaximaInRegion = 1;
-    end
+        % get positions of all peaks
+        % maximaIdx = cell2mat(peaks.VoxelIdxList)
+        % maximaIdx = cell2mat(singleRegProbs.VoxelIdxList);
+        % maximaIdx = cell2mat(peaks.VoxelIdxList)
         
+        % determinet how many peaks fell into current area
+   
+        nMaximaInRegion = sum(ismember(peakVoxels,voxels));
     
+        if ~clusterMask
+            nMaximaInRegion = 1;
+        end
+            
+        
         %% if connected peak area has n>1 regional maxima, cluster it to n areas   
     
         if nMaximaInRegion == 1
@@ -266,8 +251,10 @@ nPeaks = height(peaks);
         end
     
     end
+
     
-    nObjects =  max(mask,[],'all'); 
+    
+    nObjects =  max(mask,[],'all')
     
     %% Result plot
 

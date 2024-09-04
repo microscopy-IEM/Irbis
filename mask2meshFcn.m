@@ -23,16 +23,19 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
         % mask = padarray(mask,[0,0,padSize],0,'both');  
    
         mode = '2D';
+        regions = regionprops(mask,'Centroid',"Image","BoundingBox");
 
     elseif nd == 3
           
         mode = '3D';
+        regions = regionprops3(mask,'Centroid',"Image","BoundingBox")
+        % regions = regionprops3(mask,'Centroid',"ConvexImage","BoundingBox");
 
     end
 
         
     % regions = regionprops(mask,'Centroid',"FilledImage","BoundingBox");
-    regions = regionprops(mask,'Centroid',"Image","BoundingBox");
+    
     
     nRegions = size(regions,1);
     
@@ -46,22 +49,29 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
         disp(['Processing ' num2str(regInd) ' of ' num2str(nRegions)])
     
         % get array of pixels defined as bounding box of curren region
-        % currentRegion = regions(regInd).FilledImage;
-        currentRegion = regions(regInd).Image;
-        vol = currentRegion;
-        
-        
-        vol = double(vol);
+        % currentRegion = regions(regInd).ConvexImage;
+        % currentRegion = regions(regInd).Image;
 
-        sz = size(vol);
+        % currentRegion = regions{regInd}.Image;
+        % vol = currentRegion;
+        % 
+        % 
+        % vol = double(vol);
+        % 
+        % sz = size(vol);
 
         % size(v)
 
         switch mode
             case '3D'
 
+                currentRegion = regions.Image{regInd}
+                vol = currentRegion;
+                vol = double(vol);
+                sz = size(vol);
+
                 % pad current reguion with zeros so there is gradient from edge of array towards the edge of objects 
-                vol = padarray(currentRegion,[padSize,padSize,padSize],0,'both');  
+                vol = padarray(vol,[padSize,padSize,padSize],0,'both');  
 
                 % scale to increase numebr of vertices in reconstruction
                 vol = imresize3(vol,scaleF,'method','cubic');
@@ -71,7 +81,10 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
 
             case '2D'
 
-                % vol = imgaussfilt(vol,sigma/2);
+                currentRegion = regions(regInd).Image;
+                vol = currentRegion;
+                vol = double(vol);
+                sz = size(vol);
 
                 % vol = imresize(vol,[sz(1)*scaleF sz(2)*scaleF],'method','bilinear');
                 vol = imresize(vol,[sz(1)*scaleF sz(2)*scaleF],'method','nearest');
