@@ -8,10 +8,11 @@ peak2BcgRatioThres = 1;
 
 
 % Local threshold function
-thFun = @(mx,mn)((mx)/3 + mn);    
+% thFun = @(mx,mn)((mx)/3 + mn);    
 
-thFun = @(mx,mn)((mx-mn)/2 + mn);      
+% thFun = @(mx,mn)((mx-mn)/2 + mn);      
 
+thFun = @(mx,mn)((mx-mn)/3 + mn);
 nDimensions = ndims(greyMap);
 
 %% Pre-process by gaussian filtering

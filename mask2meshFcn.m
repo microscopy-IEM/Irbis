@@ -6,10 +6,12 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
 
     % default paramateres
     padSize = 4;
-    sigma = 1.2;
+    sigma = 1.5;
     scaleF = 2;
         
     isoThres = 0.05;
+
+    z_spacing = 0.05
         
     % 2D mode  
     nd = ndims(mask);
@@ -29,7 +31,8 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
     end
 
         
-    regions = regionprops(mask,'Centroid',"FilledImage","BoundingBox");
+    % regions = regionprops(mask,'Centroid',"FilledImage","BoundingBox");
+    regions = regionprops(mask,'Centroid',"Image","BoundingBox");
     
     nRegions = size(regions,1);
     
@@ -43,7 +46,8 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
         disp(['Processing ' num2str(regInd) ' of ' num2str(nRegions)])
     
         % get array of pixels defined as bounding box of curren region
-        currentRegion = regions(regInd).FilledImage;
+        % currentRegion = regions(regInd).FilledImage;
+        currentRegion = regions(regInd).Image;
         vol = currentRegion;
         
         
@@ -68,50 +72,30 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
             case '2D'
 
                 % vol = imgaussfilt(vol,sigma/2);
+
+                figure(2)
+                nexttile
+                imshow(vol,[],'InitialMagnification',1000)
                
+                vol = padarray(vol,[padSize,padSize,padSize],min(vol,[],"all"),'both');  
+                % vol = padarray(vol,[0,0,padSize],0,'both');  
                 vol = imresize(vol,[sz(1)*scaleF sz(2)*scaleF],'method','bilinear');
                 
-
                 % pad current reguion with zeros so there is gradient from edge of array towards the edge of objects 
-                vol = padarray(vol,[padSize,padSize,padSize],0,'both');  
+                
 
                 vol(:,:,padSize+1) = imgaussfilt(vol(:,:,padSize+1),sigma/1);
                  
-                figure(2)
-                nexttile
-                imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
+                %  figure(2)
+                % nexttile
+                % imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
 
-                % 
-                % 
-                
-
-
-                % vol = imresize(vol,[sz(1)*scaleF sz(2)*scaleF],'method','cubic');
-                % 
-                % size(vol)
-                % vol = padarray(vol,[padSize,padSize,padSize],0,'both');  
-                % 
-                % size(vol)
-                % % vol(:,:,padSize+1) = imgaussfilt(vol(:,:,padSize+1),sigma);
-                % 
-                % vol = imgaussfilt3(vol,sigma);
-                % 
-
-
-                % v = imresize3(v,[scaleF,scaleF,1],'method','cubic');
-                % vol = imresize3(vol,[sz(1)*scaleF sz(2)*scaleF 5],'method','cubic');
-                % v = imresize3(v,[sz(1)*scaleF sz(2)*scaleF 1],'method','cubic');
-
-                % vol = imresize(vol,[sz(1)*scaleF sz(2)*scaleF],'method','cubic');
-                % 
-                % vol = padarray(vol,[padSize,padSize,padSize],0,'both');  
-                % vol(:,:,padSize+1) = imgaussfilt(vol(:,:,padSize+1),sigma);
+                          
 
 
         end
      
-        
-    
+            
         % run marching cubes to get vertices
         [~,verts] = extractIsosurface(vol,isoThres);
             
@@ -122,15 +106,24 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
         % verts = verts + scaleF.*regions(regInd).Centroid;
 
         dxy = regions(regInd).BoundingBox(1:3);
+        % dxy = regions(regInd).BoundingBox(1:2);
+        regions(regInd).BoundingBox
 
-        verts = verts - padSize;
-        verts = verts + scaleF.*dxy - 0.0;
+        % verts = verts*scaleF;
+
+        % verts = verts - padSize;
+        % verts = verts - padSize*pixel_size/scaleF;
+        % verts = verts - scaleF.*dxy - 0.0;
+        
+        
         
 
         % verts = verts;
 
         verts(:,1) = verts(:,1)./scaleF;
         verts(:,2) = verts(:,2)./scaleF;
+
+        verts = verts + dxy - 0.0;
 
         switch mode
             case '3D'
