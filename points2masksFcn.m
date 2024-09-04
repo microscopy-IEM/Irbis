@@ -1,41 +1,44 @@
 
 
-function finalMap = points2masksFcn(peaks,greyMap,expectedPeakDiamPx,pixel_size,z_spacing)
+function mask = points2masksFcn(peaks,greyMap,expectedPeakDiam_um,pixel_size,z_spacing)
 
 conn = 6; % 3D case
 peak2BcgRatioThres = 1;
 
-% pixel_size = 0.0484;
-% z_scaling = 0.115;
-% 
-% pixel_size = 0.03385;
-% z_scaling = 0.2;
 
-% thFun = @(mx,mn)((mx-mn)/2 + mn);      
 
 % Local threshold function
 thFun = @(mx,mn)((mx)/3 + mn);    
+
+thFun = @(mx,mn)((mx-mn)/2 + mn);      
 
 nDimensions = ndims(greyMap);
 
 %% Pre-process by gaussian filtering
 
 % smooth to suppress pixel-pixel variations
-greyMap = imgaussfilt3(greyMap,0.5);
+sigma = 1;
+greyMap = imgaussfilt3(greyMap,sigma);
+
+
 
 % binary operators
-searchDiam = round(1.5*expectedPeakDiamPx);
+% searchDiam = round(1.5*expectedPeakDiamPx);
+searchDiamPx = ceil(expectedPeakDiam_um/pixel_size)
+
+
+% searchDiamPx = 5;
+% searchDiam = 10
 
 % searchDiam = 10
-searchDiam = 10
 
-searchOffset = strel('sphere',searchDiam);
+searchOffset = strel('sphere',searchDiamPx);
 peakOffset = strel("sphere",1);
 
-expectedVol = 4/3*pi*(expectedPeakDiamPx/2)^2;
-
-minVol = round(4/3*pi*(expectedPeakDiamPx/2/2)^2);
-maxVol = round(4/3*pi*(4*expectedPeakDiamPx/2)^2);
+% expectedVol = 4/3*pi*(expectedPeakDiam_um/2)^2;
+% 
+% minVol = round(4/3*pi*(expectedPeakDiam_um/2/2)^2);
+% maxVol = round(4/3*pi*(4*expectedPeakDiam_um/2)^2);
 
 % minVol = round(expectedVol/5) % in pixels
 % maxVol = round(expectedVol*100) % in pixels
@@ -173,8 +176,8 @@ nPeaks = height(peaks);
     
     nAreas = size(singleRegProbs,1);
     
-    finalMap = false(sz);
-    finalMap = bwlabeln(finalMap);
+    mask = false(sz);
+    mask = bwlabeln(mask);
     
     % total number of areas
     N = 1;
@@ -199,7 +202,7 @@ nPeaks = height(peaks);
     
             % disp('oneMaxima')
             
-            finalMap(voxels) = N;
+            mask(voxels) = N;
             N = N+1;
     
         elseif nMaximaInRegion > 1
@@ -225,15 +228,15 @@ nPeaks = height(peaks);
     
             N = N+nMaximaInRegion;
     
-            finalMap = finalMap + regMap;
+            mask = mask + regMap;
     
             % Detect touching regions between multiple peaks
             regOverlaps = zeros(sz);
     
             for n = unique(idx)'
                     
-                currentArea = finalMap;
-                currentArea(finalMap ~= n) = 0;
+                currentArea = mask;
+                currentArea(mask ~= n) = 0;
                 currentArea(currentArea>1) = 1;
     
                 % enlarge current area by 1 pixel
@@ -247,13 +250,13 @@ nPeaks = height(peaks);
             % detect edge pixels
             edgeIdx = regOverlaps > 1;
             % delete edge points
-            finalMap(edgeIdx) = 0;
+            mask(edgeIdx) = 0;
     
         end
     
     end
     
-    nObjects =  max(finalMap,[],'all'); 
+    nObjects =  max(mask,[],'all'); 
     
     %% Result plot
 
