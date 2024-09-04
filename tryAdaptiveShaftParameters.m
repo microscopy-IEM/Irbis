@@ -69,11 +69,10 @@ function tryAdaptiveShaftParameters(centreLine, parentMesh)
         'ButtonPushedFcn', @(btn, event) saveResults(guiData));
 
     % Axes for plotting
-    ax = uiaxes(hFig, 'Position', [300, 50, 500, 400]);
+    % ax = uiaxes(hFig, 'Position', [300, 50, 500, 400]);
 
     % Store the results in the figure's UserData
     hFig.UserData.guiData = guiData;
-end
 
 function addValueToDropdown(dropdown, paramName)
     % Prompt the user for a new value
@@ -81,7 +80,10 @@ function addValueToDropdown(dropdown, paramName)
     
     if ~isempty(newValue)
         % Convert the input to a string and add to the dropdown
-        dropdown.Items = [dropdown.Items; newValue];
+        items = dropdown.Items;
+        class(newValue)
+        items{end+1} = num2str(newValue{1});
+        dropdown.Items = items;
     end
 end
 
@@ -147,15 +149,19 @@ function runCalculations(centreLine, parentMesh, dropdowns, params, guiData, hFi
 end
 
 function plotResults(ddPlotType, dropdowns, params, guiData)
-    assignin('base',"guiData",guiData)
+    get(hFig)
+    assignin('base',"guiData",hFig.UserData.guiData)
     % Access the results stored in the GUI
-    results = guiData.results;
+    results = hFig.UserData.guiData.results;
     
     % Retrieve the selected parameter values from the dropdowns
     selectedValues = zeros(1, length(params));
     for i = 1:length(params)
         selectedValues(i) = str2double(dropdowns{i}.Value);
     end
+
+    selectedValues
+    results
     
     % Set a tolerance for floating-point comparisons
     tolerance = 1e-6;
@@ -222,6 +228,8 @@ function saveResults(guiData)
         save(fullfile(path, file), 'results');
         uialert(uifigure, 'Results saved successfully!', 'Success');
     end
+end
+
 end
 
 % function tryAdaptiveShaftParameters(centreLine, parentMesh)
