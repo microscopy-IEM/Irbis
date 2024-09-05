@@ -182,7 +182,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
         verts(:,3) = verts(:,3).*z_spacing;
         
         ptCloud = pointCloud(verts);
-        ptCloud.Normal = normals;
+        ptCloud.Normal = normals
 
         verts = double(verts);
                      
