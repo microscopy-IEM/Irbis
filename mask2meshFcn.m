@@ -11,7 +11,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
         
     isoThres = 0.3;
 
-    z_spacing = 0.05
+    % z_spacing = 0.05
         
     % 2D mode  
     nd = ndims(mask);
@@ -65,21 +65,24 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
         switch mode
             case '3D'
 
-                currentRegion = regions.Image{regInd}
+                currentRegion = regions.Image{regInd};
                 vol = currentRegion;
                 vol = double(vol);
                 sz = size(vol);
 
-                % pad current reguion with zeros so there is gradient from edge of array towards the edge of objects 
-                vol = padarray(vol,[padSize,padSize,padSize],0,'both');  
-
                 % scale to increase numebr of vertices in reconstruction
                 vol = imresize3(vol,scaleF,'method','cubic');
+
+                % pad current reguion with zeros so there is gradient from edge of array towards the edge of objects 
+                vol = padarray(vol,[padSize,padSize,padSize],0,'both');  
+                
                 
                 % smooth with gaussian filter to cover "pixel corners"
-                vol = imgaussfilt3(vol,sigma);
+                vol = imgaussfilt3(vol,sigma*2);
 
             case '2D'
+
+                z_spacing = 0.05
 
                 currentRegion = regions(regInd).Image;
                 vol = currentRegion;
@@ -102,7 +105,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
                 % pad current reguion with zeros so there is gradient from edge of array towards the edge of objects 
                 
                  
-                 figure(2)
+                figure(2)
                 nexttile
                 imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
 
@@ -120,7 +123,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
 
         
         % dxy = regions(regInd).BoundingBox(1:2);
-        regions(regInd).BoundingBox;
+        % regions(regInd).BoundingBox;
 
         % verts = verts*scaleF;
 
@@ -135,14 +138,26 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
 
         switch mode
             case '3D'
+
+                assignin('base','regions',regions);
+                dxyz =  regions.BoundingBox(regInd,1:3)
+
+                verts(:,1) = verts(:,1) - padSize; 
+                verts(:,2) = verts(:,2) - padSize; 
+                verts(:,3) = verts(:,3) - padSize; 
+
                 verts(:,1) = verts(:,1)./scaleF;
                 verts(:,2) = verts(:,2)./scaleF;
                 verts(:,3) = verts(:,3)./scaleF;
 
                 verts = verts + dxyz - 0.0;
 
+                % TO OPTIMIZE this manual correction
+                verts(:,3) = verts(:,3) - z_spacing;
+
             case '2D'
 
+                regions(regInd).BoundingBox;
                 dxyz = regions(regInd).BoundingBox(1:3)
                 
                 dxyz(:,3) = z_spacing;
