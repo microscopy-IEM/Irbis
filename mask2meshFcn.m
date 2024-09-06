@@ -5,41 +5,28 @@
 function T = mask2meshFcn(mask,pixel_size,z_spacing)
 
     % default paramateres
-    padSize = 4;
+    padSize = 3;
     sigma = 1.5;
-    scaleF = 4;
-        
-    isoThres = 0.3;
+    scaleF = 2;
+    isoThres = 0.2;
 
-    % z_spacing = 0.05
-        
-    % 2D mode  
     nd = ndims(mask);
 
     if nd == 2
 
-        % pad the 2d mask matrix to have dimensions X x Y x 3
-        % padSize = 2;
-        % mask = padarray(mask,[0,0,padSize],0,'both');  
-   
         mode = '2D';
         regions = regionprops(mask,'Centroid',"Image","BoundingBox");
 
     elseif nd == 3
           
         mode = '3D';
-        regions = regionprops3(mask,'Centroid',"Image","BoundingBox")
-        % regions = regionprops3(mask,'Centroid',"ConvexImage","BoundingBox");
-
+        regions = regionprops3(mask,'Centroid',"Image","BoundingBox");
+       
     end
 
-        
-    % regions = regionprops(mask,'Centroid',"FilledImage","BoundingBox");
-    
-    
     nRegions = size(regions,1);
-    
-     
+         
+    % TO OPTIMIZE - acces the 
     T = getBaseStruct('table','model',nRegions);
            
     meshObjInd = 1;
@@ -48,20 +35,6 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
 
         disp(['Processing ' num2str(regInd) ' of ' num2str(nRegions)])
     
-        % get array of pixels defined as bounding box of curren region
-        % currentRegion = regions(regInd).ConvexImage;
-        % currentRegion = regions(regInd).Image;
-
-        % currentRegion = regions{regInd}.Image;
-        % vol = currentRegion;
-        % 
-        % 
-        % vol = double(vol);
-        % 
-        % sz = size(vol);
-
-        % size(v)
-
         switch mode
             case '3D'
 
@@ -71,43 +44,38 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
                 sz = size(vol);
 
                 % scale to increase numebr of vertices in reconstruction
-                vol = imresize3(vol,scaleF,'method','cubic');
+                vol = imresize3(vol,scaleF,'method','linear');
 
                 % pad current reguion with zeros so there is gradient from edge of array towards the edge of objects 
                 vol = padarray(vol,[padSize,padSize,padSize],0,'both');  
-                
-                
+                                
                 % smooth with gaussian filter to cover "pixel corners"
                 vol = imgaussfilt3(vol,sigma*2);
 
             case '2D'
 
-                z_spacing = 0.05
+                z_spacing = 0.0;
 
                 currentRegion = regions(regInd).Image;
                 vol = currentRegion;
                 vol = double(vol);
                 sz = size(vol);
 
-                % vol = imresize(vol,[sz(1)*scaleF sz(2)*scaleF],'method','bilinear');
-                vol = imresize(vol,[sz(1)*scaleF sz(2)*scaleF],'method','nearest');
-
-                vol = padarray(vol,[padSize,padSize,padSize],min(vol,[],"all"),'both'); 
-
-                figure(2)
-                nexttile
-                % imshow(vol,[],'InitialMagnification',1000)
-                imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
-                % vol = padarray(vol,[0,0,padSize],0,'both');  
-
-                vol(:,:,padSize+1) = imgaussfilt(vol(:,:,padSize+1),sigma*2);
-                
+                vol = imresize(vol,[sz(1)*scaleF sz(2)*scaleF],'method','bilinear');
+                               
                 % pad current reguion with zeros so there is gradient from edge of array towards the edge of objects 
+                vol = padarray(vol,[padSize,padSize,padSize],0,'both'); 
+
+                % figure(2)
+                % nexttile
+                % imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
                 
-                 
-                figure(2)
-                nexttile
-                imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
+
+                vol(:,:,padSize+1) = imgaussfilt(vol(:,:,padSize+1),sigma*2);                                
+                                                 
+                % figure(2)
+                % nexttile
+                % imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
 
 
         end     
@@ -118,29 +86,12 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
         % calculate normals
         normals = isonormals(vol,verts);
     
-        % move the region to its origin position
-        % verts = verts + scaleF.*regions(regInd).Centroid;
-
-        
-        % dxy = regions(regInd).BoundingBox(1:2);
-        % regions(regInd).BoundingBox;
-
-        % verts = verts*scaleF;
-
-        % verts = verts - padSize;
-        % verts = verts - padSize*pixel_size/scaleF;
-        % verts = verts - scaleF.*dxy - 0.0;
-    
-
-        % verts = verts;
-
-        
-
+     
         switch mode
             case '3D'
 
                 assignin('base','regions',regions);
-                dxyz =  regions.BoundingBox(regInd,1:3)
+                dxyz =  regions.BoundingBox(regInd,1:3);
 
                 verts(:,1) = verts(:,1) - padSize; 
                 verts(:,2) = verts(:,2) - padSize; 
@@ -150,15 +101,13 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
                 verts(:,2) = verts(:,2)./scaleF;
                 verts(:,3) = verts(:,3)./scaleF;
 
-                verts = verts + dxyz - 0.0;
-
-                % TO OPTIMIZE this manual correction
-                verts(:,3) = verts(:,3) - z_spacing;
+                % move the region to its origin position
+                verts = verts + dxyz - 0.5;
 
             case '2D'
 
                 regions(regInd).BoundingBox;
-                dxyz = regions(regInd).BoundingBox(1:3)
+                dxyz = regions(regInd).BoundingBox(1:3);
                 
                 dxyz(:,3) = z_spacing;
 
@@ -167,22 +116,20 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
 
                 verts(:,1) = verts(:,1)./scaleF;
                 verts(:,2) = verts(:,2)./scaleF;
-
                
+                % move the region to its origin position
                 verts = verts + dxyz - 0.5;
-
-                
                 
         end
 
-        % verts = mesh.Vertices;
 
-        %     % convert to um
+        % convert to um
         verts(:,1:2) = verts(:,1:2).*pixel_size;
         verts(:,3) = verts(:,3).*z_spacing;
+
         
         ptCloud = pointCloud(verts);
-        ptCloud.Normal = normals
+        ptCloud.Normal = normals;
 
         verts = double(verts);
                      
@@ -190,10 +137,12 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
         pt_vertices = py.numpy.array(ptCloud.Location);
         pt_normals = py.numpy.array(ptCloud.Normal);
         
-        % tic
-        [n_objects,vertices,faces,vertex_normals,face_normals] = reconstruct_mesh_python(8,pt_vertices,pt_normals,1,1);
+        tic
+        depth = 6;
+        [n_objects,vertices,faces,vertex_normals,face_normals] = reconstruct_mesh_python(depth,pt_vertices,pt_normals,1,1);
         nReg = int8(n_objects);
-        % toc
+        disp(['reconstructMesh took ' num2str(toc)])
+       
 
         % tic
         % % mesh = pc2surfacemesh(ptCloud,'poisson',9)
@@ -224,7 +173,8 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
                 case '3D'
                     
                 case '2D'
-                    vertices(:,3) = vertices(:,3) - mean(vertices(:,3))+z_spacing;
+                    vertices(:,3) = vertices(:,3) - mean(vertices(:,3));
+                    vertices(:,3) = vertices(:,3).*0.5;
             end
             
             mesh = surfaceMesh(vertices,faces,"VertexNormals",vertexNormals,"FaceNormals",faceNormals);
