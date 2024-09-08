@@ -1,24 +1,28 @@
-import pymeshlab
-import numpy as np
 import os
 
 print('after import 1')
 
-print(os.getenv('QT_QPA_PLATFORM_PLUGIN_PATH'))
+# print(os.getenv('QT_QPA_PLATFORM_PLUGIN_PATH'))
+
+os.environ['QT_PLUGIN_PATH'] = ''
 os.environ['QT_DEBUG_PLUGINS'] = '1'
-os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = r'C:/Users/stepan.kortus/AppData/Local/Programs/Python/Python310/lib/site-packages/pymeshlab/lib/plugins'
+print(os.environ)
+import pymeshlab
+import numpy as np
+# os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = r'C:/Users/stepan.kortus/AppData/Local/Programs/Python/Python310/lib/site-packages/pymeshlab/lib/plugins'
 print('after import and os setup')
+print(os.environ)
 
 def mesh_subtract_and_separate(vertices_big,faces_big,vertex_normals_big,face_normals_big,vertices_small,faces_small,vertex_normals_small,face_normals_small):
     print('in function before start')
 
-    print(vertices_big)
-    print(faces_big)
-    print(vertices_small)
-    print(faces_small)
-    print(vertex_normals_big)
-
-    mesh = pymeshlab.Mesh()
+    # print(vertices_big)
+    # print(faces_big)
+    # print(vertices_small)
+    # print(faces_small)
+    # print(vertex_normals_big)
+    # 
+    # mesh = pymeshlab.Mesh()
 
     # ms = pymeshlab.MeshSet()
     # print('in function after meshset')
