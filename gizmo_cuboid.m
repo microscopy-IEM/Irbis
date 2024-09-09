@@ -1,4 +1,4 @@
-function originalCallbacks = gizmo_cuboid(ax,fig,stickyPoints,pointA,pointB)
+function originalCallbacks = gizmo_cuboid(ax,fig,stickyPoints,pointA,pointB,scalingFactor)
             
     % save original callbacks
     buttonMotionCallback = fig.WindowButtonMotionFcn;
@@ -103,7 +103,7 @@ function originalCallbacks = gizmo_cuboid(ax,fig,stickyPoints,pointA,pointB)
     normBallPoint = plot3(ax,x0+1.25*spacing,y0,z0,'Marker','o','MarkerFaceColor',normCol,'MarkerSize',ballSize,'Tag','normBallPoint','MarkerEdgeColor',edgeCol);
 
     % add thin cuboid instead of the plane
-    [vertices,faces] = getThinCuboid(1,1,0.001,1);
+    [vertices,faces] = getThinCuboid([1 scalingFactor scalingFactor],1,0.001,1);
     normPlane = patch(ax,'Vertices',vertices,'Faces',faces,'FaceColor','cyan','FaceAlpha',planeTansparency,'EdgeColor',planeEdgeColor,'Tag','3dPlane');
     
     %% Interactivity settings
@@ -194,16 +194,16 @@ function originalCallbacks = gizmo_cuboid(ax,fig,stickyPoints,pointA,pointB)
 
     theta = acos(dot(v1,v2)/(norm(v1)*norm(v2)));
 
-    startPositionI = [moveHandles(1).XData;moveHandles(1).YData;moveHandles(1).ZData];
-    startPositionRotI = cell(1, length(rotHandles));
-    for rotN=1:length(rotHandles)
-        if isequal(rotHandles(rotN).Type,'patch')
-            startPositionRot{rotN} = [rotHandles(rotN).Vertices(:,1);rotHandles(rotN).Vertices(:,2);rotHandles(rotN).Vertices(:,3)];
-        else
-            startPositionRotI{rotN} = [rotHandles(rotN).XData;rotHandles(rotN).YData;rotHandles(rotN).ZData];
-        end
-    end
-    updateDirection(vRot,theta,rotHandles,startPositionI,startPositionRotI,pointA,pointB)
+    % startPositionI = [moveHandles(1).XData;moveHandles(1).YData;moveHandles(1).ZData];
+    % startPositionRotI = cell(1, length(rotHandles));
+    % for rotN=1:length(rotHandles)
+    %     if isequal(rotHandles(rotN).Type,'patch')
+    %         startPositionRot{rotN} = [rotHandles(rotN).Vertices(:,1);rotHandles(rotN).Vertices(:,2);rotHandles(rotN).Vertices(:,3)];
+    %     else
+    %         startPositionRotI{rotN} = [rotHandles(rotN).XData;rotHandles(rotN).YData;rotHandles(rotN).ZData];
+    %     end
+    % end
+    % updateDirection(vRot,theta,rotHandles,startPositionI,startPositionRotI,pointA,pointB)
 
 
     %% callback function called when a button press is performed on an active gizmo part
