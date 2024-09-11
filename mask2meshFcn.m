@@ -56,6 +56,8 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
 
                 z_spacing = 0.0;
 
+                z_spacing = 2;
+
                 currentRegion = regions(regInd).Image;
                 vol = currentRegion;
                 vol = double(vol);
