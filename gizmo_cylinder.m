@@ -198,7 +198,7 @@ function originalCallbacks = gizmo_cylinder(ax,fig,stickyPoints,pointA,pointB,sc
     % startPositionRotI = cell(1, length(rotHandles));
     % for rotN=1:length(rotHandles)
     %     if isequal(rotHandles(rotN).Type,'patch')
-    %         startPositionRot{rotN} = [rotHandles(rotN).Vertices(:,1);rotHandles(rotN).Vertices(:,2);rotHandles(rotN).Vertices(:,3)];
+    %         startPositionRotI{rotN} = [rotHandles(rotN).Vertices(:,1);rotHandles(rotN).Vertices(:,2);rotHandles(rotN).Vertices(:,3)];
     %     else
     %         startPositionRotI{rotN} = [rotHandles(rotN).XData;rotHandles(rotN).YData;rotHandles(rotN).ZData];
     %     end

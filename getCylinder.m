@@ -94,5 +94,7 @@ centerTop = [0, 0, height];  % Center of the top face
 vertices = [centerBottom; vertices; centerTop];
 
 vertices(:,3) = vertices(:,3) - height/2;
+vertices(:,[1 2 3]) = vertices(:,[1 3 2]);
+vertices(:,2) = -vertices(:,2);
 
 end
