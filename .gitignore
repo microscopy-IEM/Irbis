@@ -5,6 +5,7 @@ MMP_settings.mat
 *.csv
 *.xlsx
 *.avi
+*.sh
 Irbis/
 python_for_irbis/
 check_git_status.m
