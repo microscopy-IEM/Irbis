@@ -82,7 +82,9 @@ nPeaks = height(peaks);
        
         x = ceil(peaks.x(currentAreaInd)./pixel_size);
         y = ceil(peaks.y(currentAreaInd)./pixel_size);
+        
         z = ceil(peaks.z(currentAreaInd)./z_spacing);
+        z = 1;
         
         % create binary maxima map - all pixels with maxima = 1, otherwise 0
         peakSearchArea = false(sz);
@@ -162,6 +164,12 @@ nPeaks = height(peaks);
     
     mask = false(sz);
     mask = bwlabeln(mask);
+
+    % set z_spacing to 1 for 2d case 
+    if z_spacing == 0
+            z_spacing = 1;
+            peaks.z(:) = 1;
+    end
     
     % total number of areas
     N = 1;
@@ -175,6 +183,8 @@ nPeaks = height(peaks);
         x = round(peaks.x./pixel_size);
         y = round(peaks.y./pixel_size);
         z = ceil(peaks.z./z_spacing);
+        
+        
                
         peakVoxels = sub2ind(sz,y,x,z);
     
