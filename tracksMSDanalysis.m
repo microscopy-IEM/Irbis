@@ -6,8 +6,8 @@ T = tracks.tracksList{currentTimePoint};
 conf_thres = 0.7;
 
 % number of fitting points
-% fit_points = 5;
-fit_points = 0.25;
+fit_points = 5;
+% fit_points = 0.25;
 
 %% Prepare format of trajectories for MSDanalyzer tool
 coordinates = T.xyz;
