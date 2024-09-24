@@ -2,13 +2,15 @@
 % Generates mesh by Poisson surface reconstriction for each regoion
 % separately and return table filled with generated objects
 
-function T = mask2meshFcn(mask,pixel_size,z_spacing)
+function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
 
     % default paramateres
     padSize = 3;
     sigma = 1.5;
     scaleF = 2;
     isoThres = 0.2;
+
+    % wb_handle.Value = 0;
 
     nd = ndims(mask);
 
@@ -33,7 +35,10 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
     
     for regInd = 1:nRegions
 
-        disp(['Processing ' num2str(regInd) ' of ' num2str(nRegions)])
+        wb_handle.Value = regInd/nRegions;
+        wb_handle.Message = ['Processing ' num2str(regInd) ' of ' num2str(nRegions)];
+
+        % disp(['Processing ' num2str(regInd) ' of ' num2str(nRegions)])
     
         switch mode
             case '3D'
@@ -89,6 +94,10 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing)
         % calculate normals
         normals = isonormals(vol,verts);
     
+        if isempty(verts)
+            disp('Empty verts')
+            break
+        end
      
         switch mode
             case '3D'
