@@ -45,9 +45,23 @@ classdef CategorizationStorage < handle
             categorization = obj.Categorizations{idx};
         end
         
-        function listArray = updateAllTables(obj, listArray, timePoints)
+        function listArray = updateAllTables(obj, listArray, timePoints, varargin)
             % disp('in updateAllTables in CategorizationStorage')
             % Method to update all tables for all Categorizations
+
+            % if a categorization name is specified, update only that column, otherwise update all
+            if ~isempty(varargin)
+                categorizationName = varargin{1};
+                idx = obj.findCategorizationIndexByName(categorizationName);
+                if idx > 0
+                    % this enables updating only one column if the name is specified in input and if it exists in storage
+                        % if name not defined or categorization not in storage (idx = -1), return will not be activated 
+                            % the rest of the code will therefore be executed -> all categorization columns recalculated
+                    cm = obj.Categorizations{idx};
+                    listArray = cm.updateTable(listArray, timePoints);
+                    return
+                end
+            end
             for i = 1:numel(obj.Categorizations)
                 cm = obj.Categorizations{i};
                 listArray = cm.updateTable(listArray, timePoints);
