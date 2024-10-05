@@ -106,6 +106,8 @@ function [planes,nTimePoints] = importPlanes(figureH,colors,nTimePoints)
         end
         
         numOfFramesPerTimepoint = numOfZPlanes*numOfChannels;
+
+        numOfChannels
         
         % Save default description to channels
 
