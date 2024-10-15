@@ -20,6 +20,31 @@ classdef CategorizationStorage < handle
             obj.Categorizations{idx} = categorization;
             disp(obj.Categorizations)
         end
+
+        function copyCategorization(obj, existingCategorizationName, newCategorizationName)
+            % Method to copy an existing categorization and assign a new name
+            % existingCategorizationName: The name of the categorization to copy
+            % newCategorizationName: The name to give the copied categorization
+        
+            % Find the index of the existing categorization by name
+            idx = obj.findCategorizationIndexByName(existingCategorizationName);
+            
+            if idx > 0
+                % Get the existing categorization
+                existingCategorization = obj.Categorizations{idx};
+                
+                % Create a deep copy of the existing categorization
+                % Assuming Categorization is a handle class, we must manually copy properties
+                newCategorization = Categorization(newCategorizationName, existingCategorization.Conditions);
+                
+                % Add the new categorization to the list
+                obj.addCategorization(newCategorization);
+                
+                fprintf('Categorization "%s" has been copied to "%s".\n', existingCategorizationName, newCategorizationName);
+            else
+                fprintf('Categorization with name "%s" not found.\n', existingCategorizationName);
+            end
+        end
         
         function displayCategories(obj)
             % Method to display all categories
