@@ -47,14 +47,6 @@ classdef GroupingStorageBaseClass < handle
             grouping = obj.Groupings{idx};
         end
 
-        function filterArray = updateAllFilterTables(obj, listArray, filterArray, timePoints)
-            % Method to update all filter tables for all Groupings
-            for i = 1:numel(obj.Groupings)
-                cm = obj.Groupings{i};
-                filterArray = cm.updateFilterTable(listArray, filterArray, timePoints);
-            end
-        end
-
         function listArray = updateAllTables(obj, listArray, timePoints)
             % Method to update all tables for all Groupings
             disp('in updateAllTables')
