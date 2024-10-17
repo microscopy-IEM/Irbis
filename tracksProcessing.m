@@ -95,7 +95,8 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         
         
         % calculate mean velocity
-        % mean_vel = mean_disp/dT;
+        dT = tracks.frameInterval{1};
+        mean_vel = mean_disp/dT;
         % 
         % distance to reference
         % dist2nearestRef = tracks.dist2nearestRef(TrackNum);
@@ -106,6 +107,7 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         T.nOfNaN(TrackNum) = nOfNaN;
         T.maxGap(TrackNum) = maxGap;
         T.meanDisp(TrackNum) = mean_disp;
+        T.meanVelocity(TrackNum) = mean_vel;
         
         
         
