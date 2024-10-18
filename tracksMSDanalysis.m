@@ -55,6 +55,28 @@ ma = ma.computeMSD;
 % linear fit of first n points of the MSD curve
 ma = ma.fitMSD(fit_points);
 
+% % calculate velocities 
+% v = ma.getVelocities; %#ok<NOPTS>
+% 
+% ma = ma.computeVCorr;
+% % v_ = ma.vcorr
+% vcorr = ma.vcorr;
+
+% v = [];
+% for i = 1:size(vcorr,1)
+% 
+%     % v{i} = mean(vcorr{i}(6:end,2),'omitmissing');
+%     v(i) = mean(vcorr{i}(6:15,2),'omitmissing');
+% 
+% end
+
+% v(isnan)
+
+% 
+% assignin("base","v",v)
+% assignin("base","v_",v_)
+% assignin("base","ma",ma)
+
 % Select well fitted tajectories and calculate mean D
 good_enough_fit = ma.lfit.r2fit > conf_thres;
 Dmean = mean( ma.lfit.a(good_enough_fit) ) / 2 / ma.n_dim;
@@ -76,6 +98,9 @@ MSD.ma = ma;
 T.MSD5(ids) = MSD.MSD5;
 T.MSDr2(ids) = MSD.MSD5_r2;
 T.MSDcurve(ids) = ma.msd;
+% T.Velocity(ids) = [];
+
+% T.newVelocity(ids) = v;
 
 tracks.tracksList{currentTimePoint} = T;
 

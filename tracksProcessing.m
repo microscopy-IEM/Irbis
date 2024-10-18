@@ -12,10 +12,9 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
     % array(:,1:2)
 
 
-    height(T)
+    nOfTracks = height(T);
 
-    % for TrackNum = T.id.'
-     for TrackNum = 1:height(T)
+     for TrackNum = 1:nOfTracks
     
         % length of trajectory
         TrLength = lengthsOfTrajectories(TrackNum);
@@ -50,21 +49,8 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
             maxGap = max(gap_lengths); % num of missing frames in longest gap
             % numOfGaps = size(gap_ind,1);
         end
+       
     
-    
-    
-        % type asignment
-        
-        % switch  T.zone(TrackNum)
-        % 
-        %     case 0
-        %         T.type{TrackNum} = 'syn';
-        %     case 1
-        %         T.type{TrackNum} = 'ext';
-        %     case 2
-        %         T.type{TrackNum} = 'sur';
-        % 
-        % end
     
         % tracks witnout NaN
         coor = coor_nan(~isnan(coor_nan(:,1)),:);
@@ -72,13 +58,13 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
     
          % calculate overall velocity
         if TrLength >= 20
-            beg = mean(coor(1:3,:));
+            beginning = mean(coor(1:3,:));
             ending = mean(coor(end-4:end,:),'omitnan');
             % ending = mean(coor(end-4:end,:));
             % ov_veloc = sqrt(sum((beg - ending).^2,2))/TrLength*dT;
-            ovDist = sqrt(sum((beg - ending).^2,2));
+            ovDist = sqrt(sum((beginning - ending).^2,2));
         else
-            ovDist = -1;
+            ovDist = nan;
         end
     
     
@@ -89,58 +75,49 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         
         mean_disp = mean(disp);  
         
-        w = 25;
-        disp = sqrt(sum(diff(coor_nan).^2,2));
-        runMean_disp = movmean(disp,w);
         
+        disp = sqrt(sum(diff(coor_nan).^2,2));
+
+        % calculate instanetaneous velocity
+        dT = tracks.frameInterval{1};
+        w = 10;
+        velocity = movmean(disp,w,'omitnan')/dT;          
         
         % calculate mean velocity
-        dT = tracks.frameInterval{1};
-        mean_vel = mean_disp/dT;
-        % 
-        % distance to reference
-        % dist2nearestRef = tracks.dist2nearestRef(TrackNum);
+        mean_vel = mean(velocity,'omitnan');
         
-        [~,area] = boundary(coor(:,1),coor(:,2));
 
+        % 2D area
+        [~,area] = boundary(coor(:,1),coor(:,2));
+        
+        
+        % XY centres
+        XYmean(TrackNum,:) = mean(coor_nan,'omitnan');
+        
+    
+
+        % Add attributes to list
         T.length(TrackNum) = TrDuration;
         T.nOfNaN(TrackNum) = nOfNaN;
         T.maxGap(TrackNum) = maxGap;
+        
         T.meanDisp(TrackNum) = mean_disp;
+        
         T.meanVelocity(TrackNum) = mean_vel;
-        
-        
-        
+                        
         T.ovArea(TrackNum) = area;
         T.ovDist(TrackNum) = ovDist;
         
-        % XY means
-        % mean(coor_nan,'omitnan')
-        XYmean(TrackNum,:) = mean(coor_nan,'omitnan');
-        
-        % distanceMatrix = pdist2(XYmean(TrackNum,:),roiCentres);
-        % 
-        % [mn,I] = min(distanceMatrix,[],2);
-        % 
-        % nearestRef(TrackNum,1) = I;
-        % dist2nearestRef(TrackNum,1) = mn;
-        
         T.meanX(TrackNum) = XYmean(TrackNum,1);
         T.meanY(TrackNum) = XYmean(TrackNum,2);
-        
-        % T.nearestRef(TrackNum) = 0;
-        
-        T.runMean_disp(TrackNum) = {runMean_disp};
+           
+        T.disp(TrackNum) = {disp};
+        % T.velocity(TrackNum) = {velocity};
+
+        % T.runMean_disp(TrackNum) = {runMean_disp};
     
     end
-    
-    % T.nearestRef = nearestRef;
-    % T.nearestRef = nearestRef;
-    % T.dist2nearestRef = dist2nearestRef;
-    % T.XYmean = XYmean;
-    % 
-    % T
-    % tracks.statTable = T;
+      
     
     tracks.tracksList{currentTimePoint} = T;
     
