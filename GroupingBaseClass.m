@@ -10,6 +10,14 @@ classdef GroupingBaseClass < handle
             obj.Conditions = conditions;
         end
 
+        function categoryNames = getCategoryNames(obj)
+            groups = fieldnames(obj.Conditions);
+            categoryNames = cell(size(groups));
+            for i = 1:numel(groups)
+                categoryNames{i} = obj.Conditions.(groups{i}).name;
+            end
+        end
+
         function groupConditions = getGroupConditions(obj, groupName)
             groups = fieldnames(obj.Conditions);
             for i = 1:numel(groups)

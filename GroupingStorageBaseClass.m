@@ -47,6 +47,12 @@ classdef GroupingStorageBaseClass < handle
             grouping = obj.Groupings{idx};
         end
 
+        function categoryNames = returnCategoryNames(obj, name)
+            idx = obj.findGroupingIndexByName(name);
+            grouping = obj.Groupings{idx};
+            categoryNames = grouping.getCategoryNames;
+        end
+
         function listArray = updateAllTables(obj, listArray, timePoints)
             % Method to update all tables for all Groupings
             disp('in updateAllTables')
