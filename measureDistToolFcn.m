@@ -65,17 +65,15 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         dist = pdist([distLineObj.XData,distLineObj.YData],'euclidean');
         
         % calculate centre positon of the line to place text object
-        centrePos = mean([distLineObj.XData,distLineObj.YData,distLineObj.ZData]);            
+        centrePos = mean([distLineObj.XData,distLineObj.YData,distLineObj.ZData]);          
         
         % create text object
         textObj = text(ax,centrePos(1),centrePos(2),z + txtZoffset,'','FontSize',11,'Color',txtCol,'Interpreter','tex');
-        
-        
+                
         % update text
         textObj.String = [num2str(round(dist,nDig)) ' \mum'];
         textObj.BackgroundColor = [0.1 0.1 0.4];
-        
-     
+             
         % associate for start drawing and end of drawing
         fig.WindowButtonMotionFcn = @(src,evt)distLineInitDrawFcn(src,evt);
         fig.WindowButtonUpFcn = @(src,evt)initDrawEndFcn(src,evt);
@@ -85,7 +83,6 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         uimenu(cm,'Text','Delete measure tool','MenuSelectedFcn',@(src,evt)deleteDistLine(src,evt));
         distLineObj.ContextMenu = cm;
         textObj.ContextMenu = cm;
-
        
         iptPointerManager(fig, 'enable');
 
@@ -95,6 +92,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         % static point and the second point being updated
         function distLineInitDrawFcn(~,~)
          
+            ax.View = [0 90];
             distLinePoints = ax.CurrentPoint;
        
             distLineObj.XData(Idx) = distLinePoints(1,1);
@@ -193,7 +191,8 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                 return;
             end
 
-            ax.View = [0 89.9];
+            % ax.View = [0 89.9];
+            ax.View = [0 90];
             
             distLinePoints = distLineObj.Vertices;            
             pointerPos = evt.IntersectionPoint;
@@ -258,7 +257,8 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                 return;
             end
 
-            ax.View = [0 89.9];
+            % ax.View = [0 89.9];
+            ax.View = [0 90];
             
             pointerPos = evt.IntersectionPoint;
 
@@ -315,7 +315,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             d = pdist([distLineObj.XData,distLineObj.YData],'euclidean');
          
             % nOf points on line to interpolate
-            intPoints = round(d/pixelSize*3);
+            intPoints = round(d/pixelSize*4);
                     
             if x2 < x1
  
@@ -348,8 +348,8 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             % size(V)
 
                        
-            % Vq = interp2(V,xq./pixelSize,yq./pixelSize,'cubic');
-            Vq = interp2(V,xq./pixelSize,yq./pixelSize,'linear');
+            Vq = interp2(V,xq./pixelSize,yq./pixelSize,'cubic');
+            % Vq = interp2(V,xq./pixelSize,yq./pixelSize,'linear');
 
             % Vq = Vq./20;
             % Vq = Vq - min(Vq);

@@ -98,7 +98,10 @@ MSD.ma = ma;
 T.MSD5(ids) = MSD.MSD5;
 T.MSDr2(ids) = MSD.MSD5_r2;
 T.MSDcurve(ids) = ma.msd;
+% T.MSDcurve(ids) = ma.msd(2,:);
 % T.Velocity(ids) = [];
+
+ma.msd
 
 % T.newVelocity(ids) = v;
 
