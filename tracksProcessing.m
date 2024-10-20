@@ -57,11 +57,12 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
     
     
          % calculate overall velocity
-        if TrLength >= 20
+        if size(coor,1) >= 10
+           % size(coor)
+           % coor
             beginning = mean(coor(1:3,:));
             ending = mean(coor(end-4:end,:),'omitnan');
-            % ending = mean(coor(end-4:end,:));
-            % ov_veloc = sqrt(sum((beg - ending).^2,2))/TrLength*dT;
+
             ovDist = sqrt(sum((beginning - ending).^2,2));
         else
             ovDist = nan;
@@ -80,11 +81,35 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
 
         % calculate instanetaneous velocity
         dT = tracks.frameInterval{1};
-        w = 10;
-        velocity = movmean(disp,w,'omitnan')/dT;          
-        
-        % calculate mean velocity
-        mean_vel = mean(velocity,'omitnan');
+        % w = 10;
+        % velocity = movmean(disp,w,'omitnan')/dT;          
+        % 
+        % % calculate mean velocity
+        % mean_vel = mean(velocity,'omitnan');
+
+        delay = 15;
+
+        if size(coor,1) >= delay + 2
+
+            for i = 1:length(coor)-delay
+    
+                idx = [i,i+delay];
+            
+                disp(i) = sqrt(sum(diff(coor(idx,:)).^2,2));
+                
+            end
+    
+            velocity = disp/(delay*dT);
+            mean_vel = mean(velocity,'omitnan');
+        else
+
+            % beginning = coor(1,:);
+            % ending = mean(coor(end,:),'omitnan');
+
+            mean_vel = 0;
+            velocity = 0;
+
+        end
         
 
         % 2D area
@@ -112,7 +137,7 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         T.meanY(TrackNum) = XYmean(TrackNum,2);
            
         T.disp(TrackNum) = {disp};
-        % T.velocity(TrackNum) = {velocity};
+        T.velocity(TrackNum) = {velocity};
 
         % T.runMean_disp(TrackNum) = {runMean_disp};
     
