@@ -11,7 +11,9 @@ function conditions = getConditionsFromCategoryList(categories)
         
         % Assign a struct with 'name' and 'conditions' fields to the group
         % !!! struct('name', categories{i}, 'conditions', {})   % having this produces an empty structure because of the {}
-        conditions.(groupFieldName) = struct('name', categories{i}, 'conditions', {{}});
+        if ~isempty(categories{i})
+            conditions.(groupFieldName) = struct('name', categories{i}, 'conditions', {{}});
+        end
         % disp(['run ' num2str(i)])
         % disp(conditions)
     end

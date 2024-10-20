@@ -85,7 +85,7 @@ function colorColumn = getColorColumn(List, selectedParameter, colormap)
 
     nRows = height(List);
     if isequal(colormap,'random')
-        colorColumn = rand(nRows,3);
+        colorColumn = mat2cell(rand(nRows,3), ones(nRows, 1), 3);
         return
     end
 
@@ -134,7 +134,7 @@ function colorColumn = getColorColumn(List, selectedParameter, colormap)
     end
     
     % Update the colors in the app data
-    colorColumn = c;
+    colorColumn = mat2cell(c, ones(nRows, 1), 3);
 end
 
 %% colorbar

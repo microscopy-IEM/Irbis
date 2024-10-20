@@ -29,6 +29,34 @@ classdef GroupingStorageBaseClass < handle
             end
         end
 
+        function listArray = renameGrouping(obj, name, newName, listArray)
+            idx = obj.findGroupingIndexByName(name);
+            if idx > 0
+                disp(obj.Groupings{idx})
+                grouping = obj.Groupings{idx};
+                grouping.Name = newName;
+            end
+            if istable(listArray)
+                table = listArray;
+                if ismember(name, table.Properties.VariableNames)
+                    table.Properties.VariableNames{strcmp(table.Properties.VariableNames, name)} = newName;
+                else
+                    disp(['column ' name ' does not exist in the table'])
+                end
+                listArray = table;
+            else
+                for i = 1:numel(listArray)
+                    table = listArray{i};
+                    if ismember(name, table.Properties.VariableNames)
+                        table.Properties.VariableNames{strcmp(table.Properties.VariableNames, name)} = newName;
+                    else
+                        disp(['column ' name ' does not exist in the table' num2str(i)])
+                    end
+                    listArray{i} = table;
+                end
+            end
+        end
+
         function numGroupings = getNumberOfGroupings(obj)
             % Method to get the number of Groupings currently stored
             numGroupings = numel(obj.Groupings);
