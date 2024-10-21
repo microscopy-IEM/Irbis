@@ -131,14 +131,27 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
 
             textObj.ButtonDownFcn = @(src,evt)moveTool(src,evt);
 
-            % hover behavior
-            DistP1Behavior.enterFcn =@(hfig, cpp)set(findobj(hfig, 'Tag', 'DistLineP1'), 'MarkerSize',8,'MarkerFaceColor',markerHighligthCol);
-            DistP1Behavior.traverseFcn = [];
-            DistP1Behavior.exitFcn = @(hfig, cpp)set(findobj(hfig, 'Tag', 'DistLineP1'), 'MarkerSize',6,'MarkerFaceColor',markerCol); 
+            % % hover behavior
+            % % DistP1Behavior.enterFcn =@(hfig, cpp)set(findobj(hfig, 'Tag', 'DistLineP1'), 'MarkerSize',8,'MarkerFaceColor',markerHighligthCol);
+            % DistP1Behavior.traverseFcn = [];
+            % DistP1Behavior.exitFcn = @(hfig, cpp)set(findobj(hfig, 'Tag', 'DistLineP1'), 'MarkerSize',6,'MarkerFaceColor',markerCol); 
+            % 
+            % DistP2Behavior.enterFcn =@(hfig, cpp)set(findobj(hfig, 'Tag', 'DistLineP2'), 'MarkerSize',8,'MarkerFaceColor',markerHighligthCol);
+            % DistP2Behavior.traverseFcn = [];
+            % DistP2Behavior.exitFcn = @(hfig, cpp)set(findobj(hfig, 'Tag', 'DistLineP2'), 'MarkerSize',6,'MarkerFaceColor',markerCol);
+            % 
+            % TextBehavior.enterFcn = @(hfig, cpp)set(hfig, 'WindowScrollWheelFcn',@(src,evt)zoomHist(src,evt));
+            % TextBehavior.traverseFcn = [];
+            % TextBehavior.exitFcn = @(hfig, cpp)set(hfig, 'WindowScrollWheelFcn',WindowScrollWheelFcnOrig);
 
-            DistP2Behavior.enterFcn =@(hfig, cpp)set(findobj(hfig, 'Tag', 'DistLineP2'), 'MarkerSize',8,'MarkerFaceColor',markerHighligthCol);
+            % hover behavior
+            DistP1Behavior.enterFcn =@(hfig, cpp)set(distPoint1Obj, 'MarkerSize',8,'MarkerFaceColor',markerHighligthCol);
+            DistP1Behavior.traverseFcn = [];
+            DistP1Behavior.exitFcn = @(hfig, cpp)set(distPoint1Obj, 'MarkerSize',6,'MarkerFaceColor',markerCol); 
+
+            DistP2Behavior.enterFcn =@(hfig, cpp)set(distPoint2Obj, 'MarkerSize',8,'MarkerFaceColor',markerHighligthCol);
             DistP2Behavior.traverseFcn = [];
-            DistP2Behavior.exitFcn = @(hfig, cpp)set(findobj(hfig, 'Tag', 'DistLineP2'), 'MarkerSize',6,'MarkerFaceColor',markerCol);
+            DistP2Behavior.exitFcn = @(hfig, cpp)set(distPoint2Obj, 'MarkerSize',6,'MarkerFaceColor',markerCol);
 
             TextBehavior.enterFcn = @(hfig, cpp)set(hfig, 'WindowScrollWheelFcn',@(src,evt)zoomHist(src,evt));
             TextBehavior.traverseFcn = [];
@@ -158,7 +171,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
 
         function zoomHist(~,evt)
 
-            maxHist = maxHist + evt.VerticalScrollCount*pixelSize;
+            maxHist = maxHist - evt.VerticalScrollCount*pixelSize;
             % minHist = 2;
 
             if maxHist < 0
@@ -358,6 +371,10 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
 
             Vq = normalize(Vq,1,"range",[0 maxHist]);
             Vq = maxHist-Vq - maxHist - minHist;
+
+            % [pks,locs,w,p] = findpeaks(Vq)
+
+
             
             x = linspace(0,d,intPoints)';
             
