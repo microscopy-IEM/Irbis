@@ -191,6 +191,9 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                 delete(histObj)
                 delete(textObj) % delete text object
                 delete(distLineObj) % delete patch object
+
+                delete(findobj(ax,'Tag','tempWlineTxt'))
+                delete(findobj(ax,'Tag','tempWline'))
      
         end
 
@@ -385,13 +388,17 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                 %      figure('Name','Peaks detection')
                 % end
                 
-                cla
-                plot(-Vq)
+                % cla
+                % plot(-Vq)
     
                 % xVect = xq - xq(1);
                 xVect = x - x(1);
                 % xVect = xq;
-                findpeaks(-Vq,xVect,'MinPeakProminence',0.1,'Annotate','extents')
+
+                if exportPeaks
+                    findpeaks(-Vq,xVect,'MinPeakProminence',0.1,'Annotate','extents')
+
+                end
     
                 
                 [pks,locs,w,p] = findpeaks(-Vq,xVect,'MinPeakProminence',0.1,'Annotate','extents');
@@ -406,7 +413,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                     ypos = -(pks(1) - p(1)/2);
                     xpos = locs(1) - w(1)/2;
         
-                    line([xpos,xpos+w(1)],[ypos,ypos]);
+                    % line([xpos,xpos+w(1)],[ypos,ypos]);
         
                     % hwpmPoints = [xpos,ypos; xpos+w(1),ypos];
                     
