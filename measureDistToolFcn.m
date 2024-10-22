@@ -36,6 +36,10 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         % hiostogram attributes
         maxHist = 10*pixelSize;
         minHist = 2*pixelSize;
+
+        showHist = 0;
+        detectPeaks = 0;
+        exportPeaks = 0;
        
 
         txtCol = [0.96 0.96 0.96];
@@ -58,7 +62,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         distPoint2Obj = patch(ax,x,y,z,lineCol,'Tag','DistLineP2','FaceLighting','none','LineWidth',2,'MarkerSize',6,...
                                     'BackFaceLighting','unlit','Marker','o','EdgeColor',lineCol,'MarkerFaceColor',markerCol);
 
-        histObj = line(ax,0,0,z,'Tag','HistLineP2','Color','m');
+        histObj = line(ax,0,0,z,'Tag','HistLineP2','Color','m','Visible','Off');
 
            
         % calculate distance between origin and end point of the distLine
@@ -81,6 +85,12 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         cm = uicontextmenu(fig);               
 
         uimenu(cm,'Text','Delete measure tool','MenuSelectedFcn',@(src,evt)deleteDistLine(src,evt));
+        uimenu(cm,'Text','Show profile','MenuSelectedFcn',@(src,evt)showProfileFcn(src,evt),'Checked',showHist);
+        uimenu(cm,'Text','Detect peaks','MenuSelectedFcn',@(src,evt)detectPeaksFcn(src,evt),'Checked',detectPeaks);
+        uimenu(cm,'Text','Export','MenuSelectedFcn',@(src,evt)exportFcn(src,evt),'Checked',detectPeaks);
+
+        
+        % assign menu to graphic components
         distLineObj.ContextMenu = cm;
         textObj.ContextMenu = cm;
        
@@ -131,19 +141,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
 
             textObj.ButtonDownFcn = @(src,evt)moveTool(src,evt);
 
-            % % hover behavior
-            % % DistP1Behavior.enterFcn =@(hfig, cpp)set(findobj(hfig, 'Tag', 'DistLineP1'), 'MarkerSize',8,'MarkerFaceColor',markerHighligthCol);
-            % DistP1Behavior.traverseFcn = [];
-            % DistP1Behavior.exitFcn = @(hfig, cpp)set(findobj(hfig, 'Tag', 'DistLineP1'), 'MarkerSize',6,'MarkerFaceColor',markerCol); 
-            % 
-            % DistP2Behavior.enterFcn =@(hfig, cpp)set(findobj(hfig, 'Tag', 'DistLineP2'), 'MarkerSize',8,'MarkerFaceColor',markerHighligthCol);
-            % DistP2Behavior.traverseFcn = [];
-            % DistP2Behavior.exitFcn = @(hfig, cpp)set(findobj(hfig, 'Tag', 'DistLineP2'), 'MarkerSize',6,'MarkerFaceColor',markerCol);
-            % 
-            % TextBehavior.enterFcn = @(hfig, cpp)set(hfig, 'WindowScrollWheelFcn',@(src,evt)zoomHist(src,evt));
-            % TextBehavior.traverseFcn = [];
-            % TextBehavior.exitFcn = @(hfig, cpp)set(hfig, 'WindowScrollWheelFcn',WindowScrollWheelFcnOrig);
-
+           
             % hover behavior
             DistP1Behavior.enterFcn =@(hfig, cpp)set(distPoint1Obj, 'MarkerSize',8,'MarkerFaceColor',markerHighligthCol);
             DistP1Behavior.traverseFcn = [];
@@ -156,7 +154,6 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             TextBehavior.enterFcn = @(hfig, cpp)set(hfig, 'WindowScrollWheelFcn',@(src,evt)zoomHist(src,evt));
             TextBehavior.traverseFcn = [];
             TextBehavior.exitFcn = @(hfig, cpp)set(hfig, 'WindowScrollWheelFcn',WindowScrollWheelFcnOrig);
-
          
             iptSetPointerBehavior(distPoint1Obj , DistP1Behavior);
             iptSetPointerBehavior(distPoint2Obj , DistP2Behavior);
@@ -320,6 +317,10 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
 
         function updateHistPlot()
 
+            if ~showHist
+                return
+            end
+
             x1 = distPoint1Obj.XData;
             x2 = distPoint2Obj.XData;
             y1 = distPoint1Obj.YData;
@@ -357,36 +358,170 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             R = [cos(angle) -sin(angle); sin(angle) cos(angle)];
 
             V = double(im);
-
-            % size(V)
-
-                       
+      
             Vq = interp2(V,xq./pixelSize,yq./pixelSize,'cubic');
             % Vq = interp2(V,xq./pixelSize,yq./pixelSize,'linear');
 
-            % Vq = Vq./20;
-            % Vq = Vq - min(Vq);
-            % Vq = -Vq;
-            % maxHist
-
             Vq = normalize(Vq,1,"range",[0 maxHist]);
             Vq = maxHist-Vq - maxHist - minHist;
-
-            % [pks,locs,w,p] = findpeaks(Vq)
-
-
             
             x = linspace(0,d,intPoints)';
-            
+            clc
             points = [x Vq];
             
+            % rotate points to align with measureDistTool orientation
             pointsRot = points*R;
 
             histObj.XData = pointsRot(:,1)+x0;
             histObj.ZData = ones(size(histObj.XData)).*z;
             histObj.YData = pointsRot(:,2)+y0;
 
+            if detectPeaks
+
+                
+                % % if exportPeaks
+                % h = findobj('Name','Peaks detection');
+                % if isempty(h)
+                %      figure('Name','Peaks detection')
+                % end
+                
+                cla
+                plot(-Vq)
+    
+                % xVect = xq - xq(1);
+                xVect = x - x(1);
+                % xVect = xq;
+                findpeaks(-Vq,xVect,'MinPeakProminence',0.1,'Annotate','extents')
+    
+                
+                [pks,locs,w,p] = findpeaks(-Vq,xVect,'MinPeakProminence',0.1,'Annotate','extents');
+
+                if ~isempty(pks)
+        
+
+                    peakWidth = w(1);
+
+                    % disp(['Peak half-maxima width = ' num2str(round(peakWidth,3))])
+                    
+                    ypos = -(pks(1) - p(1)/2);
+                    xpos = locs(1) - w(1)/2;
+        
+                    line([xpos,xpos+w(1)],[ypos,ypos]);
+        
+                    % hwpmPoints = [xpos,ypos; xpos+w(1),ypos];
+                    
+                    
+                    hwpmPoints = [xpos,ypos; xpos+w(1),ypos];
+    
+                    hwpmPointsRot = hwpmPoints*R;
+    
+    
+                    % hwpmPoints = [xpos+x0,ypos+y0; xpos+x0+w(1),ypos+y0]
+    
+    
+                    delete(findobj(ax,'Tag','tempWline'))
+                    wLine = line(ax,hwpmPointsRot(:,1)+x0,(hwpmPointsRot(:,2)+y0),[z z],'Tag','tempWline','Color','b');
+
+
+                    delete(findobj(ax,'Tag','tempWlineTxt'))
+                    wTxt = text(ax,hwpmPointsRot(1,1)+x0,(hwpmPointsRot(1,2)+y0),z + txtZoffset,'','Tag','tempWlineTxt','FontSize',10,'Color',[0.9 0.9 0.9]);
+                    wTxt.String = [num2str(round(peakWidth,3)) ' \mum'];
+                else
+
+                    delete(findobj(ax,'Tag','tempWlineTxt'))
+                    delete(findobj(ax,'Tag','tempWline'))
+
+
+                end
+            else
+                
+                % close('Peaks detection')
+                h = findobj('Name','Peaks detection');
+                if ~isempty(h)
+                
+                    close(h)
+                
+                end
+
+            
+            end
+
+            
+
             drawnow
+
+        end
+
+
+        function showProfileFcn(src,evt)
+
+            if src.Checked
+                src.Checked = 0;
+                showHist = 0;
+                histObj.Visible = 'off';
+            else
+                src.Checked = 1;
+                showHist = 1;
+                updateHistPlot
+                histObj.Visible = 'on';
+            end
+            
+
+            % get(src)
+
+        end
+
+        function detectPeaksFcn(src,evt)
+
+            if src.Checked
+                src.Checked = 0;
+                detectPeaks = 0;
+                % histObj.Visible = 'off';
+                delete(findobj(ax,'Tag','tempWlineTxt'))
+                delete(findobj(ax,'Tag','tempWline'))
+                
+            else
+                src.Checked = 1;
+                detectPeaks = 1;
+                
+                % histObj.Visible = 'on';
+                % figure('Name','Peaks detection')
+                updateHistPlot
+            end
+            
+
+            % get(src)
+
+        end
+
+        function exportFcn(src,evt)
+
+
+             if src.Checked
+                src.Checked = 0;
+                exportPeaks = 0;
+                % histObj.Visible = 'off';
+                % delete(findobj(ax,'Tag','tempWlineTxt'))
+                % delete(findobj(ax,'Tag','tempWline'))
+
+                 % close('Peaks detection')
+                h = findobj('Name','Peaks detection');
+                if ~isempty(h)
+                
+                    close(h)
+                
+                end
+                
+            else
+                src.Checked = 1;
+                exportPeaks = 1;
+                
+                % histObj.Visible = 'on';
+                figure('Name','Peaks detection')
+                updateHistPlot
+            end
+
+            
 
         end
     
