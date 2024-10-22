@@ -378,7 +378,8 @@ function originalCallbacks = gizmo_cylinder(ax,fig,stickyPoints,pointA,pointB,sc
         
                     D = (aL*x1 + bL*y1 + cL)/sqrt(aL^2 + bL^2);
         
-                    dy = D*YmicMetrPerPix;    
+                    % reversed y - added minus sign to dy
+                    dy = -D*YmicMetrPerPix;     
         
                     newPosition = [startPosition(1) startPosition(2)+dy  startPosition(3)];
                     updatePosition(newPosition,moveHandles,pointA,pointB)                  
@@ -480,7 +481,8 @@ function originalCallbacks = gizmo_cylinder(ax,fig,stickyPoints,pointA,pointB,sc
                     v2 = currentScreenPosition - CPix;
         
                     thetaVect = atan2(cross([v1, 0], [v2, 0]), dot(v1, v2));
-                    theta = sign(sind(elevation))*thetaVect(3);
+                    % reversed y - added minus to sign(-sind(elevation))
+                    theta = sign(-sind(elevation))*thetaVect(3);
         
                     updateDirection(vRot,theta,rotHandles,startPosition,startPositionRot,pointA,pointB)
                  
