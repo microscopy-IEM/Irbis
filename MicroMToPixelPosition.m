@@ -71,12 +71,14 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     if sign(-sind(azimuth))*sign(sind(elevation)) < 0
     xYratio = 1 + xYratio;
     end
-    yXratio = sign(sind(azimuth))*yCMic/yLimMic;
-    if sign(sind(azimuth)) < 0
+    % reversed y - minus sign in sign(-sind(azimuth)) instead of plus
+    yXratio = sign(-sind(azimuth))*yCMic/yLimMic;
+    if sign(-sind(azimuth)) < 0
     yXratio = 1 + yXratio;
     end
-    yYratio = sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
-    if sign(cosd(azimuth))*sign(sind(elevation)) < 0
+    % reversed y - minus sign in sign(-cosd(azimuth)) instead of plus
+    yYratio = sign(-cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
+    if sign(-cosd(azimuth))*sign(sind(elevation)) < 0
     yYratio = 1 + yYratio;
     end    
 
@@ -98,6 +100,8 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     % set(ax,'PlotBoxAspectRatio',[1,1,1]);
 
     PixelPos = [xCPix,yCPix];
+
+    % set(0,'PointerLocation',[xCPix,yCPix])
 
 
 end
