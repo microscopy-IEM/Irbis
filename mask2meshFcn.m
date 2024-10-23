@@ -4,11 +4,15 @@
 
 function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
 
+
+    % pixel_size = pixel_size/2;
+
     % default paramateres
     padSize = 3;
-    sigma = 1.5;
+    sigma = 1;
     scaleF = 2;
     isoThres = 0.2;
+    depth = 4;
 
     % wb_handle.Value = 0;
 
@@ -59,10 +63,9 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
 
             case '2D'
 
-                z_spacing = 0.0;
-
+                % z_spacing = 0.0;
                 
-                z_spacing = 1;
+                z_spacing = 0.5;
 
                 currentRegion = regions(regInd).Image;
                 vol = currentRegion;
@@ -79,7 +82,10 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
                 % imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
                 
 
-                vol(:,:,padSize+1) = imgaussfilt(vol(:,:,padSize+1),sigma*2);                                
+                vol(:,:,padSize+1) = imgaussfilt(vol(:,:,padSize+1),sigma*2); 
+
+                % vol = imgaussfilt3(vol,sigma*2);
+                % vol = imgaussfilt(vol,sigma*2); 
                                                  
                 % figure(2)
                 % nexttile
@@ -143,6 +149,8 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         ptCloud = pointCloud(verts);
         ptCloud.Normal = normals;
 
+        ptCloud = pcdownsample(ptCloud,'random',0.25);
+
         verts = double(verts);
                      
         % Run Poisson surface reconstruction in python
@@ -150,7 +158,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         pt_normals = py.numpy.array(ptCloud.Normal);
         
         tic
-        depth = 6;
+        
         [n_objects,vertices,faces,vertex_normals,face_normals] = reconstruct_mesh_python(depth,pt_vertices,pt_normals,1,1);
         nReg = int8(n_objects);
         disp(['reconstructMesh took ' num2str(toc)])

@@ -401,24 +401,29 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                 end
     
                 
-                [pks,locs,w,p] = findpeaks(-Vq,xVect,'MinPeakProminence',0.1,'Annotate','extents');
+                [pks,locs,w,p,wxPk] = findpeaksSK(-Vq,xVect,'MinPeakProminence',0.1,'Annotate','extents','SortStr','descend')
 
                 if ~isempty(pks)
         
 
-                    peakWidth = w(1);
+                    peakInd = 1;
+                    peakWidth = w(peakInd);
 
                     % disp(['Peak half-maxima width = ' num2str(round(peakWidth,3))])
                     
-                    ypos = -(pks(1) - p(1)/2);
-                    xpos = locs(1) - w(1)/2;
+                    ypos = -(pks(peakInd) - p(peakInd)/2);
+                    % xpos = locs(peakInd) - w(peakInd)/2;
+
+                    xpos1 = wxPk(1,1);
+                    xpos2 = wxPk(1,2);
+
         
                     % line([xpos,xpos+w(1)],[ypos,ypos]);
         
                     % hwpmPoints = [xpos,ypos; xpos+w(1),ypos];
                     
                     
-                    hwpmPoints = [xpos,ypos; xpos+w(1),ypos];
+                    hwpmPoints = [xpos1,ypos; xpos2,ypos];
     
                     hwpmPointsRot = hwpmPoints*R;
     

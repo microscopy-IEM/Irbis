@@ -2,6 +2,9 @@
 
 function mask = points2masksFcn(peaks,greyMap,expectedPeakDiam_um,pixel_size,z_spacing,clusterMask)
 
+
+% wb = uiprogressdlg(hFig,'Title',['Generating masks from points' num2str(1)],'Message','Generating...','Cancelable','off');
+
 conn = 6; % 3D case
 peak2BcgRatioThres = 1;
 
@@ -15,10 +18,15 @@ thFun = @(mx,mn)((mx-mn)/3 + mn);
 nDimensions = ndims(greyMap);
 
 %% Pre-process by gaussian filtering
+scaleF = 1;
+sz = size(greyMap);
+greyMap = imresize(greyMap,[sz(1)*scaleF sz(2)*scaleF],'method','bilinear');
+
+pixel_size = pixel_size/scaleF;
 
 % smooth to suppress pixel-pixel variations
 sigma = 0.5;
-greyMap = imgaussfilt3(greyMap,sigma);
+% greyMap = imgaussfilt3(greyMap,sigma);
 
 % searchDiam = round(1.5*expectedPeakDiamPx);
 searchDiamPx = ceil(expectedPeakDiam_um/pixel_size);
