@@ -1,6 +1,6 @@
 
 
-function mask = points2masksFcn(peaks,greyMap,expectedPeakDiam_um,pixel_size,z_spacing,clusterMask)
+function [mask,mask_pixelSize] = points2masksFcn(peaks,greyMap,expectedPeakDiam_um,orig_pixel_size,z_spacing,clusterMask)
 
 
 % wb = uiprogressdlg(hFig,'Title',['Generating masks from points' num2str(1)],'Message','Generating...','Cancelable','off');
@@ -17,27 +17,67 @@ peak2BcgRatioThres = 1;
 thFun = @(mx,mn)((mx-mn)/3 + mn);
 nDimensions = ndims(greyMap);
 
-%% Pre-process by gaussian filtering
-scaleF = 1;
-sz = size(greyMap);
-greyMap = imresize(greyMap,[sz(1)*scaleF sz(2)*scaleF],'method','bilinear');
+if nDimensions == 2
 
-pixel_size = pixel_size/scaleF;
+        % mode = '2D';
+        z_spacing = 1;
+        peaks.z(:) = 1;
+        
+        % TO OPTIMIZE - scale 2 slow down the imdilate step significantly -
+        % we need to operate within local neighborhood of each peak and not
+        % always with whole image - the same for 3D
+        scaleF = 2;
+        mask_pixelSize = orig_pixel_size/scaleF;
+        % searchDiam = round(1.5*expectedPeakDiamPx);
+        searchDiamPx = ceil(expectedPeakDiam_um/mask_pixelSize);
+
+
+        sz = size(greyMap);
+
+        greyMap = imresize(greyMap,[sz(1)*scaleF sz(2)*scaleF],'method','bilinear');
+
+        morphOperator = 'disk';
+        morphSz = searchDiamPx;
+
+elseif nDimensions == 3
+
+        % mode = '3D';
+        scaleF = 2;
+        mask_pixelSize = orig_pixel_size/scaleF;
+        % searchDiam = round(1.5*expectedPeakDiamPx);
+        searchDiamPx = ceil(expectedPeakDiam_um/mask_pixelSize);
+
+
+        sz = size(greyMap);
+      
+        greyMap = imresize3(greyMap,[sz(1)*scaleF sz(2)*scaleF sz(3)],'method','linear');
+
+        % morphOperator = 'sphere';
+        morphOperator = 'cuboid';
+        morphSz = [searchDiamPx*2 searchDiamPx*2 round(searchDiamPx/1)];
+       
+
+end
+%% Pre-process by gaussian filtering
+
+
 
 % smooth to suppress pixel-pixel variations
 sigma = 0.5;
-% greyMap = imgaussfilt3(greyMap,sigma);
-
-% searchDiam = round(1.5*expectedPeakDiamPx);
-searchDiamPx = ceil(expectedPeakDiam_um/pixel_size);
+greyMap = imgaussfilt3(greyMap,sigma);
 
 % searchDiamPx = 5;
 
-% binary operators
-searchOffset = strel('sphere',searchDiamPx);
-peakOffset = strel("sphere",1);
+% create binary operators
+searchOffset = strel(morphOperator,morphSz);
 
-   
+
+% sz_ = size(searchOffset.Neighborhood);
+% searchOffset.Neighborhood = imresize3(searchOffset.Neighborhood,[sz_(1) sz_(2) round(sz_(3)/2)],'method','linear')
+
+peakOffset = strel("sphere",1)
+
+% get map size   
 sz = size(greyMap);
 
 nPeaks = height(peaks);
@@ -78,6 +118,7 @@ nPeaks = height(peaks);
     
     % create empty map for storing detected peak areas
     peakAreas = false(sz);
+    % peakAreas = gpuArray(false(sz));
   
     
     for currentAreaInd = 1:nPeaks
@@ -88,11 +129,13 @@ nPeaks = height(peaks);
         % y = round(peaks.y(currentAreaInd));
         % z = ceil(peaks.z(currentAreaInd));
        
-        x = ceil(peaks.x(currentAreaInd)./pixel_size);
-        y = ceil(peaks.y(currentAreaInd)./pixel_size);
+        x = ceil(peaks.x(currentAreaInd)./mask_pixelSize);
+        y = ceil(peaks.y(currentAreaInd)./mask_pixelSize);
         
         z = ceil(peaks.z(currentAreaInd)./z_spacing);
-        z = 1;
+        % z = 1;
+
+        % sz2 = [searchDiamPx,searchDiamPx,searchDiamPx];
         
         % create binary maxima map - all pixels with maxima = 1, otherwise 0
         peakSearchArea = false(sz);
@@ -100,13 +143,20 @@ nPeaks = height(peaks);
         peakSearchArea(y,x,z) = 1;
                 
         % define close pixels next to the local maxima to calculate "mean" peak maxima value
-        peakAbs = imdilate(peakSearchArea,peakOffset);
-        % define neiburhood of maxima to search for connected pixels
+        % peakAbs = imdilate(peakSearchArea,peakOffset);
+        % define neighborhood of maxima to search for connected pixels
+        % tic
         peakSearchArea = imdilate(peakSearchArea,searchOffset);
-        
+        % toc
         mn = min(greyMap(peakSearchArea));
         % mx = mean(greyMap(peakAbs));
-        mx = max(greyMap(peakAbs));
+        % mx = max(greyMap(peakAbs));
+
+        mx = greyMap(y,x,z);
+
+        % alternatively, otsu method can be used
+        % T = uint16(graythresh(greyMap(peakSearchArea))*2^16)
+
         % th_max = max(greyMap(peakAbs)); % max threshold - in region can be present pixels with higher value from another lokal peak maxime 
     
         % calculate local threshold by selected function
@@ -166,18 +216,21 @@ nPeaks = height(peaks);
     %% Check each peak area if contains only one peak or if more peaks merged into one connected area      
     
     CC = bwconncomp(peakAreas,conn);
+    % CC = bwconncomp(gather(peakAreas),conn);
     singleRegProbs = regionprops3(CC,greyMap,"Centroid","VoxelIdxList","VoxelList");
     
+
+    % singleRegProbs = regionprops(CC,greyMap,"Centroid","PixelIdxList","PixelList");
+
     nAreas = size(singleRegProbs,1);
     
     mask = false(sz);
     mask = bwlabeln(mask);
 
     % set z_spacing to 1 for 2d case 
-    if z_spacing == 0
-            z_spacing = 1;
-            peaks.z(:) = 1;
-    end
+    % if isequal(mode,'2D')            
+    %         peaks.z(:) = 1;
+    % end
     
     % total number of areas
     N = 1;
@@ -188,11 +241,10 @@ nPeaks = height(peaks);
         % get all voxels of current area
         voxels = singleRegProbs.VoxelIdxList{currentAreaInd};
             
-        x = round(peaks.x./pixel_size);
-        y = round(peaks.y./pixel_size);
+        x = round(peaks.x./mask_pixelSize);
+        y = round(peaks.y./mask_pixelSize);
         z = ceil(peaks.z./z_spacing);
-        
-        
+                
                
         peakVoxels = sub2ind(sz,y,x,z);
     
@@ -203,23 +255,23 @@ nPeaks = height(peaks);
         
         % determinet how many peaks fell into current area
    
-        nMaximaInRegion = sum(ismember(peakVoxels,voxels));
+        nMaximasInRegion = sum(ismember(peakVoxels,voxels));
     
         if ~clusterMask
-            nMaximaInRegion = 1;
+            nMaximasInRegion = 1;
         end
             
         
-        %% if connected peak area has n>1 regional maxima, cluster it to n areas   
+        %% If connected peak area has n>1 regional maxima, cluster it to n areas   
     
-        if nMaximaInRegion == 1
+        if nMaximasInRegion == 1
     
             % disp('oneMaxima')
             
             mask(voxels) = N;
             N = N+1;
     
-        elseif nMaximaInRegion > 1
+        elseif nMaximasInRegion > 1
     
             % disp('twoMaxima')
           
@@ -228,7 +280,7 @@ nPeaks = height(peaks);
                         
             regMap = zeros(sz);
            
-            idx = spectralcluster(P,nMaximaInRegion,'Distance','euclidean');
+            idx = spectralcluster(P,nMaximasInRegion,'Distance','euclidean');
             % [idx,V,DD] = spectralcluster(P,nMaximainRegion,'Distance','mahalanobis');
     
             % figure
@@ -240,7 +292,7 @@ nPeaks = height(peaks);
             idx = idx + N - 1;
             regMap(voxels) = idx;
     
-            N = N+nMaximaInRegion;
+            N = N+nMaximasInRegion;
     
             mask = mask + regMap;
     
@@ -270,9 +322,8 @@ nPeaks = height(peaks);
     
     end
 
-    
-    
-    nObjects =  max(mask,[],'all')
+        
+    % nObjects =  max(mask,[],'all');
     
     %% Result plot
 

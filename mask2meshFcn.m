@@ -11,7 +11,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
     padSize = 3;
     sigma = 1;
     scaleF = 2;
-    isoThres = 0.2;
+    isoThres = 0.3;
     depth = 4;
 
     % wb_handle.Value = 0;
@@ -50,7 +50,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
                 currentRegion = regions.Image{regInd};
                 vol = currentRegion;
                 vol = double(vol);
-                sz = size(vol);
+                % sz = size(vol);
 
                 % scale to increase numebr of vertices in reconstruction
                 vol = imresize3(vol,scaleF,'method','linear');
@@ -65,7 +65,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
 
                 % z_spacing = 0.0;
                 
-                z_spacing = 0.5;
+                z_spacing = 0.75;
 
                 currentRegion = regions(regInd).Image;
                 vol = currentRegion;
@@ -81,7 +81,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
                 % nexttile
                 % imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
                 
-
+                % blurr only single plane (exclude pad array)
                 vol(:,:,padSize+1) = imgaussfilt(vol(:,:,padSize+1),sigma*2); 
 
                 % vol = imgaussfilt3(vol,sigma*2);
@@ -149,7 +149,10 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         ptCloud = pointCloud(verts);
         ptCloud.Normal = normals;
 
-        ptCloud = pcdownsample(ptCloud,'random',0.25);
+        % downsample pointCLoud using pixel size
+
+        gridStep = pixel_size/1.5;
+        ptCloud = pcdownsample(ptCloud,'gridAverage',gridStep,'PreserveStructure',true);
 
         verts = double(verts);
                      
@@ -157,11 +160,11 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         pt_vertices = py.numpy.array(ptCloud.Location);
         pt_normals = py.numpy.array(ptCloud.Normal);
         
-        tic
+        % tic
         
         [n_objects,vertices,faces,vertex_normals,face_normals] = reconstruct_mesh_python(depth,pt_vertices,pt_normals,1,1);
         nReg = int8(n_objects);
-        disp(['reconstructMesh took ' num2str(toc)])
+        % disp(['reconstructMesh took ' num2str(toc)])
        
 
         % tic
