@@ -85,7 +85,7 @@ function baseStructs = getBaseStruct(varargin)
 
                 timeline = struct();
         
-                timeline.nTimePoints = 1;
+                timeline.nTimePoints = 0;   % changed to 0 because 1 was causing problems when there was only 1 tp - it did not update the other currentIndexes
                 timeline.currentTimePoint = 1;
                 timeline.currentIndex.planes = [];
                 timeline.currentIndex.tracks = [];
