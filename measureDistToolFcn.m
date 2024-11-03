@@ -1,7 +1,6 @@
 % function create an interactive tool to measure distance between twou user selected points in axes,
 % typically on image.
 
-
 function measureDistToolFcn(fig,ax,z,im,pixelSize)
 
     % store original figure callbacks
@@ -25,8 +24,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             return;
         end
       
-        % disp('this tool')
-        nDig = 2;
+        nDig = 2; % number of digits to round distance values
         txtZoffset = 0.2;
         lineZOffset = 0.1;
         xyTxtOffset = 0.0;
@@ -35,6 +33,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         maxHist = 10*pixelSize;
         minHist = 2*pixelSize;
  
+        % in default only measure distance, profile function are set to off
         showHist = 0;
         detectPeaks = 0;
         exportPeaks = 0;       
@@ -61,27 +60,26 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                                     'BackFaceLighting','unlit','Marker','o','EdgeColor',lineCol,'MarkerFaceColor',markerCol);
 
         textObj = text(ax,0,0,z,'','FontSize',11,'Color',distTxtCol,'Interpreter','tex');
-
+ 
         histObj = line(ax,0,0,z,'Tag','HistLineP2','Color','m','Visible','Off');
 
         widthLineObj = line(ax,[x x],[y y],[z z],'Tag','widthLine','Color',[0.5 0.5 1],'LineWidth',2,'Visible','Off');
         widthTxtObj = text(ax,0,0,z,'','Tag','widthLineTxt','FontSize',11,'Color',[0.9 0.9 0.9],'Visible','Off');
 
+        % pre-define variable to handle peak export figure
         exportFigObj = [];
+        exportAx = [];
+        exportPlot = [];
+        exportWidth = [];
            
-        % calculate distance between origin and end point of the distLine
-        % dist = pdist([distLineObj.XData,distLineObj.YData],'euclidean');
+        % define main variable t o keep distance between origin and end point of the distLine
         dist = 0;
         
         % calculate centre positon of the line to place text object
-        % centrePos = mean([distLineObj.XData,distLineObj.YData,distLineObj.ZData]);        
         centrePos = [x,y,z];    
         
-        % update text object position        
+        % update text object text and position        
         textObj.Position = [centrePos(1),centrePos(2),z + txtZoffset];
-                
-        % update text
-        % textObj.String = [num2str(round(dist,nDig)) ' \mum'];
         textObj.String = '0 \mum';
         textObj.BackgroundColor = [0.1 0.1 0.4];
              
@@ -97,17 +95,18 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         uimenu(cm,'Text','Detect peaks','MenuSelectedFcn',@(src,evt)detectPeaksFcn(src,evt),'Checked',detectPeaks);
         uimenu(cm,'Text','Export','MenuSelectedFcn',@(src,evt)exportPeakFcn(src,evt),'Checked',detectPeaks);
         
-        % assign menu to graphic components
+        % assign menu to graphical components
         distLineObj.ContextMenu = cm;
         textObj.ContextMenu = cm;
        
-        % enable hover function
+        % Ensure to enable hover function in figure
         iptPointerManager(fig, 'enable');
 
         Idx = 1; 
 
         % Function perform the initial drawing. First point is always the
         % static point and the second point being updated
+        % function called when the initial drawing starts (mouse button pressed)
         function distLineInitDrawFcn(~,~)
          
             ax.View = [0 90];
@@ -119,11 +118,12 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             distPoint2Obj.XData = distLinePoints(1,1);
             distPoint2Obj.YData = distLinePoints(1,2);
     
-            % update text position
+            % update text position during initial drawing
             dist = pdist([distLineObj.XData,distLineObj.YData],'euclidean');
             centrePos = mean([distLineObj.XData,distLineObj.YData,distLineObj.ZData + txtZoffset]);            
             textObj.Position = centrePos;
     
+            % show um for longer distances and nm for short
             if dist >= 1
                 textObj.String = [num2str(round(dist,nDig)) ' \mum'];
             else
@@ -132,6 +132,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             
         end
     
+        % function called when the initial drawing ends (mouse button released)
         function initDrawEndFcn(fig,~)
                 
             % assign back all original figure callbacks
@@ -142,14 +143,15 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             fig.WindowKeyReleaseFcn = WindowKeyReleaseFcnOrig;
             fig.WindowScrollWheelFcn = WindowScrollWheelFcnOrig;
 
-            distLineObj.ButtonDownFcn = @(src,evt)distLinePointDragFcn(src,evt);
-            % assign callback to textObject (stored in UserDara of distLine)
+            % assign callbacks to distLine objects that execute draging by selected edn points
+            distLineObj.ButtonDownFcn = @(src,evt)distLinePointDragFcn(src,evt);            
             distPoint1Obj.ButtonDownFcn = @(src,evt)distLinePointDragFcn(src,evt);
             distPoint2Obj.ButtonDownFcn = @(src,evt)distLinePointDragFcn(src,evt);
 
+            % assign callback that execute draging the alle objects together
             textObj.ButtonDownFcn = @(src,evt)moveTool(src,evt);
            
-            % hover behavior
+            % set pointer hover over graphical objects behavior
             DistP1Behavior.enterFcn =@(hfig, cpp)set(distPoint1Obj, 'MarkerSize',8,'MarkerFaceColor',markerHighligthCol);
             DistP1Behavior.traverseFcn = [];
             DistP1Behavior.exitFcn = @(hfig, cpp)set(distPoint1Obj, 'MarkerSize',6,'MarkerFaceColor',markerCol); 
@@ -166,6 +168,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             iptSetPointerBehavior(distPoint2Obj , DistP2Behavior);
             iptSetPointerBehavior(textObj , TextBehavior);
 
+            % set pointer back to arrow
             fig.Pointer = 'arrow';
 
             % if no distance was set by mouse during initial drag (accidental single click), delete the tool.
@@ -175,6 +178,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                            
         end
 
+        % function modify plotted profile amplitude by mouse wheel interaction
         function zoomHist(~,evt)
 
             maxHist = maxHist - evt.VerticalScrollCount*pixelSize;
@@ -200,6 +204,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                 delete(distLineObj) % delete patch object
                 delete(widthLineObj)
                 delete(widthTxtObj)
+                delete(exportFigObj)
      
         end
     
@@ -234,8 +239,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                 distPoint2Obj.YData = distLineObj.YData(1);
         
                 % update text position
-                dist = pdist([distLineObj.XData,distLineObj.YData],'euclidean');
-                
+                dist = pdist([distLineObj.XData,distLineObj.YData],'euclidean');                
                 centrePos = mean([distLineObj.XData + xyTxtOffset,distLineObj.YData + xyTxtOffset,distLineObj.ZData + txtZoffset]);         
                 textObj.Position = centrePos;
         
@@ -323,14 +327,10 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             x1 = distPoint1Obj.XData;
             x2 = distPoint2Obj.XData;
             y1 = distPoint1Obj.YData;
-            y2 = distPoint2Obj.YData;
-           
-            d = pdist([distLineObj.XData,distLineObj.YData],'euclidean');
-         
+            y2 = distPoint2Obj.YData;      
+                     
             % n of points on line to interpolate
-            intPoints = round(d/pixelSize*4);
-
-            
+            intPoints = round(dist/pixelSize*4);
                     
             % distinguish "left" and "right" point
             if x2 < x1
@@ -365,7 +365,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             Vq = normalize(Vq,1,"range",[0 maxHist]);
             Vq = maxHist-Vq - maxHist - minHist;
             
-            x = linspace(0,d,intPoints)';
+            x = linspace(0,dist,intPoints)';
             
             points = [x Vq];
              
@@ -399,8 +399,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         
                     widthLineObj.XData = (hwpmPointsRot(:,1)+x0);
                     widthLineObj.YData = (hwpmPointsRot(:,2)+y0);
-                    widthLineObj.ZData = [z z];
-    
+                    widthLineObj.ZData = [z z];    
                    
                     widthTxtObj.String = [num2str(round(peakWidth,3)) ' \mum'];
                     widthTxtObj.Position = [hwpmPointsRot(1,1)+x0,(hwpmPointsRot(1,2)+y0),z + txtZoffset];
@@ -426,11 +425,21 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
 
                 end
 
-
             end
 
-            if exportPeaks
-                findpeaks(-Vq,xVect,'MinPeakProminence',0.1,'Annotate','extents')
+            if exportPeaks && detectPeaks
+               
+                exportPlot.XData = x;
+                exportPlot.YData = -Vq;
+                
+                if ~isempty(pks) 
+                    exportWidth.XData = (hwpmPoints(:,1)+0);
+                    exportWidth.YData = -(hwpmPoints(:,2)+0);
+                else
+                    exportWidth.XData = [];
+                    exportWidth.YData = [];
+                end
+               
             end            
 
             drawnow
@@ -443,6 +452,11 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                 src.Checked = 0;
                 showHist = 0;
                 histObj.Visible = 'off';
+                widthLineObj.Visible = 'off';
+                widthTxtObj.Visible = 'off';
+
+                h = findobj(distLineObj.ContextMenu.Children,'Text','Detect peaks');
+                h.Checked = 0;
             else
                 src.Checked = 1;
                 showHist = 1;
@@ -450,7 +464,6 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                 histObj.Visible = 'on';                
             end
             
-
         end
 
         function detectPeaksFcn(src,~)
@@ -498,21 +511,31 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             else
                 src.Checked = 1;
                 exportPeaks = 1;
-                
-                % histObj.Visible = 'on';
-                figure('Name','Peaks detection')
+                                                
+
+                exportFigObj = uifigure("Name",'Peaks detection','WindowStyle','alwaysontop','Tag','distMeasureFig');
+                exportFigObj.Position = [100,100,600,400];
+                exportFigObj.CloseRequestFcn = @exportFigCloseReq;
+                pos = exportFigObj.Position;
+                offset = 100;
+                exportAx = uiaxes('Parent',exportFigObj,'Position',[50,50,pos(3)-offset,pos(4)-offset]);
+
+                exportPlot = plot(exportAx,[0,0]);
+                exportAx.NextPlot = 'add';
+                exportWidth = line(exportAx,[0 0],[0 0],'Tag','widthLineB','Color',[0.5 0.5 1],'LineWidth',2,'Visible','On');
                 updateHistPlot
 
-                % exportFigObj = uifigure("Name",'Peaks detection','WindowStyle','alwaysontop')
-                % pos = exportFigObj.Position;
-                % offset = 100;
-                % expoAx = uiaxes('Parent',exportFigObj,'Position',[50,50,pos(3)-offset,pos(4)-offset]);
-                % 
-                % % get(expoAx)
-                % 
-                % plot(expoAx,rand(10))
-
              end           
+
+        end
+
+        function exportFigCloseReq(~,~)
+             
+            exportPeaks = 0;
+          
+            h = findobj(distLineObj.ContextMenu.Children,'Text','Export');
+            h.Checked = 0;
+            delete(exportFigObj)
 
         end
     
