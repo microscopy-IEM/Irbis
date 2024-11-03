@@ -2,7 +2,7 @@ import pymeshlab
 import numpy as np
 from utils_py_script import to_numpy_array  # `to_numpy_array` is defined in utils_py_script.py
 
-def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original, tolerance=1e-4, threshold=0.1, min_sample_size=50):
+def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original, tolerance=1e-4, threshold=0.1, min_sample_size=50, green_threshold=0.3, distance_threshold=0.1):
     """
     Subtracts a cylinder from a base mesh, splits the result into connected components, 
     and identifies components that are closest to an original set of vertices.
@@ -16,12 +16,16 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         tolerance (float): Tolerance for vertex distance matching.
         threshold (float): Proportion threshold for match acceptance.
         min_sample_size (int): Minimum sample size for efficient matching.
+        green_threshold (int): Threshold for the green component to identify vertices connected to the cylinder mesh.
+        distance_threshold (float): Threshold for which vertices are considered for calculating base point
+            - used if no vertices with green component are found
 
     Returns:
         dict: Dictionary containing:
             - n_objects: Number of components meeting the match criteria.
             - component_data: Dictionary with vertices, faces, vertexNormals, and faceNormals for each component.
             - base_points: Array of average base points for each component close to the original mesh.
+            - component_colors: Dictionary with arrays of colors of individual vertices for each component.
     """
     ms = pymeshlab.MeshSet()
     
@@ -35,22 +39,33 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
             "vertex_matrix": to_numpy_array(mesh['vertices'], dtype=np.float64),
             "face_matrix": to_numpy_array(mesh['faces'], dtype=np.int32)
         }
-        if 'vertexNormals' in mesh and mesh['vertexNormals']:
+        if 'vertexNormals' in mesh:
             mesh_args["v_normals_matrix"] = to_numpy_array(mesh['vertexNormals'], dtype=np.float64)
-        if 'faceNormals' in mesh and mesh['faceNormals']:
+        if 'faceNormals' in mesh:
             mesh_args["f_normals_matrix"] = to_numpy_array(mesh['faceNormals'], dtype=np.float64)
         
         # Create the PyMeshLab mesh and add to MeshSet with a unique name
         new_mesh = pymeshlab.Mesh(**mesh_args)
         ms.add_mesh(new_mesh, f"mesh_{i}")
+
+        try:
+            # Apply distinct color to each mesh (e.g., red for first mesh, green for second)
+            if i == 0:
+                color = pymeshlab.Color(255, 0, 0)
+                ms.set_color_per_vertex(color1=color)  # Red for the base mesh
+            else:
+                color = pymeshlab.Color(0, 255, 0)
+                ms.set_color_per_vertex(color1=color)  # Green for the small mesh
+        except Exception as e:
+            print(f"Error setting color for mesh {i}: {e}")
     
     # Perform boolean difference between the first two meshes
-    ms.generate_boolean_difference(first_mesh=0, second_mesh=1)
+    ms.generate_boolean_difference(first_mesh=0, second_mesh=1, transfer_vert_color=True)
     
     # Split result into connected components
-    n_complete = ms.number_meshes()
+    n_complete = ms.mesh_number()
     ms.generate_splitting_by_connected_components()
-    n_total = ms.number_meshes()
+    n_total = ms.mesh_number()
     
     all_matches = []
     
@@ -78,14 +93,14 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         
         # Check if each sampled vertex has a match within the defined tolerance by finding distances <= tolerance.
         # `matches` is a boolean array where True indicates a match for that sampled vertex.
-        matches = np.any(distances <= tolerance, axis=1)
+        matches = np.any(distances <= float(tolerance), axis=1)
         
         # Calculate the proportion of sampled vertices that have at least one match in the original vertices.
         match_prop = float(np.sum(matches) / len(sampled_vertices))  # Ensure float for Python compatibility
         all_matches.append(match_prop)
     
     # Filter components that meet the match threshold
-    ids_above_threshold = [i + n_complete for i, match in enumerate(all_matches) if match > threshold]
+    ids_above_threshold = [i + n_complete for i, match in enumerate(all_matches) if match > float(threshold)]
     if not ids_above_threshold:
         ids_above_threshold = list(range(n_complete, n_total))  # Include all if none match the threshold
 
@@ -104,227 +119,63 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
             "faceNormals": to_numpy_array(current_mesh.face_normal_matrix(), dtype=np.float64)
         }
 
-        # Find base points in the component that match vertices in the cylinder
-        base_vertices = [vertex for vertex in current_mesh.vertex_matrix()
-                         if np.any(np.all(np.isclose(vertex, to_numpy_array(mesh_data[1]['vertices'], dtype=np.float64), atol=tolerance), axis=1))]
-        if base_vertices:
-            base_points.append(np.mean(base_vertices, axis=0))
+
+        # Extract vertices with green component above a certain threshold to identify those originating from or near the small mesh
+        component_colors = current_mesh.vertex_color_matrix()
+        green_vertices_mask = component_colors[:, 1] > float(green_threshold)  # Only vertices with green > threshold
+        matched_vertices = current_mesh.vertex_matrix()[green_vertices_mask]
+        matched_normals = current_mesh.vertex_normal_matrix()[green_vertices_mask]
+        component_colors_array[component_index] = component_colors
+
+        # Calculate base point as the mean position and normal of all selected vertices with high green intensity
+        if len(matched_vertices) > 0:
+            mean_vertex = np.mean(matched_vertices, axis=0)
+            mean_normal = np.mean(matched_normals, axis=0)
+            base_points.append(np.concatenate((mean_vertex, mean_normal)))
+        else:
+            small_mesh_vertices = to_numpy_array(mesh_data[1]['vertices'], dtype=np.float64)
+            # If no matched vertices are found with the green threshold, select up to 20 unique closest vertices below the distance threshold
+            # Calculate distances between each vertex in the current component mesh and vertices in the small mesh.
+            # The result is a matrix of shape (current_mesh_vertices, small_mesh_vertices) where each element [i, j]
+            # represents the Euclidean distance between vertex i in the current mesh and vertex j in the small mesh.
+            distances = np.linalg.norm(current_mesh.vertex_matrix()[:, None, :] - small_mesh_vertices[None, :, :], axis=2)
+        
+            # Identify indices where distances are below the specified threshold
+            # This creates a tuple of arrays, where below_threshold_indices[0] contains the indices of `current_mesh.vertex_matrix()`
+            # and below_threshold_indices[1] contains the indices of `small_mesh_vertices` for all pairs below the threshold.
+            below_threshold_indices = np.where(distances < float(distance_threshold))
+        
+            # Check if any distances met the threshold criteria
+            if below_threshold_indices[0].size > 0:
+                # Flatten the indices of current mesh vertices that are within the threshold
+                # `flat_indices` will contain all vertex indices in `current_mesh.vertex_matrix()` that
+                # have at least one corresponding distance below the threshold.
+                flat_indices = below_threshold_indices[0]
+        
+                # Select up to 20 unique closest vertices within the threshold by using argpartition.
+                # `np.argpartition` finds the indices of the 20 smallest elements in `distances[below_threshold_indices]`.
+                # Applying `np.unique` removes duplicate indices, ensuring only unique vertices are chosen.
+                unique_nearest_indices = np.unique(np.argpartition(distances[below_threshold_indices], 20)[:20])
+        
+                # Use these unique indices to retrieve coordinates and normals from the current mesh.
+                matched_vertices = current_mesh.vertex_matrix()[unique_nearest_indices]
+                matched_normals = current_mesh.vertex_normal_matrix()[unique_nearest_indices]
+
+                mean_vertex = np.mean(matched_vertices, axis=0)
+                mean_normal = np.mean(matched_normals, axis=0)
+                base_points.append(np.concatenate((mean_vertex, mean_normal)))
+            else:
+                # Append NaNs if no matched vertices
+                base_points.append(np.full(6, np.nan))
+
+    n_objects = n_total - n_complete
+    base_points = np.array(base_points)
 
     return {
         "n_objects": len(ids_above_threshold),
         "component_data": component_data,
-        "base_points": np.array(base_points)
+        "base_points": np.array(base_points),
+        "component_colors": component_colors_array
     }
 
-result = mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original)
-
-
-# import pymeshlab
-# import numpy as np
-# 
-# def mesh_subtract_cylinder_and_find_closest_object(vertices_big,faces_big,vertex_normals_big,face_normals_big,vertices_cylinder,faces_cylinder,vertices_original):
-# 
-#     ms = pymeshlab.MeshSet()
-# 
-#     if len(vertex_normals_big)==0 or len(face_normals_big)==0:
-#         m_big = pymeshlab.Mesh(vertex_matrix = vertices_big,face_matrix=faces_big)
-#     else:
-#         m_big = pymeshlab.Mesh(vertex_matrix = vertices_big,face_matrix=faces_big,v_normals_matrix=vertex_normals_big,f_normals_matrix=face_normals_big)
-# 
-#     m_cylinder = pymeshlab.Mesh(vertex_matrix = vertices_cylinder, face_matrix = faces_cylinder)
-# 
-#     ms.add_mesh(m_big)
-#     ms.add_mesh(m_cylinder)
-# 
-#     ms.generate_boolean_difference(first_mesh=0,second_mesh=1)
-# 
-#     n_complete = ms.number_meshes()
-#     ms.generate_splitting_by_connected_components()
-# 
-#     n_total = ms.number_meshes()
-# 
-#     # print(n_complete)
-#     # print(n_total)
-# 
-#     all_matches = []
-#     distances = []
-# 
-#     # centreOriginal = np.mean(vertices_original, axis=0)
-#     # print(centreOriginal)
-#     # 
-#     # for i in range(n_complete,n_total):
-#     #     vertices_cut = ms.mesh(i).vertex_matrix()
-#     #     distances_i = np.linalg.norm(vertices_cut - centreOriginal, axis=1)
-#     #     avg_distance = np.mean(distances_i)
-#     # 
-#     #     print(avg_distance)
-#     #     distances.append(avg_distance)
-#     # 
-#     # min_distance_n = distances.index(min(distances))
-#     # min_distance_i = min_distance_n + n_complete
-# 
-#     tolerance = 1e-4
-#     threshold = 0.1
-#     # for i in range(n_complete,n_total):
-#     #     vertices_cut = ms.mesh(i).vertex_matrix()
-#     #     if len(vertices_cut) < len(vertices_original):
-#     #         matchList = [np.any(np.all(vertices_cut[vertex] == vertices_original[:],axis = 1)) for vertex in range(0,len(vertices_cut))]
-#     #         matchProp = np.sum(matchList)/len(matchList)
-#     #         #criterion = np.all([np.any(np.all(vertices_cut[vertex] == vertices_original[:],axis = 1)) for vertex in range(0,len(vertices_cut))])
-#     #     elif len(vertices_cut) >= len(vertices_original):
-#     #         matchList = [np.any(np.all(vertices_original[vertex] == vertices_cut[:],axis = 1)) for vertex in range(0,int(len(vertices_original)/5))]
-#     #         #criterion = np.all([np.any(np.all(vertices_original[vertex] == vertices_cut[:],axis = 1)) for vertex in range(0,int(len(vertices_original)/5))])
-#     #         matchProp = np.sum(matchList)/len(matchList)
-#     #         if matchProp > 0.1:
-#     #             matchProp = 1.1
-# 
-#     min_sample_size = 50;
-#     for i in range(n_complete, n_total):
-#         print(i)
-#         vertices_cut = ms.mesh(i).vertex_matrix()
-# 
-#         # Ensure contiguous array for compatibility with .view()
-#         vertices_cut = vertices_cut.copy()
-#         vertices_original = vertices_original.copy()
-# 
-#         # Branch to compare against the smaller vertex set for efficiency
-#         if len(vertices_cut) < len(vertices_original):
-#             if len(vertices_cut) >= min_sample_size:
-#                 step_size = int(len(vertices_cut) // min_sample_size)
-#                 sampled_vertices = vertices_cut[::step_size].copy()  # Copy to ensure contiguity
-# 
-#                 # Use broadcasting to calculate pairwise distances and check for matches within tolerance
-#                 distances = np.linalg.norm(sampled_vertices[:, None, :] - vertices_original[None, :, :], axis=2)
-#                 matches = np.any(distances <= tolerance, axis=1)
-#                 match_prop = np.sum(matches) / len(sampled_vertices)
-#             else:
-#                 # For non-downsampled, calculate pairwise distances for all vertices
-#                 distances = np.linalg.norm(vertices_cut[:, None, :] - vertices_original[None, :, :], axis=2)
-#                 matches = np.any(distances <= tolerance, axis=1)
-#                 match_prop = np.sum(matches) / len(vertices_cut)
-#         else:
-#             if len(vertices_original) >= min_sample_size:
-#                 step_size = int(len(vertices_original) // min_sample_size)
-#                 sampled_vertices = vertices_original[::step_size].copy()  # Copy to ensure contiguity
-# 
-#                 distances = np.linalg.norm(sampled_vertices[:, None, :] - vertices_cut[None, :, :], axis=2)
-#                 matches = np.any(distances <= tolerance, axis=1)
-#                 match_prop = np.sum(matches) / len(sampled_vertices)
-#             else:
-#                 distances = np.linalg.norm(vertices_original[:, None, :] - vertices_cut[None, :, :], axis=2)
-#                 matches = np.any(distances <= tolerance, axis=1)
-#                 match_prop = np.sum(matches) / len(vertices_original)
-#         print(match_prop)
-#         all_matches.append(match_prop)
-# 
-#     # for i in range(n_complete,n_total):
-#     #     # print(i)
-#     #     vertices_cut = ms.mesh(i).vertex_matrix()
-#     #     if len(vertices_cut) > 0.5*len(vertices_big):
-#     #         # print(f'{i} too big')
-#     #         matchProp = 0
-#     #     elif len(vertices_cut) < len(vertices_original):
-#     #         # print(f'{i} smaller than original')
-#     #         matchList = [np.any(np.all(np.isclose(vertices_cut[vertex], vertices_original, atol=tolerance),axis = 1)) for vertex in range(0,len(vertices_cut))]
-#     #         matchProp = np.sum(matchList)/len(matchList)
-#     #         #criterion = np.all([np.any(np.all(vertices_cut[vertex] == vertices_original[:],axis = 1)) for vertex in range(0,len(vertices_cut))])
-#     #     elif len(vertices_cut) >= len(vertices_original):
-#     #         # print(f'{i} bigger than original')
-#     #         matchList = [np.any(np.all(np.isclose(vertices_original[vertex], vertices_cut, atol=tolerance),axis = 1)) for vertex in range(0,int(len(vertices_original)))]
-#     #         #criterion = np.all([np.any(np.all(vertices_original[vertex] == vertices_cut[:],axis = 1)) for vertex in range(0,int(len(vertices_original)/5))])
-#     #         matchProp = np.sum(matchList)/len(matchList)
-#     #         # if matchProp > 0.1:
-#     #         #     matchProp = 1.1
-#     # 
-#     #     # print(i)
-#     #     # print(matchProp)
-#     #     # print(len(vertices_cut))
-#     #     # print(matchProp)
-#     #     # ms.save_current_mesh(f'testMesh_{i}.ply')
-#     #     matches.append(matchProp)
-# 
-#     matches_above_threshold = [i for i, value in enumerate(all_matches) if value > threshold]
-#     print(matches_above_threshold)
-#     if len(matches_above_threshold) == 0:
-#         print('NO MATCH - ALL ADDED')
-#         ids_above_threshold = [i for i in range(n_complete,n_total)]
-#     else:
-#         ids_above_threshold = [m + n_complete for m in matches_above_threshold]
-#     # print(ids_above_threshold)
-# 
-#     # max_match_n = matches.index(max(matches))
-#     # max_match_i = max_match_n + n_complete
-# 
-#     vertices_dict = dict()
-#     faces_dict = dict()
-#     vertex_normals_dict = dict()
-#     face_normals_dict = dict()
-# 
-#     base_points = [];
-# 
-#     j = 1
-#     for i in ids_above_threshold:
-#         ms.set_current_mesh(new_curr_id = i)
-#         cm = ms.current_mesh()
-# 
-#         # print(ids_above_threshold[i])
-#         # j = int(ids_above_threshold[i])
-#         # print(j)
-# 
-#         vertices_dict[j] = cm.vertex_matrix()
-#         faces_dict[j] = cm.face_matrix()
-#         vertex_normals_dict[j] = cm.vertex_normal_matrix()
-#         face_normals_dict[j] = cm.face_normal_matrix()
-# 
-#         base_vertices = []
-# 
-#         for vertex_n in range(0,len(cm.vertex_matrix())):
-#             if np.any(np.all(cm.vertex_matrix()[vertex_n] == vertices_cylinder, axis = 1)):
-#                 base_vertices.append(list(cm.vertex_matrix()[vertex_n]))
-# 
-#         av = [item[0] for item in base_vertices]
-#         bv = [item[1] for item in base_vertices]
-#         cv = [item[2] for item in base_vertices]
-# 
-#         mean_list = [np.mean(av), np.mean(bv), np.mean(cv)]
-#         base_points.append(mean_list)
-# 
-#         j += 1
-# 
-#     base_points = np.array(base_points)
-# 
-# 
-#     # ms.set_current_mesh(new_curr_id = max_match_i)
-#     # # ms.set_current_mesh(new_curr_id = min_distance_i)
-#     # cm = ms.current_mesh()
-# 
-#     # vertices_new = cm.vertex_matrix()
-#     # faces_new = cm.face_matrix()
-#     # vertex_normals_new = cm.vertex_normal_matrix()
-#     # face_normals_new = cm.face_normal_matrix()
-# 
-#     # base_vertices = []
-#     # 
-#     # for vertex_n in range(0,len(vertices_new)):
-#     #     if np.any(np.all(vertices_new[vertex_n] == vertices_cylinder, axis = 1)):
-#     #         base_vertices.append(list(vertices_new[vertex_n]))
-#     # 
-#     # av = [item[0] for item in base_vertices]
-#     # bv = [item[1] for item in base_vertices]
-#     # cv = [item[2] for item in base_vertices]
-#     # 
-#     # base_point = np.array([np.mean(av), np.mean(bv), np.mean(cv)])
-# 
-#     # n_objects = n_total - n_complete
-#     n_objects = len(ids_above_threshold)
-# 
-#     # return(n_objects,vertices_new,faces_new,vertex_normals_new,face_normals_new,base_points)
-#     return(n_objects,vertices_dict,faces_dict,vertex_normals_dict,face_normals_dict,base_points)
-# 
-# n_objects,vertices,faces,vertex_normals,face_normals,base_points = mesh_subtract_cylinder_and_find_closest_object(vertices_big,faces_big,vertex_normals_big,face_normals_big,vertices_cylinder,faces_cylinder,vertices_original)
-# 
-# 
-# 
-# 
-# 
-# 
+output = mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original, tolerance, threshold, min_sample_size, green_threshold, distance_threshold)

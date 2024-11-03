@@ -2,15 +2,18 @@ import pymeshlab
 import numpy as np
 from utils_py_script import to_numpy_array  # `to_numpy_array` is defined in utils_py_script.py
 
-def mesh_subtract_and_separate_with_color(mesh_data, green_threshold=0.3, tolerance=1e-4):
+def mesh_subtract_and_separate_with_color(mesh_data, green_threshold=0.3, tolerance=1e-4, distance_threshold=0.1):
     """
     Subtracts the second mesh from the first, splits the result into connected components, 
     and identifies vertices for base point calculation based on green color intensity.
+    For example, used for spines generation.
     
     Parameters:
         mesh_data (list): List of dictionaries containing 'vertices', 'faces', and optionally 'vertexNormals' and 'faceNormals'.
         green_threshold (int): Threshold for the green component to identify vertices connected to the small mesh.
         tolerance (float): Distance tolerance for proximity checks.
+        distance_threshold (float): Threshold for which vertices are considered for calculating base point
+            - used if no vertices with green component are found
         
     Returns:
         dict: Contains n_objects, component_data, and base_points for each component.
@@ -23,15 +26,13 @@ def mesh_subtract_and_separate_with_color(mesh_data, green_threshold=0.3, tolera
             "vertex_matrix": to_numpy_array(mesh['vertices'], dtype=np.float64),
             "face_matrix": to_numpy_array(mesh['faces'], dtype=np.int32)
         }
-        if 'vertexNormals' in mesh and mesh['vertexNormals']:
+        if 'vertexNormals' in mesh:
             mesh_args["v_normals_matrix"] = to_numpy_array(mesh['vertexNormals'], dtype=np.float64)
-        if 'faceNormals' in mesh and mesh['faceNormals']:
+        if 'faceNormals' in mesh:
             mesh_args["f_normals_matrix"] = to_numpy_array(mesh['faceNormals'], dtype=np.float64)
 
         new_mesh = pymeshlab.Mesh(**mesh_args)
         ms.add_mesh(new_mesh, f"mesh_{i}")
-
-        print(f'mesh {i} added')
 
         try:
             # Apply distinct color to each mesh (e.g., red for first mesh, green for second)
@@ -43,7 +44,6 @@ def mesh_subtract_and_separate_with_color(mesh_data, green_threshold=0.3, tolera
                 ms.set_color_per_vertex(color1=color)  # Green for the small mesh
         except Exception as e:
             print(f"Error setting color for mesh {i}: {e}")
-            # Optionally, you can set a default color or take other corrective actions here
 
     # Perform boolean difference with vertex color transfer
     ms.generate_boolean_difference(first_mesh=0, second_mesh=1, transfer_vert_color=True)
@@ -84,8 +84,40 @@ def mesh_subtract_and_separate_with_color(mesh_data, green_threshold=0.3, tolera
             mean_normal = np.mean(matched_normals, axis=0)
             base_points.append(np.concatenate((mean_vertex, mean_normal)))
         else:
-            # Append NaNs if no matched vertices
-            base_points.append(np.full(6, np.nan))
+            small_mesh_vertices = to_numpy_array(mesh_data[1]['vertices'], dtype=np.float64)
+            # If no matched vertices are found with the green threshold, select up to 20 unique closest vertices below the distance threshold
+            # Calculate distances between each vertex in the current component mesh and vertices in the small mesh.
+            # The result is a matrix of shape (current_mesh_vertices, small_mesh_vertices) where each element [i, j]
+            # represents the Euclidean distance between vertex i in the current mesh and vertex j in the small mesh.
+            distances = np.linalg.norm(current_mesh.vertex_matrix()[:, None, :] - small_mesh_vertices[None, :, :], axis=2)
+        
+            # Identify indices where distances are below the specified threshold
+            # This creates a tuple of arrays, where below_threshold_indices[0] contains the indices of `current_mesh.vertex_matrix()`
+            # and below_threshold_indices[1] contains the indices of `small_mesh_vertices` for all pairs below the threshold.
+            below_threshold_indices = np.where(distances < distance_threshold)
+        
+            # Check if any distances met the threshold criteria
+            if below_threshold_indices[0].size > 0:
+                # Flatten the indices of current mesh vertices that are within the threshold
+                # `flat_indices` will contain all vertex indices in `current_mesh.vertex_matrix()` that
+                # have at least one corresponding distance below the threshold.
+                flat_indices = below_threshold_indices[0]
+        
+                # Select up to 20 unique closest vertices within the threshold by using argpartition.
+                # `np.argpartition` finds the indices of the 20 smallest elements in `distances[below_threshold_indices]`.
+                # Applying `np.unique` removes duplicate indices, ensuring only unique vertices are chosen.
+                unique_nearest_indices = np.unique(np.argpartition(distances[below_threshold_indices], 20)[:20])
+        
+                # Use these unique indices to retrieve coordinates and normals from the current mesh.
+                matched_vertices = current_mesh.vertex_matrix()[unique_nearest_indices]
+                matched_normals = current_mesh.vertex_normal_matrix()[unique_nearest_indices]
+
+                mean_vertex = np.mean(matched_vertices, axis=0)
+                mean_normal = np.mean(matched_normals, axis=0)
+                base_points.append(np.concatenate((mean_vertex, mean_normal)))
+            else:
+                # Append NaNs if no matched vertices
+                base_points.append(np.full(6, np.nan))
 
     n_objects = n_total - n_complete
     base_points = np.array(base_points)
@@ -97,97 +129,5 @@ def mesh_subtract_and_separate_with_color(mesh_data, green_threshold=0.3, tolera
         "component_colors": component_colors_array
     }
 
-output = mesh_subtract_and_separate_with_color(mesh_data, green_threshold)
-
-
-
-# import pymeshlab
-# import numpy as np
-# 
-# def mesh_subtract_and_separate(vertices_big,faces_big,vertex_normals_big,face_normals_big,vertices_small,faces_small,vertex_normals_small,face_normals_small):
-# 
-#     ms = pymeshlab.MeshSet()
-# 
-#     if len(vertex_normals_big)==0 or len(face_normals_big)==0:
-#         m_big = pymeshlab.Mesh(vertex_matrix = vertices_big,face_matrix=faces_big)
-#     else:
-#         m_big = pymeshlab.Mesh(vertex_matrix = vertices_big,face_matrix=faces_big,v_normals_matrix=vertex_normals_big,f_normals_matrix=face_normals_big)
-# 
-#     if len(vertex_normals_small)==0 or len(face_normals_small)==0:
-#         m_small = pymeshlab.Mesh(vertex_matrix = vertices_small,face_matrix=faces_small)
-#     else:
-#         m_small = pymeshlab.Mesh(vertex_matrix = vertices_small,face_matrix=faces_small,v_normals_matrix=vertex_normals_small,f_normals_matrix=face_normals_small)
-# 
-#     ms.add_mesh(m_big)
-#     ms.add_mesh(m_small)
-# 
-#     shaft = ms.mesh(1).vertex_matrix()
-# 
-#     ms.generate_boolean_difference(first_mesh=0,second_mesh=1)
-# 
-#     # ms.save_current_mesh(str(output),save_vertex_normal=True)
-# 
-#     n_complete = ms.number_meshes()
-#     print(n_complete)
-# 
-#     ms.generate_splitting_by_connected_components()
-# 
-#     n_total = ms.number_meshes()
-#     print(n_total)
-# 
-#     # file = open('temp_cuttingPlaneList.csv','w')
-# 
-#     vertices_dict = dict()
-#     faces_dict = dict()
-#     vertex_normals_dict = dict()
-#     face_normals_dict = dict()
-# 
-#     base_points = [];
-# 
-#     for i in range(n_complete,n_total):
-#         ms.set_current_mesh(new_curr_id = i)
-#         cm = ms.current_mesh()
-#         j = i + 1 - n_complete
-#         # ms.save_current_mesh(f'temp_subtract_{j}.ply')
-# 
-#         vertices_dict[j] = cm.vertex_matrix()
-#         faces_dict[j] = cm.face_matrix()
-#         vertex_normals_dict[j] = cm.vertex_normal_matrix()
-#         face_normals_dict[j] = cm.face_normal_matrix()
-# 
-#         spine = ms.mesh(i).vertex_matrix()
-#         spine_normal = ms.mesh(i).vertex_normal_matrix()
-# 
-#         vertices = []
-#         normals = []
-# 
-#         for vertex_n in range(0,len(spine)):
-#             if np.any(np.all(spine[vertex_n] == shaft[:],axis = 1)):
-#                 vertices.append(list(spine[vertex_n]))
-#                 normals.append(list(spine_normal[vertex_n]))
-# 
-#         av = [item[0] for item in vertices]
-#         bv = [item[1] for item in vertices]
-#         cv = [item[2] for item in vertices]
-#         an = [item[0] for item in normals]
-#         bn = [item[1] for item in normals]
-#         cn = [item[2] for item in normals]
-# 
-#         mean_list = [np.mean(av),np.mean(bv),np.mean(cv),np.mean(an),np.mean(bn),np.mean(cn)]
-# 
-#         base_points.append(mean_list)
-# 
-#     #     for mean in mean_list:
-#     #         file.write(str(mean) + ';')    
-#     #     file.write('\n')
-#     # file.close()
-# 
-#     n_objects = n_total - n_complete
-# 
-#     base_points = np.array(base_points)
-# 
-#     # print('base_points lenght')
-#     # print(len(base_points))
-#     return(n_objects,vertices_dict,faces_dict,vertex_normals_dict,face_normals_dict,base_points)
-# 
-# n_objects,vertices,faces,vertex_normals,face_normals,base_points = mesh_subtract_and_separate(vertices_big,faces_big,vertex_normals_big,face_normals_big,vertices_small,faces_small,vertex_normals_small,face_normals_small)
+# Call the function so that the script can run when called from Matlab
+output = mesh_subtract_and_separate_with_color(mesh_data, green_threshold, distance_threshold)

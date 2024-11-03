@@ -2,15 +2,17 @@ function [nObjects, meshCell, basePoints] = mesh_subtract_and_separate_and_save_
     % Define parameters for use in the Python script
     green_threshold = 0.3;
     tolerance = 1e-4;
+    distance_threshold = 0.1;
 
     % Call the Python script with mesh data and parameters
     output = pyrunfile('mesh_subtract_and_separate_and_save_plane_py_script.py', "output", ...
         mesh_data=mesh_data, ...
         green_threshold=green_threshold, ...
-        tolerance=tolerance);
+        tolerance=tolerance, ...
+        distance_threshold=distance_threshold);
 
     % Retrieve the number of objects
-    nObjects = int8(output{'n_objects'})
+    nObjects = int8(output{'n_objects'});
 
     % Retrieve component data and initialize the cell array for surface meshes
     componentData = output{'component_data'};
@@ -31,7 +33,7 @@ function [nObjects, meshCell, basePoints] = mesh_subtract_and_separate_and_save_
     % Retrieve base points
     basePoints = double(output{'base_points'});
 
-    assignin("base","basePoints",basePoints)
+    % assignin("base","basePoints",basePoints)
 
     componentColors = dictionary(output{'component_colors'});
 

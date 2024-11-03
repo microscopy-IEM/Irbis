@@ -47,20 +47,26 @@ pcshow(ptCloud)
 ptVertices = py.numpy.array(ptCloud.Location);
 ptNormals = py.numpy.array(ptCloud.Normal);
 
-[n_objects,vertices,faces,vertex_normals,face_normals] = reconstruct_mesh_python(8,ptVertices,ptNormals,1,1);
+mesh_data{1} = struct('vertices', ptVertices, ...
+                        'vertexNormals', ptNormals);
+[~, meshCell, ~] = reconstruct_mesh_python(depth,mesh_data,1,1);
 
-verticesDict = dictionary(vertices);
-facesDict = dictionary(faces);
-vertexNormalsDict = dictionary(vertex_normals);
-faceNormalsDict = dictionary(face_normals);
+% [n_objects,vertices,faces,vertex_normals,face_normals] = reconstruct_mesh_python(8,ptVertices,ptNormals,1,1);
+% 
+% verticesDict = dictionary(vertices);
+% facesDict = dictionary(faces);
+% vertexNormalsDict = dictionary(vertex_normals);
+% faceNormalsDict = dictionary(face_normals);
+% 
+% regionID = 1
+% 
+% vertices = double(verticesDict(py.int(regionID)));
+% faces = double(facesDict(py.int(regionID)))+1;
+% vertexNormals = double(vertexNormalsDict(py.int(regionID)));
+% faceNormals = double(faceNormalsDict(py.int(regionID)));
 
-regionID = 1
+% mesh = surfaceMesh(vertices,faces,"VertexNormals",vertexNormals,"FaceNormals",faceNormals);
 
-vertices = double(verticesDict(py.int(regionID)));
-faces = double(facesDict(py.int(regionID)))+1;
-vertexNormals = double(vertexNormalsDict(py.int(regionID)));
-faceNormals = double(faceNormalsDict(py.int(regionID)));
-
-mesh = surfaceMesh(vertices,faces,"VertexNormals",vertexNormals,"FaceNormals",faceNormals);
+mesh = meshCell{1};
 
 surfaceMeshShow(mesh)

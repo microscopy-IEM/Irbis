@@ -1,43 +1,60 @@
 import pymeshlab
 import numpy as np
+from utils_py_script import to_numpy_array  # to_numpy_array is available in utils_py_script.py
 
 def divide_mesh(mesh_data, pointA, pointB, depth=8):
-    # Helper function to ensure data is a NumPy array and convert memoryview if needed
-    def to_numpy_array(data, dtype):
-        if isinstance(data, memoryview):
-            return np.array(data, dtype=dtype)
-        return np.asarray(data, dtype=dtype)
+    """
+    Accepts the original mesh and the cut part on the side of the cutting plane in the direction
+    of the plane normal. Finds the separated component of the cut mesh closest to the cut point. 
+    Subtracts this component from the original mesh, applies Poisson reconstruction, 
+    and closes holes on both divided components.
 
+    Parameters:
+        mesh_data (list of dict): List of dictionaries for each mesh 
+            (first: original, second: cut part in the direction of normal), each containing:
+            - 'vertices': Vertex coordinates for the mesh (NumPy array or memoryview).
+            - 'faces': Face indices for the mesh (NumPy array or memoryview).
+            - 'vertexNormals' (optional): Vertex normals (NumPy array or memoryview) - cannot be empty.
+            - 'faceNormals' (optional): Face normals (NumPy array or memoryview) - cannot be empty.
+        pointA (array-like): 3D coordinates of the reference point for division.
+        pointB (array-like): 3D coordinates of the endpoint to define division direction.
+        depth (int): Depth for Poisson surface reconstruction.
+        
+    Returns:
+        dict: Contains two reconstructed meshes as 'closest_mesh' and 'cut_mesh', each with:
+            - 'vertices': Reconstructed vertex coordinates as a NumPy array.
+            - 'faces': Reconstructed face indices as a NumPy array.
+            - 'vertexNormals': Vertex normals as a NumPy array.
+            - 'faceNormals': Face normals as a NumPy array.
+            'closest_mesh' is the original mesh without the cut component (can contain parts on both
+            sides of the cutting plane), 'cut_mesh' is the cut component closest to the cutting point.
+    """
     ms = pymeshlab.MeshSet()
 
-    # Iterate over each mesh entry in mesh_data
+    # Load each mesh and include normals if provided in mesh_data
     for i, mesh in enumerate(mesh_data):
-        # Prepare required arguments
         mesh_args = {
             "vertex_matrix": to_numpy_array(mesh['vertices'], dtype=np.float64),
             "face_matrix": to_numpy_array(mesh['faces'], dtype=np.int32)
         }
 
-        # Conditionally add normals if they are available and non-empty
-        if 'vertexNormals' in mesh and mesh['vertexNormals']:
+        # Add optional vertex and face normals if they exist in the input data
+        if 'vertexNormals' in mesh:
             mesh_args["v_normals_matrix"] = to_numpy_array(mesh['vertexNormals'], dtype=np.float64)
-        if 'faceNormals' in mesh and mesh['faceNormals']:
+        if 'faceNormals' in mesh:
             mesh_args["f_normals_matrix"] = to_numpy_array(mesh['faceNormals'], dtype=np.float64)
 
-        # Create the PyMeshLab mesh, passing only the necessary arguments
         new_mesh = pymeshlab.Mesh(**mesh_args)
-
-        # Add the new mesh to the MeshSet with a unique name
         ms.add_mesh(new_mesh, f"mesh_{i}")
 
-    # Split connected components of the first cut mesh
+    # Split connected components of the mesh to isolate the detached parts
     ms.set_current_mesh(new_curr_id=1)
-    n_complete = ms.number_meshes()
+    n_complete = ms.mesh_number()
     ms.generate_splitting_by_connected_components()
-    n_total = ms.number_meshes()
-    n_objects = n_total - n_complete  # Count of new mesh components created by splitting
+    n_total = ms.mesh_number()
+    n_objects = n_total - n_complete  # Number of new components after splitting
 
-    # Find the component closest to pointA
+    # Identify the component closest to pointA
     pointA = np.array(pointA)
     min_distances = []
     for i in range(n_complete, n_total):
@@ -49,7 +66,7 @@ def divide_mesh(mesh_data, pointA, pointB, depth=8):
     closest_mesh_id = np.argmin(min_distances) + n_complete
     ms.set_current_mesh(new_curr_id=closest_mesh_id)
 
-    # Extract vertices and normals for the closest and parent meshes
+    # Extract vertices and normals for the closest and remaining parts
     closest_mesh = ms.current_mesh()
     closest_vertices = closest_mesh.vertex_matrix()
     closest_normals = closest_mesh.vertex_normal_matrix()
@@ -58,26 +75,26 @@ def divide_mesh(mesh_data, pointA, pointB, depth=8):
     original_vertices = original_mesh.vertex_matrix()
     original_normals = original_mesh.vertex_normal_matrix()
 
-    # Define cap point and normal from `pointA` to `pointB`
-    cap_points = np.array([pointA])  # Single cap point as `pointA`
-    cap_normals = np.array([pointB - pointA])  # Normal in the direction from `pointA` to `pointB`
+    # Define a cap point and direction normal between pointA and pointB for reconstruction
+    cap_points = np.array([pointA])  # Set cap as pointA
+    cap_normals = np.array([pointB - pointA])  # Directional normal from pointA to pointB
 
-    # Mask and remove vertices in the closest mesh from the original mesh
+    # Remove vertices in the closest mesh from the original mesh, retaining others
     mask_vertices = np.isin(original_vertices, closest_vertices).all(axis=1)
     cut_original_vertices = original_vertices[~mask_vertices]
     cut_original_normals = original_normals[~mask_vertices]
 
-    # Append cap points to both separated components
+    # Add cap points to each divided component for continuity
     closest_vertices = np.vstack((closest_vertices, cap_points))
     closest_normals = np.vstack((closest_normals, cap_normals))
     cut_original_vertices = np.vstack((cut_original_vertices, cap_points))
     cut_original_normals = np.vstack((cut_original_normals, -cap_normals))
 
-    # Create meshes for the divided components
+    # Create meshes for each component after division and cap insertion
     m_closest = pymeshlab.Mesh(vertex_matrix=closest_vertices, v_normals_matrix=closest_normals)
     m_cut = pymeshlab.Mesh(vertex_matrix=cut_original_vertices, v_normals_matrix=cut_original_normals)
 
-    # Initialize new MeshSet for processing reconstructed meshes
+    # Initialize a new MeshSet to apply reconstruction and hole closure to each divided part
     ms2 = pymeshlab.MeshSet()
     ms2.add_mesh(m_closest, 'closest_mesh')
     ms2.generate_surface_reconstruction_screened_poisson(depth=int(depth), preclean=True)
@@ -91,169 +108,21 @@ def divide_mesh(mesh_data, pointA, pointB, depth=8):
     ms2.meshing_close_holes(newfaceselected=False)
     mesh_cut_reconstructed = ms2.current_mesh()
 
-    # Return vertices and faces of reconstructed meshes
+    # Return final mesh data with vertices, faces, and normals of each divided component
     return {
         "closest_mesh": {
-            "vertices": mesh_closest_reconstructed.vertex_matrix(),
-            "faces": mesh_closest_reconstructed.face_matrix()
+            "vertices": to_numpy_array(mesh_closest_reconstructed.vertex_matrix(), dtype=np.float64),
+            "faces": to_numpy_array(mesh_closest_reconstructed.face_matrix(), dtype=np.int32),
+            "vertexNormals": to_numpy_array(mesh_closest_reconstructed.vertex_normal_matrix(), dtype=np.float64),
+            "faceNormals": to_numpy_array(mesh_closest_reconstructed.face_normal_matrix(), dtype=np.float64)
         },
         "cut_mesh": {
-            "vertices": mesh_cut_reconstructed.vertex_matrix(),
-            "faces": mesh_cut_reconstructed.face_matrix()
+            "vertices": to_numpy_array(mesh_cut_reconstructed.vertex_matrix(), dtype=np.float64),
+            "faces": to_numpy_array(mesh_cut_reconstructed.face_matrix(), dtype=np.int32),
+            "vertexNormals": to_numpy_array(mesh_cut_reconstructed.vertex_normal_matrix(), dtype=np.float64),
+            "faceNormals": to_numpy_array(mesh_cut_reconstructed.face_normal_matrix(), dtype=np.float64)
         }
     }
 
-
+# Call the function so that the script can run when called from Matlab
 output = divide_mesh(mesh_data, pointA, pointB, d)
-
-
-# import pymeshlab
-# import os
-# import time
-# import numpy as np
-# 
-# def divide_mesh(pointA,pointB,depth=8,temp_path ='C:\\Users\\Public\\MMP\\temp'):
-#     os.chdir(temp_path)
-#     ms = pymeshlab.MeshSet()
-#     ms.load_new_mesh('temp_parent.ply')  
-#     for i in [1,2]:
-#         input = f'temp_cut_in_{i}.ply'
-#         ms.load_new_mesh(str(input))  
-# 
-# 
-#     ms.set_current_mesh(new_curr_id=1)
-#     n_complete = ms.number_meshes()
-# 
-#     ms.generate_splitting_by_connected_components()
-# 
-#     n_total = ms.number_meshes()
-# 
-#     n_objects = n_total - n_complete
-# 
-#     min_distances = []
-# 
-#     # find the mesh closest to pointA
-#     pointA = np.array(pointA)
-#     pointB = np.array(pointB)
-#     for i in range(n_complete,n_total):
-#         ms.set_current_mesh(new_curr_id = i)
-#         mesh_vertices = ms.current_mesh().vertex_matrix()
-#         distances = np.linalg.norm(mesh_vertices - pointA, axis=1)
-#         min_dist = np.min(distances)
-#         min_distances.append(min_dist)
-# 
-#     closest = np.argmin(min_distances)
-#     closest = closest + n_complete
-# 
-#     closest_mesh = ms.mesh(id = closest)
-#     closest_mesh_vertices = closest_mesh.vertex_matrix()
-#     closest_mesh_normals = closest_mesh.vertex_normal_matrix()
-#     original_mesh = ms.mesh(id = 0)
-#     original_mesh_vertices = original_mesh.vertex_matrix()
-#     original_mesh_normals = original_mesh.vertex_normal_matrix()
-# 
-# 
-#     ms.set_current_mesh(new_curr_id = closest)
-#     '''
-#     ms.compute_selection_from_mesh_border()
-#     ms.generate_from_selected_vertices()
-#     print(ms.current_mesh().vertex_number())
-#     ms.generate_polyline_from_selected_edges()
-#     '''
-#     #axis = np.array(pointB-pointA)/np.linalg.norm(np.array(pointB-pointA))
-#     #ms.generate_polyline_from_planar_section()
-#     #ms.generate_polyline_from_planar_section(planeaxis=3,customaxis=axis,planeoffset=pointA)
-# 
-# 
-#     '''polyline = ms.current_mesh()
-#     polyline_vertices = polyline.vertex_matrix()
-#     polyline_normals = polyline.vertex_normal_matrix()
-#     print(polyline_vertices)'''
-# 
-#     #pointC = np.mean(polyline_vertices,axis=1)
-#     pointC = pointA
-#     cap_points = pointC
-#     # print(f'pointC: {pointC}')
-#     pointC_normal = np.array(pointB-pointA)
-#     cap_points_normals = pointC_normal
-#     '''for i in range(0,len(polyline_vertices),2):
-#         pointCs = (pointC + polyline_vertices[i])/2
-#         cap_points = np.vstack((cap_points,pointCs))
-#         pointCs_normal = (pointC_normal + polyline_normals[i])/2
-#         cap_points_normals = np.vstack((cap_points_normals,pointCs_normal))'''
-# 
-#     #ms.show_polyscope()
-# 
-#     # delete points from the original array
-#     mask_vertices = np.isin(original_mesh_vertices,closest_mesh_vertices)
-#     mask_vertices = np.all(mask_vertices,axis=1)
-#     # print(mask_vertices)
-#     cut_original_vertices = original_mesh_vertices[~mask_vertices]
-#     # print(len(cut_original_vertices))
-#     # print(f'original normal: {(original_mesh_normals)}')
-#     mask_normals = np.isin(original_mesh_normals,closest_mesh_normals)
-#     # print(mask_normals)
-#     mask_normals = np.all(mask_normals,axis=1)
-#     # print(mask_normals)
-#     cut_original_normals = original_mesh_normals[~mask_vertices]
-#     # print(len(cut_original_normals))
-# 
-#     # add the cap points to the divided matrixes
-#     closest_mesh_vertices = np.vstack((closest_mesh_vertices,cap_points))
-# 
-#     closest_mesh_normals = np.vstack((closest_mesh_normals,cap_points_normals))
-#     cut_original_vertices = np.vstack((cut_original_vertices,cap_points))
-#     cut_original_normals = np.vstack((cut_original_normals,(-1)*cap_points_normals))
-# 
-#     #faces = np.empty()
-#     m_closest = pymeshlab.Mesh(vertex_matrix=closest_mesh_vertices,v_normals_matrix=closest_mesh_normals)
-#     #m_closest.vertex_normal_matrix = closest_mesh_normals
-# 
-#     m_cut = pymeshlab.Mesh(vertex_matrix=cut_original_vertices,v_normals_matrix=cut_original_normals)
-#     #m_cut.vertex_normal_matrix = cut_original_normals
-# 
-#     # end_time = time.time()
-#     # print(f'Execution time for most of the script: {end_time - start_time} s')
-# 
-#     ms2 = pymeshlab.MeshSet()
-#     ms2.add_mesh(m_closest,'closest_mesh')
-# 
-#     # start_time = time.time()
-#     ms2.generate_surface_reconstruction_screened_poisson(depth=int(depth),preclean=True)
-#     # end_time = time.time()
-#     # print(f'Execution time for poissoon reconstruction: {end_time - start_time} s')
-# 
-#     # start_time = time.time()
-#     ms2.meshing_repair_non_manifold_vertices()
-#     # end_time = time.time()
-#     # print(f'Execution time for removing non-manifold vertices: {end_time - start_time} s')
-# 
-#     # start_time = time.time()
-#     ms2.meshing_close_holes(newfaceselected = False)
-#     # end_time = time.time()
-#     # print(f'Execution time for hole filling: {end_time - start_time} s')    
-# 
-#     ms2.save_current_mesh(f'temp_cut_out_1.ply')
-# 
-#     ms2.add_mesh(m_cut,'cut_mesh')
-#     # start_time = time.time()
-#     ms2.generate_surface_reconstruction_screened_poisson(depth=int(depth),preclean=True)
-#     # end_time = time.time()
-#     # print(f'Execution time for poissoon reconstruction: {end_time - start_time} s')
-# 
-#     # start_time = time.time()
-#     ms2.meshing_repair_non_manifold_vertices()
-#     # end_time = time.time()
-#     # print(f'Execution time for removing non-manifold vertices: {end_time - start_time} s')
-# 
-#     # start_time = time.time()
-#     ms2.meshing_close_holes(newfaceselected = False)
-#     # end_time = time.time()
-#     # print(f'Execution time for hole filling: {end_time - start_time} s')
-# 
-#     ms2.save_current_mesh(f'temp_cut_out_2.ply')
-# 
-#     return()
-# 
-# divide_mesh(pointA = pointA,pointB = pointB, depth = d, temp_path = path)
-# 

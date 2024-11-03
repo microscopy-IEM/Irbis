@@ -1,4 +1,4 @@
-function [nObjects, meshCell] = reconstruct_mesh_python(depth,mesh_data,varargin)
+function [nObjects, meshCell, components] = reconstruct_mesh_python(depth,mesh_data,varargin)
 
     % disp('in matlab function')
     if nargin == 3
@@ -26,11 +26,12 @@ function [nObjects, meshCell] = reconstruct_mesh_python(depth,mesh_data,varargin
         separate=separate);
 
     % Retrieve the number of objects
-    nObjects = int8(output{'n_objects'})
+    nObjects = int8(output{'n_objects'});
 
     % Retrieve component data and initialize the cell array for surface meshes
     componentData = output{'component_data'};
     meshCell = cell(1, nObjects);
+    components = cell(1, nObjects);
 
     % Loop through each object and create surfaceMesh from Python output
     for i = 1:nObjects
@@ -42,6 +43,11 @@ function [nObjects, meshCell] = reconstruct_mesh_python(depth,mesh_data,varargin
 
         % Create the surfaceMesh for each component
         meshCell{i} = surfaceMesh(vertices, faces, "VertexNormals", vertexNormals, "FaceNormals", faceNormals);
+
+        components{i} = struct('vertices', vertices, ...
+                                    'faces',faces, ...
+                                    'vertexNormals', vertexNormals, ...
+                                    'faceNormals', faceNormals);
     end
 end
 

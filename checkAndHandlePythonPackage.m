@@ -1,9 +1,33 @@
 function checkAndHandlePythonPackage(fig,settingsAppData,packageName)
     % Check if a Python package is installed
+
+    pymeshlabVersion = '2023.12.post2';
     try
         py.importlib.import_module(packageName);
         disp([packageName ' is installed.']);
         % uialert(fig,'Pymeshlab is already installed.','success');
+
+        % Special handling for the pymeshlab package to ensure version 2023.12.post2
+        if strcmp(packageName, 'pymeshlab')
+            % Retrieve version of the installed pymeshlab package
+            version = char(py.importlib.metadata.version(packageName));
+            
+            if ~strcmp(version, pymeshlabVersion)
+                disp(['Updating ' packageName ' to version ' pymeshlabVersion '.']);
+                
+                % Update the package to the required version
+                commandStr = sprintf('"%s" -m pip install --upgrade %s==%s', pyenv().Executable, packageName, pymeshlabVersion);
+                [status, cmdout] = system(commandStr);
+                if status == 0
+                    disp([packageName ' has been updated successfully.']);
+                else
+                    disp('Failed to update the package. Please check the error message:');
+                    disp(cmdout);
+                end
+            else
+                disp([packageName ' is already up to date.']);
+            end
+        end
     catch
         choice = questdlg([packageName ' is not installed. Would you like to install it, change the Python executable, or cancel?'], ...
             'Package Not Found', ...
@@ -12,12 +36,13 @@ function checkAndHandlePythonPackage(fig,settingsAppData,packageName)
         
         switch choice
             case 'Install'
-                % Attempt to install the package using pip
-                % pyrunfile('install_pymeshlab_py_script.py')
-                % disp([packageName ' has been installed.']);
-                % [v,e] = pyversion; system([e,' -m pip install pymeshlab'])  
-                version = '2022.2.post4';
-                commandStr = sprintf('"%s" -m pip install %s==%s', pyenv().Executable, packageName, version);
+                % version = '2022.2.post4';
+                if strcmp(packageName, 'pymeshlab')
+                    version = pymeshlabVersion;
+                    commandStr = sprintf('"%s" -m pip install %s==%s', pyenv().Executable, packageName, version);
+                else
+                    commandStr = sprintf('"%s" -m pip install %s', pyenv().Executable, packageName);
+                end
                 [status, cmdout] = system(commandStr);
                 if status == 0
                     disp([packageName ' has been installed successfully.']);

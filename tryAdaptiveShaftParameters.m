@@ -583,22 +583,27 @@ function [contours, middlePoints, shaftNorms, mesh] = generateAdaptiveShaft(cent
 
     % Generate mesh using Python Poisson surface reconstruction
     depth = 9; % Adjust as needed
-    [~, vertices, faces, vertex_normals,face_normals] = reconstruct_mesh_python(depth, ptVertices, ptNormals, 0);
+    mesh_data{1} = struct('vertices', ptVertices, ...
+                            'vertexNormals', ptNormals);
+    [~, meshCell, ~] = reconstruct_mesh_python(depth,mesh_data,0);
+    % [~, vertices, faces, vertex_normals,face_normals] = reconstruct_mesh_python(depth, ptVertices, ptNormals, 0);
 
-    % Convert Python arrays to MATLAB arrays
-    regionID = 1;
-    verticesDict = dictionary(vertices);
-    facesDict = dictionary(faces);
-    vertexNormalsDict = dictionary(vertex_normals);
-    faceNormalsDict = dictionary(face_normals);
+    % % Convert Python arrays to MATLAB arrays
+    % regionID = 1;
+    % verticesDict = dictionary(vertices);
+    % facesDict = dictionary(faces);
+    % vertexNormalsDict = dictionary(vertex_normals);
+    % faceNormalsDict = dictionary(face_normals);
+    % 
+    % vertices = double(verticesDict(py.int(regionID)));
+    % faces = double(facesDict(py.int(regionID)))+1;
+    % vertexNormals = double(vertexNormalsDict(py.int(regionID)));
+    % faceNormals = double(faceNormalsDict(py.int(regionID)));
+    % 
+    % % Create mesh structure
+    % mesh = struct('vertices', vertices, 'faces', faces, 'vertexNormals', vertexNormals, 'faceNormals', faceNormals);
 
-    vertices = double(verticesDict(py.int(regionID)));
-    faces = double(facesDict(py.int(regionID)))+1;
-    vertexNormals = double(vertexNormalsDict(py.int(regionID)));
-    faceNormals = double(faceNormalsDict(py.int(regionID)));
-
-    % Create mesh structure
-    mesh = struct('vertices', vertices, 'faces', faces, 'vertexNormals', vertexNormals, 'faceNormals', faceNormals);
+    mesh = meshCell{1};
 
     % Return results
     contours = contours;

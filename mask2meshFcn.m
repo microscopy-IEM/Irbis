@@ -159,11 +159,15 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         % Run Poisson surface reconstruction in python
         pt_vertices = py.numpy.array(ptCloud.Location);
         pt_normals = py.numpy.array(ptCloud.Normal);
+
+        % Initialize the struct with vertices and vertex normals
+        mesh_data{1} = struct('vertices', pt_vertices, ...
+                                'vertexNormals', pt_normals);
         
         % tic
-        
-        [n_objects,vertices,faces,vertex_normals,face_normals] = reconstruct_mesh_python(depth,pt_vertices,pt_normals,1,1);
-        nReg = int8(n_objects);
+        [nReg, meshCell, components] = reconstruct_mesh_python(depth,mesh_data,1,1);
+        % [n_objects,vertices,faces,vertex_normals,face_normals] = reconstruct_mesh_python(depth,pt_vertices,pt_normals,1,1);
+        % nReg = int8(n_objects);
         % disp(['reconstructMesh took ' num2str(toc)])
        
 
@@ -179,28 +183,33 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         % save mesh if was generated
         if nReg > 0
        
-            verticesDict = dictionary(vertices);
-            facesDict = dictionary(faces);
-            vertexNormalsDict = dictionary(vertex_normals);
-            faceNormalsDict = dictionary(face_normals);
-            
-            regionID = 1;
-              
-            vertices = double(verticesDict(py.int(regionID)));
-            faces = double(facesDict(py.int(regionID)))+1;
-            vertexNormals = double(vertexNormalsDict(py.int(regionID)));
-            faceNormals = double(faceNormalsDict(py.int(regionID)));
+            % verticesDict = dictionary(vertices);
+            % facesDict = dictionary(faces);
+            % vertexNormalsDict = dictionary(vertex_normals);
+            % faceNormalsDict = dictionary(face_normals);
+            % 
+            % regionID = 1;
+            % 
+            % vertices = double(verticesDict(py.int(regionID)));
+            % faces = double(facesDict(py.int(regionID)))+1;
+            % vertexNormals = double(vertexNormalsDict(py.int(regionID)));
+            % faceNormals = double(faceNormalsDict(py.int(regionID)));
+
           
 
             switch mode
                 case '3D'
+                    mesh = meshCell{1};
                     
                 case '2D'
+                    components = components{1};
+                    vertices = components.vertices;
                     vertices(:,3) = vertices(:,3) - mean(vertices(:,3));
                     vertices(:,3) = vertices(:,3).*0.5;
+                    mesh = surfaceMesh(vertices,components.faces,"VertexNormals",components.vertexNormals,"FaceNormals",components.faceNormals);
             end
             
-            mesh = surfaceMesh(vertices,faces,"VertexNormals",vertexNormals,"FaceNormals",faceNormals);
+            % mesh = surfaceMesh(vertices,faces,"VertexNormals",vertexNormals,"FaceNormals",faceNormals);
             mesh = smoothSurfaceMesh(mesh,4);
                
             

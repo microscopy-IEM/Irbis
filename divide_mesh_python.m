@@ -13,23 +13,5 @@ function meshCell = divide_mesh_python(mesh_data,pointA,pointB,depth)
     cut_vertices = double(output{'cut_mesh'}{'vertices'});
     cut_faces = double(output{'cut_mesh'}{'faces'}) + 1;
     meshCell{2} = surfaceMesh(cut_vertices, cut_faces);
-    
-    % % Display or process the extracted data
-    % disp('Closest Mesh Vertices:');
-    % disp(closest_vertices);
-    % disp('Closest Mesh Faces:');
-    % disp(closest_faces);
-    % 
-    % disp('Cut Mesh Vertices:');
-    % disp(cut_vertices);
-    % disp('Cut Mesh Faces:');
-    % disp(cut_faces);
 
 end
-
-% function divide_mesh_python(pointA,pointB,depth,path)
-% 
-%     pathAdapted = strrep(path,'\','/');
-%     pyrunfile('divide_mesh_py_script.py',pointA=pointA,pointB=pointB,d=depth,path=pathAdapted);
-% 
-% end
