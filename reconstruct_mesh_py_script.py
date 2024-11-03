@@ -1,6 +1,11 @@
 import pymeshlab
 import numpy as np
-from utils_py_script import to_numpy_array  # `to_numpy_array` is defined in utils_py_script.py
+
+def to_numpy_array(data, dtype):
+    """Ensure data is a NumPy array, converting memoryview if needed."""
+    if isinstance(data, memoryview):
+        return np.array(data, dtype=dtype)
+    return np.asarray(data, dtype=dtype)
 
 def reconstruct_mesh(mesh_data, depth=8, fraction_to_keep=0.8, min_vertex_num=20, separate=True):
     """
@@ -76,8 +81,6 @@ def reconstruct_mesh(mesh_data, depth=8, fraction_to_keep=0.8, min_vertex_num=20
                     "faceNormals": to_numpy_array(current_mesh.face_normal_matrix(), dtype=np.float64)
                 }
                 object_num += 1
-
-                print(i)
 
         n_objects = object_num - 1
 

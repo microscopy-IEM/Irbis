@@ -1,6 +1,11 @@
 import pymeshlab
 import numpy as np
-from utils_py_script import to_numpy_array  # `to_numpy_array` is defined in utils_py_script.py
+
+def to_numpy_array(data, dtype):
+    """Ensure data is a NumPy array, converting memoryview if needed."""
+    if isinstance(data, memoryview):
+        return np.array(data, dtype=dtype)
+    return np.asarray(data, dtype=dtype)
 
 def mesh_subtract_and_separate_with_color(mesh_data, green_threshold=0.3, tolerance=1e-4, distance_threshold=0.1):
     """
@@ -84,40 +89,40 @@ def mesh_subtract_and_separate_with_color(mesh_data, green_threshold=0.3, tolera
             mean_normal = np.mean(matched_normals, axis=0)
             base_points.append(np.concatenate((mean_vertex, mean_normal)))
         else:
-            small_mesh_vertices = to_numpy_array(mesh_data[1]['vertices'], dtype=np.float64)
-            # If no matched vertices are found with the green threshold, select up to 20 unique closest vertices below the distance threshold
-            # Calculate distances between each vertex in the current component mesh and vertices in the small mesh.
-            # The result is a matrix of shape (current_mesh_vertices, small_mesh_vertices) where each element [i, j]
-            # represents the Euclidean distance between vertex i in the current mesh and vertex j in the small mesh.
-            distances = np.linalg.norm(current_mesh.vertex_matrix()[:, None, :] - small_mesh_vertices[None, :, :], axis=2)
-        
-            # Identify indices where distances are below the specified threshold
-            # This creates a tuple of arrays, where below_threshold_indices[0] contains the indices of `current_mesh.vertex_matrix()`
-            # and below_threshold_indices[1] contains the indices of `small_mesh_vertices` for all pairs below the threshold.
-            below_threshold_indices = np.where(distances < distance_threshold)
-        
-            # Check if any distances met the threshold criteria
-            if below_threshold_indices[0].size > 0:
-                # Flatten the indices of current mesh vertices that are within the threshold
-                # `flat_indices` will contain all vertex indices in `current_mesh.vertex_matrix()` that
-                # have at least one corresponding distance below the threshold.
-                flat_indices = below_threshold_indices[0]
-        
-                # Select up to 20 unique closest vertices within the threshold by using argpartition.
-                # `np.argpartition` finds the indices of the 20 smallest elements in `distances[below_threshold_indices]`.
-                # Applying `np.unique` removes duplicate indices, ensuring only unique vertices are chosen.
-                unique_nearest_indices = np.unique(np.argpartition(distances[below_threshold_indices], 20)[:20])
-        
-                # Use these unique indices to retrieve coordinates and normals from the current mesh.
-                matched_vertices = current_mesh.vertex_matrix()[unique_nearest_indices]
-                matched_normals = current_mesh.vertex_normal_matrix()[unique_nearest_indices]
-
-                mean_vertex = np.mean(matched_vertices, axis=0)
-                mean_normal = np.mean(matched_normals, axis=0)
-                base_points.append(np.concatenate((mean_vertex, mean_normal)))
-            else:
-                # Append NaNs if no matched vertices
-                base_points.append(np.full(6, np.nan))
+            # small_mesh_vertices = to_numpy_array(mesh_data[1]['vertices'], dtype=np.float64)
+            # # If no matched vertices are found with the green threshold, select up to 20 unique closest vertices below the distance threshold
+            # # Calculate distances between each vertex in the current component mesh and vertices in the small mesh.
+            # # The result is a matrix of shape (current_mesh_vertices, small_mesh_vertices) where each element [i, j]
+            # # represents the Euclidean distance between vertex i in the current mesh and vertex j in the small mesh.
+            # distances = np.linalg.norm(current_mesh.vertex_matrix()[:, None, :] - small_mesh_vertices[None, :, :], axis=2)
+            # 
+            # # Identify indices where distances are below the specified threshold
+            # # This creates a tuple of arrays, where below_threshold_indices[0] contains the indices of `current_mesh.vertex_matrix()`
+            # # and below_threshold_indices[1] contains the indices of `small_mesh_vertices` for all pairs below the threshold.
+            # below_threshold_indices = np.where(distances < distance_threshold)
+            # 
+            # # Check if any distances met the threshold criteria
+            # if below_threshold_indices[0].size > 0:
+            #     # Flatten the indices of current mesh vertices that are within the threshold
+            #     # `flat_indices` will contain all vertex indices in `current_mesh.vertex_matrix()` that
+            #     # have at least one corresponding distance below the threshold.
+            #     flat_indices = below_threshold_indices[0]
+            # 
+            #     # Select up to 20 unique closest vertices within the threshold by using argpartition.
+            #     # `np.argpartition` finds the indices of the 20 smallest elements in `distances[below_threshold_indices]`.
+            #     # Applying `np.unique` removes duplicate indices, ensuring only unique vertices are chosen.
+            #     unique_nearest_indices = np.unique(np.argpartition(distances[below_threshold_indices], 20)[:20])
+            # 
+            #     # Use these unique indices to retrieve coordinates and normals from the current mesh.
+            #     matched_vertices = current_mesh.vertex_matrix()[unique_nearest_indices]
+            #     matched_normals = current_mesh.vertex_normal_matrix()[unique_nearest_indices]
+            # 
+            #     mean_vertex = np.mean(matched_vertices, axis=0)
+            #     mean_normal = np.mean(matched_normals, axis=0)
+            #     base_points.append(np.concatenate((mean_vertex, mean_normal)))
+            # else:
+            #     # Append NaNs if no matched vertices
+            base_points.append(np.full(6, np.nan))
 
     n_objects = n_total - n_complete
     base_points = np.array(base_points)

@@ -6,10 +6,14 @@
 
 % Script reads general info (num of channles, planes etc.) from the image metadata
 
-function [planes,nTimePoints] = importPlanes(figureH,colors,nTimePoints)
+function [planes,nTimePoints] = importPlanes(figureH,colors,nTimePoints,varargin)
 
-    wb = uiprogressdlg(figureH,'Title','Importing file','Message','Importing file...','Cancelable','on');
-    wb.Value = 0;
+    if nargin < 4
+        wb = uiprogressdlg(figureH,'Title','Importing file','Message','Importing file...','Cancelable','on');
+        wb.Value = 0;
+    else 
+        wb = varargin{1};
+    end
     
      % select files
     [fileName,path] = uigetfile('*.tif','MultiSelect','off');
@@ -107,8 +111,6 @@ function [planes,nTimePoints] = importPlanes(figureH,colors,nTimePoints)
         
         numOfFramesPerTimepoint = numOfZPlanes*numOfChannels;
 
-        numOfChannels
-        
         % Save default description to channels
 
         channelColors = cell(1,numOfChannels);
@@ -186,11 +188,11 @@ function [planes,nTimePoints] = importPlanes(figureH,colors,nTimePoints)
     
   
         % planes
-    
-    wb.Value = 1;
-    pause(0.1)
-    close(wb)
-
+    if nargin < 4
+        wb.Value = 1;
+        % pause(0.1)
+        close(wb)
+    end
 end
 
 

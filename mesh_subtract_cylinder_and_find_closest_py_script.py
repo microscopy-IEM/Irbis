@@ -1,6 +1,11 @@
 import pymeshlab
 import numpy as np
-from utils_py_script import to_numpy_array  # `to_numpy_array` is defined in utils_py_script.py
+
+def to_numpy_array(data, dtype):
+    """Ensure data is a NumPy array, converting memoryview if needed."""
+    if isinstance(data, memoryview):
+        return np.array(data, dtype=dtype)
+    return np.asarray(data, dtype=dtype)
 
 def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original, tolerance=1e-4, threshold=0.1, min_sample_size=50, green_threshold=0.3, distance_threshold=0.1):
     """
@@ -27,6 +32,7 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
             - base_points: Array of average base points for each component close to the original mesh.
             - component_colors: Dictionary with arrays of colors of individual vertices for each component.
     """
+    print('before ms setting')
     ms = pymeshlab.MeshSet()
     
     # Convert vertices_original to a NumPy array with correct data type
@@ -48,6 +54,8 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         new_mesh = pymeshlab.Mesh(**mesh_args)
         ms.add_mesh(new_mesh, f"mesh_{i}")
 
+        print(f'after loading {i}')
+
         try:
             # Apply distinct color to each mesh (e.g., red for first mesh, green for second)
             if i == 0:
@@ -58,9 +66,13 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
                 ms.set_color_per_vertex(color1=color)  # Green for the small mesh
         except Exception as e:
             print(f"Error setting color for mesh {i}: {e}")
+
+    print('after first loop')
     
     # Perform boolean difference between the first two meshes
     ms.generate_boolean_difference(first_mesh=0, second_mesh=1, transfer_vert_color=True)
+
+    print('after boolean difference')
     
     # Split result into connected components
     n_complete = ms.mesh_number()
@@ -68,6 +80,8 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
     n_total = ms.mesh_number()
     
     all_matches = []
+
+    print('before next loop')
     
     # Calculate match proportions for each component by comparing against original vertices
     for i in range(n_complete, n_total):
@@ -86,6 +100,8 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         step_size = int(max(1, len(sampled_vertices) // min_sample_size))
         sampled_vertices = sampled_vertices[::step_size]
 
+        print(f'before linalg norm {i}')
+
         # Calculate Euclidean distances between each sampled vertex and all vertices in comparison_vertices
         # Broadcasting ensures that `distances` is an array of shape (sampled_vertices.size, comparison_vertices.size)
         # where each element represents the distance from one sampled vertex to one comparison vertex
@@ -98,6 +114,8 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         # Calculate the proportion of sampled vertices that have at least one match in the original vertices.
         match_prop = float(np.sum(matches) / len(sampled_vertices))  # Ensure float for Python compatibility
         all_matches.append(match_prop)
+
+    print('after another loop')
     
     # Filter components that meet the match threshold
     ids_above_threshold = [i + n_complete for i, match in enumerate(all_matches) if match > float(threshold)]
@@ -107,6 +125,8 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
     # Extract component data and calculate base points
     component_data = {}
     base_points = []
+
+    print('before saving loop')
 
     for j, component_id in enumerate(ids_above_threshold, start=1):
         ms.set_current_mesh(new_curr_id=component_id)
@@ -133,43 +153,47 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
             mean_normal = np.mean(matched_normals, axis=0)
             base_points.append(np.concatenate((mean_vertex, mean_normal)))
         else:
-            small_mesh_vertices = to_numpy_array(mesh_data[1]['vertices'], dtype=np.float64)
-            # If no matched vertices are found with the green threshold, select up to 20 unique closest vertices below the distance threshold
-            # Calculate distances between each vertex in the current component mesh and vertices in the small mesh.
-            # The result is a matrix of shape (current_mesh_vertices, small_mesh_vertices) where each element [i, j]
-            # represents the Euclidean distance between vertex i in the current mesh and vertex j in the small mesh.
-            distances = np.linalg.norm(current_mesh.vertex_matrix()[:, None, :] - small_mesh_vertices[None, :, :], axis=2)
-        
-            # Identify indices where distances are below the specified threshold
-            # This creates a tuple of arrays, where below_threshold_indices[0] contains the indices of `current_mesh.vertex_matrix()`
-            # and below_threshold_indices[1] contains the indices of `small_mesh_vertices` for all pairs below the threshold.
-            below_threshold_indices = np.where(distances < float(distance_threshold))
-        
-            # Check if any distances met the threshold criteria
-            if below_threshold_indices[0].size > 0:
-                # Flatten the indices of current mesh vertices that are within the threshold
-                # `flat_indices` will contain all vertex indices in `current_mesh.vertex_matrix()` that
-                # have at least one corresponding distance below the threshold.
-                flat_indices = below_threshold_indices[0]
-        
-                # Select up to 20 unique closest vertices within the threshold by using argpartition.
-                # `np.argpartition` finds the indices of the 20 smallest elements in `distances[below_threshold_indices]`.
-                # Applying `np.unique` removes duplicate indices, ensuring only unique vertices are chosen.
-                unique_nearest_indices = np.unique(np.argpartition(distances[below_threshold_indices], 20)[:20])
-        
-                # Use these unique indices to retrieve coordinates and normals from the current mesh.
-                matched_vertices = current_mesh.vertex_matrix()[unique_nearest_indices]
-                matched_normals = current_mesh.vertex_normal_matrix()[unique_nearest_indices]
+            # small_mesh_vertices = to_numpy_array(mesh_data[1]['vertices'], dtype=np.float64)
+            # # If no matched vertices are found with the green threshold, select up to 20 unique closest vertices below the distance threshold
+            # # Calculate distances between each vertex in the current component mesh and vertices in the small mesh.
+            # # The result is a matrix of shape (current_mesh_vertices, small_mesh_vertices) where each element [i, j]
+            # # represents the Euclidean distance between vertex i in the current mesh and vertex j in the small mesh.
+            # distances = np.linalg.norm(current_mesh.vertex_matrix()[:, None, :] - small_mesh_vertices[None, :, :], axis=2)
+            # 
+            # # Identify indices where distances are below the specified threshold
+            # # This creates a tuple of arrays, where below_threshold_indices[0] contains the indices of `current_mesh.vertex_matrix()`
+            # # and below_threshold_indices[1] contains the indices of `small_mesh_vertices` for all pairs below the threshold.
+            # below_threshold_indices = np.where(distances < float(distance_threshold))
+            # 
+            # # Check if any distances met the threshold criteria
+            # if below_threshold_indices[0].size > 0:
+            #     # Flatten the indices of current mesh vertices that are within the threshold
+            #     # `flat_indices` will contain all vertex indices in `current_mesh.vertex_matrix()` that
+            #     # have at least one corresponding distance below the threshold.
+            #     flat_indices = below_threshold_indices[0]
+            # 
+            #     # Select up to 20 unique closest vertices within the threshold by using argpartition.
+            #     # `np.argpartition` finds the indices of the 20 smallest elements in `distances[below_threshold_indices]`.
+            #     # Applying `np.unique` removes duplicate indices, ensuring only unique vertices are chosen.
+            #     unique_nearest_indices = np.unique(np.argpartition(distances[below_threshold_indices], 20)[:20])
+            # 
+            #     # Use these unique indices to retrieve coordinates and normals from the current mesh.
+            #     matched_vertices = current_mesh.vertex_matrix()[unique_nearest_indices]
+            #     matched_normals = current_mesh.vertex_normal_matrix()[unique_nearest_indices]
+            # 
+            #     mean_vertex = np.mean(matched_vertices, axis=0)
+            #     mean_normal = np.mean(matched_normals, axis=0)
+            #     base_points.append(np.concatenate((mean_vertex, mean_normal)))
+            # else:
+            #     # Append NaNs if no matched vertices
+            base_points.append(np.full(6, np.nan))
 
-                mean_vertex = np.mean(matched_vertices, axis=0)
-                mean_normal = np.mean(matched_normals, axis=0)
-                base_points.append(np.concatenate((mean_vertex, mean_normal)))
-            else:
-                # Append NaNs if no matched vertices
-                base_points.append(np.full(6, np.nan))
+            print(f'saving loop end {i}')
 
     n_objects = n_total - n_complete
     base_points = np.array(base_points)
+
+    print('before return')
 
     return {
         "n_objects": len(ids_above_threshold),

@@ -1,6 +1,11 @@
 import pymeshlab
 import numpy as np
-from utils_py_script import to_numpy_array  # Assumes to_numpy_array is defined in utils_py_script.py
+
+def to_numpy_array(data, dtype):
+    """Ensure data is a NumPy array, converting memoryview if needed."""
+    if isinstance(data, memoryview):
+        return np.array(data, dtype=dtype)
+    return np.asarray(data, dtype=dtype)
 
 def find_closest_and_close_holes(mesh_data, max_hole_size=1000, match_threshold=0.1, early_stop_threshold=0.85, min_sample_size=50, tolerance=1e-3):
     """

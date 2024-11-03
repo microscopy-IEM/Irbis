@@ -1,6 +1,11 @@
 import pymeshlab
 import numpy as np
-from utils_py_script import to_numpy_array  # Assumes `to_numpy_array` is defined in utils_py_script.py
+
+def to_numpy_array(data, dtype):
+    """Ensure data is a NumPy array, converting memoryview if needed."""
+    if isinstance(data, memoryview):
+        return np.array(data, dtype=dtype)
+    return np.asarray(data, dtype=dtype)
 
 def mesh_intersect_and_separate(mesh_data):
     """

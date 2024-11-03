@@ -2,6 +2,7 @@ function checkAndHandlePythonPackage(fig,settingsAppData,packageName)
     % Check if a Python package is installed
 
     pymeshlabVersion = '2023.12.post2';
+    pyenv
     try
         py.importlib.import_module(packageName);
         disp([packageName ' is installed.']);
@@ -60,6 +61,8 @@ function checkAndHandlePythonPackage(fig,settingsAppData,packageName)
                     pythonExecutablePath = fullfile(path, file);
                     settingsAppData.pythonPath = pythonExecutablePath;
                     disp(['Python environment will be updated to use: ', pythonExecutablePath]);
+                    pyenv(Version=pythonExecutablePath)
+                    pyenv
                     uialert(fig,'You need to reset the app to apply the changes.','Warning')
                     % pyenv('Version', pythonExecutablePath);
                     % disp(['Python environment updated to use: ', pythonExecutablePath]);
