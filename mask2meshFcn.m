@@ -12,7 +12,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
     sigma = 1;
     scaleF = 2;
     isoThres = 0.3;
-    depth = 4;
+    depth = 4
 
     % wb_handle.Value = 0;
 
@@ -164,11 +164,11 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         mesh_data{1} = struct('vertices', pt_vertices, ...
                                 'vertexNormals', pt_normals);
         
-        % tic
+        tic
         [nReg, meshCell, components] = reconstruct_mesh_python(depth,mesh_data,1,1);
         % [n_objects,vertices,faces,vertex_normals,face_normals] = reconstruct_mesh_python(depth,pt_vertices,pt_normals,1,1);
         % nReg = int8(n_objects);
-        % disp(['reconstructMesh took ' num2str(toc)])
+        disp(['reconstructMesh took ' num2str(toc)])
        
 
         % tic
