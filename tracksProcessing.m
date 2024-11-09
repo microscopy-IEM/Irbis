@@ -21,7 +21,9 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         
         % get coordinates
         coor_nan = T.xyz{TrackNum};
-        coor_nan = coor_nan(:,1:2);
+        % coor_nan = coor_nan(:,1:2);
+
+        coor_nan = coor_nan(:,1:3);
         
         % count Nan values
         Nan_values = (isnan(coor_nan(:,1)))'; % find NaN values
@@ -135,6 +137,7 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         
         T.meanX(TrackNum) = XYmean(TrackNum,1);
         T.meanY(TrackNum) = XYmean(TrackNum,2);
+        T.meanZ(TrackNum) = XYmean(TrackNum,3);
            
         T.disp(TrackNum) = {disp};
         T.velocity(TrackNum) = {velocity};
