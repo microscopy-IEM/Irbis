@@ -135,4 +135,4 @@ def mesh_subtract_and_separate_with_color(mesh_data, green_threshold=0.3, tolera
     }
 
 # Call the function so that the script can run when called from Matlab
-output = mesh_subtract_and_separate_with_color(mesh_data, green_threshold, distance_threshold)
+output = mesh_subtract_and_separate_with_color(mesh_data, green_threshold, tolerance, distance_threshold)

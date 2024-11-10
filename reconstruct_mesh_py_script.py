@@ -104,8 +104,8 @@ def reconstruct_mesh(mesh_data, depth=8, fraction_to_keep=0.8, min_vertex_num=20
 # Call the function so that the script can run when called from Matlab
 output = reconstruct_mesh(
     mesh_data=mesh_data,
-    depth=4,
-    fraction_to_keep=0.8,
-    min_vertex_num=20,
-    separate=True
+    depth=d,
+    fraction_to_keep=f,
+    min_vertex_num=nVer,
+    separate=separate
 )

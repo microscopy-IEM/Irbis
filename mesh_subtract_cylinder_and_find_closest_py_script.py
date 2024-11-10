@@ -32,7 +32,6 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
             - base_points: Array of average base points for each component close to the original mesh.
             - component_colors: Dictionary with arrays of colors of individual vertices for each component.
     """
-    print('before ms setting')
     ms = pymeshlab.MeshSet()
     
     # Convert vertices_original to a NumPy array with correct data type
@@ -54,8 +53,6 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         new_mesh = pymeshlab.Mesh(**mesh_args)
         ms.add_mesh(new_mesh, f"mesh_{i}")
 
-        print(f'after loading {i}')
-
         try:
             # Apply distinct color to each mesh (e.g., red for first mesh, green for second)
             if i == 0:
@@ -67,12 +64,8 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         except Exception as e:
             print(f"Error setting color for mesh {i}: {e}")
 
-    print('after first loop')
-    
     # Perform boolean difference between the first two meshes
     ms.generate_boolean_difference(first_mesh=0, second_mesh=1, transfer_vert_color=True)
-
-    print('after boolean difference')
     
     # Split result into connected components
     n_complete = ms.mesh_number()
@@ -81,8 +74,6 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
     
     all_matches = []
 
-    print('before next loop')
-    
     # Calculate match proportions for each component by comparing against original vertices
     for i in range(n_complete, n_total):
         # Convert the vertices of the current mesh component to a NumPy array
@@ -100,8 +91,6 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         step_size = int(max(1, len(sampled_vertices) // min_sample_size))
         sampled_vertices = sampled_vertices[::step_size]
 
-        print(f'before linalg norm {i}')
-
         # Calculate Euclidean distances between each sampled vertex and all vertices in comparison_vertices
         # Broadcasting ensures that `distances` is an array of shape (sampled_vertices.size, comparison_vertices.size)
         # where each element represents the distance from one sampled vertex to one comparison vertex
@@ -114,8 +103,6 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         # Calculate the proportion of sampled vertices that have at least one match in the original vertices.
         match_prop = float(np.sum(matches) / len(sampled_vertices))  # Ensure float for Python compatibility
         all_matches.append(match_prop)
-
-    print('after another loop')
     
     # Filter components that meet the match threshold
     ids_above_threshold = [i + n_complete for i, match in enumerate(all_matches) if match > float(threshold)]
@@ -125,8 +112,7 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
     # Extract component data and calculate base points
     component_data = {}
     base_points = []
-
-    print('before saving loop')
+    component_colors_array = {}
 
     for j, component_id in enumerate(ids_above_threshold, start=1):
         ms.set_current_mesh(new_curr_id=component_id)
@@ -145,7 +131,7 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         green_vertices_mask = component_colors[:, 1] > float(green_threshold)  # Only vertices with green > threshold
         matched_vertices = current_mesh.vertex_matrix()[green_vertices_mask]
         matched_normals = current_mesh.vertex_normal_matrix()[green_vertices_mask]
-        component_colors_array[component_index] = component_colors
+        component_colors_array[j] = component_colors
 
         # Calculate base point as the mean position and normal of all selected vertices with high green intensity
         if len(matched_vertices) > 0:
@@ -187,13 +173,10 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
             # else:
             #     # Append NaNs if no matched vertices
             base_points.append(np.full(6, np.nan))
-
-            print(f'saving loop end {i}')
+            
 
     n_objects = n_total - n_complete
     base_points = np.array(base_points)
-
-    print('before return')
 
     return {
         "n_objects": len(ids_above_threshold),
