@@ -218,7 +218,7 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
         operatorDropdown.Items = {'equals'};
 
         % Create a new tree with checkboxes for the value field
-        cats = categories(columnData);
+        cats = sort(categories(columnData));
         valueField = uitree(criteriaGrid, 'Checkbox', 'Tag', 'valueTree');
         valueField.Layout.Row = row;
         valueField.Layout.Column = 3;
@@ -336,51 +336,53 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
     end
 
     function saveCategories(scrollPanel)
-        conditions = struct();
-        for i = 1:length(scrollPanel.UserData.CategoryPanels)
-            categoryPanel = scrollPanel.UserData.CategoryPanels{i};
-            categoryName = categoryPanel.Children(1).Children(1).Value; % Get the category name
-            conditionsDict = dictionary(string.empty, {}); % Initialize with key and value types
-            for j = 1:length(categoryPanel.UserData.CriteriaComponents)
-                rowComponents = categoryPanel.UserData.CriteriaComponents{j};
-                column = rowComponents{1}.Value;
-                operator = rowComponents{2}.Value;
 
-                % Check if the value field is a uitree (for categorical variables)
-                if strcmp(rowComponents{3}.Type, 'uicheckboxtree')
-                    checkedNodes = rowComponents{3}.CheckedNodes;
-                    value = {checkedNodes.Text}; % Save as cell array
-                    conditionsDict(column) = {value};
-                else
-                    value = rowComponents{3}.Value;
-                    operatorValueDict = dictionary(operator, value);
-                    if isKey(conditionsDict, column)
-                        innerDict = conditionsDict(column);
-                        innerDict = innerDict{1};
-                        % innerDict
-                        isConfigured(innerDict)
-                        % operator
-                        if isKey(innerDict, operator)
-                            disp('overwriting the same condition');
-                        end
-                        innerDict(operator) = value;
-                        conditionsDict(column) = {innerDict};
-                    else
-                        conditionsDict(column) = {operatorValueDict};
-                    end
-                end
-            end
-            categoryStruct.name = categoryName;
-            categoryStruct.conditions = conditionsDict;
-            conditions.(['group' num2str(i)]) = categoryStruct;
-        end
-        assignin('base', 'cats', conditions); % Save to workspace for further use
-        % disp(conditions)
-
-        name = string(nameField.Value);
-
-        uiresume(groupingFig);
-        delete(groupingFig);
+        saveSortedCategories(scrollPanel, groupingFig)
+        % conditions = struct();
+        % for i = 1:length(scrollPanel.UserData.CategoryPanels)
+        %     categoryPanel = scrollPanel.UserData.CategoryPanels{i};
+        %     categoryName = categoryPanel.Children(1).Children(1).Value; % Get the category name
+        %     conditionsDict = dictionary(string.empty, {}); % Initialize with key and value types
+        %     for j = 1:length(categoryPanel.UserData.CriteriaComponents)
+        %         rowComponents = categoryPanel.UserData.CriteriaComponents{j};
+        %         column = rowComponents{1}.Value;
+        %         operator = rowComponents{2}.Value;
+        % 
+        %         % Check if the value field is a uitree (for categorical variables)
+        %         if strcmp(rowComponents{3}.Type, 'uicheckboxtree')
+        %             checkedNodes = rowComponents{3}.CheckedNodes;
+        %             value = {checkedNodes.Text}; % Save as cell array
+        %             conditionsDict(column) = {value};
+        %         else
+        %             value = rowComponents{3}.Value;
+        %             operatorValueDict = dictionary(operator, value);
+        %             if isKey(conditionsDict, column)
+        %                 innerDict = conditionsDict(column);
+        %                 innerDict = innerDict{1};
+        %                 % innerDict
+        %                 isConfigured(innerDict)
+        %                 % operator
+        %                 if isKey(innerDict, operator)
+        %                     disp('overwriting the same condition');
+        %                 end
+        %                 innerDict(operator) = value;
+        %                 conditionsDict(column) = {innerDict};
+        %             else
+        %                 conditionsDict(column) = {operatorValueDict};
+        %             end
+        %         end
+        %     end
+        %     categoryStruct.name = categoryName;
+        %     categoryStruct.conditions = conditionsDict;
+        %     conditions.(['group' num2str(i)]) = categoryStruct;
+        % end
+        % assignin('base', 'cats', conditions); % Save to workspace for further use
+        % % disp(conditions)
+        % 
+        % name = string(nameField.Value);
+        % 
+        % uiresume(groupingFig);
+        % delete(groupingFig);
     end
 
     function loadSettings()
