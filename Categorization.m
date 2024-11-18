@@ -131,6 +131,7 @@ classdef Categorization < handle
         function categories = evaluateConditions(obj, table)
             categories = repmat("Uncategorized", height(table), 1);
             fields = fieldnames(obj.Conditions);
+            assignin("base","conds",obj.Conditions)
             for i = 1:numel(fields)
                 group = fields{i};
                 groupName = obj.Conditions.(group).name;
@@ -139,6 +140,10 @@ classdef Categorization < handle
                 condFields = keys(conds);
                 for j = 1:numel(condFields)
                     condValue = conds(condFields{j});
+                    if ~ismember(condFields{j}, table.Properties.VariableNames)
+                        error('Categorization:ColumnNotInTable', ...
+                            'The column name used in the categorization is not present in the data.');
+                    end
                     % if iscell(condValue)  % List of selected categories
                     %     match = match & ismember(table.(condFields{j}), condValue);
                     if isequal(class(condValue{1}),'dictionary')

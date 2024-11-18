@@ -11,7 +11,6 @@ function resultTable = groupIdByTimepointTableFromCombinedList(combinedList, att
     end
 
     % Remove rows where groupId is 0
-    combinedList(combinedList.groupId == categorical("0"), :)
     combinedList(combinedList.groupId == categorical("0"), :) = [];
 
     if isempty(combinedList)

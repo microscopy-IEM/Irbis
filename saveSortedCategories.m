@@ -1,4 +1,4 @@
-function saveSortedCategories(scrollPanel, groupingFig)
+function conditions = saveSortedCategories(scrollPanel, groupingFig)
     % create categories structure to store to Categorization object
     % sorts the structure so that the structure is the same no matter the order of definition
 
@@ -8,7 +8,7 @@ function saveSortedCategories(scrollPanel, groupingFig)
         categoryNames{i} = scrollPanel.UserData.CategoryPanels{i}.Children(1).Children(1).Value;
     end
 
-    [~, indexes] = sort(categoryNames)
+    [~, indexes] = sort(categoryNames);
     % indexes = indexes(:)
     size(indexes)
 
@@ -28,17 +28,17 @@ function saveSortedCategories(scrollPanel, groupingFig)
             columns{j} = categoryPanel.UserData.CriteriaComponents{j}{1}.Value;
             operators{j} = categoryPanel.UserData.CriteriaComponents{j}{2}.Value;
         end
-        [sortedColumns, columnIndexes] = sort(columns)
-        operatorsSortedByColumns = operators(columnIndexes)
+        [sortedColumns, columnIndexes] = sort(columns);
+        operatorsSortedByColumns = operators(columnIndexes);
 
         % now, I also need to sort based on the operator, when the column is mentioned more times
-        [~, b, c] = unique(sortedColumns, "stable")
+        [~, b, c] = unique(sortedColumns, "stable");
 
         for elementId = 1:numel(b)
             elementCount = sum(c == elementId);
             if elementCount > 1
                 % column more than once -> sort
-                relevantOperators = operatorsSortedByColumns(b(elementId):b(elementId)+elementCount-1)
+                relevantOperators = operatorsSortedByColumns(b(elementId):b(elementId)+elementCount-1);
                 [~, operatorIndexes] = sort(relevantOperators);
                 relevantColumnIndexes = columnIndexes(b(elementId):b(elementId)+elementCount-1);
                 columnIndexes(b(elementId):b(elementId)+elementCount-1) = relevantColumnIndexes(operatorIndexes);
@@ -81,7 +81,7 @@ function saveSortedCategories(scrollPanel, groupingFig)
         conditions.(['group' num2str(risingNum)]) = categoryStruct;
         risingNum = risingNum + 1;
     end
-    assignin('base', 'cats', conditions); % Save to workspace for further use
+    % assignin('base', 'cats', conditions); % Save to workspace for further use
     % disp(conditions)
 
     uiresume(groupingFig);

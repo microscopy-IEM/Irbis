@@ -337,7 +337,8 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
 
     function saveCategories(scrollPanel)
 
-        saveSortedCategories(scrollPanel, groupingFig)
+        name = string(nameField.Value);
+        conditions = saveSortedCategories(scrollPanel, groupingFig);
         % conditions = struct();
         % for i = 1:length(scrollPanel.UserData.CategoryPanels)
         %     categoryPanel = scrollPanel.UserData.CategoryPanels{i};
@@ -379,7 +380,7 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
         % assignin('base', 'cats', conditions); % Save to workspace for further use
         % % disp(conditions)
         % 
-        % name = string(nameField.Value);
+        
         % 
         % uiresume(groupingFig);
         % delete(groupingFig);
@@ -475,6 +476,13 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
                 for j = 1:numel(condFields)
                     condValue = conds(condFields{j});
                     column = condFields{j};
+
+                    if ~ismember(column, tableData.Properties.VariableNames)
+                        % the column used in definition does not exist in the current table
+                        delete(groupingFig)
+                        error('Categorization:ColumnNotInTable', ...
+                            'The column name used in the categorization is not present in the data.');
+                    end
                     if isequal(class(condValue{1}),'dictionary')
                         condDict = condValue{1};
                         condKeys = keys(condDict);
