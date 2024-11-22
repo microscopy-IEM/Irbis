@@ -3,11 +3,8 @@
 function [mask,mask_pixelSize] = points2masksFcn(peaks,greyMap,expectedPeakDiam_um,orig_pixel_size,z_spacing,clusterMask)
 
 
-% wb = uiprogressdlg(hFig,'Title',['Generating masks from points' num2str(1)],'Message','Generating...','Cancelable','off');
-
 conn = 6; % 3D case
 peak2BcgRatioThres = 1;
-
 
 % Local threshold function
 % thFun = @(mx,mn)((mx)/3 + mn);    
@@ -75,7 +72,7 @@ searchOffset = strel(morphOperator,morphSz);
 % sz_ = size(searchOffset.Neighborhood);
 % searchOffset.Neighborhood = imresize3(searchOffset.Neighborhood,[sz_(1) sz_(2) round(sz_(3)/2)],'method','linear')
 
-peakOffset = strel("sphere",1)
+peakOffset = strel("sphere",1);
 
 % get map size   
 sz = size(greyMap);

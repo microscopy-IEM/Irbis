@@ -39,7 +39,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
     
     for regInd = 1:nRegions
 
-        wb_handle.Value = regInd/nRegions;
+        % wb_handle.Value = regInd/nRegions;
         wb_handle.Message = ['Processing ' num2str(regInd) ' of ' num2str(nRegions)];
 
         % disp(['Processing ' num2str(regInd) ' of ' num2str(nRegions)])
