@@ -1,22 +1,48 @@
 function [nObjects, meshCell, components] = reconstruct_mesh_python(depth,mesh_data,varargin)
 
-    % disp('in matlab function')
+    % 241201 - corrected version
+    % argument 1 - depth (number)
+    % argument 2 - mesh_data (struct containing both vertices, faces, and possibly also normals)
+    
+    % define default values: 
+    fractionToKeep = 0.8;
+    minVertexNum = 20;
+    separate = 1;
+    
+    % overwrite the default values when custom are specified: 
     if nargin == 3
-        fractionToKeep = 0.8;
-        minVertexNum = 20;
-        % disp('3 args')
-        separate = 1;
-    elseif nargin == 4
-        fractionToKeep = 0.8;
-        minVertexNum = 20;
+        % there is 1 varargin
         separate = varargin{1};
-        % disp('5 args')
-    else
-        separate = 1;
+    elseif nargin == 4
+        % there are 2 varargin
         fractionToKeep = varargin{1};
         minVertexNum = varargin{2};
-        % disp('else args')
+    elseif nargin == 5
+        % there are 3 varargin 
+        fractionToKeep = varargin{1};
+        minVertexNum = varargin{2};
+        separate = varargin{3};
+    else
+        warning("There are more arguments than expected to reconstruct_mesh_python")
     end
+
+    % 241201 - THIS WAS INCORRECT WITH THE NEW INPUT!!
+    % if nargin == 3
+    %     fractionToKeep = 0.8;
+    %     minVertexNum = 20;
+    %     % disp('3 args')
+    %     separate = 1;
+    % elseif nargin == 4
+    %     fractionToKeep = 0.8;
+    %     minVertexNum = 20;
+    %     separate = varargin{1};
+    %     % disp('5 args')
+    % else
+    %     separate = 1;
+    %     fractionToKeep = varargin{1};
+    %     minVertexNum = varargin{2};
+    %     % disp('else args')
+    % end
 
     output = pyrunfile('reconstruct_mesh_py_script.py',"output", ...
         mesh_data=mesh_data, ...

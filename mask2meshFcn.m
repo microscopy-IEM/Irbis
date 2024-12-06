@@ -165,7 +165,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
                                 'vertexNormals', pt_normals);
         
         tic
-        [nReg, meshCell, components] = reconstruct_mesh_python(depth,mesh_data,1,1);
+        [nReg, meshCell, components] = reconstruct_mesh_python(depth,mesh_data,1,1,0);  % 241201 IS: added 0 to the end - to skip segmenting objects
         % [n_objects,vertices,faces,vertex_normals,face_normals] = reconstruct_mesh_python(depth,pt_vertices,pt_normals,1,1);
         % nReg = int8(n_objects);
         disp(['reconstructMesh took ' num2str(toc)])
