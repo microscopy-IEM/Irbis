@@ -58,7 +58,6 @@ end
 %% Pre-process by gaussian filtering
 
 
-
 % smooth to suppress pixel-pixel variations
 sigma = 0.5;
 greyMap = imgaussfilt3(greyMap,sigma);
