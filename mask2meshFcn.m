@@ -8,7 +8,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
 
     % default paramateres
     padSize = 3;
-    sigma = 1;
+    sigma = 2;
     scaleF = 2;
     isoThres = 0.3;
     % depth = 4
