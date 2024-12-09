@@ -4,15 +4,14 @@
 
 function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
 
-
     % pixel_size = pixel_size/2;
 
     % default paramateres
     padSize = 3;
     sigma = 1;
-    scaleF = 1;
+    scaleF = 2;
     isoThres = 0.3;
-    depth = 4
+    % depth = 4
 
     % wb_handle.Value = 0;
 
@@ -91,16 +90,15 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
                 % nexttile
                 % imshow(vol(:,:,padSize+1),[],'InitialMagnification',1000)
 
-
         end     
             
-        
-        % run marching cubes to get vertices
+        % run marching cubes to get vertices and faces
         [faces,verts] = extractIsosurface(vol,isoThres);
+
+        % extractIsosurface returns single
         faces = double(faces);
         verts = double(verts);
             
-        % whos faces
         % calculate normals
         normals = isonormals(vol,verts);
 
@@ -115,13 +113,15 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         switch mode
             case '3D'
 
-                assignin('base','regions',regions);
+                % assignin('base','regions',regions);
                 dxyz =  regions.BoundingBox(regInd,1:3);
 
+                % revert padding
                 verts(:,1) = verts(:,1) - padSize; 
                 verts(:,2) = verts(:,2) - padSize; 
                 verts(:,3) = verts(:,3) - padSize; 
 
+                % revert scaling
                 verts(:,1) = verts(:,1)./scaleF;
                 verts(:,2) = verts(:,2)./scaleF;
                 verts(:,3) = verts(:,3)./scaleF;
@@ -136,9 +136,11 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
                 
                 dxyz(:,3) = z_spacing;
 
+                % revert padding
                 verts(:,1) = verts(:,1) - padSize; 
                 verts(:,2) = verts(:,2) - padSize; 
 
+                % revert scaling
                 verts(:,1) = verts(:,1)./scaleF;
                 verts(:,2) = verts(:,2)./scaleF;
                
@@ -148,11 +150,41 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         end
 
 
-        % convert to um
+        % convert vertices to micro-meters
         verts(:,1:2) = verts(:,1:2).*pixel_size;
-        verts(:,3) = verts(:,3).*z_spacing;
+        verts(:,3) = verts(:,3).*z_spacing;       
+                
 
+        switch mode
+            
+            case '3D'
+
+                mesh = surfaceMesh(verts,faces,"VertexNormals",normals);
+                % compute normals for faces
+                computeNormals(mesh,"face")
+
+            case '2D'
+
+                verts(:,3) = verts(:,3) - mean(verts(:,3));
+                verts(:,3) = verts(:,3).*0.5;
+                % mesh = surfaceMesh(verts,faces);
         
+                mesh = surfaceMesh(verts,faces,"VertexNormals",normals);
+                % compute normals for faces
+                computeNormals(mesh,"face")
+                
+                % mesh = surfaceMesh(verts,faces,"VertexNormals",components.vertexNormals,"FaceNormals",components.faceNormals);
+                % mesh = smoothSurfaceMesh(mesh,2);
+               
+        end
+            
+        T(meshObjInd,1:11) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]}};
+        T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);
+        
+        meshObjInd = meshObjInd+1;
+    
+        %% Previous code using Poisson surface reconsruction
+
         % ptCloud = pointCloud(verts);
         % ptCloud.Normal = normals;
 
@@ -184,36 +216,6 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         % % mesh = pc2surfacemesh(ptCloud,'poisson',9)
         % disp('matlab')
         % toc
-
-        
-
-        switch mode
-            
-            case '3D'
-
-                mesh = surfaceMesh(verts,faces,"VertexNormals",normals);
-                computeNormals(mesh,"face")
-
-            case '2D'
-
-                verts(:,3) = verts(:,3) - mean(verts(:,3));
-                verts(:,3) = verts(:,3).*0.5;
-                % mesh = surfaceMesh(verts,faces);
-        
-                mesh = surfaceMesh(verts,faces,"VertexNormals",normals);
-                computeNormals(mesh,"face")
-                % mesh = surfaceMesh(verts,faces,"VertexNormals",components.vertexNormals,"FaceNormals",components.faceNormals);
-        
-                % mesh = smoothSurfaceMesh(mesh,2);
-               
-        end
-            
-        T(meshObjInd,1:11) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]}};
-        T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);
-        
-        meshObjInd = meshObjInd+1;
-    
-        %% Previous code using Poisson surface reconsruction
         % if nReg > 1
         %     warning('Adaptive reconstruction produced more than 1 objects from current region')
         % end
@@ -261,7 +263,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
     
     end
 
-    T
+    % T
     % 
     % % surfaceMeshShow(mesh)
     % c = 'm'
