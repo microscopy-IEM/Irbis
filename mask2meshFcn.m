@@ -98,6 +98,8 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         % extractIsosurface returns single
         faces = double(faces);
         verts = double(verts);
+
+       
             
         % calculate normals
         normals = isonormals(vol,verts);
@@ -174,14 +176,29 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
                 computeNormals(mesh,"face")
                 
                 % mesh = surfaceMesh(verts,faces,"VertexNormals",components.vertexNormals,"FaceNormals",components.faceNormals);
-                % mesh = smoothSurfaceMesh(mesh,2);
+                % mesh = smoothSurfaceMesh(mesh,2)
+
+                % simplify(mesh,SimplificationMethod="quadric-decimation",TargetNumFaces=200)
+                % simplify(mesh,SimplificationMethod="quadric-decimation",VoxelSize=pixel_size*0.5)
+                simplify(mesh,SimplificationMethod="quadric-decimation",BoundaryWeight=0.5);
+
+                % simplify(mesh,SimplificationMethod="vertex-clustering",VoxelSize=pixel_size)
+                % "vertex-clustering"
+                % BoundaryWeight
+                % VoxelSize
+                % mesh
                
         end
-            
+        
+        verts = mesh.Vertices;
+        % verts = [];
         T(meshObjInd,1:11) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]}};
         T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);
         
         meshObjInd = meshObjInd+1;
+
+        %  ptCloud = pointCloud(verts);
+        % pcshow(ptCloud)
     
         %% Previous code using Poisson surface reconsruction
 
