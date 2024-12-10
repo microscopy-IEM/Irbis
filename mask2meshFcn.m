@@ -11,6 +11,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
     sigma = 2;
     scaleF = 2;
     isoThres = 0.3;
+    dataPrecision = 'single';
     % depth = 4
 
     % wb_handle.Value = 0;
@@ -96,9 +97,8 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         [faces,verts] = extractIsosurface(vol,isoThres);
 
         % extractIsosurface returns single
-        faces = double(faces);
-        verts = double(verts);
-
+        % faces = double(faces);
+        % verts = double(verts);
        
             
         % calculate normals
@@ -178,11 +178,14 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
                 % mesh = surfaceMesh(verts,faces,"VertexNormals",components.vertexNormals,"FaceNormals",components.faceNormals);
                 % mesh = smoothSurfaceMesh(mesh,2)
 
-                % simplify(mesh,SimplificationMethod="quadric-decimation",TargetNumFaces=200)
+                % simplify(mesh,SimplificationMethod="quadric-decimation",TargetNumFaces=100)
                 % simplify(mesh,SimplificationMethod="quadric-decimation",VoxelSize=pixel_size*0.5)
                 simplify(mesh,SimplificationMethod="quadric-decimation",BoundaryWeight=0.5);
 
                 % simplify(mesh,SimplificationMethod="vertex-clustering",VoxelSize=pixel_size)
+
+                % simplify(mesh)
+                removeDefects(mesh,"unreferenced-vertices")
                 % "vertex-clustering"
                 % BoundaryWeight
                 % VoxelSize
@@ -191,7 +194,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
         end
         
         verts = mesh.Vertices;
-        % verts = [];
+        verts = [];
         T(meshObjInd,1:11) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]}};
         T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);
         
