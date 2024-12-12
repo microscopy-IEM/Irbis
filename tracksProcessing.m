@@ -51,13 +51,11 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
             maxGap = max(gap_lengths); % num of missing frames in longest gap
             % numOfGaps = size(gap_ind,1);
         end
-       
-    
+           
     
         % tracks witnout NaN
         coor = coor_nan(~isnan(coor_nan(:,1)),:);
-    
-    
+        
          % calculate overall velocity
         if size(coor,1) >= 10
            % size(coor)
@@ -69,11 +67,9 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         else
             ovDist = nan;
         end
-    
-    
-        % calculate mean displacement
-          
         
+        % calculate mean displacement
+                  
         disp = sqrt(sum(diff(coor).^2,2));
         
         mean_disp = mean(disp);  
@@ -113,16 +109,12 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
 
         end
         
-
         % 2D area
         [~,area] = boundary(coor(:,1),coor(:,2));
-        
-        
+                
         % XY centres
         XYmean(TrackNum,:) = mean(coor_nan,'omitnan');
-        
-    
-
+            
         % Add attributes to list
         T.length(TrackNum) = TrDuration;
         T.nOfNaN(TrackNum) = nOfNaN;
@@ -145,8 +137,7 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         % T.runMean_disp(TrackNum) = {runMean_disp};
     
     end
-      
-    
+          
     tracks.tracksList{currentTimePoint} = T;
     
     [tracks] = tracksMSDanalysis(tracks,currentTimePoint);

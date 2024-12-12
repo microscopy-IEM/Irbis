@@ -101,7 +101,7 @@ T.MSDcurve(ids) = ma.msd;
 % T.MSDcurve(ids) = ma.msd(2,:);
 % T.Velocity(ids) = [];
 
-ma.msd
+% ma.msd
 
 % T.newVelocity(ids) = v;
 

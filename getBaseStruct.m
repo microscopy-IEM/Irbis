@@ -71,6 +71,7 @@ function baseStructs = getBaseStruct(varargin)
                 info.round = 1;
                 info.cell = 1;
                 info.description = '';
+                % info.date = datetime('Today');  % For Irbis ver 1.12
                 info.notes = '';
                 info.spaceUnits = 'µm'; 
                 info.timeUnits = 'sec';
@@ -80,6 +81,7 @@ function baseStructs = getBaseStruct(varargin)
                 info.saveTimestamp = datetime();            % rewritten during saving
             
                 baseStructs.info = info;
+                % info
 
             case 'timeline'
 
