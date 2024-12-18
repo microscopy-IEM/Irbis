@@ -1,6 +1,6 @@
 
 
-function [mask,mask_pixelSize] = points2masksFcn(peaks,greyMap,expectedPeakDiam_um,orig_pixel_size,z_spacing,clusterMask)
+function [mask,mask_pixelSize,greyMap] = points2masksFcn(peaks,greyMap,expectedPeakDiam_um,orig_pixel_size,z_spacing,clusterMask)
 
 
 conn = 6; % 3D case

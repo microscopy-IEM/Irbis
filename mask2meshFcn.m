@@ -2,7 +2,7 @@
 % Generates mesh by Poisson surface reconstriction for each regoion
 % separately and return table filled with generated objects
 
-function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
+function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
 
     % pixel_size = pixel_size/2;
 
@@ -21,12 +21,12 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
     if nd == 2
 
         mode = '2D';
-        regions = regionprops(mask,'Centroid',"Image","BoundingBox");
+        regions = regionprops(mask,greyMap,'Centroid',"Image","BoundingBox",'MeanIntensity');
 
     elseif nd == 3
           
         mode = '3D';
-        regions = regionprops3(mask,'Centroid',"Image","BoundingBox");
+        regions = regionprops3(mask,greyMap,'Centroid',"Image","BoundingBox",'MeanIntensity');
        
     end
 
@@ -50,6 +50,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
                 currentRegion = regions.Image{regInd};
                 vol = currentRegion;
                 vol = double(vol);
+                meanInt = regions(regInd).MeanIntensity;
                 % sz = size(vol);
 
                 % scale to increase numebr of vertices in reconstruction
@@ -67,7 +68,14 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
                 
                 z_spacing = 0.75;
 
-                currentRegion = regions(regInd).Image;
+                currentRegion = regions(regInd).Image;               
+                meanInt = regions(regInd).MeanIntensity;
+
+                % greyMap(idx{:})
+                % f = greyMap(regions(regInd).PixelList)
+                % 
+                % size(greyMap)
+
                 vol = currentRegion;
                 vol = double(vol);
                 sz = size(vol);
@@ -193,10 +201,14 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,wb_handle)
                
         end
         
-        verts = mesh.Vertices;
+        % verts = mesh.Vertices;
+        % Not saving points
         verts = [];
         T(meshObjInd,1:11) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]}};
         T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);
+
+        % Adding feature mean intensity to table
+        T(meshObjInd,'meanInt') = {meanInt};
         
         meshObjInd = meshObjInd+1;
 
