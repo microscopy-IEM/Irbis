@@ -11,7 +11,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
     sigma = 2;
     scaleF = 2;
     isoThres = 0.3;
-    dataPrecision = 'single';
+    % dataPrecision = 'single';
     % depth = 4
 
     % wb_handle.Value = 0;
@@ -21,12 +21,12 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
     if nd == 2
 
         mode = '2D';
-        regions = regionprops(mask,greyMap,'Centroid',"Image","BoundingBox",'MeanIntensity');
+        regions = regionprops(mask,greyMap,'Centroid',"Image","BoundingBox",'MeanIntensity','MaxIntensity');
 
     elseif nd == 3
           
         mode = '3D';
-        regions = regionprops3(mask,greyMap,'Centroid',"Image","BoundingBox",'MeanIntensity');
+        regions = regionprops3(mask,greyMap,'Centroid',"Image","BoundingBox",'MeanIntensity','MaxIntensity');
        
     end
 
@@ -34,6 +34,11 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
          
     % TO OPTIMIZE - acces the 
     T = getBaseStruct('table','model',nRegions);
+
+    % Adding feature "mean intensity" to table
+    newTabCol = nan(height(T), 1);
+    T.meanInt = newTabCol;
+    T.maxInt = newTabCol;
            
     meshObjInd = 1;
     
@@ -50,7 +55,9 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
                 currentRegion = regions.Image{regInd};
                 vol = currentRegion;
                 vol = double(vol);
-                meanInt = regions(regInd).MeanIntensity;
+                % regions
+                meanInt = regions.MeanIntensity(regInd);
+                maxInt = regions.MaxIntensity(regInd);
                 % sz = size(vol);
 
                 % scale to increase numebr of vertices in reconstruction
@@ -70,6 +77,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
 
                 currentRegion = regions(regInd).Image;               
                 meanInt = regions(regInd).MeanIntensity;
+                maxInt = regions(regInd).MaxIntensity;
 
                 % greyMap(idx{:})
                 % f = greyMap(regions(regInd).PixelList)
@@ -101,7 +109,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
 
         end     
             
-        % run marching cubes to get vertices and faces
+        % run marching cubes to get vertices and faces 
         [faces,verts] = extractIsosurface(vol,isoThres);
 
         % extractIsosurface returns single
@@ -114,206 +122,116 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
 
         % set all NaN normals to 0
         normals(isnan(normals)) = 0;
-    
+
         if isempty(verts)
             disp('Empty verts')
-            break
         end
-     
-        switch mode
-            case '3D'
-
-                % assignin('base','regions',regions);
-                dxyz =  regions.BoundingBox(regInd,1:3);
-
-                % revert padding
-                verts(:,1) = verts(:,1) - padSize; 
-                verts(:,2) = verts(:,2) - padSize; 
-                verts(:,3) = verts(:,3) - padSize; 
-
-                % revert scaling
-                verts(:,1) = verts(:,1)./scaleF;
-                verts(:,2) = verts(:,2)./scaleF;
-                verts(:,3) = verts(:,3)./scaleF;
-
-                % move the region to its origin position
-                verts = verts + dxyz - 0.5;
-
-            case '2D'
-
-                regions(regInd).BoundingBox;
-                dxyz = regions(regInd).BoundingBox(1:3);
-                
-                dxyz(:,3) = z_spacing;
-
-                % revert padding
-                verts(:,1) = verts(:,1) - padSize; 
-                verts(:,2) = verts(:,2) - padSize; 
-
-                % revert scaling
-                verts(:,1) = verts(:,1)./scaleF;
-                verts(:,2) = verts(:,2)./scaleF;
-               
-                % move the region to its origin position
-                verts = verts + dxyz - 0.5;
-                
-        end
-
-
-        % convert vertices to micro-meters
-        verts(:,1:2) = verts(:,1:2).*pixel_size;
-        verts(:,3) = verts(:,3).*z_spacing;       
-                
-
-        switch mode
+    
+        % Continue only if some vertices were extracted
+        if ~isempty(verts)
             
-            case '3D'
-
-                mesh = surfaceMesh(verts,faces,"VertexNormals",normals);
-                % compute normals for faces
-                computeNormals(mesh,"face")
-
-            case '2D'
-
-                verts(:,3) = verts(:,3) - mean(verts(:,3));
-                verts(:,3) = verts(:,3).*0.5;
-                % mesh = surfaceMesh(verts,faces);
+                        
+            switch mode
+                case '3D'
+    
+                    % assignin('base','regions',regions);
+                    dxyz =  regions.BoundingBox(regInd,1:3);
+    
+                    % revert padding
+                    verts(:,1) = verts(:,1) - padSize; 
+                    verts(:,2) = verts(:,2) - padSize; 
+                    verts(:,3) = verts(:,3) - padSize; 
+    
+                    % revert scaling
+                    verts(:,1) = verts(:,1)./scaleF;
+                    verts(:,2) = verts(:,2)./scaleF;
+                    verts(:,3) = verts(:,3)./scaleF;
+    
+                    % move the region to its origin position
+                    verts = verts + dxyz - 0.5;
+    
+                case '2D'
+    
+                    regions(regInd).BoundingBox;
+                    dxyz = regions(regInd).BoundingBox(1:3);
+                    
+                    dxyz(:,3) = z_spacing;
+    
+                    % revert padding
+                    verts(:,1) = verts(:,1) - padSize; 
+                    verts(:,2) = verts(:,2) - padSize; 
+    
+                    % revert scaling
+                    verts(:,1) = verts(:,1)./scaleF;
+                    verts(:,2) = verts(:,2)./scaleF;
+                   
+                    % move the region to its origin position
+                    verts = verts + dxyz - 0.5;
+                    
+            end
         
-                mesh = surfaceMesh(verts,faces,"VertexNormals",normals);
-                % compute normals for faces
-                computeNormals(mesh,"face")
+            % convert vertices to micro-meters
+            verts(:,1:2) = verts(:,1:2).*pixel_size;
+            verts(:,3) = verts(:,3).*z_spacing;       
+                    
+
+            switch mode
                 
-                % mesh = surfaceMesh(verts,faces,"VertexNormals",components.vertexNormals,"FaceNormals",components.faceNormals);
-                % mesh = smoothSurfaceMesh(mesh,2)
-
-                % simplify(mesh,SimplificationMethod="quadric-decimation",TargetNumFaces=100)
-                % simplify(mesh,SimplificationMethod="quadric-decimation",VoxelSize=pixel_size*0.5)
-                simplify(mesh,SimplificationMethod="quadric-decimation",BoundaryWeight=0.5);
-
-                % simplify(mesh,SimplificationMethod="vertex-clustering",VoxelSize=pixel_size)
-
-                % simplify(mesh)
-                removeDefects(mesh,"unreferenced-vertices")
-                % "vertex-clustering"
-                % BoundaryWeight
-                % VoxelSize
-                % mesh
-               
+                case '3D'
+    
+                    mesh = surfaceMesh(verts,faces,"VertexNormals",normals);
+                    % compute normals for faces
+                    computeNormals(mesh,"face")
+    
+                case '2D'
+    
+                    verts(:,3) = verts(:,3) - mean(verts(:,3));
+                    verts(:,3) = verts(:,3).*0.5;
+                    % mesh = surfaceMesh(verts,faces);
+            
+                    mesh = surfaceMesh(verts,faces,"VertexNormals",normals);
+                    % compute normals for faces
+                    computeNormals(mesh,"face")
+                    
+                    % mesh = surfaceMesh(verts,faces,"VertexNormals",components.vertexNormals,"FaceNormals",components.faceNormals);
+                    % mesh = smoothSurfaceMesh(mesh,2)
+    
+                    % simplify(mesh,SimplificationMethod="quadric-decimation",TargetNumFaces=100)
+                    % simplify(mesh,SimplificationMethod="quadric-decimation",VoxelSize=pixel_size*0.5)
+                    simplify(mesh,SimplificationMethod="quadric-decimation",BoundaryWeight=0.5);
+    
+                    % simplify(mesh,SimplificationMethod="vertex-clustering",VoxelSize=pixel_size)
+    
+                    % simplify(mesh)
+                    removeDefects(mesh,"unreferenced-vertices")
+                    % "vertex-clustering"
+                    % BoundaryWeight
+                    % VoxelSize
+                    % mesh
+                   
+            end
+            
+            % verts = mesh.Vertices;
+            % Not saving points to reduce size
+            verts = [];
+            % T(meshObjInd,1:11) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]}};
+    
+            T(meshObjInd,1:13) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]},meanInt,maxInt};
+            T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);
+    
+            
+            meshObjInd = meshObjInd+1;
+    
+   
         end
-        
-        % verts = mesh.Vertices;
-        % Not saving points
-        verts = [];
-        T(meshObjInd,1:11) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]}};
-        T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);
 
-        % Adding feature mean intensity to table
-        T(meshObjInd,'meanInt') = {meanInt};
-        
-        meshObjInd = meshObjInd+1;
-
-        %  ptCloud = pointCloud(verts);
-        % pcshow(ptCloud)
-    
-        %% Previous code using Poisson surface reconsruction
-
-        % ptCloud = pointCloud(verts);
-        % ptCloud.Normal = normals;
-
-        % downsample pointCLoud using pixel size
-
-        % gridStep = pixel_size/1.5;
-        % gridStep = pixel_size*1.5;
-
-        % ptCloud = pcdownsample(ptCloud,'gridAverage',gridStep,'PreserveStructure',true);
-        % 
-        % verts = double(verts);
-        % 
-        % % Run Poisson surface reconstruction in python
-        % pt_vertices = py.numpy.array(ptCloud.Location);
-        % pt_normals = py.numpy.array(ptCloud.Normal);
-
-        % Initialize the struct with vertices and vertex normals
-        % mesh_data{1} = struct('vertices', pt_vertices, ...
-        %                         'vertexNormals', pt_normals);
-        
-        % tic
-        % [nReg, meshCell, components] = reconstruct_mesh_python(depth,mesh_data,1,1,0);  % 241201 IS: added 0 to the end - to skip segmenting objects
-        % [n_objects,vertices,faces,vertex_normals,face_normals] = reconstruct_mesh_python(depth,pt_vertices,pt_normals,1,1);
-        % nReg = int8(n_objects);
-        % disp(['reconstructMesh took ' num2str(toc)])
-       
-
-        % tic
-        % % mesh = pc2surfacemesh(ptCloud,'poisson',9)
-        % disp('matlab')
-        % toc
-        % if nReg > 1
-        %     warning('Adaptive reconstruction produced more than 1 objects from current region')
-        % end
-        % 
-        % % save mesh if was generated
-        % if nReg > 0
-        % 
-        %     % verticesDict = dictionary(vertices);
-        %     % facesDict = dictionary(faces);
-        %     % vertexNormalsDict = dictionary(vertex_normals);
-        %     % faceNormalsDict = dictionary(face_normals);
-        %     % 
-        %     % regionID = 1;
-        %     % 
-        %     % vertices = double(verticesDict(py.int(regionID)));
-        %     % faces = double(facesDict(py.int(regionID)))+1;
-        %     % vertexNormals = double(vertexNormalsDict(py.int(regionID)));
-        %     % faceNormals = double(faceNormalsDict(py.int(regionID)));
-        % 
-        % 
-        % 
-        %     switch mode
-        %         case '3D'
-        %             mesh = meshCell{1};
-        % 
-        %         case '2D'
-        %             components = components{1};
-        %             vertices = components.vertices;
-        %             vertices(:,3) = vertices(:,3) - mean(vertices(:,3));
-        %             vertices(:,3) = vertices(:,3).*0.5;
-        %             mesh = surfaceMesh(vertices,components.faces,"VertexNormals",components.vertexNormals,"FaceNormals",components.faceNormals);
-        %     end
-        % 
-        %     % mesh = surfaceMesh(vertices,faces,"VertexNormals",vertexNormals,"FaceNormals",faceNormals);
-        %     mesh = smoothSurfaceMesh(mesh,4);
-        % 
-        % 
-        %     T(meshObjInd,1:11) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]}};
-        %     T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);
-        % 
-        %     meshObjInd = meshObjInd+1;
-        % 
-        % end
-          
-    
     end
 
-    % T
-    % 
-    % % surfaceMeshShow(mesh)
-    % c = 'm'
-    % figure
-    % ax1 = axes;
-    % for regInd = 1:nRegions
-    %         c = rand(1,3);
-    %         % mesh = allMeshes{regInd};
-    %         mesh = T.Mesh{regInd};
-    %         p = patch(ax1,'Faces',mesh.Faces,'Vertices',mesh.Vertices,'FaceColor',c);
-    %         p.LineStyle = 'none';
-    %         p.FaceAlpha = 0.6;
-    %         hold on
-    % 
-    % end
-    % 
-    % axis equal
-    % N
-    % l1 = light(ax1)
+    % assignin('base','T',T);
+
+    % remove empty row cuased by skipped regions
+    nSkipped = nRegions-meshObjInd;
+    T(end-nSkipped:end,:) = [];
+    
 
 end
