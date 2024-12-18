@@ -229,7 +229,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
 
     % assignin('base','T',T);
 
-    % remove empty row cuased by skipped regions
+    % remove empty rows cuased by skipped regions
     nSkipped = nRegions-meshObjInd;
     T(end-nSkipped:end,:) = [];
     
