@@ -1,15 +1,34 @@
-function [nObjects, meshCell, basePoints] = mesh_subtract_and_separate_and_save_plane_python(mesh_data)
+function [nObjects, meshCell, basePoints] = mesh_subtract_and_separate_and_save_plane_python(mesh_data, varargin)
     % Define parameters for use in the Python script
     green_threshold = 0.3;
     tolerance = 1e-4;
     distance_threshold = 0.1;
 
-    % Call the Python script with mesh data and parameters
-    output = pyrunfile('mesh_subtract_and_separate_and_save_plane_py_script.py', "output", ...
-        mesh_data=mesh_data, ...
-        green_threshold=green_threshold, ...
-        tolerance=tolerance, ...
-        distance_threshold=distance_threshold);
+    if nargin > 1
+        library_selection = varargin{1};    % 1 for pymeshlab, 2 for trimesh
+    else
+        library_selection = 1;
+    end
+
+    if library_selection == 1
+        % Use pymeshlab for mesh processing
+        % Call the Python script with mesh data and parameters
+        output = pyrunfile('mesh_subtract_and_separate_and_save_plane_py_script.py', "output", ...
+            mesh_data=mesh_data, ...
+            green_threshold=green_threshold, ...
+            tolerance=tolerance, ...
+            distance_threshold=distance_threshold);
+    elseif library_selection == 2
+        % Use trimesh for mesh processing
+        % Call the Python script with mesh data and parameters
+        output = pyrunfile('mesh_subtract_and_separate_and_save_plane_trimesh_py_script.py', "output", ...
+            mesh_data=mesh_data, ...
+            green_threshold=green_threshold, ...
+            tolerance=tolerance, ...
+            distance_threshold=distance_threshold);
+    else
+        error("Invalid library selection. Please choose 1 for pymeshlab or 2 for trimesh.");
+    end
 
     % Retrieve the number of objects
     nObjects = int8(output{'n_objects'});
@@ -25,7 +44,6 @@ function [nObjects, meshCell, basePoints] = mesh_subtract_and_separate_and_save_
         faces = int32(componentData{i}{'faces'}) + 1; % Adjust for MATLAB 1-based indexing
         vertexNormals = double(componentData{i}{'vertexNormals'});
         faceNormals = double(componentData{i}{'faceNormals'});
-
         % Create the surfaceMesh for each component
         meshCell{i} = surfaceMesh(vertices, faces, "VertexNormals", vertexNormals, "FaceNormals", faceNormals);
     end
