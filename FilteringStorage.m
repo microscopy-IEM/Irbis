@@ -49,11 +49,11 @@ classdef FilteringStorage < GroupingStorageBaseClass
                 filterObj = obj.Groupings{i};
                 
                 % Check if the filter corresponds to the specified columnName
-                if isequal(filterObj.ColumnName, columnName)
+                if isequal(filterObj.Name, columnName)
                     % Update based on the determined filter type
                     if strcmp(filterType, 'categorical')
                         % Update the conditions with new categories (categorical filter)
-                        filterObj.Conditions('group1').conditions(columnName) = {newCondition};
+                        filterObj.Conditions.('group1').conditions(columnName) = {newCondition};
                     elseif strcmp(filterType, 'range')
                         % Create operatorValueDict with 'greaterThan' and 'lessThan' for range filter
                         operatorValueDict = dictionary(...
@@ -61,7 +61,7 @@ classdef FilteringStorage < GroupingStorageBaseClass
                             'lessThan', newCondition(2));
                         
                         % Update the conditions with the new range
-                        filterObj.Conditions('group1').conditions(columnName) = {operatorValueDict};
+                        filterObj.Conditions.('group1').conditions(columnName) = {operatorValueDict};
                     end
         
                     % Mark that the filter was found and updated
@@ -70,7 +70,7 @@ classdef FilteringStorage < GroupingStorageBaseClass
                 end
             end
             
-            % If no filter was found with the given columnName, throw an error or add a new filter
+            % If no filter was found with the given columnName, add a new filter
             if ~filterFound
                 if strcmp(filterType, 'categorical')
                     % Add new categorical filter
