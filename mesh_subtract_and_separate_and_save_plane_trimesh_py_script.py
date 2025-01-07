@@ -1,5 +1,6 @@
 import trimesh
 import numpy as np
+import sys
 
 
 def to_numpy_array(data, dtype):
@@ -28,8 +29,44 @@ def mesh_subtract_and_separate_with_color(mesh_data, green_threshold=0.3, distan
         vertices = to_numpy_array(mesh['vertices'], dtype=np.float64)
         faces = to_numpy_array(mesh['faces'], dtype=np.int32)
         trimesh_mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=True)
+        print('is_volume before')
+        print(trimesh_mesh.is_volume)
+
         trimesh_mesh.fix_normals()  # Should prevent issues with is_volume being False
         # trimesh_mesh.fix_normals()  # Should prevent issues with is_volume being False
+
+        
+        print('is_volume after')
+        print(trimesh_mesh.is_volume)
+
+        print('volume')
+        print(trimesh_mesh.volume)
+
+        print(trimesh_mesh.is_watertight)
+
+        print(trimesh_mesh.is_winding_consistent)
+
+        if not trimesh_mesh.is_watertight:
+            print('mesh is not watertight')
+            if 'pymeshfix' not in sys.modules:
+                import pymeshfix 
+
+            new_vertices, new_faces = pymeshfix.clean_from_arrays(vertices, faces)
+            trimesh_mesh = trimesh.Trimesh(vertices=new_vertices, faces=new_faces, process=True)
+            trimesh_mesh.fix_normals()
+
+            print('is_volume after')
+            print(trimesh_mesh.is_volume)
+
+            print('volume')
+            print(trimesh_mesh.volume)
+
+            print(trimesh_mesh.is_watertight)
+
+            print(trimesh_mesh.is_winding_consistent)
+
+
+
         meshes.append(trimesh_mesh)
 
     # Apply distinct colors (Red and Green)
