@@ -1,5 +1,6 @@
 import trimesh
 import numpy as np
+import sys
 
 def to_numpy_array(data, dtype):
     """Ensure data is a NumPy array, converting memoryview if needed."""
@@ -26,7 +27,26 @@ def mesh_intersect_and_separate(mesh_data):
         vertices = to_numpy_array(mesh['vertices'], dtype=np.float64)
         faces = to_numpy_array(mesh['faces'], dtype=np.int32)
         trimesh_mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=True)
-        trimesh_mesh.fix_normals()  # Should prevent issues with is_volume being False
+        if not trimesh_mesh.is_watertight:
+            print('mesh is not watertight')
+            # not watertight means it has holes or non-manifold edges
+            if 'pymeshfix' not in sys.modules:
+                import pymeshfix 
+
+            new_vertices, new_faces = pymeshfix.clean_from_arrays(vertices, faces)
+            trimesh_mesh = trimesh.Trimesh(vertices=new_vertices, faces=new_faces, process=True)
+
+        # use this intstead of fix_normals() - which does almost the same if I understand it correctly
+        if not trimesh_mesh.is_winding_consistent:
+            # non-consistent winding means that two adjacent faces have normals in opposite directions
+            print('winding is not consistent')
+            trimesh.repair.fix_winding(trimesh_mesh)
+        if not trimesh_mesh.is_volume:
+            # not volume means (at least in some situation) that the volume is negative - normals point inward
+            print('mesh is not volume')
+            trimesh.repair.fix_inversion(trimesh_mesh, multibody=False)
+
+        # we are hoping that everything is fixed by now
         meshes.append(trimesh_mesh)
 
     # Perform boolean intersection between the two meshes

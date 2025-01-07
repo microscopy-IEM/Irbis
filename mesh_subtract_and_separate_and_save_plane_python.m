@@ -56,6 +56,30 @@ function [nObjects, meshCell, basePoints] = mesh_subtract_and_separate_and_save_
     componentColors = dictionary(output{'component_colors'});
 
     assignin("base","componentColors",componentColors)
+
+    % Plot the meshes as patches
+    figure;
+    hold on;
+    for i = 1:nObjects
+        % Extract vertices and faces from the surfaceMesh object
+        vertices = meshCell{i}.Vertices;
+        faces = meshCell{i}.Faces;
+
+        % Plot patch for each component
+        patch('Vertices', vertices, 'Faces', faces, ...
+            'FaceColor', 'cyan', 'EdgeColor', 'black', 'FaceAlpha', 0.5);
+    end
+
+    % Plot base points as scatter
+    scatter3(basePoints(:,1), basePoints(:,2), basePoints(:,3), 50, 'red', 'filled');
+
+    % Configure plot appearance
+    axis equal;
+    xlabel('X'); ylabel('Y'); zlabel('Z');
+    grid on;
+    title('Mesh Components and Base Points');
+    hold off;
+
 end
 
 
