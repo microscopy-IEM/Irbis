@@ -18,7 +18,7 @@ classdef ManualCategorization < GroupingBaseClass
 
             % show the user a dialog window with the existing categories
             % allow to rename, delete or add new ones
-            newCategoryNames = createGroupDialog(oldCategoryNames);
+            [newColumnName, newCategoryNames] = createGroupDialog(columnName, oldCategoryNames);
 
             if istable(listArray)
 
@@ -55,6 +55,10 @@ classdef ManualCategorization < GroupingBaseClass
                             end
                         end
                         table.(columnName) = oldColumn;
+                        if ~isequal(columnName,newColumnName)
+                            table.Properties.VariableNames{columnName} = newColumnName;
+                            disp(['column ' columnName ' renamed to ' newColumnName])
+                        end
                         listArray{id} = table;
                     else
                         disp(['the column is missing in id ' num2str(id)])
