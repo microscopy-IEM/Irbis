@@ -248,14 +248,10 @@ k
     %% Irbis version 1.11 changes
     if loadedIrbisVersion < 1.12
         % newer changes
-        % added the info.dish and info.date fields
+        % added the info.dish and info.experimentDate fields
         if isfield(loadedStruct,'info')
-            if ~isfield(loadedStruct.info,'date')
-                if isfield(loadedStruct.info,'createTimestamp')
-                    loadedStruct.info.date = dateshift(loadedStruct.info.createTimestamp, 'start', 'day');
-                else
-                    loadedStruct.info.date = NaT;
-                end
+            if ~isfield(loadedStruct.info,'experimentDate')
+                loadedStruct.info.experimentDate = NaT;
             end
             if ~isfield(loadedStruct.info,'dish')
                 loadedStruct.info.dish = NaN;
@@ -270,13 +266,15 @@ k
                     branch = branches{branchNum};
         
                     % add positionShift column to the tables if missing
-                    branchColor = loadedStruct.model.(branch).Color
+                    branchColor = loadedStruct.model.(branch).Color;
                     for timePoint = 1:numel(loadedStruct.model.(branch).List)
                         List = loadedStruct.model.(branch).List{timePoint};
-                        variableNames = string(List.Properties.VariableNames);
-                        if ~ismember('color',variableNames)
-                            tableHeight = height(List);
-                            loadedStruct.model.(branch).List{timePoint}.color = repmat({branchColor}, tableHeight, 1);
+                        if istable(List)
+                            variableNames = string(List.Properties.VariableNames);
+                            if ~ismember('color',variableNames)
+                                tableHeight = height(List);
+                                loadedStruct.model.(branch).List{timePoint}.color = repmat({branchColor}, tableHeight, 1);
+                            end
                         end
                     end
                 end
