@@ -138,6 +138,14 @@ function originalCallbacks = gizmo_cuboid(ax, fig, stickyPoints, pointA, pointB,
         activeHandles(end + 1) = scalePointHandle;
     end
 
+    % symmetry element to use for rotation before scaling
+    symmetryElementVector = objectStruct.symmetryElementVector;
+    symmetryElementHandle = plot3(ax,x0 + symmetryElementVector(1),y0 + symmetryElementVector(2),z0 + symmetryElementVector(3));
+    symmetryElementHandle.UserData = symmetryElementVector;
+    moveHandles(end + 1) = symmetryElementHandle;
+    rotHandles(end + 1) = symmetryElementHandle;
+    passiveHandles(end + 1) = symmetryElementHandle;
+
     % disp(rotHandles)
     % get(scaleHandles)
 
@@ -386,31 +394,51 @@ function originalCallbacks = gizmo_cuboid(ax, fig, stickyPoints, pointA, pointB,
 
                     scalePointVector = scalePointVector/norm(scalePointVector);
 
-                        k = cross(rotatedScalePointVector, scalePointVector);
-                        % k = cross([1 0 0], normalVector);
-                    if isequal(norm(k), 0)
-                        disp('they are parallel')
-                        transformedScaleVector = scalePointVector;
-                        R = eye(3);
-                        Rinv = inv(R);
-                    else
-                        vRot = k/norm(k);
+                    %     k = cross(rotatedScalePointVector, scalePointVector);
+                    %     % k = cross([1 0 0], normalVector);
+                    % if isequal(norm(k), 0)
+                    %     disp('they are parallel')
+                    %     transformedScaleVector = scalePointVector;
+                    %     R = eye(3);
+                    %     Rinv = inv(R);
+                    % else
+                    %     vRot = k/norm(k);
     
-                        % theta = acos(dot([1 0 0], normalVector));
-                        dot(rotatedScalePointVector, scalePointVector)
-                        theta = acos(dot(rotatedScalePointVector, scalePointVector))
+                    %     % theta = acos(dot([1 0 0], normalVector));
+                    %     dot(rotatedScalePointVector, scalePointVector)
+                    %     theta = acos(dot(rotatedScalePointVector, scalePointVector))
     
-                        R = [cos(theta) + (vRot(1))^2 * (1 - cos(theta))      (vRot(1)) * (vRot(2)) * (1 - cos(theta)) - (vRot(3)) * sin(theta)    (vRot(1)) * (vRot(3)) * (1 - cos(theta)) + (vRot(2)) * sin(theta);
-                        (vRot(2)) * (vRot(1)) * (1 - cos(theta)) + (vRot(3)) * sin(theta)    cos(theta) + (vRot(2))^2 * (1 - cos(theta))    (vRot(2)) * (vRot(3)) * (1 - cos(theta)) - (vRot(1)) * sin(theta);
-                        (vRot(3)) * (vRot(1)) * (1 - cos(theta)) - (vRot(2)) * sin(theta)    (vRot(3)) * (vRot(2)) * (1 - cos(theta)) + (vRot(1)) * sin(theta)    cos(theta) + (vRot(3))^2 * (1 - cos(theta))];
+                    %     R = [cos(theta) + (vRot(1))^2 * (1 - cos(theta))      (vRot(1)) * (vRot(2)) * (1 - cos(theta)) - (vRot(3)) * sin(theta)    (vRot(1)) * (vRot(3)) * (1 - cos(theta)) + (vRot(2)) * sin(theta);
+                    %     (vRot(2)) * (vRot(1)) * (1 - cos(theta)) + (vRot(3)) * sin(theta)    cos(theta) + (vRot(2))^2 * (1 - cos(theta))    (vRot(2)) * (vRot(3)) * (1 - cos(theta)) - (vRot(1)) * sin(theta);
+                    %     (vRot(3)) * (vRot(1)) * (1 - cos(theta)) - (vRot(2)) * sin(theta)    (vRot(3)) * (vRot(2)) * (1 - cos(theta)) + (vRot(1)) * sin(theta)    cos(theta) + (vRot(3))^2 * (1 - cos(theta))];
     
-                        disp('jere')
-                        disp(R)
+                    %     disp('jere')
+                    %     disp(R)
 
-                        Rinv = inv(R);
+                    %     Rinv = inv(R);
 
-                        % transformedScaleVector = (R*scalePointVector)/norm(R*scalePointVector);
-                    end
+                    %     % transformedScaleVector = (R*scalePointVector)/norm(R*scalePointVector);
+                    % end
+
+                    originalVector = symmetryElementHandle.UserData
+                    symmetryElementArray = [symmetryElementHandle.XData, symmetryElementHandle.YData, symmetryElementHandle.ZData];
+
+                    rotatedScalePointVector = (symmetryElementArray - cBallPointArray)/norm(symmetryElementArray - cBallPointArray);
+
+                    translationMatrix4D = eye(4);
+                    translationMatrix4D(1:3, 4) = -startPosition(:);
+
+                    translationMatrix4Dinv = eye(4);
+                    translationMatrix4Dinv(1:3, 4) = startPosition(:);
+
+                    xVector = [1 0 0];
+                    R = calculateRotationMatrix(originalVector, rotatedScalePointVector);
+
+                    rotationMatrix4D = eye(4);
+                    rotationMatrix4D(1:3,1:3) = R;
+
+                    rotationMatrix4Dinv = eye(4);
+                    rotationMatrix4Dinv(1:3,1:3) = R';
 
                     startPositionScale = cell(1, length(scaleHandles));
                     % disp('startPositionScale')
@@ -423,14 +451,16 @@ function originalCallbacks = gizmo_cuboid(ax, fig, stickyPoints, pointA, pointB,
                         if isequal(scaleHandles(scaleN).Type,'patch')
                             disp('this is patch')
                             % disp('this is patch')
-                            % startPositionScale{scaleN} = scaleHandles(scaleN).Vertices;
-                            startPositionScale{scaleN} = [scaleHandles(scaleN).Vertices(:,1);scaleHandles(scaleN).Vertices(:,2);scaleHandles(scaleN).Vertices(:,3)];
+                            startPositionScale{scaleN} = scaleHandles(scaleN).Vertices;
+                            % startPositionScale{scaleN} = [scaleHandles(scaleN).Vertices(:,1);scaleHandles(scaleN).Vertices(:,2);scaleHandles(scaleN).Vertices(:,3)];
                             % disp('what I got')
                             % startPositionScale{scaleN}
                             % disp('stop')
                         else
                             % disp('I am here')
-                            startPositionScale{scaleN} = [scaleHandles(scaleN).XData;scaleHandles(scaleN).YData;scaleHandles(scaleN).ZData];
+                            startPositionScale{scaleN} = [scaleHandles(scaleN).XData', scaleHandles(scaleN).YData', scaleHandles(scaleN).ZData'];
+                            
+                            % startPositionScale{scaleN} = [scaleHandles(scaleN).XData;scaleHandles(scaleN).YData;scaleHandles(scaleN).ZData];
                             % startPositionScale{scaleN}
                             % disp('this was the result')
                         end
@@ -609,7 +639,19 @@ function originalCallbacks = gizmo_cuboid(ax, fig, stickyPoints, pointA, pointB,
                     D = (vLine(1)*x1 + vLine(2)*y1 + cL)/sqrt(vLine(1)^2 + vLine(2)^2);
                     scaleFactor = 1 + D*scalePointVector/scaleInitialDistancePix;
 
-                    scale(startPosition, startPositionScale, scaleHandles, scaleFactor, R, Rinv)
+                    scaleMatrix4D = eye(4);
+                    % scaleMatrix4D(1,1) = scaleFactor;
+                    for i = 1:3
+                        scaleMatrix4D(i,i) = scaleFactor(i);
+                    end
+
+                    scaleMatrix4D
+
+                    transformMatrix4D = translationMatrix4Dinv*rotationMatrix4Dinv*scaleMatrix4D*rotationMatrix4D*translationMatrix4D;
+
+                    % transformMatrix4D = translationMatrix4Dinv*rotationMatrix4Dinv*scaleMatrix4D*rotationMatrix4D*translationMatrix4D;
+
+                    scale(startPosition, startPositionScale, scaleHandles, transformMatrix4D)
                  
              end        
         end
@@ -739,19 +781,11 @@ end
 
 
 %% function calculating scaling in specified dimension
-function scale(startPosition, startPositionScale, handles, scaleFactor, R, Rinv)
-
-    % startPositionScale{1}
-
-    % disp(size(Rinv))
-    % disp(size(R))
-    disp(R)
-    % disp(size(scaleFactor'))
-    % disp(size(startPosition))
+function scale(startPosition, startPositionScale, handles, transformMatrix4D)
 
     % adapt position of all elements affected by rotation
     for i=1:(length(handles))
-        % disp(['i: ', num2str(i)])
+        disp(['i: ', num2str(i)])
 
         if isequal(handles(i).Type,'line')
             % for n=1:size(startPositionScale{i},2)
@@ -767,12 +801,19 @@ function scale(startPosition, startPositionScale, handles, scaleFactor, R, Rinv)
 
             % disp(size(startPositionScale{i}))
             % P1_rotated = Rinv*(scaleFactor.*(R*(startPositionScale{i}-startPosition)))+startPosition;
-            P1_rotated = ((R*(startPositionScale{i}-startPosition)))+startPosition;
+            % P1_rotated = ((R*(startPositionScale{i}-startPosition)))+startPosition;
+            data3D = startPositionScale{i};
+            disp(size(data3D))
+            N = size(data3D, 1)
+            data4D = [data3D, ones(N, 1)];
+            disp(size(data3D))
+            scaledData4D = (transformMatrix4D*data4D')';
+            scaledData3D = scaledData4D(:,1:3);
 
             % P1_rotated = Rinv*(scaleFactor.*(R*(startPositionScale{i}-startPosition)))+startPosition;
-            handles(i).XData = P1_rotated(1);
-            handles(i).YData = P1_rotated(2);
-            handles(i).ZData = P1_rotated(3);         
+            handles(i).XData = scaledData3D(1);
+            handles(i).YData = scaledData3D(2);
+            handles(i).ZData = scaledData3D(3);         
 
             % handles(i).XData = scaleFactor(1) * (startPositionScale{i}(1) - startPosition(1)) + startPosition(1);
             % handles(i).YData = scaleFactor(2) * (startPositionScale{i}(2) - startPosition(2)) + startPosition(2);
@@ -783,41 +824,131 @@ function scale(startPosition, startPositionScale, handles, scaleFactor, R, Rinv)
             % handles(i).ZData
 
         elseif isequal(handles(i).Type,'patch')
+
+            data3D = startPositionScale{i};
+            disp(size(data3D))
+            N = size(data3D, 1)
+            data4D = [data3D, ones(N, 1)];
+            disp(size(data4D))
+            scaledData4D = (transformMatrix4D*data4D')';
+            scaledData3D = scaledData4D(:,1:3);
+            handles(i).Vertices = scaledData3D;
             % disp('here')
-            cornerN = round(size(startPositionScale{i},1)/3);
+            % cornerN = round(size(startPositionScale{i},1)/3);
             % scaleFactor
             % R
             % Rinv
             % startPositionScale{i}
-            for corner=1:cornerN
-                startPosCorner = [startPositionScale{i}(corner);startPositionScale{i}(corner+cornerN);startPositionScale{i}(corner+2*cornerN)];
-                % disp('new')
-                % disp(size((R*(startPosCorner-startPosition))))
-                % multiplied = R*(startPosCorner-startPosition)
-                % scaleFactor 
-                % disp(size(scaleFactor.*multiplied))
+            % for corner=1:cornerN
+            %     startPosCorner = [startPositionScale{i}(corner);startPositionScale{i}(corner+cornerN);startPositionScale{i}(corner+2*cornerN)];
+            %     % disp('new')
+            %     % disp(size((R*(startPosCorner-startPosition))))
+            %     % multiplied = R*(startPosCorner-startPosition)
+            %     % scaleFactor 
+            %     % disp(size(scaleFactor.*multiplied))
                 
-                % disp(size(scaleFactor))
-                % disp(size((scaleFactor.*(R*(startPosCorner-startPosition)))))
-                % P1_rotated = Rinv*(scaleFactor.*(R*(startPosCorner-startPosition)))+startPosition;
-                P1_rotated = ((R*(startPosCorner-startPosition)))+startPosition;
+            %     % disp(size(scaleFactor))
+            %     % disp(size((scaleFactor.*(R*(startPosCorner-startPosition)))))
+            %     % P1_rotated = Rinv*(scaleFactor.*(R*(startPosCorner-startPosition)))+startPosition;
+            %     P1_rotated = ((R*(startPosCorner-startPosition)))+startPosition;
 
-                % P1_rotated = Rinv*(scaleFactor.*(R*(startPosCorner-startPosition)))+startPosition;
-                % P1_rotated = Rinv*(scaleFactor.*(R*(startPosCorner-startPosition)))+startPosition;
-                % disp('new')
-                % disp(size((R*(startPosCorner-startPosition))))
-                % disp(size(scaleFactor))
-                % disp(size(startPosCorner))
-                handles(i).Vertices(corner,1) = P1_rotated(1);
-                handles(i).Vertices(corner,2) = P1_rotated(2);
-                handles(i).Vertices(corner,3) = P1_rotated(3);
-            end
+            %     % P1_rotated = Rinv*(scaleFactor.*(R*(startPosCorner-startPosition)))+startPosition;
+            %     % P1_rotated = Rinv*(scaleFactor.*(R*(startPosCorner-startPosition)))+startPosition;
+            %     % disp('new')
+            %     % disp(size((R*(startPosCorner-startPosition))))
+            %     % disp(size(scaleFactor))
+            %     % disp(size(startPosCorner))
+            %     handles(i).Vertices(corner,1) = P1_rotated(1);
+            %     handles(i).Vertices(corner,2) = P1_rotated(2);
+            %     handles(i).Vertices(corner,3) = P1_rotated(3);
+            % end
 
             % handles(i).Vertices
         end
     end
 
 end
+
+% %% function calculating scaling in specified dimension
+% function scale(startPosition, startPositionScale, handles, scaleFactor, R, Rinv)
+
+%     % startPositionScale{1}
+
+%     % disp(size(Rinv))
+%     % disp(size(R))
+%     disp(R)
+%     % disp(size(scaleFactor'))
+%     % disp(size(startPosition))
+
+%     % adapt position of all elements affected by rotation
+%     for i=1:(length(handles))
+%         % disp(['i: ', num2str(i)])
+
+%         if isequal(handles(i).Type,'line')
+%             % for n=1:size(startPositionScale{i},2)
+%             %     % disp(size(Rinv))
+%             %     % disp(size(R))
+%             %     % disp(size(scaleFactor))
+%             %     disp(size(startPositionScale{i}(:,n)))
+%             %     P1_rotated = R*(scaleFactor.*(Rinv*(startPositionScale{i}(:,n)-startPosition)))+startPosition;
+%             %     handles(i).XData(n) = P1_rotated(1);
+%             %     handles(i).YData(n) = P1_rotated(2);
+%             %     handles(i).ZData(n) = P1_rotated(3);
+%             % end 
+
+%             % disp(size(startPositionScale{i}))
+%             % P1_rotated = Rinv*(scaleFactor.*(R*(startPositionScale{i}-startPosition)))+startPosition;
+%             P1_rotated = ((R*(startPositionScale{i}-startPosition)))+startPosition;
+
+%             % P1_rotated = Rinv*(scaleFactor.*(R*(startPositionScale{i}-startPosition)))+startPosition;
+%             handles(i).XData = P1_rotated(1);
+%             handles(i).YData = P1_rotated(2);
+%             handles(i).ZData = P1_rotated(3);         
+
+%             % handles(i).XData = scaleFactor(1) * (startPositionScale{i}(1) - startPosition(1)) + startPosition(1);
+%             % handles(i).YData = scaleFactor(2) * (startPositionScale{i}(2) - startPosition(2)) + startPosition(2);
+%             % handles(i).ZData = scaleFactor(3) * (startPositionScale{i}(3) - startPosition(3)) + startPosition(3);
+
+%             % handles(i).XData
+%             % handles(i).YData
+%             % handles(i).ZData
+
+%         elseif isequal(handles(i).Type,'patch')
+%             % disp('here')
+%             cornerN = round(size(startPositionScale{i},1)/3);
+%             % scaleFactor
+%             % R
+%             % Rinv
+%             % startPositionScale{i}
+%             for corner=1:cornerN
+%                 startPosCorner = [startPositionScale{i}(corner);startPositionScale{i}(corner+cornerN);startPositionScale{i}(corner+2*cornerN)];
+%                 % disp('new')
+%                 % disp(size((R*(startPosCorner-startPosition))))
+%                 % multiplied = R*(startPosCorner-startPosition)
+%                 % scaleFactor 
+%                 % disp(size(scaleFactor.*multiplied))
+                
+%                 % disp(size(scaleFactor))
+%                 % disp(size((scaleFactor.*(R*(startPosCorner-startPosition)))))
+%                 % P1_rotated = Rinv*(scaleFactor.*(R*(startPosCorner-startPosition)))+startPosition;
+%                 P1_rotated = ((R*(startPosCorner-startPosition)))+startPosition;
+
+%                 % P1_rotated = Rinv*(scaleFactor.*(R*(startPosCorner-startPosition)))+startPosition;
+%                 % P1_rotated = Rinv*(scaleFactor.*(R*(startPosCorner-startPosition)))+startPosition;
+%                 % disp('new')
+%                 % disp(size((R*(startPosCorner-startPosition))))
+%                 % disp(size(scaleFactor))
+%                 % disp(size(startPosCorner))
+%                 handles(i).Vertices(corner,1) = P1_rotated(1);
+%                 handles(i).Vertices(corner,2) = P1_rotated(2);
+%                 handles(i).Vertices(corner,3) = P1_rotated(3);
+%             end
+
+%             % handles(i).Vertices
+%         end
+%     end
+
+% end
 
 % %% function calculating scaling in specified dimension
 % function scale(startPosition, startPositionScale, handles, vector, scaleFactor)

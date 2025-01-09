@@ -64,6 +64,7 @@ objectStruct.scalePointVectors = {[0 1 1]};
 
 % cylinder 
 objectStruct.scalePointVectors = {[1 0 1], [0 1 0]};
+objectStruct.symmetryElementVector = [0 1 0];
 
 MyDragzoom();
 % gizmo_app_testing(ax,f,my3Dline,gizmoPointA,gizmoPointB)
