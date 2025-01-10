@@ -7,7 +7,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
     % pixel_size = pixel_size/2;
 
     % default paramateres
-    padSize = 3;
+    padSize = 4;
     sigma = 2;
     scaleF = 2;
     isoThres = 0.3;
@@ -100,6 +100,8 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
                 % blurr only single plane (exclude pad array)
                 vol(:,:,padSize+1) = imgaussfilt(vol(:,:,padSize+1),sigma*2); 
 
+                % vol(:,:,padSize:padSize+2) = imgaussfilt3(vol(:,:,padSize:padSize+2),sigma*2); 
+
                 % vol = imgaussfilt3(vol,sigma*2);
                 % vol = imgaussfilt(vol,sigma*2); 
                                                  
@@ -118,10 +120,10 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
        
             
         % calculate normals
-        normals = isonormals(vol,verts);
+        % normals = isonormals(vol,verts);
 
         % set all NaN normals to 0
-        normals(isnan(normals)) = 0;
+        % normals(isnan(normals)) = 0;
 
         if isempty(verts)
             disp('Empty verts')
@@ -179,26 +181,31 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
                 
                 case '3D'
     
-                    mesh = surfaceMesh(verts,faces,"VertexNormals",normals);
+                    % mesh = surfaceMesh(verts,faces,"VertexNormals",normals);
                     % compute normals for faces
-                    computeNormals(mesh,"face")
+                    % computeNormals(mesh,"face")
+                    mesh = surfaceMesh(verts,faces);
+                    computeNormals(mesh)
     
                 case '2D'
     
-                    verts(:,3) = verts(:,3) - mean(verts(:,3));
                     verts(:,3) = verts(:,3).*0.5;
+                    verts(:,3) = verts(:,3) - mean(verts(:,3));
+                   
                     % mesh = surfaceMesh(verts,faces);
             
-                    mesh = surfaceMesh(verts,faces,"VertexNormals",normals);
+                    % mesh = surfaceMesh(verts,faces,"VertexNormals",normals);
                     % compute normals for faces
-                    computeNormals(mesh,"face")
+                    % computeNormals(mesh,"face")
+                    mesh = surfaceMesh(verts,faces);
+                    computeNormals(mesh)
                     
                     % mesh = surfaceMesh(verts,faces,"VertexNormals",components.vertexNormals,"FaceNormals",components.faceNormals);
                     % mesh = smoothSurfaceMesh(mesh,2)
     
                     % simplify(mesh,SimplificationMethod="quadric-decimation",TargetNumFaces=100)
                     % simplify(mesh,SimplificationMethod="quadric-decimation",VoxelSize=pixel_size*0.5)
-                    simplify(mesh,SimplificationMethod="quadric-decimation",BoundaryWeight=0.5);
+                    % simplify(mesh,SimplificationMethod="quadric-decimation",BoundaryWeight=0.9);
     
                     % simplify(mesh,SimplificationMethod="vertex-clustering",VoxelSize=pixel_size)
     
@@ -216,7 +223,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
             verts = [];
             % T(meshObjInd,1:11) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]}};
     
-            T(meshObjInd,1:13) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]},meanInt,maxInt};
+            T(meshObjInd,:) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]},{[1 0 0]},meanInt,maxInt};
             T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);
     
             
