@@ -117,6 +117,8 @@ function originalCallbacks = gizmo_cuboid(ax, fig, stickyPoints, pointA, pointB,
 
     activeHandles = [xBallPoint yBallPoint zBallPoint normBallPoint xzRot xyRot yzRot];
     passiveHandles = [normLine, lx, ly, lz];
+
+    % symmetryPointHandles = [];
     
     % add thin cuboid instead of the plane
     objectHandle = patch(ax,'Vertices',objectStruct.vertices,'Faces',objectStruct.faces,'FaceColor','cyan','FaceAlpha',planeTansparency,'EdgeColor',planeEdgeColor,'Tag','3dPlane');
@@ -138,14 +140,52 @@ function originalCallbacks = gizmo_cuboid(ax, fig, stickyPoints, pointA, pointB,
         activeHandles(end + 1) = scalePointHandle;
     end
 
-    % symmetry element to use for rotation before scaling
-    symmetryElementVector = objectStruct.symmetryElementVector;
-    symmetryElementHandle = plot3(ax,x0 + symmetryElementVector(1),y0 + symmetryElementVector(2),z0 + symmetryElementVector(3));
-    symmetryElementHandle.UserData = symmetryElementVector;
-    moveHandles(end + 1) = symmetryElementHandle;
-    rotHandles(end + 1) = symmetryElementHandle;
-    passiveHandles(end + 1) = symmetryElementHandle;
+    % % for symmetryVectorNum = 1:numel(objectStruct.symmetryElementVectors)
+    %     % symmetry element to use for rotation before scaling
+    %     symmetryElementVector = objectStruct.symmetryElementVector;
+    %     % symmetryElementVector = objectStruct.symmetryElementVectors{symmetryVectorNum};
+    %     symmetryElementHandle = plot3(ax,x0 + symmetryElementVector(1),y0 + symmetryElementVector(2),z0 + symmetryElementVector(3));
+    %     symmetryElementHandle.UserData = symmetryElementVector;
+    %     moveHandles(end + 1) = symmetryElementHandle;
+    %     rotHandles(end + 1) = symmetryElementHandle;
+    %     passiveHandles(end + 1) = symmetryElementHandle;
+    %     % symmetryPointHandles(symmetryVectorNum) = symmetryElementHandle;
+    %     % symmetryPointHandles(end + 1) = symmetryElementHandle;
+    % % end
 
+    symmetryPointHandles = [objectHandle];
+
+    for symmetryVectorNum = 1:3
+        % symmetry element to use for rotation before scaling
+        % symmetryElementVector = objectStruct.symmetryElementVector;
+        symmetryElementVector = [0 0 0];
+        symmetryElementVector(symmetryVectorNum) = 1;
+        % symmetryElementVector = objectStruct.symmetryElementVectors{symmetryVectorNum};
+        symmetryElementHandle = plot3(ax,x0 + symmetryElementVector(1),y0 + symmetryElementVector(2),z0 + symmetryElementVector(3));
+        symmetryElementHandle.UserData = symmetryElementVector;
+        moveHandles(end+1) = symmetryElementHandle;
+        rotHandles(end+1) = symmetryElementHandle;
+        passiveHandles(end+1) = symmetryElementHandle;
+        symmetryPointHandles(end+1) = symmetryElementHandle
+        disp(symmetryElementHandle)
+    end
+
+
+    disp(class(scaleHandles))
+    disp(class(symmetryPointHandles))
+
+    disp('here')
+    disp(size(symmetryPointHandles))
+    disp(symmetryPointHandles(1))
+    disp('there')
+
+    symmetryPointHandles = symmetryPointHandles(2:end);
+
+    disp('here again')
+    disp(class(symmetryPointHandles))
+    disp(size(symmetryPointHandles))
+    disp(symmetryPointHandles(1))
+    disp('there')
     % disp(rotHandles)
     % get(scaleHandles)
 
@@ -378,7 +418,7 @@ function originalCallbacks = gizmo_cuboid(ax, fig, stickyPoints, pointA, pointB,
                         
                     % end
 
-                    rotatedScalePointVector = (srcArray - cBallPointArray)/norm(srcArray - cBallPointArray)
+                    rotatedScalePointVector = (srcArray - cBallPointArray)/norm(srcArray - cBallPointArray);
 
                     if isequal(size(scalePointVector), [1, 3])
                         disp(size(scalePointVector))
@@ -393,6 +433,66 @@ function originalCallbacks = gizmo_cuboid(ax, fig, stickyPoints, pointA, pointB,
                     end
 
                     scalePointVector = scalePointVector/norm(scalePointVector);
+
+                    % % first as a reference 
+                    % originalVectorRef = symmetryPointHandles(1).UserData
+                    % symmetryPointArrayRef = [symmetryPointHandles(1).XData, symmetryPointHandles(1).YData, symmetryPointHandles(1).ZData];
+                    % rotatedVectorRef = (symmetryPointArrayRef - cBallPointArray)/norm(symmetryPointArrayRef - cBallPointArray)
+
+
+                    % R = eye(3);
+                    % R(1:3,1) = rotatedVectorRef(:);
+
+                    % refCount = 2
+                    % for symmetryPointHandle = symmetryPointHandles(2:end)
+                    %     originalVector = symmetryPointHandle.UserData
+                    %     symmetryPointArray = [symmetryPointHandle.XData, symmetryPointHandle.YData, symmetryPointHandle.ZData];
+                    %     rotatedVector = (symmetryPointArray - cBallPointArray)/norm(symmetryPointArray - cBallPointArray)
+                    %     vTemp = cross(rotatedVectorRef, rotatedVector);
+                    %     vLocal = vTemp/norm(vTemp);
+                    %     R(1:3,refCount) = vLocal(:);
+                    %     refCount = refCount + 1;
+                    % end
+
+                    % disp(R)
+
+                    % % Check determinant => ensure right-handed
+                    % if det(R) < 0
+                    %     % flip one axis to fix left-handed
+                    %     R(:,3) = -R(:,3);
+                    % end
+
+                    % first as a reference 
+                    originalVectorRef = symmetryPointHandles(1).UserData
+                    symmetryPointArrayRef = [symmetryPointHandles(1).XData, symmetryPointHandles(1).YData, symmetryPointHandles(1).ZData];
+                    rotatedVectorRef = (symmetryPointArrayRef - cBallPointArray)/norm(symmetryPointArrayRef - cBallPointArray)
+
+
+                    R = eye(3);
+                    R(1:3,1) = rotatedVectorRef(:);
+
+                    refCount = 2
+                    for symmetryPointHandle = symmetryPointHandles(2:end)
+                        originalVector = symmetryPointHandle.UserData
+                        symmetryPointArray = [symmetryPointHandle.XData, symmetryPointHandle.YData, symmetryPointHandle.ZData];
+                        rotatedVector = (symmetryPointArray - cBallPointArray)/norm(symmetryPointArray - cBallPointArray)
+                        vTemp = cross(rotatedVectorRef, rotatedVector);
+                        vLocal = vTemp/norm(vTemp);
+                        R(1:3,refCount) = rotatedVector(:);
+                        refCount = refCount + 1;
+                    end
+
+                    disp(R)
+
+                    % Check determinant => ensure right-handed
+                    if det(R) < 0
+                        % flip one axis to fix left-handed
+                        R(:,2) = -R(:,2);
+                    end
+
+                    disp(R)
+                    R = inv(R);
+
 
                     %     k = cross(rotatedScalePointVector, scalePointVector);
                     %     % k = cross([1 0 0], normalVector);
@@ -420,10 +520,17 @@ function originalCallbacks = gizmo_cuboid(ax, fig, stickyPoints, pointA, pointB,
                     %     % transformedScaleVector = (R*scalePointVector)/norm(R*scalePointVector);
                     % end
 
-                    originalVector = symmetryElementHandle.UserData
-                    symmetryElementArray = [symmetryElementHandle.XData, symmetryElementHandle.YData, symmetryElementHandle.ZData];
+                    % % get the rotation part
+                    % for symmetryPointHandle = symmetryPointHandles
+                    %     originalVector = symmetryPointHandle.UserData;
+                    %     symmetryPointArray = [symmetryPointHandle.XData, symmetryPointHandle.YData, symmetryPointHandle.ZData];
+                    %     rotatedVector = 
+                    % end
 
-                    rotatedScalePointVector = (symmetryElementArray - cBallPointArray)/norm(symmetryElementArray - cBallPointArray);
+                    % originalVector = symmetryElementHandle.UserData;
+                    % symmetryElementArray = [symmetryElementHandle.XData, symmetryElementHandle.YData, symmetryElementHandle.ZData];
+
+                    % rotatedScalePointVector = (symmetryElementArray - cBallPointArray)/norm(symmetryElementArray - cBallPointArray);
 
                     translationMatrix4D = eye(4);
                     translationMatrix4D(1:3, 4) = -startPosition(:);
@@ -431,8 +538,8 @@ function originalCallbacks = gizmo_cuboid(ax, fig, stickyPoints, pointA, pointB,
                     translationMatrix4Dinv = eye(4);
                     translationMatrix4Dinv(1:3, 4) = startPosition(:);
 
-                    xVector = [1 0 0];
-                    R = calculateRotationMatrix(originalVector, rotatedScalePointVector);
+                    % xVector = [1 0 0];
+                    % R = calculateRotationMatrix(originalVector, rotatedScalePointVector);
 
                     rotationMatrix4D = eye(4);
                     rotationMatrix4D(1:3,1:3) = R;
@@ -645,9 +752,11 @@ function originalCallbacks = gizmo_cuboid(ax, fig, stickyPoints, pointA, pointB,
                         scaleMatrix4D(i,i) = scaleFactor(i);
                     end
 
-                    scaleMatrix4D
+                    % scaleMatrix4D
 
                     transformMatrix4D = translationMatrix4Dinv*rotationMatrix4Dinv*scaleMatrix4D*rotationMatrix4D*translationMatrix4D;
+                    % transformMatrix4D = scaleMatrix4D*rotationMatrix4D*translationMatrix4D;
+                    % transformMatrix4D = translationMatrix4Dinv*rotationMatrix4D*translationMatrix4D;
 
                     % transformMatrix4D = translationMatrix4Dinv*rotationMatrix4Dinv*scaleMatrix4D*rotationMatrix4D*translationMatrix4D;
 

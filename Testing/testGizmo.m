@@ -54,21 +54,41 @@ gizmoPointB = plot3(ax,x0+1,y0+1,z0,'m','Marker','o','MarkerFaceColor','m','Mark
 ax.FontUnits = 'pixels';
 ax.Units = "pixels";
 
-scalingFactor = 1;
-% [vertices,faces] = getThinCuboid([1 scalingFactor scalingFactor],1,0.001,1);
-[vertices,faces] = getCylinder(30,3,0.5,2,1);
+selection = 'cylinder';
 
-objectStruct = struct('vertices',vertices,'faces',faces);
-% plane-like (cuboid)
-objectStruct.scalePointVectors = {[0 1 1]};
+switch selection
+    case 'cuboid'
+        scalingFactor = 1;
+        thickness = 0.1;
+        [vertices,faces] = getThinCuboid([1 scalingFactor scalingFactor],1,thickness,1);
+        objectStruct = struct('vertices',vertices,'faces',faces);
+        % plane-like (cuboid)
+        objectStruct.scalePointVectors = {[0 1 1]};
+        % objectStruct.symmetryElementVectors = {[0 1 0]};
+        objectStruct.symmetryElementVector = [1 1 1];
+    case 'cylinder'
 
-% cylinder 
-objectStruct.scalePointVectors = {[1 0 1], [0 1 0]};
-objectStruct.symmetryElementVector = [0 1 0];
+
+        scalingFactor = 1;
+        % [vertices,faces] = getThinCuboid([1 scalingFactor scalingFactor],1,0.001,1);
+        [vertices,faces] = getCylinder(30,3,0.5,2,1);
+
+        objectStruct = struct('vertices',vertices,'faces',faces);
+        % plane-like (cuboid)
+        objectStruct.scalePointVectors = {[0 1 1]};
+
+        % cylinder 
+        objectStruct.scalePointVectors = {[1 0 1], [0 1 0]};
+        % objectStruct.symmetryElementVectors = {[0 1 0]};
+        objectStruct.symmetryElementVector = [0 1 0];
+
+        
+end
 
 MyDragzoom();
-% gizmo_app_testing(ax,f,my3Dline,gizmoPointA,gizmoPointB)
 gizmo_cuboid_testing(ax,f,my3Dline,gizmoPointA,gizmoPointB,objectStruct)
+% gizmo_app_testing(ax,f,my3Dline,gizmoPointA,gizmoPointB)
+
 % gizmo(ax,[])
 
 
