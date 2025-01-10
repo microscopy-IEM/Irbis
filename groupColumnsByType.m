@@ -34,10 +34,10 @@ function [columnNamesScalar, columnNamesVector, columnNamesCategorical, columnNa
     % Loop through numeric columns and check if the first value is scalar or vector
     for i = 1:numel(columnNamesNumeric)
         colData = T.(columnNamesNumeric{i});
-        
+
         % Check if the first entry is scalar or vector
-        firstEntry = colData(1);
-        
+        firstEntry = colData(1,:);
+
         if isscalar(firstEntry)
             columnNamesScalar{end+1} = columnNamesNumeric{i};
         elseif isvector(firstEntry)

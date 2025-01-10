@@ -25,7 +25,7 @@ function baseStructs = getBaseStruct(varargin)
             return
         elseif isequal(varargin{1},'irbisVersion')
             baseStructs = irbisVersion;
-            returnx
+            return
         end
     end
 

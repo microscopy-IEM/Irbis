@@ -10,7 +10,7 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
             loadedStruct = loadedStruct.MMpack;
             presentRootFields = fieldnames(loadedStruct);
         end
-k
+
         emptyRootFields = {};
         for i = 1:length(presentRootFields)
             field = presentRootFields{i};
@@ -295,8 +295,13 @@ k
         end
     end
 
+    % change the Irbis version - CHANGE FOR THE NEWEST
+    disp('new irbis version:')
+    disp(getBaseStruct('irbisVersion'))
+    loadedStruct.info.irbisVersion = getBaseStruct('irbisVersion');
     updatedStruct = loadedStruct;
-    assignin("base", "updatedStruct", updatedStruct);
+
+    % assignin("base", "updatedStruct", updatedStruct);
 
 end
 
