@@ -40,18 +40,18 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         vertices=to_numpy_array(mesh_data[0]['vertices'], dtype=np.float64),
         faces=to_numpy_array(mesh_data[0]['faces'], dtype=np.int32)
     )
-    print(base_mesh.is_volume)
-    print(base_mesh.is_watertight)
-    base_mesh.fix_normals()
+    # print(base_mesh.is_volume)
+    # print(base_mesh.is_watertight)
+    # base_mesh.fix_normals()
 
     cylinder_mesh = trimesh.Trimesh(
         vertices=to_numpy_array(mesh_data[1]['vertices'], dtype=np.float64),
         faces=to_numpy_array(mesh_data[1]['faces'], dtype=np.int32)
     )
 
-    print(cylinder_mesh.is_volume)
-    print(cylinder_mesh.is_watertight)
-    cylinder_mesh.fix_normals()
+    # print(cylinder_mesh.is_volume)
+    # print(cylinder_mesh.is_watertight)
+    # cylinder_mesh.fix_normals()
 
     # Perform boolean difference
     subtracted_mesh = base_mesh.difference(cylinder_mesh)
@@ -121,5 +121,17 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         "base_points": base_points
     }
 
-# Example usage
-output = mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original, tolerance, threshold, min_sample_size, green_threshold, distance_threshold)
+# Call from Matlab
+try:
+    output = mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original, tolerance, threshold, min_sample_size, green_threshold, distance_threshold)
+except Exception as e:
+    import traceback
+    traceback.print_exc()
+
+    import sys
+
+    print(f"Error: {str(e)}")
+    output = None
+
+    sys.exit(1)
+    

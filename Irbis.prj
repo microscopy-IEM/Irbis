@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="4242946787" file="C:\Users\sveco\Documents\Irbis\Irbis.prj" location="C:\Users\sveco\Documents\Irbis" name="Irbis" preferred-package-location="C:\Users\sveco\Documents\Irbis\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3688041596" file="C:\Users\sveco\Documents\Irbis\Irbis.prj" location="C:\Users\sveco\Documents\Irbis" name="Irbis" preferred-package-location="C:\Users\sveco\Documents\Irbis\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\Irbis_resources\icon.ico</param.icon>
     <param.icons>
@@ -83,6 +83,7 @@
       <file>${PROJECT_ROOT}\attach_objects_py_script.py</file>
       <file>${PROJECT_ROOT}\attach_objects_trimesh_py_script.py</file>
       <file>${PROJECT_ROOT}\checkAndHandlePythonPackage.m</file>
+      <file>${PROJECT_ROOT}\find_intersection_volume_py_script.py</file>
       <file>${PROJECT_ROOT}\IrbisApp.mlapp</file>
       <file>${PROJECT_ROOT}\mesh_intersect_and_separate_py_script.py</file>
       <file>${PROJECT_ROOT}\mesh_intersect_and_separate_trimesh_py_script.py</file>

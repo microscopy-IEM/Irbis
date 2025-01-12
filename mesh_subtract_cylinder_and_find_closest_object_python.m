@@ -12,6 +12,7 @@ function [nObjects, meshCell, basePoints] = mesh_subtract_cylinder_and_find_clos
         library_selection = 1;
     end
 
+    try
     if library_selection == 1
         output = pyrunfile('mesh_subtract_cylinder_and_find_closest_py_script.py',"output", ...
             mesh_data=mesh_data, ...
@@ -33,6 +34,12 @@ function [nObjects, meshCell, basePoints] = mesh_subtract_cylinder_and_find_clos
     else
         error("Invalid library selection. Please choose 1 for pymeshlab or 2 for trimesh.");
     end
+
+    catch ME
+        disp(ME.message);
+        error("Error in running the python script.");
+    end
+
 
     % output = pyrunfile('mesh_subtract_cylinder_and_find_closest_py_script.py',"output", ...
     %     mesh_data=mesh_data, ...

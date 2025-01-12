@@ -1,5 +1,20 @@
-import pymeshlab
-import numpy as np
+# Call the function so that the script can run when called from Matlab
+print('Doing pymeshlab import...')
+try:
+    import pymeshlab
+    import numpy as np
+except Exception as e:
+    import traceback
+    print('Traceback error: \n')
+    traceback.print_exc()
+
+
+    print('Printed error: \n')
+    print(f"Error: {str(e)}")
+    output = None
+
+    import sys
+    sys.exit(1)
 
 def to_numpy_array(data, dtype):
     """Ensure data is a NumPy array, converting memoryview if needed."""
@@ -135,4 +150,18 @@ def mesh_subtract_and_separate_with_color(mesh_data, green_threshold=0.3, tolera
     }
 
 # Call the function so that the script can run when called from Matlab
-output = mesh_subtract_and_separate_with_color(mesh_data, green_threshold, tolerance, distance_threshold)
+print('Running mesh_subtract_and_separate_with_color function...')
+try:
+    output = mesh_subtract_and_separate_with_color(mesh_data, green_threshold, tolerance, distance_threshold)
+except Exception as e:
+    import traceback
+    print('Traceback error: \n')
+    traceback.print_exc()
+
+
+    print('Printed error: \n')
+    print(f"Error: {str(e)}")
+    output = None
+
+    import sys
+    sys.exit(1)

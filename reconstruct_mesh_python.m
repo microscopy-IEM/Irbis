@@ -5,7 +5,7 @@ function [nObjects, meshCell, components] = reconstruct_mesh_python(depth,mesh_d
     % argument 2 - mesh_data (struct containing both vertices, faces, and possibly also normals)
     
     % define default values: 
-    fractionToKeep = 0.8;
+    fractionToKeep = 1;
     minVertexNum = 20;
     separate = 1;
     
@@ -44,12 +44,27 @@ function [nObjects, meshCell, components] = reconstruct_mesh_python(depth,mesh_d
     %     % disp('else args')
     % end
 
+    tic
     output = pyrunfile('reconstruct_mesh_py_script.py',"output", ...
         mesh_data=mesh_data, ...
         d=depth, ...
         f=fractionToKeep, ...
         nVer=minVertexNum, ...
         separate=separate);
+    
+    toc
+
+    % tic
+    % output = pyrunfile('reconstruct_mesh_open3d_py_script.py',"output", ...
+    %     mesh_data=mesh_data, ...
+    %     d=depth, ...
+    %     f=fractionToKeep, ...
+    %     nVer=minVertexNum, ...
+    %     separate=separate);
+    % toc
+
+    % the open3d version seems to be faster (0.5 vs 1.4 s on constant shaft)
+        % same for adaptive shaft (0.6 vs 4.2 s)
 
     % Retrieve the number of objects
     nObjects = int8(output{'n_objects'});

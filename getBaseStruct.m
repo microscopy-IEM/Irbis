@@ -6,7 +6,7 @@ function baseStructs = getBaseStruct(varargin)
     %     2: timeDependencyType
     %     3: nTimePoints
 
-    irbisVersion = 1.12;
+    irbisVersion = 1.13;
 
     structTypes = {'info','timeline','tools','views','results','planes','tracks','points','model'};
     timeDependencyType = {'timeDependent','timeIndependent'};
@@ -315,8 +315,8 @@ function List = createEmptyList(structType,varargin)
 
             % TO OPTIMIZE - add volume, surface, ... right away? 
 
-            varNames = ["groupId","Points","Mesh","name","prevTPid","nextTPid","parent","children","volume","surface","positionShift","color"];
-            varTypes = ["double","cell","cell","string","double","double","cell","cell","double","double","cell","cell"];
+            varNames = ["groupId","Points","Mesh","name","prevTPid","nextTPid","parent","children","volume","surface","positionShift","color","excluded"];
+            varTypes = ["double","cell","cell","string","double","double","cell","cell","double","double","cell","cell","logical"];
         
             if ismember('derived',specialTypes)
                 addedNames = ["CentreLine","RadiusVect","ZScale","Contours","MiddlePoints","RadiusScale"];

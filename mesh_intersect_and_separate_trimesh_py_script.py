@@ -1,3 +1,4 @@
+print('using trimesh intersect script')
 import trimesh
 import numpy as np
 import sys

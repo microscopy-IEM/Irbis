@@ -10,6 +10,7 @@ function [nObjects, meshCell, basePoints] = mesh_subtract_and_separate_and_save_
         library_selection = 1;
     end
 
+    try
     if library_selection == 1
         % Use pymeshlab for mesh processing
         % Call the Python script with mesh data and parameters
@@ -28,6 +29,11 @@ function [nObjects, meshCell, basePoints] = mesh_subtract_and_separate_and_save_
             distance_threshold=distance_threshold);
     else
         error("Invalid library selection. Please choose 1 for pymeshlab or 2 for trimesh.");
+    end
+    
+    catch ME
+        disp(ME.message);
+        error("Error in running the python script.");
     end
 
     % Retrieve the number of objects

@@ -57,6 +57,9 @@ classdef GroupingBaseClass < handle
                 if isempty(listArray)
                     return
                 end
+                if isempty(filterArray)
+                    filterArray = arrayfun(@(~) table(), zeros(1, numel(timePoints)), 'UniformOutput', false);
+                end
                 for tp = timePoints
                     listTable = listArray{tp};
                     filterTable = filterArray{tp};

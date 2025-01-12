@@ -1,3 +1,4 @@
+print('running mesh_subtract_and_separate_and_save_plane_trimesh_py_script.py')
 import trimesh
 import numpy as np
 import sys
@@ -28,13 +29,14 @@ def mesh_subtract_and_separate(mesh_data, green_threshold=0.3, distance_threshol
     """
     # Convert mesh data to trimesh objects
     meshes = []
-    for mesh in mesh_data[:2]:
+    for id, mesh in enumerate(mesh_data[:2]):
         vertices = to_numpy_array(mesh['vertices'], dtype=np.float64)
         faces = to_numpy_array(mesh['faces'], dtype=np.int32)
         trimesh_mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=True)
 
         if not trimesh_mesh.is_watertight:
             print('mesh is not watertight')
+            print(id)
             # not watertight means it has holes or non-manifold edges
             if 'pymeshfix' not in sys.modules:
                 import pymeshfix 
@@ -46,10 +48,12 @@ def mesh_subtract_and_separate(mesh_data, green_threshold=0.3, distance_threshol
         if not trimesh_mesh.is_winding_consistent:
             # non-consistent winding means that two adjacent faces have normals in opposite directions
             print('winding is not consistent')
+            print(id)
             trimesh.repair.fix_winding(trimesh_mesh)
         if not trimesh_mesh.is_volume:
             # not volume means (at least in some situation) that the volume is negative - normals point inward
             print('mesh is not volume')
+            print(id)
             trimesh.repair.fix_inversion(trimesh_mesh, multibody=False)
 
         # we are hoping that everything is fixed by now
@@ -79,6 +83,11 @@ def mesh_subtract_and_separate(mesh_data, green_threshold=0.3, distance_threshol
             'vertexNormals': vertex_normals,
             'faceNormals': face_normals
         }
+
+        print(idx)
+        print(component.is_watertight)
+        print(component.is_winding_consistent)
+        print(component.is_volume)
 
         distances = np.linalg.norm(vertices[:, None, :] - meshes[1].vertices[None, :, :], axis=2)
         close_indices = np.where(np.min(distances, axis=1) < distance_threshold)[0]
