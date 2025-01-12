@@ -295,6 +295,29 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
         end
     end
 
+    if loadedIrbisVersion < 1.13
+        % adding column 'excluded' to the table 
+        if isfield(loadedStruct,'model')
+            if ~isempty(loadedStruct.model)
+                branches = loadedStruct.model.branches;
+                for branchNum = 1:numel(branches)
+                    branch = branches{branchNum};
+        
+                    for timePoint = 1:numel(loadedStruct.model.(branch).List)
+                        List = loadedStruct.model.(branch).List{timePoint};
+                        if istable(List)
+                            variableNames = string(List.Properties.VariableNames);
+                            if ~ismember('excluded',variableNames)
+                                tableHeight = height(List);
+                                loadedStruct.model.(branch).List{timePoint}.excluded = false(tableHeight, 1);
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
     % change the Irbis version - CHANGE FOR THE NEWEST
     disp('new irbis version:')
     disp(getBaseStruct('irbisVersion'))

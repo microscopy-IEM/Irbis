@@ -4,6 +4,14 @@ clear all;
 
 my3Dline = [];
 
+center = [12 10 15];
+radius = 2*1.15;
+theta=-pi:0.1:pi;
+
+v = [0 1 0];
+v=null(v);
+points=repmat(center',1,size(theta,2))+radius*(v(:,1)*cos(theta)+v(:,2)*sin(theta));
+
 f = figure;
 f.Position = [100 300 1000 1000];
 % plot3(my3Dline(:,1),my3Dline(:,2),my3Dline(:,3),'LineWidth',2)
@@ -13,6 +21,10 @@ axis equal
 grid on
 rotate3d 'off'
 disableDefaultInteractivity(ax)
+
+
+stickyLine = plot3(ax,points(1,:),points(2,:),points(3,:),'Color','g','LineWidth',5);
+% stickyLine = plot3(ax,points(1,:),points(2,:),points(3,:),'Color','g','LineWidth',5,'Tag','stickyLine');
 
 ax.YDir = "reverse";
 
@@ -60,33 +72,37 @@ switch selection
     case 'cuboid'
         scalingFactor = 1;
         thickness = 0.1;
-        [vertices,faces] = getThinCuboid([1 scalingFactor scalingFactor],1,thickness,1);
-        objectStruct = struct('vertices',vertices,'faces',faces);
-        % plane-like (cuboid)
-        objectStruct.scalePointVectors = {[0 1 1]};
-        % objectStruct.symmetryElementVectors = {[0 1 0]};
-        objectStruct.symmetryElementVector = [1 1 1];
+        % [vertices,faces] = getThinCuboid([1 scalingFactor scalingFactor],1,thickness,1);
+        % objectStruct = struct('vertices',vertices,'faces',faces);
+        % % plane-like (cuboid)
+        % objectStruct.scalePointVectors = {[0 1 1]};
+        % % objectStruct.symmetryElementVectors = {[0 1 0]};
+        % objectStruct.symmetryElementVector = [1 1 1];
+        objectStruct = createThinCuboidObject([1 scalingFactor scalingFactor],1,thickness,1);
     case 'cylinder'
 
 
-        scalingFactor = 1;
+        % scalingFactor = 1;
         % [vertices,faces] = getThinCuboid([1 scalingFactor scalingFactor],1,0.001,1);
-        [vertices,faces] = getCylinder(30,3,0.5,2,1);
+        % [vertices,faces] = getCylinder(30,3,0.5,2,1);
 
-        objectStruct = struct('vertices',vertices,'faces',faces);
-        % plane-like (cuboid)
-        objectStruct.scalePointVectors = {[0 1 1]};
+        % objectStruct = struct('vertices',vertices,'faces',faces);
+        % % plane-like (cuboid)
+        % objectStruct.scalePointVectors = {[0 1 1]};
 
-        % cylinder 
-        objectStruct.scalePointVectors = {[1 0 1], [0 1 0]};
-        % objectStruct.symmetryElementVectors = {[0 1 0]};
-        objectStruct.symmetryElementVector = [0 1 0];
+        % % cylinder 
+        % objectStruct.scalePointVectors = {[1 0 1], [0 1 0]};
+        % % objectStruct.symmetryElementVectors = {[0 1 0]};
+        % objectStruct.symmetryElementVector = [0 1 0];
+        objectStruct = createCylinderObject(30,3,0.5,2,1);
+
 
         
 end
 
 MyDragzoom();
-gizmo_cuboid_testing(ax,f,my3Dline,gizmoPointA,gizmoPointB,objectStruct)
+% gizmo_cuboid_testing(ax,f,my3Dline,gizmoPointA,gizmoPointB,objectStruct)
+gizmoTool(ax,f,points,gizmoPointA,gizmoPointB,objectStruct)
 % gizmo_app_testing(ax,f,my3Dline,gizmoPointA,gizmoPointB)
 
 % gizmo(ax,[])

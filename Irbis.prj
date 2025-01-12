@@ -81,14 +81,15 @@
     </fileset.main>
     <fileset.resources>
       <file>${PROJECT_ROOT}\attach_objects_py_script.py</file>
+      <file>${PROJECT_ROOT}\attach_objects_trimesh_py_script.py</file>
       <file>${PROJECT_ROOT}\checkAndHandlePythonPackage.m</file>
-      <file>${PROJECT_ROOT}\divide_mesh_py_script.py</file>
-      <file>${PROJECT_ROOT}\find_closest_and_close_holes_py_script.py</file>
-      <file>${PROJECT_ROOT}\find_intersection_volume_py_script.py</file>
       <file>${PROJECT_ROOT}\IrbisApp.mlapp</file>
       <file>${PROJECT_ROOT}\mesh_intersect_and_separate_py_script.py</file>
+      <file>${PROJECT_ROOT}\mesh_intersect_and_separate_trimesh_py_script.py</file>
       <file>${PROJECT_ROOT}\mesh_subtract_and_separate_and_save_plane_py_script.py</file>
+      <file>${PROJECT_ROOT}\mesh_subtract_and_separate_and_save_plane_trimesh_py_script.py</file>
       <file>${PROJECT_ROOT}\mesh_subtract_cylinder_and_find_closest_py_script.py</file>
+      <file>${PROJECT_ROOT}\mesh_subtract_cylinder_and_find_closest_trimesh_py_script.py</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_py_script.py</file>
     </fileset.resources>
     <fileset.package />
@@ -125,9 +126,13 @@
       <file>${PROJECT_ROOT}\combineTableAcrossTimepoints.m</file>
       <file>${PROJECT_ROOT}\compute_mesh_total_area.m</file>
       <file>${PROJECT_ROOT}\compute_mesh_volume.m</file>
+      <file>${PROJECT_ROOT}\computeGroupIdStatistics.m</file>
+      <file>${PROJECT_ROOT}\createCylinderObject.m</file>
       <file>${PROJECT_ROOT}\createEmptyListFcn.m</file>
       <file>${PROJECT_ROOT}\createGroupDialog.m</file>
+      <file>${PROJECT_ROOT}\createThinCuboidObject.m</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\animationTimeline.mlapp</file>
+      <file>${PROJECT_ROOT}\CustomUIComponents\filterComponent.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\histogramFilterComp.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\icons\downArrow.png</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\icons\leftArrow.png</file>
@@ -137,29 +142,28 @@
       <file>${PROJECT_ROOT}\CustomUIComponents\positionAdjustment.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\surfaceReconstructionComp.mlapp</file>
       <file>${PROJECT_ROOT}\CustomUIComponents\ValueChangedEventData.m</file>
-      <file>${PROJECT_ROOT}\CustomUIComponents\volumeHistogram.mlapp</file>
       <file>${PROJECT_ROOT}\delete_gizmo_app.m</file>
-      <file>${PROJECT_ROOT}\delete_gizmo_cuboid.m</file>
-      <file>${PROJECT_ROOT}\divide_mesh_python.m</file>
+      <file>${PROJECT_ROOT}\deleteGizmo.m</file>
       <file>${PROJECT_ROOT}\Filtering.m</file>
       <file>${PROJECT_ROOT}\FilteringStorage.m</file>
-      <file>${PROJECT_ROOT}\find_closest_and_close_holes_python.m</file>
       <file>${PROJECT_ROOT}\find_intersection_volume_python.m</file>
       <file>${PROJECT_ROOT}\findpeaksSK.m</file>
       <file>${PROJECT_ROOT}\frenet.m</file>
       <file>${PROJECT_ROOT}\generateRandomText.m</file>
       <file>${PROJECT_ROOT}\getBaseStruct.m</file>
       <file>${PROJECT_ROOT}\getColorColumn.m</file>
+      <file>${PROJECT_ROOT}\getColumnNamesDividedByType.m</file>
       <file>${PROJECT_ROOT}\getConditionsFromCategoryList.m</file>
-      <file>${PROJECT_ROOT}\getCylinder.m</file>
       <file>${PROJECT_ROOT}\getDefaultSettings.m</file>
       <file>${PROJECT_ROOT}\getMaximumArrayLenFromStruct.m</file>
-      <file>${PROJECT_ROOT}\getThinCuboid.m</file>
+      <file>${PROJECT_ROOT}\getSettingsFolder.m</file>
       <file>${PROJECT_ROOT}\getZProjection.m</file>
       <file>${PROJECT_ROOT}\gizmo_app.m</file>
-      <file>${PROJECT_ROOT}\gizmo_cuboid.m</file>
-      <file>${PROJECT_ROOT}\gizmo_cylinder.m</file>
+      <file>${PROJECT_ROOT}\gizmoTool.m</file>
+      <file>${PROJECT_ROOT}\groupColumnsByType.m</file>
       <file>${PROJECT_ROOT}\groupIdByTimepointTableFromCombinedList.m</file>
+      <file>${PROJECT_ROOT}\GroupIdFiltering.m</file>
+      <file>${PROJECT_ROOT}\GroupIdFilteringStorage.m</file>
       <file>${PROJECT_ROOT}\GroupingBaseClass.m</file>
       <file>${PROJECT_ROOT}\GroupingStorageBaseClass.m</file>
       <file>${PROJECT_ROOT}\icons\chartIcon.png</file>
@@ -200,6 +204,8 @@
       <file>${PROJECT_ROOT}\ManualCategorization.m</file>
       <file>${PROJECT_ROOT}\ManualCategorizationStorage.m</file>
       <file>${PROJECT_ROOT}\mask2meshFcn.m</file>
+      <file>${PROJECT_ROOT}\mask2meshFcnCombined.m</file>
+      <file>${PROJECT_ROOT}\matlab_generateConstantShaft.m</file>
       <file>${PROJECT_ROOT}\measureDistToolFcn.m</file>
       <file>${PROJECT_ROOT}\mesh_intersect_and_separate_python.m</file>
       <file>${PROJECT_ROOT}\mesh_subtract_and_separate_and_save_plane_python.m</file>
@@ -208,25 +214,29 @@
       <file>${PROJECT_ROOT}\MMP_jumpsRemoval.m</file>
       <file>${PROJECT_ROOT}\moveCellItem.m</file>
       <file>${PROJECT_ROOT}\MyDragzoom.m</file>
+      <file>${PROJECT_ROOT}\PackEventData.m</file>
       <file>${PROJECT_ROOT}\peakClusterFcn.m</file>
       <file>${PROJECT_ROOT}\perform_fast_marching.m</file>
       <file>${PROJECT_ROOT}\perform_front_propagation_3d.mexw64</file>
       <file>${PROJECT_ROOT}\planesCropFcn.m</file>
       <file>${PROJECT_ROOT}\point_to_line_distance.m</file>
-      <file>${PROJECT_ROOT}\point_to_plane_distance.m</file>
       <file>${PROJECT_ROOT}\points2masksFcn.m</file>
       <file>${PROJECT_ROOT}\precalculatePlanePlotAll.m</file>
       <file>${PROJECT_ROOT}\preRegisterPlanesFcn.m</file>
+      <file>${PROJECT_ROOT}\processDataForResultsViewer.m</file>
       <file>${PROJECT_ROOT}\processDoubleArraysWithPaths.m</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_python.m</file>
       <file>${PROJECT_ROOT}\reorderFileNames.m</file>
+      <file>${PROJECT_ROOT}\restoreOriginalCallbacks.m</file>
+      <file>${PROJECT_ROOT}\saveSortedCategories.m</file>
+      <file>${PROJECT_ROOT}\saveToSettingsFolder.m</file>
       <file>${PROJECT_ROOT}\scaleBarFcn.m</file>
       <file>${PROJECT_ROOT}\separateNumbersIntoConsecutiveGroups.m</file>
       <file>${PROJECT_ROOT}\setPyenv.m</file>
       <file>${PROJECT_ROOT}\SKgradient.m</file>
       <file>${PROJECT_ROOT}\SKisonormals.m</file>
       <file>${PROJECT_ROOT}\spineList2ResultTable.m</file>
-      <file>${PROJECT_ROOT}\submesh_selection.m</file>
+      <file>${PROJECT_ROOT}\splitMasksDynamic.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\compute_geodesic.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.m</file>
       <file>${PROJECT_ROOT}\toolbox_fast_marching\perform_front_propagation_2d.mexw64</file>
@@ -243,6 +253,9 @@
       <file>${PROJECT_ROOT}\tracksProcessing.m</file>
       <file>${PROJECT_ROOT}\tryAdaptiveShaftParameters.m</file>
       <file>${PROJECT_ROOT}\tubeplot.m</file>
+      <file>${PROJECT_ROOT}\UI\addStateButtonTo.m</file>
+      <file>${PROJECT_ROOT}\UI\removeStateButtonFrom.m</file>
+      <file>${PROJECT_ROOT}\UI\switchStateButtonStatus.m</file>
       <file>${PROJECT_ROOT}\validateAndUpdateStruct.m</file>
     </fileset.depfun>
     <build-deliverables>

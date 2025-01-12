@@ -58,8 +58,8 @@ def attach_objects(mesh_data):
     output_data = {
         "vertices": merged_mesh.vertices,
         "faces": merged_mesh.faces,
-        "vertexNormals": merged_mesh.vertex_normals if merged_mesh.has_vertex_normals else np.zeros_like(merged_mesh.vertices),
-        "faceNormals": merged_mesh.face_normals if merged_mesh.has_face_normals else np.zeros_like(merged_mesh.faces)
+        "vertexNormals": merged_mesh.vertex_normals if len(merged_mesh.vertex_normals) > 0 else np.zeros_like(merged_mesh.vertices),
+        "faceNormals": merged_mesh.face_normals if len(merged_mesh.face_normals) > 0 else np.zeros_like(merged_mesh.faces)
     }
 
     return output_data
