@@ -1,12 +1,17 @@
 function meshCell = fix_mesh_python(mesh_data)
+    % ensures that the mesh is watertight and manifold and that the normals are consistent and pointing outwards
 
     try
         % Call the Python script with mesh data
-        fixed_mesh_data = pyrunfile('fix_mesh_py_script.py', "fixed_mesh_data", ...
-            mesh_data=mesh_data);
+        [is_fixed, fixed_mesh_data] = pyrunfile('fix_mesh_py_script.py', ...
+            ["is_fixed","fixed_mesh_data"], mesh_data=mesh_data);
     catch ME
         disp(ME.message);
         error("Error in running the python script.");
+    end
+
+    if ~logical(is_fixed)
+        disp("Warning! Mesh is not well behaved.");
     end
 
     % Loop through each object and create surfaceMesh from Python output

@@ -1,8 +1,12 @@
-print('running mesh_subtract_and_separate_and_save_plane_trimesh_py_script.py')
-import trimesh
-import numpy as np
-import sys
-import time     # only for testing purposes
+try:
+    import trimesh
+    import numpy as np
+    import sys
+    # import time     # only for testing purposes
+except ImportError as e:
+    print(e)
+    print('Please install the required packages using `pip install numpy trimesh`')
+    sys.exit(1)
 
 def to_numpy_array(data, dtype):
     """Ensure data is a NumPy array, converting memoryview if needed."""
@@ -35,8 +39,8 @@ def mesh_subtract_and_separate(mesh_data, green_threshold=0.3, distance_threshol
         trimesh_mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=True)
 
         if not trimesh_mesh.is_watertight:
-            print('mesh is not watertight')
-            print(id)
+            # print('mesh is not watertight')
+            # print(id)
             # not watertight means it has holes or non-manifold edges
             if 'pymeshfix' not in sys.modules:
                 import pymeshfix 
@@ -47,13 +51,13 @@ def mesh_subtract_and_separate(mesh_data, green_threshold=0.3, distance_threshol
         # use this intstead of fix_normals() - which does almost the same if I understand it correctly
         if not trimesh_mesh.is_winding_consistent:
             # non-consistent winding means that two adjacent faces have normals in opposite directions
-            print('winding is not consistent')
-            print(id)
+            # print('winding is not consistent')
+            # print(id)
             trimesh.repair.fix_winding(trimesh_mesh)
         if not trimesh_mesh.is_volume:
             # not volume means (at least in some situation) that the volume is negative - normals point inward
-            print('mesh is not volume')
-            print(id)
+            # print('mesh is not volume')
+            # print(id)
             trimesh.repair.fix_inversion(trimesh_mesh, multibody=False)
 
         # we are hoping that everything is fixed by now
@@ -84,32 +88,31 @@ def mesh_subtract_and_separate(mesh_data, green_threshold=0.3, distance_threshol
             'faceNormals': face_normals
         }
 
-        print(idx)
-        print(component.is_watertight)
-        print(component.is_winding_consistent)
-        print(component.is_volume)
+        # print(idx)
+        # print(component.is_watertight)
+        # print(component.is_winding_consistent)
+        # print(component.is_volume)
 
         distances = np.linalg.norm(vertices[:, None, :] - meshes[1].vertices[None, :, :], axis=2)
         close_indices = np.where(np.min(distances, axis=1) < distance_threshold)[0]
         
         if len(close_indices) > 0:
-            print('I am here')
             mean_vertex = np.mean(vertices[close_indices], axis=0)
             mean_normal = np.mean(component.vertex_normals[close_indices], axis=0)
 
             # move the mean vertex to the surface of the mesh
             # timing and printing only for testing purposes
-            start_time = time.time()
+            # start_time = time.time()
             closest, distance, _ = trimesh.proximity.closest_point(component, mean_vertex.reshape(1, 3))
-            end_time = time.time()
-            print('time for closest point calculation: ', end_time - start_time)
-            print(distance)
-            print(closest)
+            # end_time = time.time()
+            # print('time for closest point calculation: ', end_time - start_time)
+            # print(distance)
+            # print(closest)
             base_points.append(np.concatenate((closest.reshape(3,), mean_normal)))
         else:
             base_points.append(np.full(6, np.nan))
-            print(idx)
-            print('no base point found')
+            # print(idx)
+            # print('no base point found')
 
     n_objects = len(components)
     base_points = np.array(base_points)
@@ -123,6 +126,10 @@ def mesh_subtract_and_separate(mesh_data, green_threshold=0.3, distance_threshol
         "component_colors": component_colors_array
     }
 
-# Example call
-print('using trimesh subtract script')
-output = mesh_subtract_and_separate(mesh_data, green_threshold=0.3, distance_threshold=0.1)
+# Call from Matlab
+try:
+    output = mesh_subtract_and_separate(mesh_data, green_threshold=0.3, distance_threshold=0.1)
+except Exception as e:
+    print(f"Error performing mesh subtraction: {e}")
+    output = None
+    sys.exit(1)

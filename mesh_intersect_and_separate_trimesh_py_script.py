@@ -1,7 +1,12 @@
-print('using trimesh intersect script')
-import trimesh
-import numpy as np
-import sys
+try:
+    import trimesh
+    import numpy as np
+    import sys
+except ImportError as e:
+    print(e)
+    print('Please install the required packages using `pip install numpy trimesh`')
+    sys.exit(1)
+
 
 def to_numpy_array(data, dtype):
     """Ensure data is a NumPy array, converting memoryview if needed."""
@@ -29,7 +34,7 @@ def mesh_intersect_and_separate(mesh_data):
         faces = to_numpy_array(mesh['faces'], dtype=np.int32)
         trimesh_mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=True)
         if not trimesh_mesh.is_watertight:
-            print('mesh is not watertight')
+            # print('mesh is not watertight')
             # not watertight means it has holes or non-manifold edges
             if 'pymeshfix' not in sys.modules:
                 import pymeshfix 
@@ -40,11 +45,11 @@ def mesh_intersect_and_separate(mesh_data):
         # use this intstead of fix_normals() - which does almost the same if I understand it correctly
         if not trimesh_mesh.is_winding_consistent:
             # non-consistent winding means that two adjacent faces have normals in opposite directions
-            print('winding is not consistent')
+            # print('winding is not consistent')
             trimesh.repair.fix_winding(trimesh_mesh)
         if not trimesh_mesh.is_volume:
             # not volume means (at least in some situation) that the volume is negative - normals point inward
-            print('mesh is not volume')
+            # print('mesh is not volume')
             trimesh.repair.fix_inversion(trimesh_mesh, multibody=False)
 
         # we are hoping that everything is fixed by now
@@ -79,6 +84,9 @@ def mesh_intersect_and_separate(mesh_data):
         "component_data": component_data
     }
 
-# Example call
-print('using trimesh intersect script')
-output = mesh_intersect_and_separate(mesh_data)
+# Call from Matlab
+try:
+    output = mesh_intersect_and_separate(mesh_data)
+except Exception as e:
+    print(f"Error performing mesh subtraction: {e}")
+    sys.exit(1)

@@ -1,5 +1,11 @@
-import trimesh
-import numpy as np
+try:
+    import trimesh
+    import numpy as np
+    import sys
+except ImportError as e:
+    print(e)
+    print('Please install the required packages using `pip install numpy trimesh`')
+    sys.exit(1)
 
 
 def to_numpy_array(data, dtype):
@@ -7,6 +13,23 @@ def to_numpy_array(data, dtype):
     if isinstance(data, memoryview):
         return np.array(data, dtype=dtype)
     return np.asarray(data, dtype=dtype)
+
+def fix_mesh(trimesh_mesh, vertices, faces):
+    if not trimesh_mesh.is_watertight:
+        if 'pymeshfix' not in sys.modules:
+            import pymeshfix 
+
+        new_vertices, new_faces = pymeshfix.clean_from_arrays(vertices, faces)
+        trimesh_mesh = trimesh.Trimesh(vertices=new_vertices, faces=new_faces, process=True)
+
+    # use this intstead of fix_normals() - which does almost the same if I understand it correctly
+    if not trimesh_mesh.is_winding_consistent:
+        # non-consistent winding means that two adjacent faces have normals in opposite directions
+        trimesh.repair.fix_winding(trimesh_mesh)
+    if not trimesh_mesh.is_volume:
+        # not volume means (at least in some situation) that the volume is negative - normals point inward
+        trimesh.repair.fix_inversion(trimesh_mesh, multibody=False)
+    return trimesh_mesh
 
 
 def attach_objects(mesh_data):
@@ -49,6 +72,7 @@ def attach_objects(mesh_data):
 
         # Create trimesh object and add to list
         trimesh_mesh = trimesh.Trimesh(**trimesh_kwargs, process=False)
+        trimesh_mesh = fix_mesh(trimesh_mesh, vertices, faces)
         meshes.append(trimesh_mesh)
 
     # Merge all meshes into one
@@ -66,4 +90,8 @@ def attach_objects(mesh_data):
 
 
 # Call the function to run in a MATLAB workflow
-output = attach_objects(mesh_data)
+try:
+    output = attach_objects(mesh_data)
+except Exception as e:
+    print(e)
+    sys.exit(1)

@@ -6,18 +6,24 @@ function [nObjects, meshCell] = mesh_intersect_and_separate_python(mesh_data, va
         library_selection = 1;
     end
 
-    if library_selection == 1
-        % Use pymeshlab for mesh processing
-        % Call the Python script with mesh data and parameters
-        output = pyrunfile('mesh_intersect_and_separate_py_script.py', "output", ...
-            mesh_data=mesh_data);
-    elseif library_selection == 2
-        % Use trimesh for mesh processing
-        % Call the Python script with mesh data and parameters
-        output = pyrunfile('mesh_intersect_and_separate_trimesh_py_script.py', "output", ...
-            mesh_data=mesh_data);
-    else
-        error("Invalid library selection. Please choose 1 for pymeshlab or 2 for trimesh.");
+    try
+        if library_selection == 1
+            % Use pymeshlab for mesh processing
+            % Call the Python script with mesh data and parameters
+            output = pyrunfile('mesh_intersect_and_separate_py_script.py', "output", ...
+                mesh_data=mesh_data);
+        elseif library_selection == 2
+            % Use trimesh for mesh processing
+            % Call the Python script with mesh data and parameters
+            output = pyrunfile('mesh_intersect_and_separate_trimesh_py_script.py', "output", ...
+                mesh_data=mesh_data);
+        else
+            error("Invalid library selection. Please choose 1 for pymeshlab or 2 for trimesh.");
+        end
+    
+    catch ME
+        disp(ME.message);
+        error("Error in running the python script.");
     end
 
     % % Call the Python script with mesh data and parameters

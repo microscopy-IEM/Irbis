@@ -1,12 +1,35 @@
-import trimesh
-import numpy as np
-from scipy.spatial.distance import cdist
+try:
+    import trimesh
+    import numpy as np
+    from scipy.spatial.distance import cdist
+    import sys
+except ImportError as e:
+    print(e)
+    print('Please install the required packages using `pip install numpy trimesh scipy`')
+    sys.exit(1)
 
 def to_numpy_array(data, dtype):
     """Ensure data is a NumPy array, converting memoryview if needed."""
     if isinstance(data, memoryview):
         return np.array(data, dtype=dtype)
     return np.asarray(data, dtype=dtype)
+
+def fix_mesh(trimesh_mesh, vertices, faces):
+    if not trimesh_mesh.is_watertight:
+        if 'pymeshfix' not in sys.modules:
+            import pymeshfix 
+
+        new_vertices, new_faces = pymeshfix.clean_from_arrays(vertices, faces)
+        trimesh_mesh = trimesh.Trimesh(vertices=new_vertices, faces=new_faces, process=True)
+
+    # use this intstead of fix_normals() - which does almost the same if I understand it correctly
+    if not trimesh_mesh.is_winding_consistent:
+        # non-consistent winding means that two adjacent faces have normals in opposite directions
+        trimesh.repair.fix_winding(trimesh_mesh)
+    if not trimesh_mesh.is_volume:
+        # not volume means (at least in some situation) that the volume is negative - normals point inward
+        trimesh.repair.fix_inversion(trimesh_mesh, multibody=False)
+    return trimesh_mesh
 
 def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original, tolerance=1e-4, threshold=0.1, min_sample_size=50, green_threshold=0.3, distance_threshold=0.1):
     """
@@ -40,6 +63,8 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         vertices=to_numpy_array(mesh_data[0]['vertices'], dtype=np.float64),
         faces=to_numpy_array(mesh_data[0]['faces'], dtype=np.int32)
     )
+
+    base_mesh = fix_mesh(base_mesh, mesh_data[0]['vertices'], mesh_data[0]['faces'])
     # print(base_mesh.is_volume)
     # print(base_mesh.is_watertight)
     # base_mesh.fix_normals()
@@ -49,9 +74,7 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
         faces=to_numpy_array(mesh_data[1]['faces'], dtype=np.int32)
     )
 
-    # print(cylinder_mesh.is_volume)
-    # print(cylinder_mesh.is_watertight)
-    # cylinder_mesh.fix_normals()
+    cylinder_mesh = fix_mesh(cylinder_mesh, mesh_data[1]['vertices'], mesh_data[1]['faces'])
 
     # Perform boolean difference
     subtracted_mesh = base_mesh.difference(cylinder_mesh)
@@ -105,7 +128,7 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
 
         # Calculate base point (mean position and normal)
         mean_vertex = np.mean(component.vertices, axis=0)
-        print(component.vertex_normals)
+        # print(component.vertex_normals)
         if component.vertex_normals is not None:
             mean_normal = np.mean(component.vertex_normals, axis=0)
         else:
@@ -125,11 +148,7 @@ def mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original,
 try:
     output = mesh_subtract_cylinder_and_find_closest_object(mesh_data, vertices_original, tolerance, threshold, min_sample_size, green_threshold, distance_threshold)
 except Exception as e:
-    import traceback
-    traceback.print_exc()
-
-    import sys
-
+    
     print(f"Error: {str(e)}")
     output = None
 

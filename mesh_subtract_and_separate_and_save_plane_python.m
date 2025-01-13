@@ -11,27 +11,27 @@ function [nObjects, meshCell, basePoints] = mesh_subtract_and_separate_and_save_
     end
 
     try
-    if library_selection == 1
-        % Use pymeshlab for mesh processing
-        % Call the Python script with mesh data and parameters
-        output = pyrunfile('mesh_subtract_and_separate_and_save_plane_py_script.py', "output", ...
-            mesh_data=mesh_data, ...
-            green_threshold=green_threshold, ...
-            tolerance=tolerance, ...
-            distance_threshold=distance_threshold);
-    elseif library_selection == 2
-        % Use trimesh for mesh processing
-        % Call the Python script with mesh data and parameters
-        output = pyrunfile('mesh_subtract_and_separate_and_save_plane_trimesh_py_script.py', "output", ...
-            mesh_data=mesh_data, ...
-            green_threshold=green_threshold, ...
-            tolerance=tolerance, ...
-            distance_threshold=distance_threshold);
-    else
-        error("Invalid library selection. Please choose 1 for pymeshlab or 2 for trimesh.");
-    end
+        if library_selection == 1
+            % Use pymeshlab for mesh processing
+            % Call the Python script with mesh data and parameters
+            output = pyrunfile('mesh_subtract_and_separate_and_save_plane_py_script.py', "output", ...
+                mesh_data=mesh_data, ...
+                green_threshold=green_threshold, ...
+                tolerance=tolerance, ...
+                distance_threshold=distance_threshold);
+        elseif library_selection == 2
+            % Use trimesh for mesh processing
+            % Call the Python script with mesh data and parameters
+            output = pyrunfile('mesh_subtract_and_separate_and_save_plane_trimesh_py_script.py', "output", ...
+                mesh_data=mesh_data, ...
+                green_threshold=green_threshold, ...
+                tolerance=tolerance, ...
+                distance_threshold=distance_threshold);
+        else
+            error("Invalid library selection. Please choose 1 for pymeshlab or 2 for trimesh.");
+        end
     
-    catch ME
+    catch ME    % this is not perfect - we do not handle not having the outputs of python script, so it will crash anyway
         disp(ME.message);
         error("Error in running the python script.");
     end
@@ -59,32 +59,32 @@ function [nObjects, meshCell, basePoints] = mesh_subtract_and_separate_and_save_
 
     % assignin("base","basePoints",basePoints)
 
-    componentColors = dictionary(output{'component_colors'});
+    % componentColors = dictionary(output{'component_colors'});
 
-    assignin("base","componentColors",componentColors)
+    % assignin("base","componentColors",componentColors)
 
-    % Plot the meshes as patches
-    figure;
-    hold on;
-    for i = 1:nObjects
-        % Extract vertices and faces from the surfaceMesh object
-        vertices = meshCell{i}.Vertices;
-        faces = meshCell{i}.Faces;
+    % % Plot the meshes as patches
+    % figure;
+    % hold on;
+    % for i = 1:nObjects
+    %     % Extract vertices and faces from the surfaceMesh object
+    %     vertices = meshCell{i}.Vertices;
+    %     faces = meshCell{i}.Faces;
 
-        % Plot patch for each component
-        patch('Vertices', vertices, 'Faces', faces, ...
-            'FaceColor', 'cyan', 'EdgeColor', 'black', 'FaceAlpha', 0.5);
-    end
+    %     % Plot patch for each component
+    %     patch('Vertices', vertices, 'Faces', faces, ...
+    %         'FaceColor', 'cyan', 'EdgeColor', 'black', 'FaceAlpha', 0.5);
+    % end
 
-    % Plot base points as scatter
-    scatter3(basePoints(:,1), basePoints(:,2), basePoints(:,3), 50, 'red', 'filled');
+    % % Plot base points as scatter
+    % scatter3(basePoints(:,1), basePoints(:,2), basePoints(:,3), 50, 'red', 'filled');
 
-    % Configure plot appearance
-    axis equal;
-    xlabel('X'); ylabel('Y'); zlabel('Z');
-    grid on;
-    title('Mesh Components and Base Points');
-    hold off;
+    % % Configure plot appearance
+    % axis equal;
+    % xlabel('X'); ylabel('Y'); zlabel('Z');
+    % grid on;
+    % title('Mesh Components and Base Points');
+    % hold off;
 
 end
 
