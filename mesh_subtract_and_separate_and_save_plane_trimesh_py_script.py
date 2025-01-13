@@ -93,6 +93,7 @@ def mesh_subtract_and_separate(mesh_data, green_threshold=0.3, distance_threshol
         close_indices = np.where(np.min(distances, axis=1) < distance_threshold)[0]
         
         if len(close_indices) > 0:
+            print('I am here')
             mean_vertex = np.mean(vertices[close_indices], axis=0)
             mean_normal = np.mean(component.vertex_normals[close_indices], axis=0)
 

@@ -4,12 +4,25 @@ function [objectHandle, originalCallbacks] = gizmoTool(ax, fig, stickyPoints, po
     originalCallbacks = storeOriginalCallbacks(fig);
     % delete old gizmo components
     deleteGizmo(ax);
-    % check pointA and pointB tags
+
+
+    % check pointA and pointB tags and delete other objects with the same tags
+    if ~isempty(objectStruct)        % because if objectStruct is empty, we use it for moving basePoints, and there are more of them that we want to keep
+        deleteObjectsWithTag(ax, pointA.Tag, pointA);
+    end
+
     if ~isequal(pointA.Tag, 'pointA') 
+        deleteObjectsWithTag(ax, 'pointA')
         pointA.Tag = 'pointA';
     end
-    if ~isequal(pointB.Tag, 'pointB')
-        pointB.Tag = 'pointB';
+    if ~isempty(pointB)
+        if ~isempty(objectStruct)
+            deleteObjectsWithTag(ax, pointB.Tag, pointB);
+        end
+        if ~isequal(pointB.Tag, 'pointB')
+            deleteObjectsWithTag(ax, 'pointB')
+            pointB.Tag = 'pointB';
+        end
     end
     % disable selectivity for all currently plotted components
     disableExistingObjectSelectivity(ax);
@@ -42,6 +55,23 @@ function disableExistingObjectSelectivity(ax)
             set(objectHandles(componentN), 'PickableParts', 'none');
         end
     end
+
+end
+
+
+function deleteObjectsWithTag(ax, tag, varargin)
+
+    if nargin == 3
+        exceptions = varargin{1};
+    else
+        exceptions = [];
+    end
+
+    objectHandles = findobj(ax, 'Tag', tag);
+    % Remove the objects corresponding to the two handles
+    objectsToDelete = setdiff(objectHandles, exceptions);
+
+    delete(objectsToDelete);
 
 end
 
@@ -146,23 +176,27 @@ function [componentHandles, doesRotate, doesScale, isActive, objectHandle] = def
     end
 
     % add the object
-    objectHandle = patch(ax,'Vertices',objectStruct.vertices,'Faces',objectStruct.faces,'FaceColor','cyan','FaceAlpha',planeTansparency,'EdgeColor',planeEdgeColor,'Tag','3Dobject');
-    componentHandles(end + 1) = objectHandle;
-    doesRotate(end+1) = true;
-    doesScale(end+1) = true;
-    isActive(end + 1) = false;
-
-
-    for scalePointNum = 1:numel(objectStruct.scalePointVectors)
-
-        scalePointVector = objectStruct.scalePointVectors{scalePointNum};
-        scalePointPosition = objectStruct.scalePointPositions{scalePointNum};
-        scalePointHandle = plot3(ax,x0 + scalePointPosition(1),y0 + scalePointPosition(2),z0 + scalePointPosition(3),'Marker','square','MarkerFaceColor','b','MarkerSize',ballSize,'Tag','scalePoint','MarkerEdgeColor','b');
-        scalePointHandle.UserData = scalePointVector;
-        componentHandles(end + 1) = scalePointHandle;
+    if isstruct(objectStruct)
+        objectHandle = patch(ax,'Vertices',objectStruct.vertices,'Faces',objectStruct.faces,'FaceColor','cyan','FaceAlpha',planeTansparency,'EdgeColor',planeEdgeColor,'Tag','3Dobject');
+        componentHandles(end + 1) = objectHandle;
         doesRotate(end+1) = true;
         doesScale(end+1) = true;
-        isActive(end + 1) = true;
+        isActive(end + 1) = false;
+
+
+        for scalePointNum = 1:numel(objectStruct.scalePointVectors)
+
+            scalePointVector = objectStruct.scalePointVectors{scalePointNum};
+            scalePointPosition = objectStruct.scalePointPositions{scalePointNum};
+            scalePointHandle = plot3(ax,x0 + scalePointPosition(1),y0 + scalePointPosition(2),z0 + scalePointPosition(3),'Marker','square','MarkerFaceColor','b','MarkerSize',ballSize,'Tag','scalePoint','MarkerEdgeColor','b');
+            scalePointHandle.UserData = scalePointVector;
+            componentHandles(end + 1) = scalePointHandle;
+            doesRotate(end+1) = true;
+            doesScale(end+1) = true;
+            isActive(end + 1) = true;
+        end
+    else 
+        objectHandle = [];
     end
 
 end
@@ -205,24 +239,26 @@ function [componentHandles, doesRotate, doesScale, isActive] = moveGizmoToStart(
     cBallPoint = findobj(componentHandles, 'Tag', 'cBallPoint');
     normBallPoint = findobj(componentHandles, 'Tag', 'normBallPoint');
 
-    % rotation
-    v1 = [normBallPoint.XData;normBallPoint.YData;normBallPoint.ZData] - [pointA.XData;pointA.YData;pointA.ZData];
-    v2 = - [pointA.XData;pointA.YData;pointA.ZData] + [pointB.XData;pointB.YData;pointB.ZData];
+    % % rotation
+    % v1 = [normBallPoint.XData;normBallPoint.YData;normBallPoint.ZData] - [pointA.XData;pointA.YData;pointA.ZData];
+    % v2 = - [pointA.XData;pointA.YData;pointA.ZData] + [pointB.XData;pointB.YData;pointB.ZData];
 
-    v1 = v1/norm(v1);
-    v2 = v2/norm(v2);
+    % v1 = v1/norm(v1);
+    % v2 = v2/norm(v2);
 
-    vRot = cross(v1,v2);
+    % vRot = cross(v1,v2);
 
-    theta = acos(dot(v1,v2)/(norm(v1)*norm(v2)));
+    % theta = acos(dot(v1,v2)/(norm(v1)*norm(v2)));
 
     pointA.XData = cBallPoint.XData;
     pointA.YData = cBallPoint.YData;
     pointA.ZData = cBallPoint.ZData;
 
-    pointB.XData = normBallPoint.XData;
-    pointB.YData = normBallPoint.YData;
-    pointB.ZData = normBallPoint.ZData;
+    if ~isempty(pointB)
+        pointB.XData = normBallPoint.XData;
+        pointB.YData = normBallPoint.YData;
+        pointB.ZData = normBallPoint.ZData;
+    end
 
     % add them to the handles so that they get tranformed automatically
     componentHandles(end + 1) = pointA;
@@ -230,10 +266,12 @@ function [componentHandles, doesRotate, doesScale, isActive] = moveGizmoToStart(
     doesScale(end + 1) = false;
     isActive(end + 1) = false;
 
-    componentHandles(end + 1) = pointB;
-    doesRotate(end + 1) = true;
-    doesScale(end + 1) = false;
-    isActive(end + 1) = false;
+    if ~isempty(pointB)
+        componentHandles(end + 1) = pointB;
+        doesRotate(end + 1) = true;
+        doesScale(end + 1) = false;
+        isActive(end + 1) = false;
+    end
 end
 
 
