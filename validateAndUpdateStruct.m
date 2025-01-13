@@ -266,14 +266,14 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
                     branch = branches{branchNum};
         
                     % add positionShift column to the tables if missing
-                    branchColor = loadedStruct.model.(branch).Color;
+                    % branchColor = loadedStruct.model.(branch).Color;
                     for timePoint = 1:numel(loadedStruct.model.(branch).List)
                         List = loadedStruct.model.(branch).List{timePoint};
                         if istable(List)
                             variableNames = string(List.Properties.VariableNames);
                             if ~ismember('color',variableNames)
                                 tableHeight = height(List);
-                                loadedStruct.model.(branch).List{timePoint}.color = repmat({branchColor}, tableHeight, 1);
+                                loadedStruct.model.(branch).List{timePoint}.color = mat2cell(rand(tableHeight,3), ones(tableHeight, 1), 3); % repmat({branchColor}, tableHeight, 1);
                             end
                         end
                     end
