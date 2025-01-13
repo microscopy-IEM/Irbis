@@ -223,7 +223,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
             verts = [];
             % T(meshObjInd,1:11) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]}};
     
-            T(meshObjInd,:) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]},{[1 0 0]},meanInt,maxInt};
+            T(meshObjInd,:) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]},{[1 0 0]},false,meanInt,maxInt};
             T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);
     
             
