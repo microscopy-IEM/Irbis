@@ -2,6 +2,7 @@ try:
     import trimesh
     import numpy as np
     import sys
+    import pymeshfix
 except ImportError as e:
     print(f"Error importing modules: {e}")
     import sys
@@ -37,9 +38,6 @@ def fix_mesh(mesh_data):
             if not trimesh_mesh.is_watertight:
                 # print('mesh is not watertight')
                 # not watertight means it has holes or non-manifold edges
-                if 'pymeshfix' not in sys.modules:
-                    import pymeshfix 
-
                 new_vertices, new_faces = pymeshfix.clean_from_arrays(vertices, faces)
                 trimesh_mesh = trimesh.Trimesh(vertices=new_vertices, faces=new_faces, process=True)
 

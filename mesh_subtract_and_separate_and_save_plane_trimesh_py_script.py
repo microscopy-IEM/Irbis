@@ -3,9 +3,10 @@ try:
     import numpy as np
     import sys
     # import time     # only for testing purposes
+    import pymeshfix 
 except ImportError as e:
     print(e)
-    print('Please install the required packages using `pip install numpy trimesh`')
+    print('Please install the required packages using `pip install numpy trimesh pymeshfix`')
     sys.exit(1)
 
 def to_numpy_array(data, dtype):
@@ -42,9 +43,6 @@ def mesh_subtract_and_separate(mesh_data, green_threshold=0.3, distance_threshol
             # print('mesh is not watertight')
             # print(id)
             # not watertight means it has holes or non-manifold edges
-            if 'pymeshfix' not in sys.modules:
-                import pymeshfix 
-
             new_vertices, new_faces = pymeshfix.clean_from_arrays(vertices, faces)
             trimesh_mesh = trimesh.Trimesh(vertices=new_vertices, faces=new_faces, process=True)
 

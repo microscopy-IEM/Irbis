@@ -17,7 +17,7 @@ def fix_mesh_with_trimesh(o3d_mesh):
     trimesh_mesh = trimesh.Trimesh(vertices, faces)
     
     if not trimesh_mesh.is_watertight:
-        print('mesh is not watertight')
+        # print('mesh is not watertight')
         # not watertight means it has holes or non-m    anifold edges
         new_vertices, new_faces = pymeshfix.clean_from_arrays(vertices, faces)
         trimesh_mesh = trimesh.Trimesh(vertices=new_vertices, faces=new_faces, process=True)
@@ -25,11 +25,11 @@ def fix_mesh_with_trimesh(o3d_mesh):
     # use this intstead of fix_normals() - which does almost the same if I understand it correctly
     if not trimesh_mesh.is_winding_consistent:
         # non-consistent winding means that two adjacent faces have normals in opposite directions
-        print('winding is not consistent')
+        # print('winding is not consistent')
         trimesh.repair.fix_winding(trimesh_mesh)
     if not trimesh_mesh.is_volume:
         # not volume means (at least in some situation) that the volume is negative - normals point inward
-        print('mesh is not volume')
+        # print('mesh is not volume')
         trimesh.repair.fix_inversion(trimesh_mesh, multibody=False)
 
     return trimesh_mesh
@@ -120,7 +120,7 @@ def reconstruct_mesh(mesh_data, depth=8, fraction_to_keep=0.8, min_vertex_num=20
         # Store data for the single reconstructed mesh
         # Fix the mesh with trimesh
         trimesh_mesh = fix_mesh_with_trimesh(mesh)
-        print(trimesh_mesh.is_watertight)
+        # print(trimesh_mesh.is_watertight)
 
         vertices = trimesh_mesh.vertices
         faces = trimesh_mesh.faces
@@ -142,7 +142,7 @@ def reconstruct_mesh(mesh_data, depth=8, fraction_to_keep=0.8, min_vertex_num=20
     }
 
 # Example call (parameters would need to be defined in the MATLAB environment)
-print('open3d option')
+# print('open3d option')
 try:
     output = reconstruct_mesh(
         mesh_data=mesh_data,

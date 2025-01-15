@@ -2,9 +2,10 @@ try:
     import trimesh
     import numpy as np
     import sys
+    import pymeshfix 
 except ImportError as e:
     print(e)
-    print('Please install the required packages using `pip install numpy trimesh`')
+    print('Please install the required packages using `pip install numpy trimesh pymeshfix`')
     sys.exit(1)
 
 
@@ -16,9 +17,6 @@ def to_numpy_array(data, dtype):
 
 def fix_mesh(trimesh_mesh, vertices, faces):
     if not trimesh_mesh.is_watertight:
-        if 'pymeshfix' not in sys.modules:
-            import pymeshfix 
-
         new_vertices, new_faces = pymeshfix.clean_from_arrays(vertices, faces)
         trimesh_mesh = trimesh.Trimesh(vertices=new_vertices, faces=new_faces, process=True)
 

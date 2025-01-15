@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="3688041596" file="C:\Users\sveco\Documents\Irbis\Irbis.prj" location="C:\Users\sveco\Documents\Irbis" name="Irbis" preferred-package-location="C:\Users\sveco\Documents\Irbis\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3688041596" file="C:\Users\iva.svecova\Documents\MMPack\Irbis.prj" location="C:\Users\iva.svecova\Documents\MMPack" name="Irbis" preferred-package-location="C:\Users\sveco\Documents\Irbis\Irbis\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>Irbis</param.appname>
     <param.icon>${PROJECT_ROOT}\Irbis_resources\icon.ico</param.icon>
     <param.icons>
@@ -84,6 +84,7 @@
       <file>${PROJECT_ROOT}\attach_objects_trimesh_py_script.py</file>
       <file>${PROJECT_ROOT}\checkAndHandlePythonPackage.m</file>
       <file>${PROJECT_ROOT}\find_intersection_volume_py_script.py</file>
+      <file>${PROJECT_ROOT}\fix_mesh_py_script.py</file>
       <file>${PROJECT_ROOT}\IrbisApp.mlapp</file>
       <file>${PROJECT_ROOT}\mesh_intersect_and_separate_py_script.py</file>
       <file>${PROJECT_ROOT}\mesh_intersect_and_separate_trimesh_py_script.py</file>
@@ -91,6 +92,7 @@
       <file>${PROJECT_ROOT}\mesh_subtract_and_separate_and_save_plane_trimesh_py_script.py</file>
       <file>${PROJECT_ROOT}\mesh_subtract_cylinder_and_find_closest_py_script.py</file>
       <file>${PROJECT_ROOT}\mesh_subtract_cylinder_and_find_closest_trimesh_py_script.py</file>
+      <file>${PROJECT_ROOT}\reconstruct_mesh_open3d_py_script.py</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_py_script.py</file>
     </fileset.resources>
     <fileset.package />
@@ -124,6 +126,7 @@
       <file>${PROJECT_ROOT}\CategorizationStorage.m</file>
       <file>${PROJECT_ROOT}\changeSectionButtonTooltip.m</file>
       <file>${PROJECT_ROOT}\checkNodesByName.m</file>
+      <file>${PROJECT_ROOT}\checkPythonPackageInstallation.m</file>
       <file>${PROJECT_ROOT}\combineTableAcrossTimepoints.m</file>
       <file>${PROJECT_ROOT}\compute_mesh_total_area.m</file>
       <file>${PROJECT_ROOT}\compute_mesh_volume.m</file>
@@ -145,11 +148,14 @@
       <file>${PROJECT_ROOT}\CustomUIComponents\ValueChangedEventData.m</file>
       <file>${PROJECT_ROOT}\delete_gizmo_app.m</file>
       <file>${PROJECT_ROOT}\deleteGizmo.m</file>
+      <file>${PROJECT_ROOT}\disableExistingObjectSelectivity.m</file>
       <file>${PROJECT_ROOT}\Filtering.m</file>
       <file>${PROJECT_ROOT}\FilteringStorage.m</file>
       <file>${PROJECT_ROOT}\find_intersection_volume_python.m</file>
       <file>${PROJECT_ROOT}\findpeaksSK.m</file>
+      <file>${PROJECT_ROOT}\fix_mesh_python.m</file>
       <file>${PROJECT_ROOT}\frenet.m</file>
+      <file>${PROJECT_ROOT}\generateConstantShaft.m</file>
       <file>${PROJECT_ROOT}\generateRandomText.m</file>
       <file>${PROJECT_ROOT}\getBaseStruct.m</file>
       <file>${PROJECT_ROOT}\getColorColumn.m</file>
@@ -206,11 +212,11 @@
       <file>${PROJECT_ROOT}\ManualCategorizationStorage.m</file>
       <file>${PROJECT_ROOT}\mask2meshFcn.m</file>
       <file>${PROJECT_ROOT}\mask2meshFcnCombined.m</file>
-      <file>${PROJECT_ROOT}\matlab_generateConstantShaft.m</file>
       <file>${PROJECT_ROOT}\measureDistToolFcn.m</file>
       <file>${PROJECT_ROOT}\mesh_intersect_and_separate_python.m</file>
       <file>${PROJECT_ROOT}\mesh_subtract_and_separate_and_save_plane_python.m</file>
       <file>${PROJECT_ROOT}\mesh_subtract_cylinder_and_find_closest_object_python.m</file>
+      <file>${PROJECT_ROOT}\meshOffsetFcn.m</file>
       <file>${PROJECT_ROOT}\MicroMToPixelPosition.m</file>
       <file>${PROJECT_ROOT}\MMP_jumpsRemoval.m</file>
       <file>${PROJECT_ROOT}\moveCellItem.m</file>
@@ -260,9 +266,9 @@
       <file>${PROJECT_ROOT}\validateAndUpdateStruct.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">C:\Users\sveco\Documents\Irbis\Irbis\for_testing\readme.txt</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">C:\Users\sveco\Documents\Irbis\Irbis\for_testing\Irbis.exe</file>
-      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">C:\Users\sveco\Documents\Irbis\Irbis\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="splash.png" optional="false">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="Irbis.exe" optional="false">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\Irbis.exe</file>
+      <file location="${PROJECT_ROOT}\Irbis\for_testing" name="readme.txt" optional="true">C:\Users\iva.svecova\Documents\MMPack\Irbis\for_testing\readme.txt</file>
     </build-deliverables>
     <workflow />
     <matlab>

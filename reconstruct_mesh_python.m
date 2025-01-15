@@ -8,6 +8,8 @@ function [nObjects, meshCell, components] = reconstruct_mesh_python(depth,mesh_d
     fractionToKeep = 1;
     minVertexNum = 20;
     separate = 1;
+
+    library_selection = 2; % 1 for pymeshlab, 2 for open3d
     
     % overwrite the default values when custom are specified: 
     if nargin == 3
@@ -26,42 +28,23 @@ function [nObjects, meshCell, components] = reconstruct_mesh_python(depth,mesh_d
         warning("There are more arguments than expected to reconstruct_mesh_python")
     end
 
-    % 241201 - THIS WAS INCORRECT WITH THE NEW INPUT!!
-    % if nargin == 3
-    %     fractionToKeep = 0.8;
-    %     minVertexNum = 20;
-    %     % disp('3 args')
-    %     separate = 1;
-    % elseif nargin == 4
-    %     fractionToKeep = 0.8;
-    %     minVertexNum = 20;
-    %     separate = varargin{1};
-    %     % disp('5 args')
-    % else
-    %     separate = 1;
-    %     fractionToKeep = varargin{1};
-    %     minVertexNum = varargin{2};
-    %     % disp('else args')
-    % end
+    if library_selection == 1
+        output = pyrunfile('reconstruct_mesh_py_script.py',"output", ...
+            mesh_data=mesh_data, ...
+            d=depth, ...
+            f=fractionToKeep, ...
+            nVer=minVertexNum, ...
+            separate=separate);
+        
+    elseif library_selection == 2
 
-    tic
-    output = pyrunfile('reconstruct_mesh_py_script.py',"output", ...
-        mesh_data=mesh_data, ...
-        d=depth, ...
-        f=fractionToKeep, ...
-        nVer=minVertexNum, ...
-        separate=separate);
-    
-    toc
-
-    % tic
-    % output = pyrunfile('reconstruct_mesh_open3d_py_script.py',"output", ...
-    %     mesh_data=mesh_data, ...
-    %     d=depth, ...
-    %     f=fractionToKeep, ...
-    %     nVer=minVertexNum, ...
-    %     separate=separate);
-    % toc
+        output = pyrunfile('reconstruct_mesh_open3d_py_script.py',"output", ...
+            mesh_data=mesh_data, ...
+            d=depth, ...
+            f=fractionToKeep, ...
+            nVer=minVertexNum, ...
+            separate=separate);
+    end
 
     % the open3d version seems to be faster (0.5 vs 1.4 s on constant shaft)
         % same for adaptive shaft (0.6 vs 4.2 s)
