@@ -1,141 +1,70 @@
-% 
-% % inputs:
-% colormap
-% selectedParameter
-% individualColoringOn 
-% 
-% cmap = colormap;
-% selectedColumn = selectedParameter;
-% 
-% % TO OPTIMIZE - currently, only the visualization changes the color
-%             % but it does not change in the tracksList table
-% 
-%             currentIndex = app.timeline.currentIndex.tracks;
-%             for tp=1:app.timeline.nTimePoints
-% 
-%                 if ~isequal(currentIndex(tp),0)
-% 
-%                     tracksId = currentIndex(tp);
-% 
-%                     if isequal(app.tracksColorMapDropDown_2.Value,'random')
-%                         app.appData.tracks.colors{tracksId} = cell2mat(app.tracks.tracksList{tracksId}.color);
-%                             % TO OPTIMIZE - what to do with the appData ones
-%                         continue
-%                     end
-% 
-%                     % Get the selected column name
-%                     % selectedColumn = app.tracksColorCodeDropDown.Value;
-% 
-%                     % Get the colormap function
-%                     % cmap = app.tracksColorMapDropDown_2.Value;
-%                     cmapFcn = str2func(cmap);
-% 
-%                     nTracks = app.tracks.nTracks{tracksId};
-%                     % Get the column data dynamically
-%                     columnData = app.tracks.tracksList{tracksId}.(selectedColumn);
-% 
-%                     % Initialize color array
-%                     c = zeros(nTracks, 3);
-% 
-%                     % Sort the column data
-%                     if isnumeric(columnData)
-%                         % Define the range for normalization
-%                         minVal = min(columnData);
-%                         maxVal = max(columnData);
-% 
-%                         if isequal(maxVal-minVal,0)
-%                             cr = cmapFcn(1);
-%                             c = repmat(cr, nTracks, 1);
-%                         else
-%                             % Normalize the values
-%                             normalizedValues = (columnData - minVal) / (maxVal - minVal);
-% 
-%                             cr = cmapFcn(app.tracks.nTracks{tracksId});
-% 
-%                             % Map the normalized values to the colormap
-%                             colorIndices = round(normalizedValues * (nTracks - 1)) + 1;
-%                             c = cr(colorIndices, :);
-%                         end
-%                     elseif iscategorical(columnData)
-%                         cats = categories(columnData);
-%                         nCats = numel(cats);
-%                         % Generate a colormap with a sufficient number of colors
-%                         cr = cmapFcn(nCats);
-% 
-%                         for i = 1:nCats
-%                             category = cats{i};
-%                             indices = columnData == category;
-%                             c(indices,:) = repmat(cr(i,:), sum(indices), 1);
-%                         end
-%                     else
-%                         error('Unsupported column data type for sorting.');
-%                     end
-% 
-%                     % Update the colors in the app data
-%                     app.appData.tracks.colors{tracksId} = c;
-%                 end
-% 
-%             end
-% 
-%             % Redraw the tracks with the updated colors
-%             app.plotTracks();
-
-
 function colorColumn = getColorColumn(List, selectedParameter, colormap)
+    % Assign colors based on selected parameter and colormap, handling NaN/undefined values efficiently.
 
     nRows = height(List);
-    if isequal(colormap,'random')
-        colorColumn = mat2cell(rand(nRows,3), ones(nRows, 1), 3);
+
+    % Handle 'random' colormap case: assign random colors
+    if isequal(colormap, 'random')
+        colorColumn = mat2cell(rand(nRows, 3), ones(nRows, 1), 3);
         return
     end
 
-    % Get the colormap function
+    % Convert colormap name to function handle
     cmapFcn = str2func(colormap);
-    
 
-    % Get the column data dynamically
+    % Extract data and identify valid rows
     columnData = List.(selectedParameter);
-    
-    % Initialize color array
-    c = zeros(nRows, 3);
-    
-    % Sort the column data
+    validRows = ~isnan(columnData);
+
+    % default color for undefined values
+    if isequal(colormap,'gray')
+        colorForUndefined = [1, 0, 0];
+    else
+        colorForUndefined = [0.5, 0.5, 0.5];
+    end
+
+    % Initialize color matrix with default gray
+    c = repmat(colorForUndefined, nRows, 1);
+
     if isnumeric(columnData)
-        % Define the range for normalization
-        minVal = min(columnData);
-        maxVal = max(columnData);
-    
-        if isequal(maxVal-minVal,0)
-            cr = cmapFcn(1);
-            c = repmat(cr, nRows, 1);
-        else
-            % Normalize the values
-            normalizedValues = (columnData - minVal) / (maxVal - minVal);
-    
-            cr = cmapFcn(nRows);
-    
-            % Map the normalized values to the colormap
-            colorIndices = round(normalizedValues * (nRows - 1)) + 1;
-            c = cr(colorIndices, :);
+        % Handle numerical data
+        if any(validRows)
+            % Compute normalization range (excluding NaN)
+            minVal = min(columnData(validRows));
+            maxVal = max(columnData(validRows));
+            
+            if maxVal == minVal
+                % Assign single color for constant values
+                c(validRows, :) = repmat(cmapFcn(1), sum(validRows), 1);
+            else
+                % Normalize valid data and compute color indices
+                normalized = (columnData(validRows) - minVal) / (maxVal - minVal);
+                cr = cmapFcn(nRows); % Precompute full colormap
+                indices = round(normalized * (nRows - 1)) + 1;
+                c(validRows, :) = cr(indices, :); % Map normalized values to colors
+            end
         end
+
     elseif iscategorical(columnData)
-        cats = categories(columnData);
-        nCats = numel(cats);
-        % Generate a colormap with a sufficient number of colors
-        cr = cmapFcn(nCats);
-    
-        for i = 1:nCats
-            category = cats{i};
-            indices = columnData == category;
-            c(indices,:) = repmat(cr(i,:), sum(indices), 1);
+        % Handle categorical data
+        validRows = ~isundefined(columnData); % Redefine valid rows for categorical data
+        if any(validRows)
+            cats = categories(columnData(validRows)); % Unique categories
+            nCats = numel(cats);
+            cr = cmapFcn(nCats); % Generate colormap for categories
+
+            % Map each category to a color using vectorized indexing
+            [~, catIndices] = ismember(columnData(validRows), cats);
+            c(validRows, :) = cr(catIndices, :);
         end
     else
         error('Unsupported column data type for sorting.');
     end
-    
-    % Update the colors in the app data
+
+    % Convert RGB matrix to cell array of row-wise colors
     colorColumn = mat2cell(c, ones(nRows, 1), 3);
 end
+    
 
 %% colorbar
             % % Add custom horizontal colorbar to the app.PanelPlot
