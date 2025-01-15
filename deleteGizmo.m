@@ -15,4 +15,5 @@ function deleteGizmo(ax)
     delete(findobj(ax, 'Tag', '3Dobject'));
     delete(findobj(ax, 'Tag', 'scalePoint'));
 
+
 end

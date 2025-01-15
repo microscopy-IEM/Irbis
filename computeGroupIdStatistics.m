@@ -36,7 +36,7 @@ function summaryTable = computeGroupIdStatistics(inputTable)
             SStot = sum((rowData(validIdx) - mean(rowData(validIdx))).^2);
             summaryTable.RSquared(i) = 1 - (SSres / SStot);
         else
-            disp(['Group id ' num2str(i) ' has less than 2 points.'])
+            % disp(['Group id ' num2str(i) ' has less than 2 points.'])
             summaryTable.Slope(i) = NaN;
             summaryTable.RSquared(i) = NaN;
         end

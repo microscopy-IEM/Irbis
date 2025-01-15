@@ -6,6 +6,15 @@ function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColu
         return;
     end
 
+    % Set axes properties to remove unwanted visual elements
+    set(colorbarAxesHandle, 'XTick', [], 'YTick', [], ...
+        'Color', 'none', 'Box', 'off', ...
+        'XColor', 'none', 'YColor', 'none');
+    set(colorbarAxesHandle, 'Toolbar', [], ... % Hide the toolbar
+        'Interactions', [], 'HitTest', 'off'); % Disable all default interactions)
+
+    delete(colorbarAxesHandle.Children); % Clear existing colorbar elements
+
     % Determine the number of colors based on the data type
     if isnumeric(columnData)
         nColors = 256; % High resolution for numeric data
