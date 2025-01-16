@@ -14,7 +14,6 @@ function colorColumn = getColorColumn(List, selectedParameter, colormap)
 
     % Extract data and identify valid rows
     columnData = List.(selectedParameter);
-    validRows = ~isnan(columnData);
 
     % default color for undefined values
     if isequal(colormap,'gray')
@@ -28,6 +27,7 @@ function colorColumn = getColorColumn(List, selectedParameter, colormap)
 
     if isnumeric(columnData)
         % Handle numerical data
+        validRows = ~isnan(columnData);
         if any(validRows)
             % Compute normalization range (excluding NaN)
             minVal = min(columnData(validRows));

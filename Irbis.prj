@@ -86,12 +86,15 @@
       <file>${PROJECT_ROOT}\find_intersection_volume_py_script.py</file>
       <file>${PROJECT_ROOT}\fix_mesh_py_script.py</file>
       <file>${PROJECT_ROOT}\IrbisApp.mlapp</file>
+      <file>${PROJECT_ROOT}\IrbisPreProcess.mlapp</file>
+      <file>${PROJECT_ROOT}\IrbisResultsViewer.mlapp</file>
       <file>${PROJECT_ROOT}\mesh_intersect_and_separate_py_script.py</file>
       <file>${PROJECT_ROOT}\mesh_intersect_and_separate_trimesh_py_script.py</file>
       <file>${PROJECT_ROOT}\mesh_subtract_and_separate_and_save_plane_py_script.py</file>
       <file>${PROJECT_ROOT}\mesh_subtract_and_separate_and_save_plane_trimesh_py_script.py</file>
       <file>${PROJECT_ROOT}\mesh_subtract_cylinder_and_find_closest_py_script.py</file>
       <file>${PROJECT_ROOT}\mesh_subtract_cylinder_and_find_closest_trimesh_py_script.py</file>
+      <file>${PROJECT_ROOT}\nnet.mat</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_open3d_py_script.py</file>
       <file>${PROJECT_ROOT}\reconstruct_mesh_py_script.py</file>
     </fileset.resources>
@@ -189,6 +192,7 @@
       <file>${PROJECT_ROOT}\icons\play.png</file>
       <file>${PROJECT_ROOT}\icons\progressLineBack.png</file>
       <file>${PROJECT_ROOT}\icons\progressLineFront.png</file>
+      <file>${PROJECT_ROOT}\icons\python_logo.png</file>
       <file>${PROJECT_ROOT}\icons\redo-arrow.png</file>
       <file>${PROJECT_ROOT}\icons\Refresh_icon.png</file>
       <file>${PROJECT_ROOT}\icons\rightArrow.png</file>
@@ -201,8 +205,6 @@
       <file>${PROJECT_ROOT}\ImportPoints.m</file>
       <file>${PROJECT_ROOT}\importTracksNew.m</file>
       <file>${PROJECT_ROOT}\intriangulation.m</file>
-      <file>${PROJECT_ROOT}\IrbisPreProcess.mlapp</file>
-      <file>${PROJECT_ROOT}\IrbisResultsViewer.mlapp</file>
       <file>${PROJECT_ROOT}\IS_active_contour.m</file>
       <file>${PROJECT_ROOT}\IS_active_contour_vocal.m</file>
       <file>${PROJECT_ROOT}\IS_adding_toolboxes_to_path.m</file>
@@ -261,6 +263,7 @@
       <file>${PROJECT_ROOT}\tryAdaptiveShaftParameters.m</file>
       <file>${PROJECT_ROOT}\tubeplot.m</file>
       <file>${PROJECT_ROOT}\UI\addStateButtonTo.m</file>
+      <file>${PROJECT_ROOT}\UI\fillColorbar.m</file>
       <file>${PROJECT_ROOT}\UI\removeStateButtonFrom.m</file>
       <file>${PROJECT_ROOT}\UI\switchStateButtonStatus.m</file>
       <file>${PROJECT_ROOT}\validateAndUpdateStruct.m</file>
