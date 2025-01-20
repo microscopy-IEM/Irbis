@@ -2310,8 +2310,26 @@ Initialize(varargin{:})
         set(hFig, 'Units', units);
         
         crd = get(hFig, 'CurrentPoint');
-        x = crd(1); 
-        y = crd(2);
+
+        % SK zoom point correction
+        % TO BE OPTIMIZED - pass handle of panels and not use the findobj
+        zoomPointCorrection = 1;
+
+        if zoomPointCorrection
+            plotPan = findobj(hFig,'Tag','panelPlot');       
+    
+            dy = plotPan.Position(2);
+            dx = hAx.Parent.Parent.Parent.Position(1);  
+            
+            x = crd(1)-dx; 
+            y = crd(2)-dy;
+        else
+
+       
+            x = crd(1); 
+            y = crd(2);
+
+        end
         
         set(hFig, 'Units', dfltUnits);
     end
