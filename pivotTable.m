@@ -1,44 +1,98 @@
-function pivotedTable = pivotTable(inputTable, varR, varC, varD, groupByR, groupByC)
-    % Pivots a table based on specified row, column, and data variables.
+function pivotedTable = pivotTable(inputTable, columnVarName, rowVarName, dataVarName, varargin)
+    % pivotTable - Creates a pivot table from the input table based on specified row, column, and data variables.
+    %
+    % Syntax:
+    %   pivotedTable = pivotTable(inputTable, columnVarName, rowVarName, dataVarName)
+    %   pivotedTable = pivotTable(inputTable, columnVarName, rowVarName, dataVarName, aggregationMethod, nRowBins, nColumnBins)
+    %
     % Inputs:
-    %   inputTable - MATLAB table containing the data
-    %   varR - Row variable (categorical, numerical, or logical)
-    %   varC - Column variable (categorical, numerical, or logical)
-    %   varD - Data variable to aggregate in the pivot table
-    %   groupByR - (Optional) Grouping for varR [minVal, maxVal, binWidth]
-    %   groupByC - (Optional) Grouping for varC [minVal, maxVal, binWidth]
+    %   inputTable       - Input table containing the data to be pivoted.
+    %   columnVarName    - Name of the variable to be used as columns in the pivot table.
+    %   rowVarName       - Name of the variable to be used as rows in the pivot table.
+    %   dataVarName      - Name of the variable to be used as data in the pivot table.
+    %   aggregationMethod - (Optional) Method to aggregate data in the pivot table. Default is "mean". Categorical data is only aggregated using "count".
+    %   nRowBins         - (Optional) Number of bins for row variable. Default is "none". Can be used only if the variable is numerical.
+    %   nColumnBins      - (Optional) Number of bins for column variable. Default is "none". Can be used only if the variable is numerical.
+    %
+    % Outputs:
+    %   pivotedTable     - The resulting pivot table.
+    %
+    % Example:
+    %   pivotedTable = pivotTable(inputTable, 'ColumnVar', 'RowVar', 'DataVar');
+    %   pivotedTable = pivotTable(inputTable, 'ColumnVar', 'RowVar', 'DataVar', 'sum', 5, 5);
+    %
+    % Notes:
+    %   - The function checks if the specified row, column, and data variables exist in the input table.
+    %   - If the number of input arguments is not 4 or 7, an error is raised.
+    %   - If the row or column variables are not numeric, binning is disabled for those variables.
+    %   - If the data variable is categorical, the aggregation method is set to "count".
+    %   - If the data variable is logical, the aggregation method is set to "mean".
 
-    % Convert numerical/logical row variable to categorical if grouping is specified
-    if nargin > 4 && ~isempty(groupByR)
-        if isnumeric(inputTable.(varR)) || islogical(inputTable.(varR))
-            inputTable.(varR) = groupNumeric(inputTable.(varR), groupByR(1), groupByR(2), groupByR(3));
-        end
+    % Ensure that selected variables are in the inputTable, raise error if not
+    if ~ismember(columnVarName, inputTable.Properties.VariableNames)
+        error("Column variable not found in the input table.");
+    end
+    if ~ismember(rowVarName, inputTable.Properties.VariableNames)
+        error("Row variable not found in the input table.");
+    end
+    if ~ismember(dataVarName, inputTable.Properties.VariableNames)
+        error("Data variable not found in the input table.");
     end
 
-    % Convert numerical/logical column variable to categorical if grouping is specified
-    if nargin > 4 && ~isempty(groupByC)
-        if isnumeric(inputTable.(varC)) || islogical(inputTable.(varC))
-            inputTable.(varC) = groupNumeric(inputTable.(varC), groupByC(1), groupByC(2), groupByC(3));
+    if nargin == 7
+        % Optional parameters added: 
+        % aggregationMethod - method to aggregate data in the pivot table
+        % nRowBins - number of bins for row variable
+        % nColumnBins - number of bins for column variable
+
+        if isempty(varargin{1})
+            aggregationMethod = "mean";
+        else
+            aggregationMethod = varargin{1};
         end
+
+        if isempty(varargin{2})
+            rowGrouping = "none";
+        else
+            nRowBins = varargin{2};
+            rowGrouping = nRowBins;
+        end
+
+        if isempty(varargin{3})
+            columnGrouping = "none";
+        else
+            nColumnBins = varargin{3};
+            columnGrouping = nColumnBins;
+        end
+    elseif nargin == 4
+        aggregationMethod = "mean";
+        rowGrouping = "none";
+        columnGrouping = "none";
+    else
+        error("Invalid number of input arguments.");
     end
 
-    % Ensure row and column variables are categorical
-    inputTable.(varR) = categorical(inputTable.(varR));
-    inputTable.(varC) = categorical(inputTable.(varC));
+    % Check whether the optional parameters work with the variable types
+    % Bins can be used only if the variable is numerical
+    if ~isnumeric(inputTable.(rowVarName))
+        rowGrouping = "none";
+    end
 
-    % Pivot the data
-    [rowCategories, ~, rowIdx] = unique(inputTable.(varR));
-    [colCategories, ~, colIdx] = unique(inputTable.(varC));
-    pivotedData = accumarray([rowIdx, colIdx], inputTable.(varD), [], @mean, NaN); % Aggregation using mean
+    if ~isnumeric(inputTable.(columnVarName))
+        columnGrouping = "none";
+    end
 
-    % Create output table
-    pivotedTable = array2table(pivotedData, 'RowNames', cellstr(rowCategories), ...
-        'VariableNames', cellstr(colCategories));
-end
+    if iscategorical(inputTable.(dataVarName))
+        aggregationMethod = "count";
+    elseif islogical(inputTable.(dataVarName))
+        aggregationMethod = "mean";
+    end
 
-function groupedData = groupNumeric(data, minVal, maxVal, binWidth)
-    % Groups numerical data into bins
-    edges = minVal:binWidth:maxVal;
-    edges(end) = edges(end) + 1; % Include upper boundary
-    groupedData = discretize(data, edges, 'categorical', string(edges(1:end-1)));
+    % disp(aggregationMethod)
+    % disp(rowGrouping)
+    % disp(columnGrouping)
+
+    pivotedTable = pivot(inputTable, "Rows", rowVarName, "Columns", columnVarName, "DataVariable", dataVarName, ...
+    "Method", aggregationMethod, "RowsBinMethod", rowGrouping, "ColumnsBinMethod", columnGrouping);
+
 end
