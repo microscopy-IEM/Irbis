@@ -57,7 +57,7 @@ function combinedTable = calculateGroupStats(dataTable, groupParam, targetParam,
     disp(pivotedTable.(groupParam))
     % Combine the tables
     combinedTable = horzcat(tableCell{:});
-    combinedTable.Properties.RowNames = pivotedTable.(groupParam);
+    combinedTable.Properties.RowNames = string(pivotedTable.(groupParam));
 
 end
     
