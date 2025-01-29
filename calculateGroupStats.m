@@ -13,7 +13,7 @@ function combinedTable = calculateGroupStats(dataTable, groupParam, targetParam,
     %                      (e.g., {@mean, @min, @max}).
     %
     %   OUTPUT:
-    %     groupStats     - (table) Output table with computed statistics for each group.
+    %     combinedTable     - (table) Output table with computed statistics for each group.
     %
     %   EXAMPLES:
     %     % Example table
