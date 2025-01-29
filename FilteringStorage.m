@@ -96,6 +96,9 @@ classdef FilteringStorage < GroupingStorageBaseClass
         % moved here from the base function, as the Active property will be defined only for filters
         function filterArray = updateAllFilterTables(obj, listArray, filterArray, timePoints)
             % Method to update all filter tables for all Groupings
+            % Filter array - cell array of tables, one for each time point
+            % Each table has a column for each filter            
+
             for i = 1:numel(obj.Groupings)
                 cm = obj.Groupings{i};
                     if cm.Active
@@ -105,6 +108,9 @@ classdef FilteringStorage < GroupingStorageBaseClass
                         filterArray = cm.updateFilterTable(listArray, filterArray, timePoints);
                     end
             end
+            % NOTE: With this approach, every time a filter changes, we recalculate all filters.
+            % Because we do not store the filterArray. 
+            % This is probably not optimal when it comes to filtering large datasets.
         end
 
         function activateFilter(obj, name)
