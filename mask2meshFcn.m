@@ -207,7 +207,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
                     % simplify(mesh,SimplificationMethod="quadric-decimation",VoxelSize=pixel_size*0.5)
                     % simplify(mesh,SimplificationMethod="quadric-decimation",BoundaryWeight=0.9);
     
-                    % simplify(mesh,SimplificationMethod="vertex-clustering",VoxelSize=pixel_size)
+                    simplify(mesh,SimplificationMethod="vertex-clustering",VoxelSize=pixel_size)
     
                     % simplify(mesh)
                     removeDefects(mesh,"unreferenced-vertices")
