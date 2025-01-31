@@ -234,7 +234,11 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
 
     end
 
-    % assignin('base','T',T);
+    assignin('base','T',T);
+
+    % normalize intensities for current time point
+    T.meanInt = T.meanInt./mean(T.meanInt,"omitmissing");
+    T.maxInt = T.maxInt./mean(T.maxInt,"omitmissing");
 
     % remove empty rows cuased by skipped regions
     nSkipped = nRegions-meshObjInd;
