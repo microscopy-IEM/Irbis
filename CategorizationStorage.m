@@ -21,7 +21,7 @@ classdef CategorizationStorage < handle
             disp(obj.Categorizations)
         end
 
-        function copyCategorization(obj, existingCategorizationName, newCategorizationName)
+        function newCategorization = copyCategorization(obj, existingCategorizationName, newCategorizationName)
             % Method to copy an existing categorization and assign a new name
             % existingCategorizationName: The name of the categorization to copy
             % newCategorizationName: The name to give the copied categorization

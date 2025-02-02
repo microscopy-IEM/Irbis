@@ -3,7 +3,7 @@ classdef SummarizedTableClass < handle
     properties
         rowParameterName    % string/char - name of the categorical parameter that forms rows
         summarizedTable     % table - table with summarized data, can contain statistics column or categorizations
-        groupCategories     % CategorizationStorage object - object containing defition of categorizations present in the table
+        groupCategorizations     % CategorizationStorage object - object containing defition of categorizations present in the table
         groupFilters        % FilteringStorage object - object containing filters applied based on groups based on the summarized table
         tableStructure      % structure - contains structure capturing the columns of the table, used for populating checkboxTree
             % PURPOSE: the checkboxTree should show only 'mean', 'min', etc. within 'volume by timePoint' instead of 'mean_volume_by_timePoint'
@@ -11,7 +11,7 @@ classdef SummarizedTableClass < handle
     end
 
     methods
-        function obj = SummarizedTableClass(rowParameterName, summarizedTable, groupCategories, groupFilters)
+        function obj = SummarizedTableClass(rowParameterName, summarizedTable, groupCategorizations, groupFilters)
             % Constructor for SummarizedTableClass
             obj.rowParameterName = rowParameterName;
 
@@ -21,16 +21,18 @@ classdef SummarizedTableClass < handle
             end
 
             obj.summarizedTable = summarizedTable;
-            if ~isempty(groupCategories) && isa(groupCategories, 'CategorizationStorage')
-                obj.groupCategories = groupCategories;
+            if ~isempty(groupCategorizations) && isa(groupCategorizations, 'CategorizationStorage')
+                obj.groupCategorizations = groupCategorizations;
             else
-                obj.groupCategories = CategorizationStorage();
+                obj.groupCategorizations = CategorizationStorage();
             end
             if ~isempty(groupFilters) && isa(groupFilters, 'FilteringStorage')
                 obj.groupFilters = groupFilters;
             else
                 obj.groupFilters = FilteringStorage();
             end
+
+            obj.extractTableStructure(summarizedTable);
         end
 
 
@@ -43,44 +45,37 @@ classdef SummarizedTableClass < handle
         end
 
 
-        % function extractTableStructure(obj, summarizedTable)
-        %     % Extracts the structure of the table to be used for populating the checkboxTree
-        %     categorizationNames = obj.groupCategories.returnCategorizationNames();
-        %     if ~isfield(obj.tableStructure, 'excluded')
-        %         obj.tableStructure.excluded = 'excluded';
-        %     end
-        %     if ~isfield(obj.tableStructure, 'rowParameterName')
-        %         obj.tableStructure.rowParameterName = obj.rowParameterName;
-        %     end
-        %     for i = 1:width(summarizedTable)
-        %         colName = summarizedTable.Properties.VariableNames{i};
-        %         if ismember(colName, categorizationNames)
-        %             % Add the categorization name to the structure
-        %             obj.tableStructure.(colName) = colName;
-        %         elseif ~strcmp(colName, 'excluded')
-        %             % Extract the structure of the column name
-        %             splitColName = strsplit(colName, '_');
-        %             if numel(splitColName) > 1
-        %                 % Check if the column name contains '_'
-        %                 if isfield(obj.tableStructure, splitColName{1})
-        %                     % Add the column name to the existing structure
-        %                     obj.tableStructure.(splitColName{1}){end+1} = colName;
-        %                 else
-        %                     % Create a new field in the structure
-        %                     obj.tableStructure.(splitColName{1}) = {colName};
-        %                 end
-        %             else
-        %                 % Add the column name to the structure
-        %                 obj.tableStructure.(colName) = {colName};
-        %             end
-        %         end
-        %     end
+        function extractTableStructure(obj, summarizedTable)
+            % Extracts the structure of the table to be used for populating the checkboxTree
+            % The structure contains only the statistical columns 
+                % Explanation - this is because the categorization columns can contains gaps 
+                % -> cannot be used in the same way in the struct
+            % The structure contains only the first part of the column names, e.g. 'mean' instead of 'mean_volume_by_timePoint'
+            % The full name is also stored to be added to the NodeData
+            categorizationNames = obj.groupCategorizations.returnCategorizationNames();
 
-        % end
+            for i = 1:width(summarizedTable)
+                colName = summarizedTable.Properties.VariableNames{i};
+                if ~strcmp(colName, 'excluded') && ~ismember(colName, categorizationNames)
+                    % Extract the structure of the column name
+                    splitColName = strsplit(colName, '_');
+                    if numel(splitColName) > 1  % The column name contains '_' -> it's a statistical column
+                        dataParameter = strrep(colName, [splitColName{1} '_'], ''); % assumes name of type 'mean_volume_by_timePoint'
+                        % dataParameter = [splitColName{2} '_by_' splitColName{3}];
+                        obj.tableStructure.(dataParameter).(splitColName{1}) = colName;
+                        % The full column name is stored to be added to the NodeData
+                    else
+                        % This should not happen
+                        disp(['Column name ' colName ' does not contain "_".']);
+                    end
+                end
+            end
+        end
+
 
         function addCategorization(obj, categorization)
-            % Adds a categorization to the groupCategories object and to the table
-            obj.groupCategories.addCategorization(categorization);
+            % Adds a categorization to the groupCategorizations object and to the table
+            obj.groupCategorizations.addCategorization(categorization);
 
             % Update the summarized table with the new categorization
             obj.summarizedTable = categorization.updateTable(obj.summarizedTable, {});
@@ -88,17 +83,26 @@ classdef SummarizedTableClass < handle
 
 
         function replaceCategorization(obj, categorization)
-            % Replaces an existing categorization in the groupCategories object and in the table
-            obj.groupCategories.replaceCategorization(categorization);
+            % Replaces an existing categorization in the groupCategorizations object and in the table
+            obj.groupCategorizations.replaceCategorization(categorization);
 
             % Update the summarized table with the updated categorization
             obj.summarizedTable = categorization.updateTable(obj.summarizedTable, {});
         end
 
 
+        function copyCategorization(obj, oldCategorizationName, newCategorizationName)
+            % Copies an existing categorization and assigns a new name
+            categorization = obj.groupCategorizations.copyCategorization(oldCategorizationName, newCategorizationName);
+
+            % Update the summarized table with the new categorization
+            obj.summarizedTable = categorization.updateTable(obj.summarizedTable, {});
+        end
+
+
         function deleteCategorization(obj, categorizationName)
-            % Deletes a categorization from the groupCategories object and from the table
-            obj.groupCategories.deleteCategorization(categorizationName);
+            % Deletes a categorization from the groupCategorizations object and from the table
+            obj.groupCategorizations.deleteCategorization(categorizationName);
             obj.summarizedTable.(categorizationName) = [];
         end
 
