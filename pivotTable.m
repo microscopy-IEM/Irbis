@@ -95,4 +95,12 @@ function pivotedTable = pivotTable(inputTable, columnVarName, rowVarName, dataVa
     pivotedTable = pivot(inputTable, "Rows", rowVarName, "Columns", columnVarName, "DataVariable", dataVarName, ...
     "Method", aggregationMethod, "RowsBinMethod", rowGrouping, "ColumnsBinMethod", columnGrouping);
 
+    % the first column contains the row info -> turn it into row names
+    rowNames = string(pivotedTable{:, 1});
+    % deal with some values being there multiple times - do not assign the row names
+    if length(unique(rowNames)) == length(rowNames)
+        pivotedTable.Properties.RowNames = rowNames;
+    end
+
+    pivotedTable(:, 1) = [];
 end

@@ -9,7 +9,8 @@ classdef SummarizedTableStorageClass < handle
         end
 
 
-        function addSummarizedTable(obj, summarizedTable)
+        function addSummarizedTableObject(obj, summarizedTable)
+            % summarizedTable - SummarizedTableClass object
             idx = obj.findSummarizedTableIndexByName(summarizedTable.rowParameterName);
             if idx > 0
                 disp(['Summarized table of parameter "' summarizedTable.rowParameterName '" already exists. Replaced.']);
@@ -20,7 +21,7 @@ classdef SummarizedTableStorageClass < handle
         end
 
 
-        function deleteSummarizedTable(obj, name)
+        function deleteSummarizedTableObject(obj, name)
             idx = obj.findSummarizedTableIndexByName(name);
             if idx > 0
                 obj.summarizedTableObjects(idx) = [];
@@ -35,6 +36,25 @@ classdef SummarizedTableStorageClass < handle
                     idx = i;
                     return;
                 end
+            end
+        end
+
+
+        function names = returnRowParameterNames(obj)
+            names = cell(1, numel(obj.summarizedTableObjects));
+            for i = 1:numel(obj.summarizedTableObjects)
+                cm = obj.summarizedTableObjects{i};
+                names{i} = char(cm.rowParameterName);
+            end
+        end
+
+
+        function summarizedTableObject = getSummarizedTableObject(obj, name)
+            idx = obj.findSummarizedTableIndexByName(name);
+            if idx > 0
+                summarizedTableObject = obj.summarizedTableObjects{idx};
+            else
+                summarizedTableObject = [];
             end
         end
     end

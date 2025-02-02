@@ -1,4 +1,4 @@
-function combinedTable = calculateGroupStats(dataTable, groupParam, targetParam, selectedParams, statFunctions)
+function summarizedTable = calculateGroupStats(dataTable, groupParam, targetParam, selectedParams)
     % CALCULATEGROUPSTATS Computes statistics for a parameter grouped by another parameter.
     %   groupStats = calculateGroupStats(dataTable, groupParam, targetParam, selectedParams, statFunctions)
     %   computes statistics (e.g., mean, min, max, etc.) of a target parameter for
@@ -13,7 +13,7 @@ function combinedTable = calculateGroupStats(dataTable, groupParam, targetParam,
     %                      (e.g., {@mean, @min, @max}).
     %
     %   OUTPUT:
-    %     combinedTable     - (table) Output table with computed statistics for each group.
+    %     summarizedTable     - (table) Output table with computed statistics for each group.
     %
     %   EXAMPLES:
     %     % Example table
@@ -47,17 +47,16 @@ function combinedTable = calculateGroupStats(dataTable, groupParam, targetParam,
     for i = 1:numel(selectedParams)
         selectedParameter = selectedParams{i};
         % Create pivot table with the target parameter and group parameter
-        pivotedTable = pivotTable2(dataTable, targetParam, groupParam, selectedParameter);
-        statisticsTable = computePivotTableStatistics(pivotedTable(:, 2:end));
+        pivotedTable = pivotTable(dataTable, targetParam, groupParam, selectedParameter);
+        statisticsTable = computePivotTableStatistics(pivotedTable);
         statisticsTable = renamevars(statisticsTable, statisticsTable.Properties.VariableNames, ...
-                       strcat(statisticsTable.Properties.VariableNames, '_', selectedParameter, '_', targetParam))
+                       strcat(statisticsTable.Properties.VariableNames, '_', selectedParameter, '_by_', targetParam));
         tableCell{i} = statisticsTable;
     end
 
-    disp(pivotedTable.(groupParam))
     % Combine the tables
-    combinedTable = horzcat(tableCell{:});
-    combinedTable.Properties.RowNames = string(pivotedTable.(groupParam));
+    summarizedTable = horzcat(tableCell{:});
+    % summarizedTable.Properties.RowNames = string(pivotedTable.(groupParam));
 
 end
     
