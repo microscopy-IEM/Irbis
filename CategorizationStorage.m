@@ -12,13 +12,28 @@ classdef CategorizationStorage < handle
         function addCategorization(obj, categorization)
             % Method to add a new Categorization instance to the list
             obj.Categorizations{end+1} = categorization;
-            disp(obj.Categorizations)
+            % disp(obj.Categorizations)
         end
 
         function replaceCategorization(obj, categorization)
             idx = obj.findCategorizationIndexByName(categorization.CategorizationName);
             obj.Categorizations{idx} = categorization;
-            disp(obj.Categorizations)
+            % disp(obj.Categorizations)
+        end
+
+        function renameCategorization(obj, existingCategorizationName, newCategorizationName)
+            % Find the index of the existing categorization by name
+            idx = obj.findCategorizationIndexByName(existingCategorizationName);
+            
+            if idx > 0
+                % Get the existing categorization
+                existingCategorization = obj.Categorizations{idx};
+                existingCategorization.CategorizationName = newCategorizationName;
+
+                fprintf('Categorization "%s" has been renamed to "%s".\n', existingCategorizationName, newCategorizationName);
+            else
+                fprintf('Categorization with name "%s" not found.\n', existingCategorizationName);
+            end
         end
 
         function newCategorization = copyCategorization(obj, existingCategorizationName, newCategorizationName)

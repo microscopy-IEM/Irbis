@@ -91,6 +91,15 @@ classdef SummarizedTableClass < handle
         end
 
 
+        function renameCategorization(obj, oldCategorizationName, newCategorizationName)
+            % Replaces an existing categorization in the groupCategorizations object and in the table
+            obj.groupCategorizations.renameCategorization(oldCategorizationName, newCategorizationName);
+
+            % Rename column in the summarized table
+            obj.summarizedTable.Properties.VariableNames{strcmp(obj.summarizedTable.Properties.VariableNames, oldCategorizationName)} = newCategorizationName;
+        end
+
+
         function copyCategorization(obj, oldCategorizationName, newCategorizationName)
             % Copies an existing categorization and assigns a new name
             categorization = obj.groupCategorizations.copyCategorization(oldCategorizationName, newCategorizationName);
