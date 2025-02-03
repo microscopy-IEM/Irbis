@@ -30,6 +30,11 @@ function processedStruct = processDataForResultsViewer(inputStruct)
         else
             processedStruct.storedGroupIdFilters = GroupIdFilteringStorage();
         end   
+        if isfield(inputStruct, 'storedSummarizedTables')
+            processedStruct.storedSummarizedTables = inputStruct.storedSummarizedTables;
+        else
+            processedStruct.storedSummarizedTables = SummarizedTableStorageClass();
+        end
     else
         processedStruct = [];
     end

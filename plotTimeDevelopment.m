@@ -148,7 +148,7 @@ function plotIndividualData(axes, xData, data, categories, isNumericalCategory, 
             hold(axes, 'off');
         else
             uniqueCategories = unique(categories);
-            colors = lines(numel(uniqueCategories));
+            colors = turbo(numel(uniqueCategories));
 
             hold(axes, 'on');
             for i = 1:numel(uniqueCategories)

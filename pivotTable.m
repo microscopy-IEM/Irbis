@@ -96,7 +96,15 @@ function pivotedTable = pivotTable(inputTable, columnVarName, rowVarName, dataVa
     "Method", aggregationMethod, "RowsBinMethod", rowGrouping, "ColumnsBinMethod", columnGrouping);
 
     % the first column contains the row info -> turn it into row names
-    rowNames = string(pivotedTable{:, 1});
+    rowNames = pivotedTable{:, 1};
+    missingList = ismissing(rowNames);
+    if ~isempty(missingList)
+        rowNames = string(rowNames);
+        rowNames(missingList) = "NaN";
+    else
+        rowNames = string(rowNames);
+    end
+
     % deal with some values being there multiple times - do not assign the row names
     if length(unique(rowNames)) == length(rowNames)
         pivotedTable.Properties.RowNames = rowNames;

@@ -6,7 +6,7 @@ function baseStructs = getBaseStruct(varargin)
     %     2: timeDependencyType
     %     3: nTimePoints
 
-    irbisVersion = 1.13;
+    irbisVersion = 1.14;
 
     structTypes = {'info','timeline','tools','views','results','planes','tracks','points','model'};
     timeDependencyType = {'timeDependent','timeIndependent'};
@@ -186,6 +186,7 @@ function baseStructs = getBaseStruct(varargin)
                     % disp('timeIndependent in')
                     tracks.storedFilters = FilteringStorage();
                     tracks.storedCategorizations = CategorizationStorage();
+                    tracks.storedSummarizedTables = SummarizedTableStorageClass();
                     
                     tracks.timePointPresent = false;
 
@@ -201,6 +202,8 @@ function baseStructs = getBaseStruct(varargin)
                 points.fileName = '';
                 points.registration = [];
                 points.manualAlignment = [];
+
+                points.storedSummarizedTables = SummarizedTableStorageClass();
             
                 baseStructs.points = points;
 
@@ -258,7 +261,7 @@ function baseStructs = getBaseStruct(varargin)
 
                     model.(branch).storedFilters = FilteringStorage();
                     model.(branch).storedCategorizations = CategorizationStorage();
-
+                    model.(branch).storedSummarizedTables = SummarizedTableStorageClass();
                 end
 
                 % General model features

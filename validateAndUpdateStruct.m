@@ -318,6 +318,31 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
         end
     end
 
+    if loadedIrbisVersion < 1.14
+        % adding summarizedStorageClass - needed for ResultsViewer
+        if isfield(loadedStruct,'model')
+            if ~isempty(loadedStruct.model)
+                branches = loadedStruct.model.branches;
+                for branchNum = 1:numel(branches)
+                    branch = branches{branchNum};
+                    loadedStruct.model.(branch).storedSummarizedTables = SummarizedTableStorageClass();
+                end
+            end
+        end
+
+        if isfield(loadedStruct,'tracks')
+            if ~isempty(loadedStruct.tracks)
+                loadedStruct.tracks.storedSummarizedTables = SummarizedTableStorageClass();
+            end
+        end
+
+        if isfield(loadedStruct,'points')
+            if ~isempty(loadedStruct.points)
+                loadedStruct.points.storedSummarizedTables = SummarizedTableStorageClass();
+            end
+        end
+    end
+
     % change the Irbis version - CHANGE FOR THE NEWEST
     % getBaseStruct('irbisVersion')
     disp(['new irbis version = ' num2str(getBaseStruct('irbisVersion'))])
