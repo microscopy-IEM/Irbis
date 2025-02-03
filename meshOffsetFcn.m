@@ -33,13 +33,13 @@ initMeshisIntersecting = isSelfIntersecting(currentMesh);
 initMeshisWaterTight = isWatertight(currentMesh);
 
 if initMeshisIntersecting
-    disp('Initial mesh is self-intersectiing')
+    % disp('Initial mesh is self-intersectiing')
     return
 end
 
 if ~initMeshisWaterTight
 
-    disp('Initial mesh is not waterTight')
+    % disp('Initial mesh is not waterTight')
     return
 
 end
@@ -111,11 +111,11 @@ while offsetCount < totalOffsetOut
     if isIntersecting || ~isWaterTight
 
          if isIntersecting
-            disp(['Mesh ' num2str(i) ' is self-intersectiing'])
+            % disp(['Mesh ' num2str(i) ' is self-intersectiing'])
          end
 
          if ~isWaterTight
-             disp(['Mesh ' num2str(i) ' is not WaterTight'])
+             % disp(['Mesh ' num2str(i) ' is not WaterTight'])
          end
 
          break

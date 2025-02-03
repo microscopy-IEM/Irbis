@@ -319,8 +319,9 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
     end
 
     % change the Irbis version - CHANGE FOR THE NEWEST
-    disp('new irbis version:')
-    disp(getBaseStruct('irbisVersion'))
+    % getBaseStruct('irbisVersion')
+    disp(['new irbis version = ' num2str(getBaseStruct('irbisVersion'))])
+    % disp(getBaseStruct('irbisVersion'))
     loadedStruct.info.irbisVersion = getBaseStruct('irbisVersion');
     updatedStruct = loadedStruct;
 

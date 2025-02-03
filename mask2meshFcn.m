@@ -73,7 +73,8 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
 
                 % z_spacing = 0.0;
                 
-                z_spacing = 0.75;
+                % z_spacing = 0.75;
+                z_spacing = 1;
 
                 currentRegion = regions(regInd).Image;               
                 meanInt = regions(regInd).MeanIntensity;
@@ -224,8 +225,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
             % T(meshObjInd,1:11) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]}};
     
             T(meshObjInd,:) = {0,verts,{mesh},"S1",0,0,{},{},0,0,{[0,0,0]},{[1 0 0]},false,meanInt,maxInt};
-            T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);
-    
+            T.Properties.RowNames{meshObjInd} = num2str(meshObjInd);    
             
             meshObjInd = meshObjInd+1;
     
