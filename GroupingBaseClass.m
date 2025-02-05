@@ -90,10 +90,16 @@ classdef GroupingBaseClass < handle
                             switch comparator
                                 case 'lessThan'
                                     match = match & (table.(condFields{j}) < value);
+                                case 'equalOrLessThan'
+                                    match = match & (table.(condFields{j}) <= value);
                                 case 'greaterThan'
                                     match = match & (table.(condFields{j}) > value);
+                                case 'equalOrGreaterThan'
+                                    match = match & (table.(condFields{j}) >= value);
                                 case 'equals'
                                     match = match & (table.(condFields{j}) == value);
+                                case 'notEqual'
+                                    match = match & (table.(condFields{j}) ~= value);
                                 otherwise
                                     error('Unsupported comparator: %s', comparator);
                             end

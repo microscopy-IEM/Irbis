@@ -103,7 +103,7 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
     addCategoryPanel(categoryGrid, tableData, categoryScrollPanel);
 
     if nargin > 3
-        disp('there are more')
+        % disp('there are more')
         currentCategorization = varargin{4};
         loadConditionsForRedefinition;
     end
@@ -140,7 +140,7 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
         criteriaGrid.Layout.Row = 2;
         criteriaGrid.Layout.Column = [1 3];
         criteriaGrid.RowHeight = {};
-        criteriaGrid.ColumnWidth = {'1x', 100, '1x', 70};
+        criteriaGrid.ColumnWidth = {'1x', 58, '0.5x', 70};
         criteriaGrid.Scrollable = 'on';
 
         % Add a plus button to add criteria for this category
@@ -178,7 +178,12 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
         operatorDropdown = uidropdown(criteriaGrid, 'Tag', 'operatorDropdown');
         operatorDropdown.Layout.Row = newRow;
         operatorDropdown.Layout.Column = 2;
-        operatorDropdown.Items = {'equals', 'lessThan', 'greaterThan'};
+        % operatorDropdown.Items = {'equals', 'lessThan', 'greaterThan'};
+        operatorDropdown.Items = {'=', '<', '<=', '>', '>=','≠'};
+        % operatorDropdown.Items = {'<', '<html>&#8804;</html>', '>', '<html>&#8805;</html>', '=', '<html>&#8800;</html>'}; % does not work
+        operatorDropdown.ItemsData = {'equals', 'lessThan', 'equalOrLessThan', 'greaterThan', 'equalOrGreaterThan', 'notEqual'};
+        operatorDropdown.FontSize = 16;
+        % operatorDropdown.FontWeight = 'bold';
 
         % Create a text field for user input
         valueField = uieditfield(criteriaGrid, 'numeric', 'Tag', 'valueField');
@@ -215,7 +220,9 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
     function updateToCategoricalCriteria(criteriaGrid, row, columnData, categoryPanel)
         % Update operator dropdown
         operatorDropdown = findComponent(criteriaGrid, row, 'operatorDropdown');
-        operatorDropdown.Items = {'equals'};
+        operatorDropdown.Items = {'='};
+        operatorDropdown.ItemsData = {'equals'};
+        criteriaGrid.ColumnWidth = {'1x', 40, '1x', 70};
 
         % Create a new tree with checkboxes for the value field
         cats = sort(categories(columnData));
@@ -241,7 +248,12 @@ function [name, conditions] = categorizationDefinitionWindow(varargin)
     function updateToNumericCriteria(criteriaGrid, row, categoryPanel)
         % Update operator dropdown
         operatorDropdown = findComponent(criteriaGrid, row, 'operatorDropdown');
-        operatorDropdown.Items = {'equals', 'lessThan', 'greaterThan'};
+        operatorDropdown.Items = {'=', '<', '<=', '>', '>=','≠'};
+        % operatorDropdown.Items = {'<', '<html>&#8804;</html>', '>', '<html>&#8805;</html>', '=', '<html>&#8800;</html>'};   % does not work
+        operatorDropdown.ItemsData = {'equals', 'lessThan', 'equalOrLessThan', 'greaterThan', 'equalOrGreaterThan', 'notEqual'};
+        operatorDropdown.FontSize = 16;
+        criteriaGrid.ColumnWidth = {'1x', 58, '0.5x', 70};
+        % operatorDropdown.FontWeight = 'bold';
 
         % Create a new numeric value field
         valueField = uieditfield(criteriaGrid, 'numeric', 'Tag', 'valueField');
