@@ -11,7 +11,7 @@ function checkNodesByNodeData(tree, nodeNames)
             checkedNodes = [checkedNodes,node];
         else
             % warning('Node with name "%s" not found.', nodeName);
-            disp('Node with name "%s" not found.', nodeName);
+            fprintf('Node with name "%s" not found.', nodeName);
         end
     end
     tree.CheckedNodes = checkedNodes;
