@@ -52,6 +52,9 @@ classdef SummarizedTableClass < handle
                 % -> cannot be used in the same way in the struct
             % The structure contains only the first part of the column names, e.g. 'mean' instead of 'mean_volume_by_timePoint'
             % The full name is also stored to be added to the NodeData
+            % ADJUSTED: The table can now containt also mode of categorical columns. 
+                % These columns are named 'mode_columnName' and contain categorical data. 
+                % This will be stored in the tableStructure under 'categorical - mode'.
             categorizationNames = obj.groupCategorizations.returnCategorizationNames();
 
             for i = 1:width(summarizedTable)
@@ -60,10 +63,16 @@ classdef SummarizedTableClass < handle
                     % Extract the structure of the column name
                     splitColName = strsplit(colName, '_');
                     if numel(splitColName) > 1  % The column name contains '_' -> it's a statistical column
-                        dataParameter = strrep(colName, [splitColName{1} '_'], ''); % assumes name of type 'mean_volume_by_timePoint'
-                        % dataParameter = [splitColName{2} '_by_' splitColName{3}];
-                        obj.tableStructure.(dataParameter).(splitColName{1}) = colName;
-                        % The full column name is stored to be added to the NodeData
+                        if strcmp(splitColName{1}, 'mode') && iscategorical(summarizedTable.(colName))  % columns with mode of categorical data
+                            originalColumnName = strrep(colName, 'mode_', '');
+                            dataParameter = 'categorical';
+                            obj.tableStructure.(dataParameter).(originalColumnName) = colName;
+                        else
+                            dataParameter = strrep(colName, [splitColName{1} '_'], ''); % assumes name of type 'mean_volume_by_timePoint'
+                            % dataParameter = [splitColName{2} '_by_' splitColName{3}];
+                            obj.tableStructure.(dataParameter).(splitColName{1}) = colName;
+                            % The full column name is stored to be added to the NodeData
+                        end
                     else
                         % This should not happen
                         disp(['Column name ' colName ' does not contain "_".']);

@@ -45,14 +45,28 @@ function summarizedTable = calculateGroupStats(dataTable, groupParam, targetPara
     tableCell = cell(1, numel(selectedParams));
 
     for i = 1:numel(selectedParams)
+        % added support for categorical parameters - those form just one column with a mode value (not divided to tps)
         selectedParameter = selectedParams{i};
-        % Create pivot table with the target parameter and group parameter
-        pivotedTable = pivotTable(dataTable, targetParam, groupParam, selectedParameter);
-        statisticsTable = computePivotTableStatistics(pivotedTable);
-        statisticsTable = renamevars(statisticsTable, statisticsTable.Properties.VariableNames, ...
-                       strcat(statisticsTable.Properties.VariableNames, '_', selectedParameter, '_by_', targetParam));
-        tableCell{i} = statisticsTable;
+        if iscategorical(dataTable.(selectedParameter))
+            pivotedTable = groupsummary(dataTable, groupParam, @(x) mode(x), selectedParameter)   
+                % returns a table with groupParam in the first column, GroupCounts in the second and the mode in the third
+            % Find index of the column to rename
+            colIdx = strcmp(pivotedTable.Properties.VariableNames, ['fun1_' selectedParameter]);
+            pivotedTable.Properties.VariableNames{colIdx} = ['mode_' selectedParameter];   
+                % the column is named 'fun1_selectedParameter' -> change to 'mode_selectedParameter'
+            pivotedTable(:, ['mode_' selectedParameter])
+            tableCell{i} = pivotedTable(:, ['mode_' selectedParameter]);
+        else
+            % Create pivot table with the target parameter and group parameter
+            pivotedTable = pivotTable(dataTable, targetParam, groupParam, selectedParameter);
+            statisticsTable = computePivotTableStatistics(pivotedTable);
+            statisticsTable = renamevars(statisticsTable, statisticsTable.Properties.VariableNames, ...
+                        strcat(statisticsTable.Properties.VariableNames, '_', selectedParameter, '_by_', targetParam));
+            tableCell{i} = statisticsTable;
+        end
     end
+
+    tableCell
 
     % Combine the tables
     summarizedTable = horzcat(tableCell{:});

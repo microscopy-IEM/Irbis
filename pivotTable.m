@@ -10,7 +10,7 @@ function pivotedTable = pivotTable(inputTable, columnVarName, rowVarName, dataVa
     %   columnVarName    - Name of the variable to be used as columns in the pivot table.
     %   rowVarName       - Name of the variable to be used as rows in the pivot table.
     %   dataVarName      - Name of the variable to be used as data in the pivot table.
-    %   aggregationMethod - (Optional) Method to aggregate data in the pivot table. Default is "mean". Categorical data is only aggregated using "count".
+    %   aggregationMethod - (Optional) Method to aggregate data in the pivot table. Default is "mean". Categorical data is only aggregated using "mode".
     %   nRowBins         - (Optional) Number of bins for row variable. Default is "none". Can be used only if the variable is numerical.
     %   nColumnBins      - (Optional) Number of bins for column variable. Default is "none". Can be used only if the variable is numerical.
     %
@@ -25,7 +25,7 @@ function pivotedTable = pivotTable(inputTable, columnVarName, rowVarName, dataVa
     %   - The function checks if the specified row, column, and data variables exist in the input table.
     %   - If the number of input arguments is not 4 or 7, an error is raised.
     %   - If the row or column variables are not numeric, binning is disabled for those variables.
-    %   - If the data variable is categorical, the aggregation method is set to "count".
+    %   - If the data variable is categorical, the aggregation method is set to "mode".
     %   - If the data variable is logical, the aggregation method is set to "mean".
 
     % Ensure that selected variables are in the inputTable, raise error if not
@@ -83,7 +83,7 @@ function pivotedTable = pivotTable(inputTable, columnVarName, rowVarName, dataVa
     end
 
     if iscategorical(inputTable.(dataVarName))
-        aggregationMethod = "count";
+        aggregationMethod = "mode";    % changed to 'mode' (the most frequent category) from 'count'
     elseif islogical(inputTable.(dataVarName))
         aggregationMethod = "mean";
     end
