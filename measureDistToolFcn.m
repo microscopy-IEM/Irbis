@@ -110,6 +110,9 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         function distLineInitDrawFcn(~,~)
          
             ax.View = [0 90];
+            camorbit(ax,0.01,0.01)
+            camorbit(ax,-0.01,-0.01)
+
             distLinePoints = ax.CurrentPoint;
        
             distLineObj.XData(Idx) = distLinePoints(1,1);
@@ -215,6 +218,8 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             end
 
             ax.View = [0 90];
+            camorbit(ax,0.01,0.01)
+            camorbit(ax,-0.01,-0.01)
             
             distLinePoints = distLineObj.Vertices;            
             pointerPos = evt.IntersectionPoint;
@@ -274,6 +279,8 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             end
 
             ax.View = [0 90];
+            camorbit(ax,0.01,0.01)
+            camorbit(ax,-0.01,-0.01)
             
             pointerPos = evt.IntersectionPoint;
 
@@ -311,6 +318,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                     
                 fig.WindowButtonMotionFcn = WindowButtonMotionFcnOrig;
                 fig.WindowButtonUpFcn = WindowButtonUpFcnOrig;
+                fig.WindowButtonDownFcn = WindowButtonDownFcnOrig;
 
                 updateHistPlot
                                   
