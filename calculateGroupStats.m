@@ -48,7 +48,7 @@ function summarizedTable = calculateGroupStats(dataTable, groupParam, targetPara
         % added support for categorical parameters - those form just one column with a mode value (not divided to tps)
         selectedParameter = selectedParams{i};
         if iscategorical(dataTable.(selectedParameter))
-            pivotedTable = groupsummary(dataTable, groupParam, @(x) mode(x), selectedParameter)   
+            pivotedTable = groupsummary(dataTable, groupParam, @(x) mode(x), selectedParameter);
                 % returns a table with groupParam in the first column, GroupCounts in the second and the mode in the third
             % Find index of the column to rename
             colIdx = strcmp(pivotedTable.Properties.VariableNames, ['fun1_' selectedParameter]);
@@ -65,8 +65,6 @@ function summarizedTable = calculateGroupStats(dataTable, groupParam, targetPara
             tableCell{i} = statisticsTable;
         end
     end
-
-    tableCell
 
     % Combine the tables
     summarizedTable = horzcat(tableCell{:});
