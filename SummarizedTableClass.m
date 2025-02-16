@@ -41,7 +41,19 @@ classdef SummarizedTableClass < handle
 
             % Raise an error if the tables do not have the same number of rows
             assert(height(obj.summarizedTable) == height(newTable), 'Tables must have the same number of columns');
+
+            % Delete columns from the stored table, if they are present in the new table
+            obj.summarizedTable = removevars(obj.summarizedTable, intersect(obj.summarizedTable.Properties.VariableNames, newTable.Properties.VariableNames));
+
+            disp('These columns will be overwritten: ');
+            disp(intersect(obj.summarizedTable.Properties.VariableNames, newTable.Properties.VariableNames));
+            
+            % Add the new table to the stored table
             obj.summarizedTable = horzcat(obj.summarizedTable, newTable);
+
+            % Add the new columns to the tableStructure
+            obj.extractTableStructure(newTable);
+                % It should be fine if some columns are already present, it will just overwrite them
         end
 
 

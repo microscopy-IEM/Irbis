@@ -1,4 +1,14 @@
-function [selectedCategory, selectedCheckboxes] = summarizedTableDefinitionDialog(categoricalParameterNames, numericalParameterNames)
+function [selectedCategory, selectedCheckboxes] = summarizedTableDefinitionDialog(categoricalParameterNames, numericalParameterNames, varargin)
+
+    % varargin - first argument: checkboxStatus
+        % 1 - all checkboxes should be checked by default
+        % 0 - all checkboxes should be unchecked by default
+    if nargin > 2
+        checkboxStatus = varargin{1};
+    else 
+        checkboxStatus = 1;
+    end
+
     % Determine dialog size based on number of checkboxes
     checkboxHeight = 25;
     maxDialogHeight = 700; % Maximum height allowed for the dialog
@@ -32,7 +42,7 @@ function [selectedCategory, selectedCheckboxes] = summarizedTableDefinitionDialo
     for i = 1:numel(numericalParameterNames)
         checkboxHandles(i) = uicontrol('Parent', dlg, 'Style', 'checkbox', 'String', numericalParameterNames{i}, ...
                                        'Position', [20, dialogHeight - 140 - (i - 1) * checkboxHeight, 260, checkboxHeight], ...
-                                       'HorizontalAlignment', 'left', 'Value', 1); % Set all checkboxes to checked
+                                       'HorizontalAlignment', 'left', 'Value', checkboxStatus); % Set all checkboxes to checkboxStatus
     end
     
     % OK button
