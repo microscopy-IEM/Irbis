@@ -151,7 +151,10 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
                     verts(:,3) = verts(:,3)./scaleF;
     
                     % move the region to its origin position
-                    verts = verts + dxyz - 0.5;
+                    % verts = verts + dxyz - 0.5;
+                    % TO OPTIMIZE - learn why the extra "0.5/scaleF"
+                    % correction is needed and works bcause I dont know
+                    verts = verts + dxyz - 0.5 -0.5/scaleF;
     
                 case '2D'
     
@@ -169,11 +172,21 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
                     verts(:,2) = verts(:,2)./scaleF;
                    
                     % move the region to its origin position
-                    verts = verts + dxyz - 0.5;
+                    % verts = verts + dxyz - 0.5;
+
+                    % TO OPTIMIZE - learn why the extra "0.5/scaleF"
+                    % correction is needed and works bcause I dont know
+                    verts = verts + dxyz - 0.5 -0.5/scaleF;
                     
             end
         
             % convert vertices to micro-meters
+
+            % correct for quater pixel shift
+            % verts(:,1:2) = verts(:,1:2) - 0.25;
+            % verts(:,1:2) = verts(:,1:2) - 0.5;
+            % verts(:,3) = verts(:,3) - 0.5;
+
             verts(:,1:2) = verts(:,1:2).*pixel_size;
             verts(:,3) = verts(:,3).*z_spacing;       
                     
