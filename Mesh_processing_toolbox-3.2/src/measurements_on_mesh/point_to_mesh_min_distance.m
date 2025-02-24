@@ -1,4 +1,4 @@
-function min_dst = point_to_mesh_min_distance(P, V, T)
+function min_dst_return = point_to_mesh_min_distance(P, V, T)
 %% point_to_mesh_min_distance : function to compute
 % the minimum distance between a given 3D point and the mesh.
 % In case the point doesn't orthogonally project on a face/triangle,
@@ -27,42 +27,52 @@ function min_dst = point_to_mesh_min_distance(P, V, T)
 
 
 %% Body
-tic;
+    tic;
+    nPoints = size(P,1);
+    min_dst_return = nan(nPoints,1);
 
-% Step I : Orthogonnaly project P on H for each triangle planes
-[d2H,H] = cellfun(@(r) point_to_plane_distance(P,cross(V(r(1,2),:)-V(r(1,1),:),...
-                  V(r(1,3),:)-V(r(1,1),:),2),V(r(1,1),:)),num2cell(T,2),'un',0);
-
-% Step II : Keep only the H ones which are inside their triangles ; in case there
-% are none, take the min distance to the point set
-isin = cell2mat(cellfun(@(r1,r2) is_point_inside_triangle(V(r1,:),...
-                r2),num2cell(T,2),H,'un',0));
-
-dst_vect = [d2H{isin,:}];
-
-% Step III : Keep the minimum only
-min_dst = min(dst_vect);
-min_dst_2_pt_set = min(vecnorm((repmat(P,[size(V,1),1])-V)',2));
-
-
-if ~isempty(min_dst)
+    for pointInd = 1:nPoints
     
-    min_dst = min_dst(1,1);
-    
-    if min_dst > min_dst_2_pt_set
-       
-        min_dst = min_dst_2_pt_set;
+        % min_dst = [];
+
+        % Step I : Orthogonnaly project P on H for each triangle planes
+        [d2H,H] = cellfun(@(r) point_to_plane_distance(P(pointInd,:),cross(V(r(1,2),:)-V(r(1,1),:),...
+                          V(r(1,3),:)-V(r(1,1),:),2),V(r(1,1),:)),num2cell(T,2),'un',0);
+        
+        % Step II : Keep only the H ones which are inside their triangles ; in case there
+        % are none, take the min distance to the point set
+        isin = cell2mat(cellfun(@(r1,r2) is_point_inside_triangle(V(r1,:),...
+                        r2),num2cell(T,2),H,'un',0));
+        
+        dst_vect = [d2H{isin,:}];
+        
+        % Step III : Keep the minimum only
+        min_dst = min(dst_vect);
+        min_dst_2_pt_set = min(vecnorm((repmat(P(pointInd,:),[size(V,1),1])-V)',2));
+        
+        
+        if ~isempty(min_dst)
+            
+            min_dst = min_dst(1,1);
+            
+            if min_dst > min_dst_2_pt_set
+               
+                min_dst = min_dst_2_pt_set;
+                
+            end
+        
+        else
+            
+            % fprintf('Can''t find any triangle to orthogonally projet the point on.\nTake the minimum distance to the point set.\n');
+            min_dst = min_dst_2_pt_set;
+            
+        end
+
+        min_dst_return(pointInd) = min_dst;
         
     end
-
-else
     
-    fprintf('Can''t find any triangle to orthogonally projet the point on.\nTake the minimum distance to the point set.\n');
-    min_dst = min_dst_2_pt_set;
-    
-end
-
-fprintf('Point to mesh minimum distance computed in %d seconds.\n',toc);
+    fprintf('Point to mesh minimum distance computed in %d seconds.\n',toc);
 
 
 end % point_to_mesh_min_distance
