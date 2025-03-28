@@ -25,6 +25,29 @@ function combinedTable = combineTableAcrossTimepoints(cellList,varargin)
     [allColumns, ia] = unique(columnNames, 'stable');
     allClasses = columnClasses(ia);
 
+    % Identify columns with the same name but different data types
+    conflictingColumns = {};
+    for i = 1:length(allColumns)
+        colName = allColumns{i};
+        colIndices = find(strcmp(columnNames, colName));
+        
+        if length(colIndices) > 1
+            % Check if this column has different data types across tables
+            uniqueClasses = unique(columnClasses(colIndices));
+            if length(uniqueClasses) > 1
+                conflictingColumns{end+1} = colName;
+                warning('Column "%s" has multiple data types and will be removed.', colName);
+            end
+        end
+    end
+
+    % Remove conflicting columns from allColumns and allClasses
+    for col = conflictingColumns
+        colIdx = find(strcmp(allColumns, col{1}));
+        allColumns(colIdx) = [];
+        allClasses(colIdx) = [];
+    end
+
     % I need to incorporate the fact that the position in the array does not equal the timepoint
     % timePoint is equal to position of the corresponding index number in the currentIndex array
     % example: 
@@ -52,8 +75,15 @@ function combinedTable = combineTableAcrossTimepoints(cellList,varargin)
     % Loop through each time point
     for idx = 1:numel(cellList)
         tempTable = cellList{idx};  % Get the table from the cell array
-        % Add missing columns with NaNs
+        % Remove columns with conflicting data types
         if istable(tempTable) && ~isempty(tempTable)
+            for col = conflictingColumns
+                if ismember(col{1}, tempTable.Properties.VariableNames)
+                    tempTable(:, col{1}) = [];
+                end
+            end
+            
+            % Add missing columns with NaNs
             missingCols = setdiff(allColumns, tempTable.Properties.VariableNames);
             for col = missingCols
                 colIdx = find(strcmp(allColumns, col));
