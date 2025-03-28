@@ -65,13 +65,18 @@ classdef BatchLoader < handle
             newDataStruct = struct();
             if ismember('model', obj.modalities)
                 branches = fieldnames(obj.combinedTablesModel);
+                usedBranches = {};
                 for i = 1:length(branches)
                     branch = branches{i};
-                    newDataStruct.model.(branch).combinedList = combineTableAcrossTimepoints(obj.combinedTablesModel.(branch));
-                    newDataStruct.model.(branch).storedCategorizations = CategorizationStorage();
-                    newDataStruct.model.(branch).storedFilters = FilteringStorage();
+                    combinedList = combineTableAcrossTimepoints(obj.combinedTablesModel.(branch));
+                    if ~isempty(combinedList)    % store only non-empty branches
+                        usedBranches{end+1} = branch;
+                        newDataStruct.model.(branch).combinedList = combinedList;
+                        newDataStruct.model.(branch).storedCategorizations = CategorizationStorage();
+                        newDataStruct.model.(branch).storedFilters = FilteringStorage();
+                    end
                 end
-                newDataStruct.model.branches = reshape(branches, 1, []);
+                newDataStruct.model.branches = reshape(usedBranches, 1, []);
 
             end
             if ismember('tracks', obj.modalities)
@@ -255,6 +260,8 @@ classdef BatchLoader < handle
         function cleanEmptyModalities(obj)
             if ismember('model', obj.modalities) && isempty(obj.combinedTablesModel)
                 obj.modalities = setdiff(obj.modalities, 'model');
+                % clean also unused branches
+
             end
             if ismember('tracks', obj.modalities) && isempty(obj.combinedTablesTracks)
                 obj.modalities = setdiff(obj.modalities, 'tracks');
