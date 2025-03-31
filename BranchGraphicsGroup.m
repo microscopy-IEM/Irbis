@@ -1,8 +1,8 @@
-classdef GraphicsObjectGroup < handle
+classdef BranchGraphicsGroup < handle
 
     % A class for managing groups of 3D graphics objects in MATLAB
     %
-    % The GraphicsObjectGroup class provides functionality to manage collections of
+    % The BranchGraphicsGroup class provides functionality to manage collections of
     % 3D graphics objects (patches) with shared properties and behaviors. It handles
     % object creation, deletion, visibility, appearance, and interactive features.
     %
@@ -20,7 +20,7 @@ classdef GraphicsObjectGroup < handle
     %   tag              - String identifier for the group
     %
     % Methods:
-    %   GraphicsObjectGroup - Constructor
+    %   BranchGraphicsGroup - Constructor
     %   setVisibility      - Set visibility state of non-excluded objects
     %   setLightingMethod  - Set lighting method for non-excluded objects
     %   setTransparency    - Set transparency level for non-excluded objects
@@ -30,16 +30,19 @@ classdef GraphicsObjectGroup < handle
     %   initializeGroup   - Create initial set of graphics objects
     %   addGraphicsObjects - Add or update objects in the group
     %   plotObject        - Create a single graphics object
+    %   reorganizeTableData - Reorganize table data to match objectIdArray order
     %
     % Example:
     %   axes = gca;
-    %   group = GraphicsObjectGroup(axes, 'myGroup', 'gouraud', 0.5, [1 0 0]);
+    %   group = BranchGraphicsGroup(axes, 'myGroup', 'gouraud', 0.5, [1 0 0]);
     %   group.initializeGroup(vertices, faces, ids, @clickCallback);
 
     properties
-        objectIdArray              % Array of object IDs
         GraphicsHandles % Array of graphics object handles
-        excluded
+        objectIdArray              % Array of object IDs
+        excluded          % Logical array indicating which objects are excluded from operations
+        selected    % Logical array indicating which objects are selected
+
         visible = "on" % Visibility state of the objects
 
         color
@@ -49,16 +52,18 @@ classdef GraphicsObjectGroup < handle
         parentAxes % Parent axes for the graphics objects
         buttonDownCallback % Callback function for button down press
         callbackEnabled
+        selectionColor
 
         tag
     end
 
     methods
         % Constructor
-        function obj = GraphicsObjectGroup(parentAxes, tag, lightingMethod, transparency, color)
+        function obj = BranchGraphicsGroup(parentAxes, tag, lightingMethod, selectionColor, transparency, color)
             obj.parentAxes = parentAxes;
             obj.tag = tag;
             obj.lightingMethod = lightingMethod;
+            obj.selectionColor = selectionColor;
             obj.transparency = transparency;
             obj.color = color;
             obj.visible = "on";
@@ -128,8 +133,44 @@ classdef GraphicsObjectGroup < handle
             end
         end
 
+        function setSelected(obj, selected, contextMenuHandle)
+            arguments
+                obj
+                selected (1,:) logical
+                contextMenuHandle
+            end
+            obj.selected = selected;
+            % Set the selected property for each graphics object
+            set(obj.GraphicsHandles(obj.selected), 'Selected', "on");
+            set(obj.GraphicsHandles(~obj.selected), 'Selected', "off");
 
+            % Update the selection color for selected objects
+            set(obj.GraphicsHandles(obj.selected), 'FaceColor', obj.selectionColor);
+            % Reset the color for non-selected objects
+            if iscell(obj.color)
+                for i = 1:length(obj.GraphicsHandles)
+                    if ~obj.selected(i) && ~obj.excluded(i)
+                        set(obj.GraphicsHandles(i), 'FaceColor', obj.color{i});
+                    end
+                end
+            else
+                set(obj.GraphicsHandles(~obj.selected), 'FaceColor', obj.color);
+            end
 
+            % Add contextMenu function to selected objects
+            if ~isempty(contextMenuHandle) && isvalid(contextMenuHandle)
+                set(obj.GraphicsHandles(obj.selected), 'ContextMenu', contextMenuHandle);
+            end
+        end
+
+        function setSelectionColor(obj, color)
+            arguments
+                obj
+                color (1,3) double {mustBeInRange(color, 0, 1)}
+            end
+            obj.selectionColor = color;
+            set(obj.GraphicsHandles(obj.selected), 'FaceColor', color);
+        end
 
         % Method to delete graphics objects explicitly
         function deleteGraphics(obj)
@@ -142,6 +183,29 @@ classdef GraphicsObjectGroup < handle
         % Destructor (when class instance is deleted)
         function delete(obj)
             obj.deleteGraphics();
+        end
+
+        function deleteObjects(obj, objectIds)
+            % Delete objects with specified IDs
+            if isempty(objectIds)
+                return;
+            end
+
+            for i = 1:numel(objectIds)
+                idx = find(strcmp(obj.objectIdArray, objectIds{i}), 1);
+                if ~isempty(idx) && isvalid(obj.GraphicsHandles(idx))
+                    delete(obj.GraphicsHandles(idx));
+                    obj.GraphicsHandles(idx) = [];
+                    obj.objectIdArray(idx) = [];
+                    obj.excluded(idx) = []; % Remove the excluded status for the deleted object
+                    obj.selected(idx) = []; % Remove the selected status for the deleted object
+
+                    % Do the same for color, if it is a cell array
+                    if iscell(obj.color)
+                        obj.color(idx) = []; % Remove the color for the deleted object
+                    end
+                end
+            end
         end
 
         function initializeGroup(obj, verticesArray, facesArray, idArray, buttonDownCallback)
@@ -280,7 +344,73 @@ classdef GraphicsObjectGroup < handle
             end
         end
 
+        function [verticesArray, facesArray, colorArray] = reorganizeTableData(obj, dataTable, verticesCol, facesCol, colorCol)
+            % Reorganizes data from a table to match the order of objectIdArray
+            %
+            % Parameters:
+            %   dataTable   - Table with row names as object IDs
+            %   verticesCol - Name of column containing vertices data
+            %   facesCol    - Name of column containing faces data
+            %   colorCol    - Name of column containing color data (optional)
+            %
+            % Returns:
+            %   verticesArray - Cell array of vertices in objectIdArray order
+            %   facesArray    - Cell array of faces in objectIdArray order
+            %   colorArray    - Cell array of colors in objectIdArray order (if specified)
+            
+            % Validate inputs
+            arguments
+                obj
+                dataTable table
+                verticesCol string
+                facesCol string
+                colorCol string = ""
+            end
+            
+            % Check if table has row names
+            if ~ismember('RowNames', dataTable.Properties.DimensionNames)
+                error('Input table must have row names as object IDs');
+            end
+            
+            % Get row names as IDs
+            tableIds = dataTable.Properties.RowNames;
+            
+            % Initialize output arrays
+            n = length(obj.objectIdArray);
+            verticesArray = cell(n, 1);
+            facesArray = cell(n, 1);
+            colorArray = cell(n, 1);
+            
+            % For each ID in objectIdArray, find corresponding row in table
+            for i = 1:n
+                currentId = obj.objectIdArray{i};
+                rowIdx = find(strcmp(tableIds, currentId));
                 
+                if isempty(rowIdx)
+                    warning('Object ID "%s" not found in table', currentId);
+                    verticesArray{i} = [];
+                    facesArray{i} = [];
+                    colorArray{i} = [];
+                else
+                    % Extract data for this ID
+                    verticesArray{i} = dataTable{rowIdx, verticesCol};
+                    facesArray{i} = dataTable{rowIdx, facesCol};
+                    
+                    % Extract color if specified
+                    if ~isempty(colorCol) && ismember(colorCol, dataTable.Properties.VariableNames)
+                        colorArray{i} = dataTable{rowIdx, colorCol};
+                    else
+                        colorArray{i} = [];
+                    end
+                end
+            end
+            
+            % If color column wasn't specified, return empty
+            if isempty(colorCol) || ~ismember(colorCol, dataTable.Properties.VariableNames)
+                colorArray = [];
+            end
+        end
+
         function objectHandle = plotObject(obj, vertices, faces, id, color, visibilityStatus, selectionStatus)
 
             % Create a patch object for the current object
