@@ -6,15 +6,16 @@ classdef ListHandler()
         List                % Cell array of tables
         currentTableId 
         timelineHandle
-
     end
 
     methods
-
-
-        function getCurrentTable()
+        function getCurrentTable(obj)
         end
 
-        function getTableForTimepoint()
+        function getTableForTimepoint(obj, timepoint)
+            % Get the table for a specific timepoint
+
+            % Get cellId from the timepoint
+            cellId = timelineHandle.getCellIdForTimepoint(timepoint);
         end
     end

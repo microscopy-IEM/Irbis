@@ -80,5 +80,24 @@ classdef BranchGraphicsManager < handle
                 end
             end
         end
+
+        function setSelectableBranches(obj, branches)
+            % Set the selectable branches for all groups
+            fields = fieldnames(obj.dataStruct);
+            for i = 1:numel(fields)
+                branch = fields{i};
+                groupHandle = obj.dataStruct.(branch);
+                if ~isempty(groupHandle)
+                    if ismember(branch, branches)
+                        % set pickableParts to 'visible'
+                        groupHandle.setPickableParts('visible'); % Make the group selectable
+                    else
+                        % set pickableParts to 'none'
+                        groupHandle.setPickableParts('none'); % Make the group non-selectable
+                        groupHandle.deselectAll(); % Deselect the group if it is not selectable
+                    end
+                end
+            end
+        end
     end
 end

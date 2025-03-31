@@ -44,6 +44,7 @@ classdef BranchGraphicsGroup < handle
         selected    % Logical array indicating which objects are selected
 
         visible = "on" % Visibility state of the objects
+        pickableParts = "visible" % Pickable parts of the objects
 
         color
         transparency
@@ -53,6 +54,8 @@ classdef BranchGraphicsGroup < handle
         buttonDownCallback % Callback function for button down press
         callbackEnabled
         selectionColor
+        
+        contextMenuHandle % Context menu handle for right-click actions
 
         tag
     end
@@ -104,6 +107,14 @@ classdef BranchGraphicsGroup < handle
             set(obj.GraphicsHandles(~obj.excluded), 'Visible', obj.visible);
         end
 
+        function setPickableParts(obj, pickableParts)
+            arguments
+                obj
+                pickableParts {mustBeMember(pickableParts, ["visible", "all", "none"])}
+            end
+            set(obj.GraphicsHandles(~obj.excluded), 'PickableParts', pickableParts);
+        end
+
         function setColor(obj, color)
             arguments
             obj
@@ -131,6 +142,39 @@ classdef BranchGraphicsGroup < handle
             else
             error('Color must be either a 1x3 double array or cell array of 1x3 doubles');
             end
+        end
+
+        function deselectAllAndChangeSelectionForId(obj, id)
+
+            idx = find(strcmp(id, obj.objectIdArray), 1);
+
+            if isempty(idx)
+                error('Object with ID "%s" not found in the group.', id);
+            end
+
+            selectionState = obj.selected(idx);
+            obj.selected(:) = false; % Deselect all objects
+            obj.selected(idx) = ~selectionState; % Toggle the selection state of the specified object
+
+            obj.setSelected(obj.selected, obj.contextMenuHandle); % Update the selection state of all objects
+        end
+
+        function changeSelectionForId(obj)
+            idx = find(strcmp(id, obj.objectIdArray), 1);
+
+            if isempty(idx)
+                error('Object with ID "%s" not found in the group.', id);
+            end
+
+            selectionState = obj.selected(idx);
+            obj.selected(idx) = ~selectionState; % Toggle the selection state of the specified object
+
+            obj.setSelected(obj.selected, obj.contextMenuHandle); % Update the selection state of all objects
+        end
+
+        function deselectAll(obj)
+            obj.selected(:) = false; % Deselect all objects
+            obj.setSelected(obj.selected, obj.contextMenuHandle); % Update the selection state of all objects
         end
 
         function setSelected(obj, selected, contextMenuHandle)
