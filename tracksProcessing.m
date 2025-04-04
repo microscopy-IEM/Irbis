@@ -71,11 +71,24 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         % calculate mean displacement
                   
         disp = sqrt(sum(diff(coor).^2,2));
+
+        
         
         mean_disp = mean(disp);  
         
         
         disp = sqrt(sum(diff(coor_nan).^2,2));
+
+        % calculate cumulative distance to origin
+        % dist2origin = cumsum(disp);
+
+        D = pdist(coor);
+        Z = squareform(D);
+        temp = Z(:,1);
+        
+        dist2origin(:,1) = 1:length(temp);
+        dist2origin(:,2) = temp
+
 
         % calculate instanetaneous velocity
         dT = tracks.frameInterval{1};
@@ -133,6 +146,7 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
            
         T.disp(TrackNum) = {disp};
         T.velocity(TrackNum) = {velocity};
+        T.dist2origin(TrackNum) = {dist2origin};
 
         % T.runMean_disp(TrackNum) = {runMean_disp};
     
