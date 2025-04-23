@@ -51,8 +51,7 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
             maxGap = max(gap_lengths); % num of missing frames in longest gap
             % numOfGaps = size(gap_ind,1);
         end
-           
-    
+               
         % tracks witnout NaN
         coor = coor_nan(~isnan(coor_nan(:,1)),:);
         
@@ -73,7 +72,6 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         disp = sqrt(sum(diff(coor).^2,2));
 
         
-        
         mean_disp = mean(disp);  
         
         
@@ -86,8 +84,8 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         Z = squareform(D);
         temp = Z(:,1);
         
-        dist2origin(:,1) = 1:length(temp);
-        dist2origin(:,2) = temp
+        % dist2origin(:,1) = 1:length(temp);
+        % dist2origin(:,2) = temp
 
 
         % calculate instanetaneous velocity
@@ -146,7 +144,7 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
            
         T.disp(TrackNum) = {disp};
         T.velocity(TrackNum) = {velocity};
-        T.dist2origin(TrackNum) = {dist2origin};
+        % T.dist2origin(TrackNum) = {dist2origin};
 
         % T.runMean_disp(TrackNum) = {runMean_disp};
     
