@@ -43,7 +43,9 @@ classdef ColumnDefinitionCombiner
 
             switch definitionType
                 case 'categorization'
-                    cond
+                    conds1 = firstDefinition.getConditions();
+                    conds2 = secondDefinition.getConditions();
+                    areEqual = ColumnDefinitionCombiner.conditionsAreEqual(conds1, conds2);
                 case {'formula', 'merged'}  % the formula is a text we compare
                     areEqual = isequal(firstDefinition.getFormula(), secondDefinition.getFormula());
                     % TO OPTIMIZE - different texts can be the same formula, we do not take that into account - too difficult to check

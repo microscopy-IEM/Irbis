@@ -159,6 +159,9 @@ classdef FilteringStorage < GroupingStorageBaseClass
 
         function activateFilter(obj, name)
             idx = obj.findGroupingIndexByName(name);
+            if isequal(idx, -1)
+                error(['Filter with name "', name, '" not found.']);
+            end
             filter = obj.Groupings{idx};
             filter.Active = true;
 
@@ -167,6 +170,9 @@ classdef FilteringStorage < GroupingStorageBaseClass
 
         function inactivateFilter(obj, name)
             idx = obj.findGroupingIndexByName(name);
+            if isequal(idx, -1)
+                error(['Filter with name "', name, '" not found.']);
+            end
             filter = obj.Groupings{idx};
             filter.Active = false;
 

@@ -408,7 +408,8 @@ classdef (Sealed) AppStateManager < handle
                 end
                 
                 % Create a DataStore that holds both TableStore and FilteringStorage
-                filteringStorage = FilteringStorage();
+                loadedFilteringStorages = newDataStruct.tracks.storedFilters;    % this should be a cell containing FilteringStorage objects
+                filteringStorage = FilteringStorageCombiner.combineStorage(loadedFilteringStorages);
                 dataStore = DataStore(tableStore, filteringStorage);
                 
                 % Store the DataStore in the ModalityDataStore
@@ -426,12 +427,10 @@ classdef (Sealed) AppStateManager < handle
         end
 
 
-        function addStoredColumnDefinitionsToTableStore(~, tableStore, storedCategorizations, namesToRecalculate)
+        function addStoredColumnDefinitionsToTableStore(~, tableStore, definitionList, namesToRecalculate)
             % Add stored categorizations to the table store
-            if ~isempty(storedCategorizations)
-                % extract the stored column definitions from the CategorizationStorage - stored like this for legacy reasons
-                allDefinitions = storedCategorizations.getCategorizationList();
-                tableStore.addExistingUserColumnDefinitions(allDefinitions, namesToRecalculate);
+            if ~isempty(definitionList)
+                tableStore.addExistingUserColumnDefinitions(definitionList, namesToRecalculate);
             end
         end
         
@@ -509,9 +508,9 @@ classdef (Sealed) AppStateManager < handle
 
         function getAndStoreActiveData(obj)
             if isempty(obj.branch)  % happens for modalities that do not have branches (like tracks)
-                modalityPath = {obj.modality};
+                modalityPath = {obj.modality}
             else
-                modalityPath = {obj.modality, obj.branch};
+                modalityPath = {obj.modality, obj.branch}
             end
 
             % Get the DataStore from ModalityDataStore

@@ -17,7 +17,18 @@ classdef Categorization < handle
             definitionType = obj.definitionType;
         end
 
+        function columnName = getColumnName(obj)
+            % Returns the name of the column
+            % Returns: string of the column name
+            columnName = obj.CategorizationName;
+        end
+
         function conditions = getConditions(obj)
+            conditions = obj.Conditions;
+        end
+
+        function conditions = getRules(obj)
+            % The same as getConditions, added for compatibility with other classes
             conditions = obj.Conditions;
         end
 

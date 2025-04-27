@@ -241,11 +241,11 @@ classdef BatchLoader < handle
             % tempCombinedTablesModel = configureDictionary("string", "cell");
             % tempCombinedTablesTracks = {};
             
-            if ismember('model', obj.modalities) && isprop(matf, 'model')
+            if ismember('model', obj.modalities) && (isprop(matf, 'model') || isfield(matf, 'model'))   % isprop works for batch mode and isfield for single mode
                 tempStructModel = obj.processModelData(matf, fileName, fileIdx);
             end
             
-            if ismember('tracks', obj.modalities) && isprop(matf, 'tracks')
+            if ismember('tracks', obj.modalities) && (isprop(matf, 'tracks')|| isfield(matf, 'tracks'))
                 tempStructTracks = obj.processTrackData(matf, fileName, fileIdx);
             end
         end

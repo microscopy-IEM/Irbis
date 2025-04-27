@@ -37,7 +37,8 @@ classdef (Sealed) TableStore < handle
                 disp('Adding existing user column definitions to the table data...')
                 % add existing user-defined columns to the table data
                 for i = 1:numel(userColumnDefinitions)
-                    columnName = userColumnDefinitions{i}.getColumnName();
+                    columnName = char(userColumnDefinitions{i}.getColumnName()); % <--- force char
+            
                     if ~ismember(columnName, obj.userDefinedColumns)
                         obj.userDefinedColumns{end+1} = columnName;
                         obj.userColumnDefinitions{end+1} = userColumnDefinitions{i};
@@ -45,7 +46,7 @@ classdef (Sealed) TableStore < handle
                             obj.editableColumns{end+1} = columnName;
                         end
                     end
-
+            
                     % Reapply the column definition if the name is in columnsToRecalculate
                     if ismember(columnName, columnsToRecalculate)
                         columnData = userColumnDefinitions{i}.generateColumn(obj.tableData);
