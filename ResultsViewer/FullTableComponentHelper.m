@@ -65,7 +65,7 @@ classdef FullTableComponentHelper < handle
 
 
         function calculateTreeData(obj)
-            disp('calculateTreeData called');
+            % disp('calculateTreeData called');
             delete(obj.treeHandle.Children); % delete all nodes in the tree
             obj.treeHandle.CheckedNodes = []; % clear checked nodes
             % numeric parameters
@@ -419,10 +419,13 @@ classdef FullTableComponentHelper < handle
         function removeTemplate(obj, templateName)
             % remove the template from the list of templates
             idx = find(strcmp(obj.templateNames, templateName), 1);
-            if ~isempty(idx)
-                obj.templateNames(idx) = [];
-                obj.templates(idx) = [];
+            if isempty(idx)
+                disp(['template "', templateName, '" not found.']);
+                return
             end
+
+            obj.templateNames(idx) = [];
+            obj.templates(idx) = [];
 
             fig = ancestor(obj.componentHandle, 'figure');
             saveToSettingsFolder(obj.templates, obj.templateFileName, fig);    % atm, I will make a separate folder for each table type
@@ -433,30 +436,32 @@ classdef FullTableComponentHelper < handle
         function useTemplate(obj, templateName)
             % use the template to create a new column
             idx = find(strcmp(obj.templateNames, templateName), 1);
-            if ~isempty(idx)
-                userColumnDefinition = obj.templates{idx};
-                columnName = userColumnDefinition.getColumnName();
-                existingNames = obj.tableStoreHandle.getUserDefinedColumnNames();
-                newName = FullTableComponentHelper.getUnusedNameCopy(columnName, existingNames);
+            if isempty(idx)
+                disp(['template "', templateName, '" not found.']);
+                return
+            end
+            userColumnDefinition = obj.templates{idx};
+            columnName = userColumnDefinition.getColumnName();
+            existingNames = obj.tableStoreHandle.getUserDefinedColumnNames();
+            newName = FullTableComponentHelper.getUnusedNameCopy(columnName, existingNames);
 
-                rules = userColumnDefinition.getRules();
-                switch userColumnDefinition.getDefinitionType()   % TO OPTIMIZE - this should be extracted, we depend on specifics here
-                    case 'categorization'
-                        newColumnDefinition = Categorization(newName, rules);
-                    case 'formula'
-                        newColumnDefinition = FormulaColumnDefinition(newName, rules);
-                    case 'merged'
-                        newColumnDefinition = FormulaColumnDefinition(newName, rules);
-                        newColumnDefinition.setDefinitionType('merged');
-                    case 'manual'
-                        newColumnDefinition = ManualColumnDefinition(newName, rules);
-                end
+            rules = userColumnDefinition.getRules();
+            switch userColumnDefinition.getDefinitionType()   % TO OPTIMIZE - this should be extracted, we depend on specifics here
+                case 'categorization'
+                    newColumnDefinition = Categorization(newName, rules);
+                case 'formula'
+                    newColumnDefinition = FormulaColumnDefinition(newName, rules);
+                case 'merged'
+                    newColumnDefinition = FormulaColumnDefinition(newName, rules);
+                    newColumnDefinition.setDefinitionType('merged');
+                case 'manual'
+                    newColumnDefinition = ManualColumnDefinition(newName, rules);
+            end
 
-                newColumnData = userColumnDefinition.generateColumn(obj.tableStoreHandle.getTableData());
-                obj.tableStoreHandle.addUserDefinedColumn(newName, newColumnData, newColumnDefinition);
-                if strcmp(userColumnDefinition.getDefinitionType(), 'manual')
-                    obj.tableStoreHandle.makeColumnEditable(newName);
-                end
+            newColumnData = userColumnDefinition.generateColumn(obj.tableStoreHandle.getTableData());
+            obj.tableStoreHandle.addUserDefinedColumn(newName, newColumnData, newColumnDefinition);
+            if strcmp(userColumnDefinition.getDefinitionType(), 'manual')
+                obj.tableStoreHandle.makeColumnEditable(newName);
             end
         end
 
@@ -486,7 +491,7 @@ classdef FullTableComponentHelper < handle
                         % extract the categorization and store it
                         newCategorization = Categorization(newName, conditions);
                         obj.templates{idx} = newCategorization; % this way, we do not preserve the original settings with the original name (different for editing columns)
-                        obj.templateNames{idx} = newName;
+                        obj.templateNames{idx} = char(newName);
                     end
 
                 case 'formula'
@@ -503,7 +508,7 @@ classdef FullTableComponentHelper < handle
                             % create the column definition object
                             columnDefinitionObject = FormulaColumnDefinition(columnName, formulaString);
                             obj.templates{idx} = columnDefinitionObject;
-                            obj.templateNames{idx} = columnName;
+                            obj.templateNames{idx} = char(columnName);
                         end
                     end
 
@@ -522,7 +527,7 @@ classdef FullTableComponentHelper < handle
                                 % create the column definition object
                                 columnDefinitionObject = FormulaColumnDefinition(name, formula); % create the column definition object
                                 obj.templates{idx} = columnDefinitionObject;
-                                obj.templateNames{idx} = name;
+                                obj.templateNames{idx} = char(name);
                             end
                         end
                     end
@@ -542,7 +547,7 @@ classdef FullTableComponentHelper < handle
                             groupNames = groupNames(~cellfun('isempty', groupNames));
                             columnDefinitionObject = ManualColumnDefinition(name, groupNames);
                             obj.templates{idx} = columnDefinitionObject;
-                            obj.templateNames{idx} = name;
+                            obj.templateNames{idx} = char(name);
                         end
                     end
             end
@@ -646,7 +651,7 @@ classdef FullTableComponentHelper < handle
             % Load the data from the specified file
             loadedData = load(settingsFileName, 'templatesToStore', 'templateType');
 
-            if ~strcmp(loadData.templateType, 'full')
+            if ~strcmp(loadedData.templateType, 'full')
                 disp('The selected file does not contain the correct template type.');
                 return;
             end
@@ -677,7 +682,7 @@ classdef FullTableComponentHelper < handle
 
 
         function templateNames = getTemplateNames(obj)
-            templateNames = obj.templateNames;
+            templateNames = obj.templateNames
         end
 
 
@@ -727,13 +732,16 @@ classdef FullTableComponentHelper < handle
             end
 
             if settingsExist
-                fileContent = importdata(filename);
-                if isfield(fileContent, 'templates')
-                    obj.templates = fileContent.templates;
+                % fileContent = importdata(filename);
+                % assignin("base", "fileContent", fileContent); % for debugging purposes
+                % fileContent = fileContent.data;  % The saveToSettingsFolder function saves the data in a struct with the field 'data'
+                % if isfield(fileContent, 'templates')
+                    % obj.templates = fileContent.templates;
+                    obj.templates = importdata(filename);
                     obj.templateNames = cellfun(@(template) template.getColumnName(), obj.templates, 'UniformOutput', false);
-                else
-                    disp('No templates found in the internal settings file.');
-                end
+                % else
+                %     disp('No templates found in the internal settings file.');
+                % end
             else
                 disp('No internal settings file found. Templates will not be loaded.');
             end
@@ -812,6 +820,12 @@ classdef FullTableComponentHelper < handle
     methods (Static, Access = private)
         function newName = getUnusedNameCopy(columnName, existingNames)
 
+            % Check if the columnName is not used at all
+            if ~any(strcmp(existingNames, columnName))
+                newName = columnName;
+                return;
+            end
+
             % Initialize a set to track used numbers
             usedNumbers = false(1, 1000); % Assuming a reasonable upper limit for numbers
 
@@ -820,16 +834,16 @@ classdef FullTableComponentHelper < handle
             
             % Loop through the list and find all names that match the pattern
             for i = 1:length(existingNames)
-            currentName = existingNames{i};
-            
-            % Check for columnName_num format
-            tokens = regexp(currentName, pattern, 'tokens');
-            if ~isempty(tokens)
-                number = str2double(tokens{1}{1});
-                if number > 0
-                usedNumbers(number) = true; % Mark the number as used
+                currentName = existingNames{i};
+                
+                % Check for columnName_num format
+                tokens = regexp(currentName, pattern, 'tokens');
+                if ~isempty(tokens)
+                    number = str2double(tokens{1}{1});
+                    if number > 0
+                    usedNumbers(number) = true; % Mark the number as used
+                    end
                 end
-            end
             end
             
             % Find the lowest unused number

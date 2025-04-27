@@ -126,6 +126,7 @@ classdef (Sealed) AppStateManager < handle
 
         function generateFilteringMenuStateManager(obj)
             [processorHandles, tableTypes] = obj.getTableProcessorHandles();
+            tableTypes
             if any(strcmp(tableTypes, 'Summarized'))
                 summarizedIndex = find(strcmp(tableTypes, 'Summarized'), 1);
                 processorHandle = processorHandles{summarizedIndex};
@@ -188,6 +189,8 @@ classdef (Sealed) AppStateManager < handle
             obj.multitableSynchronizer = MultitableSynchronizer(name, topProcessorHandle, bottomProcessorHandle);
             isShown = true;
 
+            obj.generateFilteringMenuStateManager();
+
             notify(obj, 'tableTypeChanged')
         end
 
@@ -196,6 +199,8 @@ classdef (Sealed) AppStateManager < handle
             if isa(obj.bottomTableStateManagerHandle, 'handle') && isvalid(obj.bottomTableStateManagerHandle)
                 delete(obj.bottomTableStateManagerHandle)
             end
+
+            obj.generateFilteringMenuStateManager();
 
             notify(obj, 'tableTypeChanged')
         end
@@ -292,7 +297,7 @@ classdef (Sealed) AppStateManager < handle
                 state.topTable.type = tableTypes{1};
                 state.topTable.processorState = processorHandles{1}.getState();
 
-                if length(processorHandles) > 1 && isa(processorHandles{2}, 'TableProcessor')
+                if length(processorHandles) > 1
                     state.bottomTable.type = tableTypes{2};
                     state.bottomTable.processorState = processorHandles{2}.getState();
                 end
@@ -323,6 +328,18 @@ classdef (Sealed) AppStateManager < handle
                     obj.topTableStateManagerHandle.setState(state.topTable.processorState);
                 end
             end
+
+            if isfield(state, 'bottomTable')
+                if isfield(state.bottomTable, 'type')
+                    obj.showSummarizedAndIndicateSuccess();
+                end
+                if isfield(state.bottomTable, 'processorState')
+                    obj.bottomTableStateManagerHandle.setState(state.bottomTable.processorState);
+                end
+            end
+
+            obj.generateFilteringMenuStateManager();
+
             % if isfield(state, 'bottomTable')
             %     if isfield(state.bottomTable, 'type')
             %         obj.bottomTableStateManagerHandle.changeTableType(state.bottomTable.type);

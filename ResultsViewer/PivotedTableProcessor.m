@@ -119,10 +119,11 @@ classdef (Sealed) PivotedTableProcessor < handle
             end
 
             obj.processDataWithoutNotification(); 
-            obj.pivotedTable = obj.pivotedTable(isKept, :);
+            if ~isempty(isKept)
+                obj.pivotedTable = obj.pivotedTable(isKept, :);
+            end
 
             notify(obj, 'tableForDisplayChanged');
-
         end
 
 
