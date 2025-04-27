@@ -132,6 +132,19 @@ classdef SummarizedTableStore < handle
                 for i = length(missingUserDefinedColumns):-1:1
                     colName = missingUserDefinedColumns{i};
                     % Remove the column from the cached data
+                    if ismember(colName, obj.cachedTableData.Properties.VariableNames)
+                        obj.cachedTableData.(colName) = [];
+                    end
+
+                    % Create the column using its definition
+                    defIdx = find(cellfun(@(x) strcmp(x.getColumnName(), colName), obj.columnDefinitionHandles));
+                    if ~isempty(defIdx)
+                        requiredColumnNames = obj.columnDefinitionHandles{defIdx}.getRequiredColumnNames();
+                        requiredTableSubset = obj.tableStoreHandle.getTableSubsetByName(requiredColumnNames);
+                        newData = obj.columnDefinitionHandles{defIdx}.generateColumn(requiredTableSubset);
+                        obj.cachedTableData.(colName) = newData;
+                    end
+                    % Remove the column from the cached data
                     % Create from the userDefinedColumnRules
                 end
                 % Find the column definitions for missing columns

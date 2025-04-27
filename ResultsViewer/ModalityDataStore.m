@@ -39,7 +39,7 @@ classdef (Sealed) ModalityDataStore < handle
                         paths{end+1} = {fields{i}, subfields{j}};
                     end
                 else
-                    paths{end+1} = {fields{i}};
+                    paths{end+1} = fields(i);
                 end
             end
         end

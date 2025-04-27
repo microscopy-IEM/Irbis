@@ -10,7 +10,7 @@ classdef FilteringStorageCombiner
             if isequal(numel(storageArray), 1) && isa(storageArray{1}, 'FilteringStorage')
                 % If only one storage, return it directly
                 % This should allow syncing between the main app and ResultsViewer
-                disp('Only one FilteringStorage instance provided. Returning it directly.');
+                % disp('Only one FilteringStorage instance provided. Returning it directly.');
                 combinedStorage = storageArray{1};
                 return
             end

@@ -126,7 +126,6 @@ classdef (Sealed) AppStateManager < handle
 
         function generateFilteringMenuStateManager(obj)
             [processorHandles, tableTypes] = obj.getTableProcessorHandles();
-            tableTypes
             if any(strcmp(tableTypes, 'Summarized'))
                 summarizedIndex = find(strcmp(tableTypes, 'Summarized'), 1);
                 processorHandle = processorHandles{summarizedIndex};
@@ -525,9 +524,9 @@ classdef (Sealed) AppStateManager < handle
 
         function getAndStoreActiveData(obj)
             if isempty(obj.branch)  % happens for modalities that do not have branches (like tracks)
-                modalityPath = {obj.modality}
+                modalityPath = {obj.modality};
             else
-                modalityPath = {obj.modality, obj.branch}
+                modalityPath = {obj.modality, obj.branch};
             end
 
             % Get the DataStore from ModalityDataStore

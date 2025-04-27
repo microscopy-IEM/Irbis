@@ -234,7 +234,7 @@ classdef DataFormatter < handle
             end
         end
 
-        function integratedData = integrateData(obj, primaryData, secondaryData)
+        function integratedData = integrateData(~, primaryData, secondaryData)
             if isempty(primaryData)
                 integratedData = secondaryData;
             elseif isempty(secondaryData)
@@ -520,7 +520,7 @@ classdef DataFormatter < handle
         % end
 
 
-        function combinedMatrix = reorganizeCellArray(obj, cellArray)
+        function combinedMatrix = reorganizeCellArray(~, cellArray)
             % Determine the number of rows and maximum number of columns
 
             % Find the longest array in terms of columns

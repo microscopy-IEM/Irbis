@@ -682,7 +682,7 @@ classdef FullTableComponentHelper < handle
 
 
         function templateNames = getTemplateNames(obj)
-            templateNames = obj.templateNames
+            templateNames = obj.templateNames;
         end
 
 

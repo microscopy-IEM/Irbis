@@ -158,9 +158,6 @@ classdef (Sealed) SummarizedTableProcessor < handle
                 name = obj.rowParameter;
                 % type = obj.tableStoreHandle.getClassOfColumn(name);
                 type = 'categorical';   % TO FIX - I was getting errors for some reason
-                if iscell(type)
-                    type = type{1};
-                end
             end
         end
 

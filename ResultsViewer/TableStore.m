@@ -34,7 +34,7 @@ classdef (Sealed) TableStore < handle
 
 
             function addExistingUserColumnDefinitions(obj, userColumnDefinitions, columnsToRecalculate)
-                disp('Adding existing user column definitions to the table data...')
+                % disp('Adding existing user column definitions to the table data...')
                 % add existing user-defined columns to the table data
                 for i = 1:numel(userColumnDefinitions)
                     columnName = char(userColumnDefinitions{i}.getColumnName()); % <--- force char
