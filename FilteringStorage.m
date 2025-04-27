@@ -3,6 +3,10 @@ classdef FilteringStorage < GroupingStorageBaseClass
         Filters
     end
 
+    events
+        filtersChanged
+    end
+
     methods
         function value = get.Filters(obj)
             value = obj.Groupings;
@@ -19,6 +23,11 @@ classdef FilteringStorage < GroupingStorageBaseClass
             active = true;
             filterObj = Filtering(columnName,conditions,active);
             obj.Groupings{end+1} = filterObj;
+
+            disp(['Added range filter for column: ', columnName]);
+
+            % Notify listeners that the filters have changed
+            notify(obj, 'filtersChanged');
         end
 
         function addCategoricalFilter(obj, columnName, categories)
@@ -28,6 +37,10 @@ classdef FilteringStorage < GroupingStorageBaseClass
             active = true;
             filterObj = Filtering(columnName,conditions,active);
             obj.Groupings{end+1} = filterObj;
+
+            disp(['Added categorical filter for column: ', columnName]);
+
+            notify(obj, 'filtersChanged');
         end
 
         function updateFilter(obj, columnName, newCondition)
@@ -79,6 +92,8 @@ classdef FilteringStorage < GroupingStorageBaseClass
                     % Add new range filter
                     obj.addRangeFilter(columnName, newCondition);
                 end
+            else
+                notify(obj, 'filtersChanged');  % otherwise, it is already done in addRangeFilter or addCategoricalFilter
             end
         end
 
@@ -113,16 +128,49 @@ classdef FilteringStorage < GroupingStorageBaseClass
             % This is probably not optimal when it comes to filtering large datasets.
         end
 
+        function isKept = filter(obj, listArray)
+            % Method to update all filter tables for all Groupings
+            % Filter array - cell array of tables, one for each time point
+            % Each table has a column for each filter            
+
+            filterArray = table();
+
+            for i = 1:numel(obj.Groupings)
+                cm = obj.Groupings{i};
+                if cm.Active
+                    filterArray = cm.updateFilterTable(listArray, filterArray, 1);
+                elseif isempty(cm.Active)
+                    cm.Active = true;
+                    filterArray = cm.updateFilterTable(listArray, filterArray, 1);
+                end
+                
+            end
+
+            if ~isempty(filterArray) && istable(listArray)
+                filterLogicalArray = all(table2array(filterArray), 2);
+                isKept = filterLogicalArray;
+            else
+                isKept = [];
+            end
+            % NOTE: With this approach, every time a filter changes, we recalculate all filters.
+            % Because we do not store the filterArray. 
+            % This is probably not optimal when it comes to filtering large datasets.
+        end
+
         function activateFilter(obj, name)
             idx = obj.findGroupingIndexByName(name);
             filter = obj.Groupings{idx};
             filter.Active = true;
+
+            notify(obj, 'filtersChanged');
         end
 
         function inactivateFilter(obj, name)
             idx = obj.findGroupingIndexByName(name);
             filter = obj.Groupings{idx};
             filter.Active = false;
+
+            notify(obj, 'filtersChanged');
         end
 
         function activationStatus = getActivationStatus(obj, name)
@@ -133,6 +181,11 @@ classdef FilteringStorage < GroupingStorageBaseClass
                 activationStatus = true;
                 filter.Active = true;
             end
+        end
+
+        function deleteGrouping(obj, name)
+            deleteGrouping@GroupingStorageBaseClass(obj, name);
+            notify(obj, 'filtersChanged');
         end
     end
 end

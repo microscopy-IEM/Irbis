@@ -60,17 +60,6 @@ classdef CategorizationStorage < handle
                 fprintf('Categorization with name "%s" not found.\n', existingCategorizationName);
             end
         end
-        
-        function displayCategories(obj)
-            % Method to display all categories
-            fprintf('Categories:\n');
-            for i = 1:numel(obj.Categorizations)
-                cm = obj.Categorizations{i};
-                fprintf('Category %d: %s\n', i, cm.CategorizationName);
-                disp('Parameters:');
-                disp(cm.Conditions);
-            end
-        end
 
         function categorizationNames = returnCategorizationNames(obj)
             categorizationNames = cell(1, numel(obj.Categorizations));
@@ -83,6 +72,11 @@ classdef CategorizationStorage < handle
         function categorization = returnCategorization(obj,categorizationName)
             idx = obj.findCategorizationIndexByName(categorizationName);
             categorization = obj.Categorizations{idx};
+        end
+
+        function categorizationList = getCategorizationList(obj) % TO OPTIMIZE - update in main app class
+            % Method to return the list of Categorizations
+            categorizationList = obj.Categorizations;
         end
         
         function listArray = updateAllTables(obj, listArray, timePoints, varargin)
@@ -105,23 +99,6 @@ classdef CategorizationStorage < handle
             for i = 1:numel(obj.Categorizations)
                 cm = obj.Categorizations{i};
                 listArray = cm.updateTable(listArray, timePoints);
-            end
-        end
-        
-        function promptAndUpdateAllConditions(obj, listArray, timePoints)
-            % Method to prompt and update conditions for all Categorizations
-            for i = 1:numel(obj.Categorizations)
-                cm = obj.Categorizations{i};
-                listArray = cm.promptAndUpdateConditions(listArray, timePoints);
-            end
-        end
-
-        function listArray = promptAndUpdateSpecificCategorization(obj, categorizationName, listArray, timePoints)
-            idx = obj.findCategorizationIndexByName(categorizationName);
-            if idx > 0
-                listArray = obj.Categorizations{idx}.promptAndUpdateConditions(listArray, timePoints);
-            else
-                fprintf('Categorization with name "%s" not found.\n', categorizationName);
             end
         end
 
@@ -154,53 +131,5 @@ classdef CategorizationStorage < handle
             % Method to get the number of Categorizations currently stored
             numCategorizations = numel(obj.Categorizations);
         end
-
-        function renameCategoryNames(obj, categorizationName)
-            % Method to rename category names for a specific categorization
-            
-            % Find the index of the categorization with the specified name
-            idx = obj.findCategorizationIndexByName(categorizationName);
-            if idx > 0
-                % Get the Categorization object
-                categorization = obj.Categorizations{idx};
-                
-                % Prompt user for new names
-                categorization.renameGroup();
-                
-                fprintf('Category names for "%s" updated successfully.\n', categorizationName);
-            else
-                fprintf('Categorization with name "%s" not found.\n', categorizationName);
-            end
-        end 
-
-        function thresholds = getThresholdsForCategorization(obj, categorizationName)
-            idx = obj.findCategorizationIndexByName(categorizationName);
-            columnName = strrep(categorizationName,'Groups','');
-            if idx > 0
-                conditions = obj.Categorizations{idx}.Conditions;
-                thresholds = [];
-                for i = 1:numel(fieldnames(conditions))
-                    fieldName = ['group' num2str(i-1)];
-                    if isfield(conditions, fieldName) && isfield(conditions.(fieldName), 'conditions')
-                        innerDict = conditions.(fieldName).conditions(columnName);
-                        innerDict = innerDict{1};
-                        if isKey(innerDict, 'lessThan')
-                            thresholds = [thresholds, innerDict('lessThan')];
-                        end
-                    end
-                end
-
-                % Check if the length is less than 3
-                while numel(thresholds) < 3
-                    % Repeat the last number to get exactly 3 numbers
-                    lastThreshold = thresholds(end);
-                    thresholds = [thresholds, lastThreshold];
-                end
-            else
-                fprintf('Categorization with name "%s" not found.\n', categorizationName);
-                thresholds = [];
-            end
-        end
- 
     end
 end

@@ -1,5 +1,9 @@
 function checkNodesByName(tree, nodeNames)
     checkedNodes = [];
+    if ~iscell(nodeNames)
+        warning('Input nodeNames should be a cell array of strings.');  % Added if there is some problem with filter settings
+        return
+    end
     for i = 1:length(nodeNames)
         % Find the node with the specific name
         nodeName = nodeNames{i};
