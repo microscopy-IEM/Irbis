@@ -1,0 +1,292 @@
+classdef (Sealed) PivotedTableProcessor < handle
+    properties (Access = private)
+        pivotedTable
+        groupedDataParameter
+        columnParameter
+        rowParameter
+        aggregationFunction
+        filteringStorageHandle
+        tableStoreHandle
+        stateManagerHandle
+        dataStoreHandle
+
+        tableStoreListener
+        filterListener
+        stateManagerListener
+
+        selectedTableCellsList (:,2) = [] % Initialize as empty array
+    end
+
+    events
+        tableForDisplayChanged
+        tableSelectionChanged
+        tableSelectionSetProgrammatically
+        rowParameterSetProgrammatically
+        tableSelectionSyncRequired  % not the prettiest, but added to do table syncing before plotting data starts listening
+        rowParameterChanged
+    end
+
+    methods
+        function obj = PivotedTableProcessor()
+        end
+
+        function delete(obj)
+            % Destructor - clean up listeners
+            if ~isempty(obj.tableStoreListener) && isvalid(obj.tableStoreListener)
+                delete(obj.tableStoreListener);
+            end
+
+            if ~isempty(obj.filterListener) && isvalid(obj.filterListener)
+                delete(obj.filterListener);
+            end
+
+            if ~isempty(obj.stateManagerListener) && isvalid(obj.stateManagerListener)
+                delete(obj.stateManagerListener);
+            end
+        end
+
+        function setHandles(obj, stateManagerHandle, dataStoreHandle)
+
+            obj.stateManagerHandle = stateManagerHandle;
+            if ~isempty(obj.stateManagerListener) && isvalid(obj.stateManagerListener)
+                delete(obj.stateManagerListener);
+            end
+            obj.stateManagerListener = addlistener(obj.stateManagerHandle, 'newModalityLoaded', @(~, ~) replaceData(obj));
+
+            obj.dataStoreHandle = dataStoreHandle;
+            obj.loadData();
+        end
+
+        function processData(obj)
+
+            rawTable = obj.tableStoreHandle.getTableData();
+
+            isMissingParameters = isempty(obj.groupedDataParameter) || isempty(obj.columnParameter) || isempty(obj.rowParameter);
+            if isMissingParameters
+                return;
+            end
+
+            isMissingData = isempty(rawTable);
+            if isMissingData
+                return;
+            end
+
+            % filter
+            isKept = obj.filteringStorageHandle.filter(rawTable);
+            if ~isempty(isKept)
+                filteredTable = rawTable(isKept, :);
+            else
+                filteredTable = rawTable;
+            end
+
+            obj.pivotedTable = pivotTable(filteredTable, obj.columnParameter, obj.rowParameter, obj.groupedDataParameter);
+            % disp(obj.pivotedTable)
+
+            notify(obj, 'tableForDisplayChanged');
+        end
+
+
+        function processDataWithoutNotification(obj)
+            % Process data without notifying observers
+            rawTable = obj.tableStoreHandle.getTableData();
+
+            isMissingParameters = isempty(obj.groupedDataParameter) || isempty(obj.columnParameter) || isempty(obj.rowParameter);
+            if isMissingParameters
+                return;
+            end
+
+            isMissingData = isempty(rawTable);
+            if isMissingData
+                return;
+            end
+
+            % filter
+            isKept = obj.filteringStorageHandle.filter(rawTable);
+            if ~isempty(isKept)
+                filteredTable = rawTable(isKept, :);
+            else
+                filteredTable = rawTable;
+            end
+
+            obj.pivotedTable = pivotTable(filteredTable, obj.columnParameter, obj.rowParameter, obj.groupedDataParameter);
+        end
+
+        
+        function filterWithBooleanList(obj, isKept)
+            % Filter the data with a boolean list
+            if isempty(obj.tableStoreHandle)
+                return;
+            end
+
+            obj.processDataWithoutNotification(); 
+            if ~isempty(isKept)
+                obj.pivotedTable = obj.pivotedTable(isKept, :);
+            end
+
+            notify(obj, 'tableForDisplayChanged');
+        end
+
+
+        function setAggregationFunction(obj, func)
+            obj.aggregationFunction = func;
+        end
+
+        function result = getTableForDisplay(obj)
+            result = obj.pivotedTable;
+        end
+
+        function setGroupedDataParameter(obj, parameter)
+            obj.groupedDataParameter = parameter;
+            obj.processData();
+        end
+
+        function setColumnParameter(obj, parameter)
+            obj.columnParameter = parameter;
+            obj.processData();
+        end
+
+        function setRowParameter(obj, parameter)
+            obj.rowParameter = parameter;
+            obj.processData();
+            notify(obj, 'rowParameterChanged');
+        end
+
+        function replaceData(obj)
+            % this should be called when the data changes
+
+            obj.dataStoreHandle = obj.stateManagerHandle.getActiveDataStore();
+            obj.loadData();
+        end
+
+        function [name, type] = getRowParameterNameAndType(obj)
+            % Returns the name and type of the row parameter
+            if isempty(obj.rowParameter)
+                name = '';
+                type = '';
+            else
+                name = obj.rowParameter;
+                type = obj.tableStoreHandle.getClassOfColumn(name);
+                if iscell(type)
+                    type = type{1};
+                end
+            end
+        end
+
+
+        function loadData(obj)
+            obj.tableStoreHandle = obj.dataStoreHandle.getTableStore();
+
+            if ~isempty(obj.tableStoreListener) && isvalid(obj.tableStoreListener)
+                delete(obj.tableStoreListener);
+            end
+            obj.tableStoreListener = addlistener(obj.tableStoreHandle, 'tableDataChanged', @(~, ~) processData(obj));
+            
+            obj.filteringStorageHandle = obj.dataStoreHandle.getFilteringStorage();
+
+            if ~isempty(obj.filterListener) && isvalid(obj.filterListener)
+                delete(obj.filterListener);
+            end
+            obj.filterListener = addlistener(obj.filteringStorageHandle, 'filtersChanged', @(~, ~) processData(obj));
+
+            obj.processData();
+        end
+
+        function storeSelectedTableCellsList(obj, selectedTableCellsList)
+            % Validates and stores the selected table cells
+            obj.selectedTableCellsList = selectedTableCellsList;
+            notify(obj, 'tableSelectionSyncRequired'); % added first, because syncing must be before plotting (to be able to combine the data)
+            notify(obj, 'tableSelectionChanged'); % this is observed by DataFormatter that processes data for plotting - needs data from both tables, if applicable
+        end
+
+        function programmaticallySetRowSelection(obj, selectedRowsList)
+            % convert row selection to selectedTableCellsList
+            numRows = numel(selectedRowsList);
+            numCols = width(obj.pivotedTable);
+            processedSelectionList = NaN(numRows * numCols, 2); % Preallocate the array
+            index = 1;
+
+            for i = 1:numRows
+                row = selectedRowsList(i);
+                cols = (1:numCols)';
+                processedSelectionList(index:(index + numCols - 1), :) = [repmat(row, numCols, 1), cols];
+                index = index + numCols;
+            end
+
+            obj.selectedTableCellsList = processedSelectionList;
+
+            notify(obj, 'tableSelectionSetProgrammatically')     % notify the component, since we do not have direct link to it
+        end
+
+        function selectedList = getSelectedTableCellsList(obj)
+            selectedList = obj.selectedTableCellsList;
+        end
+
+        function [subtable, isCategorical] = getSelectedColumns(obj)
+            if isempty(obj.selectedTableCellsList)
+                subtable = table();
+                isCategorical = [];
+                warning('FullTableProcessor:NoSelection', 'No cells are selected');
+                return;
+            end
+
+            selectedColumnNumsInOrder = unique(obj.selectedTableCellsList(:,2), 'stable'); % stable needed to preserve the order of selection
+
+            displayedTable = obj.getTableForDisplay();      % the selection is relative to the displayed table
+            subtable = displayedTable(:, selectedColumnNumsInOrder);
+            
+            isCategorical = varfun(@iscategorical, subtable, 'OutputFormat', 'uniform');
+        end
+
+        function [subtable, isCategorical] = getSelectedRows(obj)
+            selectedRowNumsInOrder = unique(obj.selectedTableCellsList(:,1), 'stable');
+
+            displayedTable = obj.getTableForDisplay();      % the selection is relative to the displayed table
+            subtable = displayedTable(selectedRowNumsInOrder, :);
+            
+            isCategorical = varfun(@iscategorical, subtable, 'OutputFormat', 'uniform');
+        end
+
+        function [subtable, isCategorical] = getSelected(obj)
+            selectedRowNumsInOrder = unique(obj.selectedTableCellsList(:,1), 'stable');
+            selectedColumnNumsInOrder = unique(obj.selectedTableCellsList(:,2), 'stable'); % stable needed to preserve the order of selection
+
+            displayedTable = obj.getTableForDisplay();      % the selection is relative to the displayed table
+            subtable = displayedTable(selectedRowNumsInOrder, selectedColumnNumsInOrder);
+            
+            isCategorical = varfun(@iscategorical, subtable, 'OutputFormat', 'uniform');
+        end
+
+
+        function processorState = getState(obj)
+            % Return the current state of the processor
+            processorState = struct();
+            processorState.groupedDataParameter = obj.groupedDataParameter;
+            processorState.columnParameter = obj.columnParameter;
+            processorState.rowParameter = obj.rowParameter;
+            processorState.selectedTableCellsList = obj.selectedTableCellsList;
+        end
+
+        function setState(obj, processorState)
+            % Set the state of the processor
+            if ~isempty(processorState)
+                obj.groupedDataParameter = processorState.groupedDataParameter;
+                obj.columnParameter = processorState.columnParameter;
+                obj.rowParameter = processorState.rowParameter;
+                obj.selectedTableCellsList = processorState.selectedTableCellsList;
+            end
+
+            notify(obj, 'tableForDisplayChanged')
+            notify(obj, 'tableSelectionSetProgrammatically')
+        end
+
+
+        function programmaticallySetRowParameter(obj, rowParameter)
+            % Set the row parameter programmatically
+            obj.rowParameter = rowParameter;
+
+            notify(obj, 'rowParameterSetProgrammatically')
+
+            obj.processData();
+        end
+    end
+end

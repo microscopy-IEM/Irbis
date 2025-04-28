@@ -2,12 +2,55 @@ classdef Categorization < handle
     properties
         CategorizationName
         Conditions
+        definitionType = 'categorization'
     end
     
     methods
         function obj = Categorization(categoryName, conditions)
             obj.CategorizationName = categoryName;
             obj.Conditions = conditions;
+        end
+
+        function definitionType = getDefinitionType(obj)
+            % Returns the definition type of the column
+            % Returns: string indicating the definition type
+            definitionType = obj.definitionType;
+        end
+
+        function columnName = getColumnName(obj)
+            % Returns the name of the column
+            % Returns: string of the column name
+            columnName = obj.CategorizationName;
+        end
+
+        function conditions = getConditions(obj)
+            conditions = obj.Conditions;
+        end
+
+        function conditions = getRules(obj)
+            % The same as getConditions, added for compatibility with other classes
+            conditions = obj.Conditions;
+        end
+
+        function obj = replaceRules(obj, newRules)
+            % Opens a dialog to edit existing creation parameters
+            % Internally edits the rules
+            obj.Conditions = newRules;
+        end
+
+        function data = generateColumn(obj, inputData)
+            % Generates column data based on defined rules
+            % Args: inputData - source data for column generation
+            % Returns: column data array
+            
+            if istable(inputData)
+                data = categorical(obj.evaluateConditions(inputData));
+            else
+                data = cell(size(inputData, 1), 1);
+                for i = 1:size(inputData, 1)
+                    data{i} = categorical(obj.evaluateConditions(inputData{i}));
+                end
+            end
         end
         
         function listArray = updateTable(obj, listArray, timePoints)
@@ -47,85 +90,6 @@ classdef Categorization < handle
 
 
             end
-        end
-        
-        function groupNames = getGroupNames(obj)
-            groups = fieldnames(obj.Conditions);
-            groupNames = cell(size(groups));
-            for i = 1:numel(groups)
-                groupNames{i} = obj.Conditions.(groups{i}).name;
-            end
-        end
-        
-        function groupConditions = getGroupConditions(obj, groupName)
-            groups = fieldnames(obj.Conditions);
-            for i = 1:numel(groups)
-                if strcmp(obj.Conditions.(groups{i}).name, groupName)
-                    groupConditions = obj.Conditions.(groups{i}).conditions;
-                    return;
-                end
-            end
-            error('Group name %s not found', groupName);
-        end
-        
-        function obj = updateGroupConditions(obj, groupName, newConditions)
-            groups = fieldnames(obj.Conditions);
-            for i = 1:numel(groups)
-                if strcmp(obj.Conditions.(groups{i}).name, groupName)
-                    obj.Conditions.(groups{i}).conditions = newConditions;
-                    return;
-                end
-            end
-            error('Group name %s not found', groupName);
-        end
-        
-        function listArray = promptAndUpdateConditions(obj, listArray, timePoints)
-            groups = fieldnames(obj.Conditions);
-            numGroups = numel(groups);
-            for i = 1:numel(groups)
-                groupName = obj.Conditions.(groups{i}).name;
-                currentConditions = obj.Conditions.(groups{i}).conditions;
-                condFields = keys(currentConditions);
-                prompt = {};
-                defaultInputs = {};
-                for j = 1:numel(condFields)
-                    condDict = currentConditions(condFields{j});
-                    if iscell(condDict)  % Check if it is a list of selected categories
-                        prompt{end+1} = sprintf('Selected categories for %s in %s', condFields{j}, groupName);
-                        defaultInputs{end+1} = strjoin(condDict, ',');
-                    else
-                        condKeys = keys(condDict);
-                        for k = 1:numel(condKeys)
-                            prompt{end+1} = sprintf('%s %s for %s', condKeys{k}, condFields{j}, groupName);
-                            defaultInputs{end+1} = num2str(condDict(condKeys{k}));
-                        end
-                    end
-                end
-                dlgTitle = sprintf('Update Conditions for %s', groupName);
-                dims = [1 50];
-                newValues = inputdlg(prompt, dlgTitle, dims, defaultInputs);
-                if ~isempty(newValues)
-                    newConditions = dictionary(string.empty, {});
-                    valueIndex = 1;
-                    for j = 1:numel(condFields)
-                        condDict = currentConditions(condFields{j});
-                        if iscell(condDict)  % Check if it is a list of selected categories
-                            newConditions(condFields{j}) = strsplit(newValues{valueIndex}, ',');
-                            valueIndex = valueIndex + 1;
-                        else
-                            condKeys = keys(condDict);
-                            newCondDict = dictionary(string.empty, []);
-                            for k = 1:numel(condKeys)
-                                newCondDict(condKeys{k}) = str2double(newValues{valueIndex});
-                                valueIndex = valueIndex + 1;
-                            end
-                            newConditions(condFields{j}) = {newCondDict};
-                        end
-                    end
-                    obj = obj.updateGroupConditions(groupName, newConditions);
-                end
-            end
-            listArray = obj.updateTable(listArray, timePoints);
         end
         
         function categories = evaluateConditions(obj, table)
