@@ -358,8 +358,15 @@ classdef (Sealed) AppStateManager < handle
             newModality = obj.appHandle.getActiveModality();
             obj.modality = newModality;
 
-            newBranch = obj.appHandle.getActiveBranch();
-            obj.branch = newBranch;
+            % Find the branches for the new modality
+            modalityIdx = find(strcmp(obj.availableModalities, newModality));
+            if ~isempty(modalityIdx) && ~isempty(obj.availableBranches{modalityIdx})
+                % Set the first available branch for this modality
+                obj.branch = obj.availableBranches{modalityIdx}{1};
+            else
+                % If no branches available, set empty branch
+                obj.branch = '';
+            end
             % if modality changes, it automatically also changes the branch (as the branches are specific to the modality)
 
             obj.getAndStoreActiveData();
@@ -380,6 +387,8 @@ classdef (Sealed) AppStateManager < handle
 
         function loadData(obj, newDataStruct)
             % Handle data loading from the main app
+
+            % assignin("base", "newDataStruct", newDataStruct); % for debugging purposes
             if isfield(newDataStruct, 'model')
                 branches = fieldnames(newDataStruct.model);
                 for i = 1:length(branches)
@@ -439,6 +448,10 @@ classdef (Sealed) AppStateManager < handle
                     obj.branch = obj.availableBranches{1}{1};
                 end
             end
+
+            disp(obj.availableModalities)
+            disp(obj.availableBranches)
+            
             notify(obj, 'availableModalitiesChanged');
         end
 

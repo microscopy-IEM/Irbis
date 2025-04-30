@@ -289,7 +289,8 @@ classdef BatchLoader < handle
         end
 
         function tempStruct = processTrackData(obj, matf, fileName, fileIdx)
-            tempStruct = struct('tables', {}, 'filterings', {}, 'columnDefinitions', {});
+     
+            % tempStruct = struct('tables', {}, 'filterings', {}, 'columnDefinitions', {});
             infoToLoad = matf.info;
             tracksToLoad = matf.tracks;
             timelineToLoad = matf.timeline;
@@ -303,7 +304,16 @@ classdef BatchLoader < handle
                 else
                     cellList = obj.enrichTablesWithMetadata(tracksToLoad.tracksList, infoToLoad, fileName, fileIdx);
                 end
+                disp('Processing tracks...');
                 tempStruct.tables = {TableCombiner.combineAcrossTimepoints(cellList, currentIndex)};
+                % This was causing the following error: 
+                    % A dot name structure assignment is illegal when the structure is empty.  Use a
+                    % subscript on the structure.
+
+                    % Error in BatchLoader/processTrackData (line 306)
+                    %                 tempStruct.tables = {TableCombiner.combineAcrossTimepoints(cellList, currentIndex)};
+                % make sure that it has been fixed!!!
+
                 if isfield(tracksToLoad, 'storedFilters')
                     filterings = {tracksToLoad.storedFilters};
                 else
