@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mermaid Zoomable Diagram</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/panzoom@9.4.0/dist/panzoom.min.js"></script>
+  <style>
+    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+    #outer-container { width: 100%; height: 100%; overflow: hidden; }
+    #panzoom-container { width: 100%; height: 100%; }
+    svg { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+<div id="outer-container">
+  <div id="panzoom-container" class="mermaid">
+classDiagram
+
+    %% UI components
+    class IrbisResultsViewer {
+        -stateManagerHandle
+        -plotManagerHandle
+    }
+
+    class filteringMenuComponent {
+        -appStateManagerHandle
+        -tableStore
+        -filteringStorage
+    }
+
+    class placeholder_TableComponent {
+        -tableProcessorHandle
+        -tableStoreHandle
+        -columnDefinitionStoreHandle
+        -appStateManagerHandle
+    }
+
+
+    %% Classes
+    class AppStateManager {
+        +EVENT modalityPathChanged
+        +EVENT availableModalitiesChanged
+        +EVENT newModalityLoaded
+        -appHandle
+        
+        -modality
+        -branch
+        -availableModalities
+        -availableBranches
+
+        -tableStoreHandle 
+        -activeTableHandle
+
+        -tableType
+
+        -allCategorizationStoreHandle
+        -activeCategorizationStoreHandle
+
+        -tableProcessorHandle
+        -tableComponentHandle
+
+        -allFilteringStorageHandle
+        -activeFilteringStorageHandle
+    }
+
+    class Categorization {
+
+    }
+
+    class CategorizationAdapted {
+
+    }
+
+    class CategorizationStorage {
+
+    }
+
+    class ColumnCreationInterface {
+
+    }
+
+    class DataFormatter {
+
+    }
+
+    class Filtering {
+        +Active
+        +Filtering()
+    }
+
+    class FilteringStorage {
+        +EVENT filtersChanged
+
+    }
+
+    class ModalityDataStore {
+
+    }
+
+    class PlotInterface {
+
+    }
+
+    class placeholder_TableProcessor {
+        +EVENT tableForDisplayChanged
+        +EVENT tableSelectionChanged
+    }
+
+    class PlotManager {
+        +tableProcessorHandle
+        +appStateManagerHandle
+        +axesHandle
+        +formatter
+        +plotType
+        +useGrouping
+        +useIndividual
+        +requiredParametersNum
+
+    }
+
+    class PredefinedColumnContextMenu {
+        +menuHandle
+        +columnName
+        +tableStoreHandle
+
+    }
+
+    class StatisticalColumnRule {
+
+    }
+
+    class TableComponentFactory {
+        
+    }
+
+    class TableModifier {
+
+    }
+
+    class TableProcessorFactory {
+
+    }
+
+    class TableStore {
+        +EVENT tableDataChanged
+    }
+
+    class UserDefinedColumnContextMenu {
+
+    }
+
+    class UserDefinedColumnStorage {
+
+    }
+
+    %% Relationships with the visual components
+    IrbisResultsViewer *-- AppStateManager : contains
+    IrbisResultsViewer *-- PlotManager : contains
+    placeholder_TableComponent ..> AppStateManager : uses
+    placeholder_TableComponent ..> placeholder_TableProcessor : uses
+    placeholder_TableComponent ..> ColumnCreationInterface : uses
+    placeholder_TableComponent ..> TableStore : uses
+
+    filteringMenuComponent ..> AppStateManager : uses
+    filteringMenuComponent ..> TableStore : uses
+    filteringMenuComponent ..> FilteringStorage : uses
+
+    %% Class Inheritance Relationships
+    ColumnCreationInterface <|-- StatisticalColumnRule : implements
+    ColumnCreationInterface <|-- CategorizationAdapted : implements
+
+    %% Composition/Aggregation Relationships
+    AppStateManager o-- ModalityDataStore : has
+    AppStateManager o-- TableStore : has
+    AppStateManager o-- FilteringStorage : has
+    AppStateManager o-- placeholder_TableProcessor : has
+    AppStateManager o-- placeholder_TableComponent : has
+    FilteringStorage o-- Filtering : has
+    ModalityDataStore o-- TableStore : has
+    PlotManager *-- DataFormatter : contains
+    PlotManager *-- PlotInterface : contains
+    CategorizationStorage o-- Categorization : has
+
+    %% Dependencies/Usage Relationships
+    PlotManager ..> TableStore : uses
+    DataFormatter ..> TableStore : uses
+    TableModifier ..> TableStore : uses
+    PredefinedColumnContextMenu ..> TableStore : uses
+    UserDefinedColumnContextMenu ..> TableStore : uses
+
+    PredefinedColumnContextMenu ..> TableModifier : calls
+    UserDefinedColumnContextMenu ..> TableModifier : calls
+
+
+    %% Listeners
+    placeholder_TableComponent ..> TableStore : listens to 'tableDataChanged'
+    placeholder_TableProcessor ..> TableStore : listens to 'tableDataChanged'
+
+    IrbisResultsViewer ..> AppStateManager : listens to 'modalityPathChanged'
+
+    IrbisResultsViewer ..> AppStateManager : listens to 'availableModalitiesChanged'
+    
+    filteringMenuComponent ..> AppStateManager : listens to 'newModalityLoaded'
+    placeholder_TableComponent ..> AppStateManager : listens to 'newModalityLoaded'
+    placeholder_TableProcessor ..> AppStateManager : listens to 'newModalityLoaded'
+    PlotManager ..> AppStateManager : listens to 'newModalityLoaded'
+
+    placeholder_TableComponent ..> placeholder_TableProcessor : listens to 'tableForDisplayChanged'
+
+    DataFormatter ..> placeholder_TableProcessor : listens to 'tableSelectionChanged'
+
+  </div>
+</div>
+<script>
+  mermaid.initialize({ startOnLoad: true });
+  document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById("panzoom-container");
+    const checkSVG = setInterval(() => {
+      const svg = container.querySelector("svg");
+      if (svg) {
+        panzoom(svg, {
+          bounds: true,
+          boundsPadding: 0.1,
+          zoomDoubleClickSpeed: 1,
+          smoothScroll: false
+        });
+        clearInterval(checkSVG);
+      }
+    }, 100);
+  });
+</script>
+</body>
+</html>

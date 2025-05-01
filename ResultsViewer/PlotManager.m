@@ -1,5 +1,5 @@
 classdef PlotManager < handle
-    properties
+    properties (Access = private)
         tableProcessorHandles
         tableTypes
         appStateManagerHandle       % the plotManager will listen, whether there are some changes in app state

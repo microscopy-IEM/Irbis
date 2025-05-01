@@ -222,7 +222,7 @@ classDiagram
         +ViewConfigurationStore()
     }
 
-    FilteringMenuStateManager ..> FilteringMenuStateManager : listens to newModalityLoaded
+    FilteringMenuStateManager ..> AppStateManager : listens to newModalityLoaded
     FullTableComponentHelper ..> FilteringMenuStateManager : listens to newModalityLoaded
     FullTableComponentHelper ..> FullTableComponentHelper : listens to tableDataChanged
     PivotedTableComponentHelper ..> FilteringMenuStateManager : listens to newModalityLoaded
