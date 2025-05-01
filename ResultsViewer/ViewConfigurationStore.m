@@ -1,7 +1,8 @@
 classdef ViewConfigurationStore < handle
-    properties
+    properties (Access = private)
         storedViews = {}    % Cell array of viewConfiguration objects
     end
+    
     methods
         function obj = ViewConfigurationStore()
             obj.storedViews = {};

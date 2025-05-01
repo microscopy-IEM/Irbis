@@ -33,8 +33,9 @@ classdef (Sealed) AppStateManager < handle
     end
 
     events
-        modalityPathChanged
-        availableModalitiesChanged
+        availableModalitiesChanged  % implicitly counts with the fact that branches are also changed
+        availableBranchesChanged    % this needs to be called when modality changes, as each modality has its own branches
+        modalityChangedProgrammatically  % called when active modality and branch are set programmatically (eg by applying a stored view)
         newModalityLoaded
         tableTypeChanged
     end
@@ -49,8 +50,8 @@ classdef (Sealed) AppStateManager < handle
             % Set default empty objects
             obj.activeDataStoreHandle = DataStore();    % TO OPTIMIZE - DataStore has arguments and sets properties in constructor
 
-            addlistener(obj.appHandle, 'modalityChanged', @(~,~) obj.changeModality());
-            addlistener(obj.appHandle, 'branchChanged', @(~,~) obj.changeBranch());
+            addlistener(obj.appHandle, 'modalityChangedByUser', @(~,~) obj.changeModalityForUserSelected());
+            addlistener(obj.appHandle, 'branchChangedByUser', @(~,~) obj.changeBranchForUserSelected());
         end
 
 
@@ -209,6 +210,8 @@ classdef (Sealed) AppStateManager < handle
 
         function storeLoadedData(obj, batchLoaderHandle)
             % Store data loaded via BatchLoader
+
+            % TO OPTIMIZE - if tracks are loaded and I add model, the tracks are not deleted 
             newDataStruct = batchLoaderHandle.storeLoadedData();
             
             obj.storeDataFromStruct(newDataStruct);
@@ -310,13 +313,14 @@ classdef (Sealed) AppStateManager < handle
             obj.modality = state.modality;
             obj.branch = state.branch;
 
-            obj.getAndStoreActiveData();
+            obj.getAndStoreActiveDataWithoutNotification(); % otherwise, the changes are happening multiple times
 
-            notify(obj, 'modalityPathChanged');
-            notify(obj, 'availableModalitiesChanged');
+            notify(obj, 'modalityChangedProgrammatically');
 
             % disp('assigning')
             % assignin("base", "state", state); % for debugging purposes
+
+            % TO OPTIMIZE - table type changes even if not needed
 
             if isfield(state, 'topTable')
                 if isfield(state.topTable, 'type')
@@ -331,6 +335,7 @@ classdef (Sealed) AppStateManager < handle
             end
 
             if isfield(state, 'bottomTable')
+                disp('there is a bottom table')
                 if isfield(state.bottomTable, 'type')
                     obj.showSummarizedAndIndicateSuccess();
                 end
@@ -339,7 +344,7 @@ classdef (Sealed) AppStateManager < handle
                 end
             end
 
-            obj.generateFilteringMenuStateManager();
+            % obj.generateFilteringMenuStateManager();  % this is not needed, as it is already done in the changeTableType method
 
             % if isfield(state, 'bottomTable')
             %     if isfield(state.bottomTable, 'type')
@@ -355,7 +360,7 @@ classdef (Sealed) AppStateManager < handle
     end
 
     methods (Access = private)
-        function changeModality(obj)
+        function changeModalityForUserSelected(obj)
 
             newModality = obj.appHandle.getActiveModality();
             obj.modality = newModality;
@@ -373,17 +378,18 @@ classdef (Sealed) AppStateManager < handle
 
             obj.getAndStoreActiveData();
 
-            notify(obj, 'modalityPathChanged'); % this keeps the activeColumns in tableProcessor, but does not keep them checked in the list
+            % changing modality leads to change in the branch as well, so notify that the branches have changed
+            notify(obj, 'availableBranchesChanged');    % the app needs to listen to this event to update the UI
         end
 
 
-        function changeBranch(obj)
+        function changeBranchForUserSelected(obj)
             newBranch = obj.appHandle.getActiveBranch();
             obj.branch = newBranch;
 
             obj.getAndStoreActiveData();
 
-            notify(obj, 'modalityPathChanged');
+            % at the moment, app does not need to be notified (no changes in the UI), and the rest is notified via getAndStoreActiveData by newModalityLoaded event
         end
 
 
@@ -538,6 +544,20 @@ classdef (Sealed) AppStateManager < handle
         % end
 
         function getAndStoreActiveData(obj)
+            if isempty(obj.branch)  % happens for modalities that do not have branches (like tracks)
+                modalityPath = {obj.modality};
+            else
+                modalityPath = {obj.modality, obj.branch};
+            end
+
+            % Get the DataStore from ModalityDataStore
+            obj.activeDataStoreHandle = obj.modalityDataStoreHandle.getModalityData(modalityPath);
+
+            notify(obj, 'newModalityLoaded');
+        end
+
+
+        function getAndStoreActiveDataWithoutNotification(obj)
             if isempty(obj.branch)  % happens for modalities that do not have branches (like tracks)
                 modalityPath = {obj.modality};
             else

@@ -326,6 +326,10 @@ classdef BatchLoader < handle
                 end
                 tempStruct.filterings = filterings;
                 tempStruct.columnDefinitions = columnDefinitions;
+            else
+                tempStruct.tables = {};
+                tempStruct.filterings = {};
+                tempStruct.columnDefinitions = {};
             end
         end
 
