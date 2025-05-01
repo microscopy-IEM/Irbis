@@ -100,10 +100,26 @@ classdef TwoVariablesPlot < plot.PlotInterface
                 numericalData = permute(numericalData, [1, 3, 2]);  % D3 potentially contains vector data - must be as columns
                 categoricalData = permute(categoricalData, [1, 3, 2]); 
 
-                boxplot(axesHandle, numericalData, categoricalData)   % X is numeric and g is categorical
+                % boxplot(axesHandle, numericalData, categoricalData)   % X is numeric and g is categorical
+
+                boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.1);
+
                 % https://www.mathworks.com/help/stats/boxplot.html#bu180jd-2
                 %    If x is a matrix, boxplot plots one box for each column of x.
                 %    If x is a matrix, then the grouping variables must contain one row for each column of x.
+
+                % Code for R2025a
+                ver = matlabRelease.Release;
+                if isequal(ver,'R2025a')
+
+                    violinplot(axesHandle, categoricalData, numericalData)
+                    axesHandle.NextPlot = 'add';
+                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.1,'BoxWidth',0.05,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
+                    axesHandle.NextPlot = 'replace';
+
+                end
+
+                
             else
                 numericalData = permute(numericalData, [1, 3, 2]);  % D3 potentially contains vector data - must be as columns
                 % if this is a matrix, it cannot be combined with yData!
@@ -111,9 +127,31 @@ classdef TwoVariablesPlot < plot.PlotInterface
                 groupData = permute(groupData, [1, 3, 2]);
 
                 boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData);
-                % https://www.mathworks.com/help/matlab/ref/boxchart.html
+
+                 % https://www.mathworks.com/help/matlab/ref/boxchart.html
                 %    ydata must be a vector, and cgroupdata must have the same length as ydata
                 %    you cannot specify xgroupdata when ydata is a matrix.
+                
+                
+                % Code for R2025a
+                ver = matlabRelease.Release;
+
+                if isequal(ver,'R2025a')
+
+                    % numericalData = log10(numericalData);
+                
+                    v = violinplot(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData);
+                    axesHandle.NextPlot = 'add';                    
+                    
+                    boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.05,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
+                    axesHandle.NextPlot = 'replace';
+
+                    legendGroups = unique(groupData);
+                    legend(axesHandle, v, legendGroups, 'Location', 'best');
+                    
+
+                end
+               
             end
         end
 
