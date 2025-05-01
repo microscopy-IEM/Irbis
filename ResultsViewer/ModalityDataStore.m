@@ -30,6 +30,11 @@ classdef (Sealed) ModalityDataStore < handle
 
         function paths = getAvailableModalityPaths(obj)
             % Returns a cell array of all available modality paths in the data collection
+
+            % NOTE - I could preallocate paths, but that would require counting the number of fields
+            %   meaning I would need to do one more for loop
+            %   for about 10 fields, it is probably not worth it
+
             paths = {};
             fields = fieldnames(obj.dataCollection);
             for i = 1:length(fields)

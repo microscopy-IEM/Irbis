@@ -18,7 +18,7 @@ classdef FullTableComponentHelper < handle
 
         templateFileName = 'IrbisApp_columnDefinitionTemplates_fullTable.mat'
             % this could be a constant, but that requires putting the class name in front of it and that is too long 
-            % and I am goo lazy to do that
+            % and I am too lazy to do that
     end
 
     events

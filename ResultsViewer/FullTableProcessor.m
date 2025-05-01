@@ -79,7 +79,7 @@ classdef (Sealed) FullTableProcessor < handle
 
         function storeSelectedTableCellsList(obj, selectedTableCellsList)
             % Validates and stores the selected table cells
-            if ~isempty(selectedTableCellsList) && ~ismatrix(selectedTableCellsList) || size(selectedTableCellsList, 2) ~= 2
+            if ~isempty(selectedTableCellsList) && (~ismatrix(selectedTableCellsList) || size(selectedTableCellsList, 2) ~= 2)
                 error('FullTableProcessor:InvalidSelection', 'Selected cells must be an nx2 array');
             end
 
@@ -166,6 +166,9 @@ classdef (Sealed) FullTableProcessor < handle
     end
 
     methods (Access = private)
+        % Processes the table data by applying filters and updating the filtered table.
+        % This method is triggered when data or filters change and ensures the
+        % filtered table reflects the current state of the data and active filters.
         function processData(obj)
 
             obj.filteredTable = obj.tableStoreHandle.getTableData();

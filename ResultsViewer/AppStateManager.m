@@ -47,7 +47,7 @@ classdef (Sealed) AppStateManager < handle
             obj.modalityDataStoreHandle = ModalityDataStore();
             
             % Set default empty objects
-            obj.activeDataStoreHandle = DataStore();
+            obj.activeDataStoreHandle = DataStore();    % TO OPTIMIZE - DataStore has arguments and sets properties in constructor
 
             addlistener(obj.appHandle, 'modalityChanged', @(~,~) obj.changeModality());
             addlistener(obj.appHandle, 'branchChanged', @(~,~) obj.changeBranch());
@@ -81,13 +81,15 @@ classdef (Sealed) AppStateManager < handle
 
         function generateTopTableStateManager(obj)
             % Generate the top table state manager
-            obj.topTableStateManagerHandle = TableStateManager(obj, obj.appHandle, obj.activeDataStoreHandle, obj.tableType, 1);
+            gridLayoutRowNum = 1;
+            obj.topTableStateManagerHandle = TableStateManager(obj, obj.appHandle, obj.activeDataStoreHandle, obj.tableType, gridLayoutRowNum);
         end
 
 
         function generateBottomTableStateManager(obj, tableType)
             % Generate the bottom table state manager
-            obj.bottomTableStateManagerHandle = TableStateManager(obj, obj.appHandle, obj.activeDataStoreHandle, tableType, 2);
+            gridLayoutRowNum = 2;
+            obj.bottomTableStateManagerHandle = TableStateManager(obj, obj.appHandle, obj.activeDataStoreHandle, tableType, gridLayoutRowNum);
         end
 
 
@@ -449,8 +451,8 @@ classdef (Sealed) AppStateManager < handle
                 end
             end
 
-            disp(obj.availableModalities)
-            disp(obj.availableBranches)
+            % disp(obj.availableModalities)
+            % disp(obj.availableBranches)
             
             notify(obj, 'availableModalitiesChanged');
         end
