@@ -17,6 +17,8 @@ classdef (Sealed) TableStore < handle
         function obj = TableStore()
         end
 
+        % TO FIX - somewhat, the manual column settings are overwritten/not shown when hiding and showing columns
+
         
         %% Set or add table data
             function setTableData(obj, newTableData)

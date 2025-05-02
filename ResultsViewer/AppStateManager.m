@@ -546,8 +546,8 @@ classdef (Sealed) AppStateManager < handle
         % end
 
         function getAndStoreActiveData(obj)
-            if isempty(obj.modality) || isempty(obj.branch)
-                % If modality or branch is empty, do nothing
+            if isempty(obj.modality)
+                % If modality is empty, do nothing
                 return
             end
 
