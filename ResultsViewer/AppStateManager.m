@@ -11,7 +11,7 @@ classdef (Sealed) AppStateManager < handle
     %                      availableBranches = {{'branch1', 'branch2'}, {}}
     %                      This means 'model' has two branches, while 'tracks' has none.
 
-    properties (Access = private)
+    properties (Access = ?matlab.unittest.TestCase)
         appHandle
         
         modality char = ''  % active modality
@@ -219,6 +219,8 @@ classdef (Sealed) AppStateManager < handle
 
 
         function storeDataFromStruct(obj, structToLoad)
+            % assignin("base", "structToLoad", structToLoad); % for debugging purposes
+
             obj.loadData(structToLoad);
             
             % Set initial modality and branch if not set
@@ -359,7 +361,7 @@ classdef (Sealed) AppStateManager < handle
         end
     end
 
-    methods (Access = private)
+    methods (Access = ?matlab.unittest.TestCase)
         function changeModalityForUserSelected(obj)
 
             newModality = obj.appHandle.getActiveModality();
@@ -544,6 +546,11 @@ classdef (Sealed) AppStateManager < handle
         % end
 
         function getAndStoreActiveData(obj)
+            if isempty(obj.modality) || isempty(obj.branch)
+                % If modality or branch is empty, do nothing
+                return
+            end
+
             if isempty(obj.branch)  % happens for modalities that do not have branches (like tracks)
                 modalityPath = {obj.modality};
             else
@@ -566,8 +573,6 @@ classdef (Sealed) AppStateManager < handle
 
             % Get the DataStore from ModalityDataStore
             obj.activeDataStoreHandle = obj.modalityDataStoreHandle.getModalityData(modalityPath);
-
-            notify(obj, 'newModalityLoaded');
         end
     end
 end

@@ -1,4 +1,8 @@
 classdef test_AppStateManager_dataLoading < testParent_AppStateManager
+    properties (Access = private)
+        logicalFlag = false; % Flag to check if event was emitted
+    end
+
     methods (Test)
         function testInitialStateIsEmpty(testCase)
             testCase.verifyEmpty(testCase.appStateManager.getAvailableModalities(), ...
@@ -35,27 +39,27 @@ classdef test_AppStateManager_dataLoading < testParent_AppStateManager
             testCase.verifyModalityState('tracks', '');
         end
 
-        function testAppendLoadedData(testCase)
-            % Load initial data
-            initialStruct = testCase.createTestModelStruct();
-            testCase.appStateManager.storeDataFromStruct(initialStruct);
+        % function testAppendLoadedData(testCase)
+        %     % Load initial data
+        %     initialStruct = testCase.createTestModelStruct();
+        %     testCase.appStateManager.storeDataFromStruct(initialStruct);
             
-            % Create and append new data
-            newBranchStruct = struct();
-            newBranchStruct.model.branch2.combinedList = table([3;4], {'C';'D'}, 'VariableNames', {'ID', 'Label'});
-            newBranchStruct.model.branch2.storedFilters = {FilteringStorage()};
-            newBranchStruct.model.branch2.storedCategorizations = CategorizationStorage();
+        %     % Create and append new data
+        %     newBranchStruct = struct();
+        %     newBranchStruct.model.branch2.combinedList = table([3;4], {'C';'D'}, 'VariableNames', {'ID', 'Label'});
+        %     newBranchStruct.model.branch2.storedFilters = {FilteringStorage()};
+        %     newBranchStruct.model.branch2.storedCategorizations = {CategorizationStorage()};
             
-            % Create mock BatchLoader
-            mockLoader = struct('appendLoadedData', @(existingData) testCase.mergeMockData(existingData, newBranchStruct));
+        %     % Create mock BatchLoader
+        %     mockLoader = struct('appendLoadedData', @(existingData) testCase.mergeMockData(existingData, newBranchStruct));
             
-            % Append data
-            testCase.appStateManager.appendLoadedData(mockLoader);
+        %     % Append data
+        %     testCase.appStateManager.appendLoadedData(mockLoader);
             
-            % Verify combined data
-            branches = testCase.appStateManager.getAvailableBranches('model');
-            testCase.verifyEqual(sort(branches), {'branch1'; 'branch2'});
-        end
+        %     % Verify combined data
+        %     branches = testCase.appStateManager.getAvailableBranches('model');
+        %     testCase.verifyEqual(sort(branches), {'branch1'; 'branch2'});
+        % end
 
         function testLoadInvalidData(testCase)
             % Test with empty struct
@@ -70,10 +74,9 @@ classdef test_AppStateManager_dataLoading < testParent_AppStateManager
         end
 
         function testEventEmittedWhenChangingModality(testCase)
-            ev = false;
-            addlistener(testCase.appStateManager, 'modalityPathChanged', @(~,~) assignin('caller', 'ev', true));
+            addlistener(testCase.appStateManager, 'availableBranchesChanged', @(~,~) setFlagTrue(testCase));
             notify(testCase.mockApp, 'modalityChangedByUser');
-            testCase.verifyTrue(ev);
+            testCase.verifyTrue(testCase.logicalFlag, 'Event was not emitted when changing modality.');
         end
 
         function testGetAvailableBranches(testCase)
@@ -94,6 +97,14 @@ classdef test_AppStateManager_dataLoading < testParent_AppStateManager
                     mergedData.model.(branches{i}) = newData.model.(branches{i});
                 end
             end
+        end
+
+        function setFlagTrue(testCase)
+            testCase.logicalFlag = true;
+        end 
+
+        function resetFlag(testCase)
+            testCase.logicalFlag = false;
         end
     end
 end

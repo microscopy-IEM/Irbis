@@ -68,6 +68,13 @@ classdef PivotedTableComponentHelper < handle
                 columnNames(1) = [];
             end
 
+            % handle the situation when there are no columns left
+            if isempty(columnNames)
+                obj.componentHandle.setRowParameter(obj.columnParameter);
+                obj.componentHandle.setDataParameter(obj.columnParameter);
+                return;
+            end
+
             if ~isempty(obj.rowParameter) && ismember(obj.rowParameter, columnNames)
                 obj.componentHandle.setRowParameter(obj.rowParameter);
                 columnNames(strcmp(columnNames, obj.rowParameter)) = [];
@@ -79,37 +86,19 @@ classdef PivotedTableComponentHelper < handle
                 columnNames(1) = [];
             end
 
+            % handle the situation when there are no columns left
+            if isempty(columnNames)
+                obj.componentHandle.setDataParameter(obj.rowParameter);
+                return;
+            end
+
             if ~isempty(obj.groupedDataParameter) && ismember(obj.groupedDataParameter, columnNames)
                 obj.componentHandle.setDataParameter(obj.groupedDataParameter);
-                % columnNames(strcmp(columnNames, obj.groupedDataParameter)) = [];
             elseif ismember('volume', columnNames)
                 obj.componentHandle.setDataParameter('volume');
-                % columnNames(strcmp(columnNames, 'volume')) = [];
             else 
                 obj.componentHandle.setDataParameter(columnNames{1});
-                % columnNames(1) = [];
             end
-            % if ismember('groupId', columnNames)
-            %     obj.componentHandle.setRowParameter('groupId');
-            %     columnNames(strcmp(columnNames, 'groupId')) = [];
-            % else
-            %     obj.componentHandle.setRowParameter(columnNames{1});
-            %     columnNames(1) = [];
-            % end
-
-            % if ismember('timePoint', columnNames)
-            %     obj.componentHandle.setColumnParameter('timePoint');
-            %     columnNames(strcmp(columnNames, 'groupId')) = [];
-            % else
-            %     obj.componentHandle.setColumnParameter(columnNames{1});
-            %     columnNames(1) = [];
-            % end
-
-            % if ismember('volume', columnNames)
-            %     obj.componentHandle.setDataParameter('volume');
-            % else 
-            %     obj.componentHandle.setDataParameter(columnNames{1});
-            % end
         end
 
         function setGroupedDataParameter(obj, parameter)
