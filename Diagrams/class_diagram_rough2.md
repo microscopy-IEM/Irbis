@@ -3,11 +3,13 @@ classDiagram
 
     %% UI components
     class IrbisResultsViewer {
+        [VIEW]
         -stateManagerHandle
         -plotManagerHandle
     }
 
     class placeholder_filteringMenuComponent {
+        [VIEW]
         -filteringStateManagerHandle
         -dataStoreHandle
         -tableStoreHandle
@@ -15,6 +17,7 @@ classDiagram
     }
 
     class placeholder_TableComponent {
+        [VIEW]
         -tableProcessorHandle
         -tableComponentHelper
     }
@@ -22,6 +25,7 @@ classDiagram
 
     %% Classes
     class AppStateManager {
+        [CONTROLLER]
         +EVENT availableModalitiesChanged
         +EVENT availableBranchesChanged
         +EVENT modalityChangedProgrammatically
@@ -30,14 +34,15 @@ classDiagram
     }
 
     class ColumnDefinitionInterface {
-
+        [MODEL]
     }
 
     class DataFormatter {
-
+        [MODEL/CONTROLLER]
     }
 
     class DataStore {
+        [MODEL]
         -tableStoreHandle
         -summarizedTablesStruct
         -filteringStorageHandle
@@ -53,6 +58,7 @@ classDiagram
     }
 
     class FilteringMenuStateManager {
+        [CONTROLLER]
         -dataStoreHandle
         -appStateManagerHandle
         -appHandle
@@ -62,14 +68,15 @@ classDiagram
     }
 
     class ModalityDataStore {
-
+        [MODEL]
     }
 
     class PlotInterface {
-
+        [VIEW]
     }
 
     class placeholder_TableProcessor {
+        [CONTROLLER]
         -dataStoreHandle
         -filteringStorageHandle
         -tableStoreHandle
@@ -81,6 +88,7 @@ classDiagram
     }
 
     class placeholder_TableComponentHelper {
+        [CONTROLLER]
         -dataStoreHandle
         -tableStoreHandle
         -stateManagerHandle
@@ -90,18 +98,21 @@ classDiagram
     }
 
     class PlotManager {
+        [CONTROLLER]
         -axesHandle
         -appStateManagerHandle
         -formatterHandle     
     }
 
     class PredefinedColumnContextMenu {
+        [VIEW]
         +menuHandle
         +columnName
         +tableStoreHandle
     }
 
     class TableStateManager {
+        [CONTROLLER]
         -dataStoreHandle
         -appStateManagerHandle
         -appHandle
@@ -112,11 +123,12 @@ classDiagram
     }
 
     class TableStore {
+        [MODEL]
         +EVENT tableDataChanged
     }
 
     class UserDefinedColumnContextMenu {
-
+        [VIEW]
     }
 
     %% Relationships with the visual components
