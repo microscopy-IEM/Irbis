@@ -163,6 +163,23 @@ classdef (Sealed) FullTableProcessor < handle
             % disp('FullTableProcessor:setState:notify');
             notify(obj, 'tableSelectionChanged');
         end
+
+
+        function editManualColumnValue(obj, columnName, rowName, newValue)
+            % Locate the row and column indices for the specified rowName and columnName
+            rowIdx = find(strcmp(obj.filteredTable.Properties.RowNames, rowName));
+            colIdx = find(strcmp(obj.filteredTable.Properties.VariableNames, columnName));
+
+            if isempty(rowIdx) || isempty(colIdx)
+                error('FullTableProcessor:InvalidInput', 'Specified row or column does not exist in the table');
+            end
+
+            % Update the value in the filteredTable
+            obj.filteredTable{rowIdx, colIdx} = newValue;
+
+            % Notify listeners that the table has changed
+            notify(obj, 'tableForDisplayChanged');
+        end
     end
 
     methods (Access = private)
@@ -172,6 +189,8 @@ classdef (Sealed) FullTableProcessor < handle
         function processData(obj)
 
             obj.filteredTable = obj.tableStoreHandle.getTableData();
+            % disp('FullTableProcessor:processData:filteredTable');
+            % disp(obj.filteredTable);
 
             isKept = obj.filteringStorageHandle.filter(obj.filteredTable);
             if ~isempty(isKept)
