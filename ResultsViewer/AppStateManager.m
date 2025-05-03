@@ -19,7 +19,7 @@ classdef (Sealed) AppStateManager < handle
         availableModalities cell = {}
         availableBranches cell = {}
 
-        modalityDataStoreHandle  % Holds DataStore objects for each modality/branch
+        modalityDataStoreHandle     % Holds DataStore objects for each modality/branch
         activeDataStoreHandle    % Current active DataStore
 
         tableType string = "Full"  % type of the table (Full, Pivoted, Summarized)
@@ -53,6 +53,12 @@ classdef (Sealed) AppStateManager < handle
             addlistener(obj.appHandle, 'modalityChangedByUser', @(~,~) obj.changeModalityForUserSelected());
             addlistener(obj.appHandle, 'branchChangedByUser', @(~,~) obj.changeBranchForUserSelected());
         end
+
+
+        % function registerListeners(obj)       % TO OPTIMIZE - it might be safer not to register listeners from the constructor, as the object is not yet fully finished
+        %     addlistener(obj.appHandle, 'modalityChangedByUser', @(~,~) obj.changeModalityForUserSelected());
+        %     addlistener(obj.appHandle, 'branchChangedByUser', @(~,~) obj.changeBranchForUserSelected());
+        % end
 
 
         function availableModalities = getAvailableModalities(obj)
