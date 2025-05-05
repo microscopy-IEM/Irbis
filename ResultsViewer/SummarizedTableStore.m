@@ -13,6 +13,8 @@ classdef SummarizedTableStore < handle
 
         cachedTableData = table(); % stores the summarized table data
 
+        rowNames = {}; % stores the names of the rows in the table
+
         tableStoreListener
     end
 
@@ -37,6 +39,7 @@ classdef SummarizedTableStore < handle
             % TO IMPLEMENT - needs to listen for changes in the parent table
 
             obj.createDefaultColumnDefinitions();
+            obj.extractRowNames();
         end
 
         function createDefaultColumnDefinitions(obj, varargin)
@@ -164,6 +167,7 @@ classdef SummarizedTableStore < handle
                 end
             end
             subset = obj.cachedTableData(:, columnNames);
+            subset.Properties.RowNames = obj.rowNames;
         end
 
         function updateTableData(obj)
@@ -183,6 +187,7 @@ classdef SummarizedTableStore < handle
             addedColumnTypes = obj.tableStoreHandle.getColumnTypesForNames(addedColumns);
             obj.parentColumnTypes = [obj.parentColumnTypes, addedColumnTypes];
             obj.createDefaultColumnDefinitions(addedColumns);
+            obj.extractRowNames();
 
             obj.cachedTableData = table();  % clear the cached data - done because filtering may have changed
 
@@ -211,6 +216,25 @@ classdef SummarizedTableStore < handle
             obj.parentColumnNames(idx) = [];
             obj.parentColumnTypes(idx) = [];
 
+        end
+
+
+        function extractRowNames(obj)
+            % get and store row names from the parent table to be able to combine them with calculated columns later
+            parentTable = obj.tableStoreHandle.getTableSubsetByName(obj.groupingName);
+            disp(size(parentTable))
+            if ~isempty(parentTable)
+                % Check if the grouping column is categorical
+                if iscategorical(parentTable.(obj.groupingName))
+                    % TO OPTIMIZE - this might not be correct at all times - be careful
+                    obj.rowNames = string(unique(parentTable.(obj.groupingName)));  % categories() returns also the filtered out names
+                else
+                    % TO OPTIMIZE - this needs to be adjusted if we want something else than categorical as rows
+                    error('Grouping column is not categorical.')
+                end
+            else
+                % nothing happens, no data
+            end
         end
     end
 

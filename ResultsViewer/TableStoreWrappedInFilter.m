@@ -62,13 +62,16 @@ classdef TableStoreWrappedInFilter < handle
         % end
 
         function subset = getTableSubsetByName(obj, columnNames)
-            subset = obj.tableStoreHandle.getTableSubsetByName(columnNames);
+            tableData = obj.tableStoreHandle.getTableData();
+            % I first ask for the whole table instead of subset, to make sure I have all the columns for the filtering
 
             % apply filtering before returning the data
             if ~isempty(obj.filteringStorageHandle)
-                isKept = obj.filteringStorageHandle.filter(subset);
+                isKept = obj.filteringStorageHandle.filter(tableData);
                 if ~isempty(isKept)
-                    subset = subset(isKept, :);
+                    subset = tableData(isKept, columnNames);
+                else
+                    subset = tableData(:, columnNames);
                 end
             end
         end
