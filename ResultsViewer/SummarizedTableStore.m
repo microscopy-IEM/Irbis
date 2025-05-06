@@ -6,10 +6,11 @@ classdef SummarizedTableStore < handle
         parentColumnNames = {}; % stores all columns available in the parent table
         parentColumnTypes = {}; % stores all types of columns available in the parent table
         columnDefinitionHandles = {}; % stores all defnitions of columns derived from the parent table
-        userDefinedColumnNames = {};
+        userDefinedColumns = {};
+        editableColumns = {};
 
         tableStoreHandle
-        userColumnDefinitionsHandle = []; % handle to the user column definition store
+        userColumnDefinitions = {}; % handle to the user column definitions (NOT STORE)
 
         cachedTableData = table(); % stores the summarized table data
 
@@ -23,12 +24,15 @@ classdef SummarizedTableStore < handle
     end
 
     methods
-        function obj = SummarizedTableStore(groupingName, tableStoreHandle, userColumnDefinitionsHandle)
+        function obj = SummarizedTableStore(groupingName, tableStoreHandle, userColumnDefinitions)
             % Constructor for SummarizedTableStore class
             obj.groupingName = groupingName;
             obj.tableStoreHandle = tableStoreHandle;
             obj.tableStoreListener = addlistener(obj.tableStoreHandle, 'tableDataChanged', @(~, ~)updateTableData(obj));
-            obj.userColumnDefinitionsHandle = userColumnDefinitionsHandle;
+            
+            if ~isempty(userColumnDefinitions)
+                obj.userColumnDefinitions = userColumnDefinitions;
+            end
 
             allColumnNames = tableStoreHandle.getColumnNames();
             isGroupingColumn = strcmp(allColumnNames, groupingName);
@@ -41,6 +45,7 @@ classdef SummarizedTableStore < handle
             obj.createDefaultColumnDefinitions();
             obj.extractRowNames();
         end
+
 
         function createDefaultColumnDefinitions(obj, varargin)
             if ~ismember('timePoint', obj.parentColumnNames)
@@ -93,31 +98,82 @@ classdef SummarizedTableStore < handle
             end
         end
 
+
         function addColumnDefinition(obj, columnDefinitionHandle)
             % Add a column definition to the store
             obj.columnDefinitionHandles{end+1} = columnDefinitionHandle;
         end
+
+
+        function addUserDefinedColumn(obj, columnName, newData, columnDefinitionHandle)
+            % Add a user-defined column to the store
+            if ~ismember(columnName, obj.userDefinedColumns)
+                obj.userDefinedColumns{end+1} = columnName;
+                obj.cachedTableData.(columnName) = newData;
+                obj.userColumnDefinitions{end+1} = columnDefinitionHandle;
+
+                notify(obj, 'tableDataChanged');
+            else 
+                % Column already exists, do not add it again
+                error('Column "%s" already exists in the table.', columnName);
+            end
+        end
+
+
+        function makeColumnEditable(obj, columnName)
+            % Make a column editable in the store
+            if ismember(columnName, obj.userDefinedColumns) && ~ismember(columnName, obj.editableColumns)   
+                % NOTE: with this, I assume that editable columns are always user defined
+                obj.editableColumns{end+1} = columnName;
+                notify(obj, 'tableDataChanged');
+            end
+        end
+
+
+        function editManualColumnValue(obj, columnName, rowName, newValue)
+            % Edit the value of a manual column
+            if ismember(columnName, obj.editableColumns) && ismember(columnName, obj.cachedTableData.Properties.VariableNames)
+                if ismember(rowName, obj.cachedTableData.Properties.RowNames)
+                    obj.cachedTableData{rowName, columnName} = newValue;
+                else
+                    error('Row %s does not exist in the table.', rowName);
+                end
+            else
+                error('Column %s does not exist or is not editable.', columnName);
+            end
+        end
+
 
         function columnCount = getNumberOfColumnsOfType(obj, type)
             % Get the number of columns of a specific type
             columnCount = sum(cellfun(@(x) isa(x, type), obj.columnDefinitionHandles));
         end
 
+
+        function columnEditability = getEditabilityOfColumns(obj, columnNames)
+            % Returns a boolean array
+            columnEditability = ismember(columnNames, obj.editableColumns);
+        end
+
+
         function columnNames = getStatisticalColumnNames(obj)
             % Get the names of all columns in the store
             columnNames = cellfun(@(x) x.getColumnName(), obj.columnDefinitionHandles, 'UniformOutput', false);
         end
+
 
         function parentNames = getParentNames(obj)
             % Get the names of all parent columns
             parentNames = obj.parentColumnNames;
         end
 
+
         function columnNames = getColumnNames(obj)
             statisticalColumnNames = obj.getStatisticalColumnNames();
-            columnNames = [statisticalColumnNames, obj.userDefinedColumnNames];
+            columnNames = [statisticalColumnNames, obj.userDefinedColumns];
         end
 
+        
         function columnNames = getStatisticalColumnNamesForParent(obj, parentName)
             % Get the names of all statistical columns for a specific parent column
             columnNames = cellfun(@(x) x.getColumnName(), obj.columnDefinitionHandles, 'UniformOutput', false);
@@ -125,13 +181,47 @@ classdef SummarizedTableStore < handle
             columnNames = columnNames(isParentColumn);
         end
 
+
+        function columnNames = getUserDefinedColumnNames(obj)
+            if isempty(obj.userDefinedColumns)
+                columnNames = {};
+            else
+                columnNames = obj.userDefinedColumns;
+            end
+        end
+
+
+        function columnNames = getEditableColumnNames(obj)
+            if isempty(obj.editableColumns)
+                columnNames = {};
+            else
+                columnNames = obj.editableColumns;
+            end
+        end
+
+
+        function numDefinitionsOfType = getNumDefinitionsOfType(obj, definitionType)
+            % get the number of user-defined columns of a specific type
+            numDefinitionsOfType = 0;
+            for i = 1:numel(obj.userColumnDefinitions)
+                if isequal(obj.userColumnDefinitions{i}.getDefinitionType(), definitionType)
+                    numDefinitionsOfType = numDefinitionsOfType + 1;
+                end
+            end
+        end
+
+
         function subset = getTableSubsetByName(obj, columnNames)
 
             % Check if all requested columns exist in the cached data
+            disp('getTableSubsetByName')
+            disp(columnNames)
             missingColumns = setdiff(columnNames, obj.cachedTableData.Properties.VariableNames);
+            disp(class(missingColumns))
+            disp(missingColumns)
 
             if ~isempty(missingColumns)
-                missingUserDefinedColumns = intersect(missingColumns, obj.userDefinedColumnNames);
+                missingUserDefinedColumns = intersect(cellstr(missingColumns), cellstr(obj.userDefinedColumns));
                 for i = length(missingUserDefinedColumns):-1:1
                     colName = missingUserDefinedColumns{i};
                     % Remove the column from the cached data
@@ -152,7 +242,7 @@ classdef SummarizedTableStore < handle
                 end
                 % Find the column definitions for missing columns
 
-                missingPredefinedColumns = setdiff(missingColumns, obj.userDefinedColumnNames);
+                missingPredefinedColumns = setdiff(cellstr(missingColumns), cellstr(obj.userDefinedColumns));
                 for i = 1:length(missingPredefinedColumns)
                     colName = missingPredefinedColumns{i};
                     defIdx = find(cellfun(@(x) strcmp(x.getColumnName(), colName), obj.columnDefinitionHandles));
@@ -169,6 +259,7 @@ classdef SummarizedTableStore < handle
             subset = obj.cachedTableData(:, columnNames);
             subset.Properties.RowNames = obj.rowNames;
         end
+
 
         function updateTableData(obj)
             % check which columns are missing and create them
@@ -193,6 +284,7 @@ classdef SummarizedTableStore < handle
 
             notify(obj, 'tableDataChanged');
         end
+
 
         function removeParentColumnAndItsChildren(obj, parentName)
             % Remove a parent column and its child columns from the store

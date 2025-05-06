@@ -102,19 +102,49 @@ classdef FormulaColumnDefinition < ColumnDefinitionInterface
         end
 
 
-        % Get Required Column Names
-        function requiredColumns = getRequiredColumns(obj)
-            % Returns a list of column names required for formula evaluation
-            % Returns: cell array of required column names
+        function columnNames = getRequiredColumns(obj, existingColumnNames)
+            % Finds which of the provided column names exist in the formula
+            % Args: existingColumnNames - cell array of column names to check
+            % Returns: cell array of column names that exist in the formula
 
-            % Use regular expressions to extract variable names from the formula string
-            % Exclude function calls by ensuring they are not followed by '('
-            pattern = '(?<!\.)\b[a-zA-Z_]\w*\b(?!\s*\()'; % Matches valid MATLAB variable names not preceded by '.' and not followed by '('
-            tokens = regexp(char(obj.formulaString), pattern, 'match');
+            if nargin == 1 || isempty(existingColumnNames)
+                % Use regular expressions to extract variable names from the formula string
+                % Does not exclude function calls (such as sin)
+                pattern = '\<[_a-zA-Z]\w*\>';
+                tokens = regexp(char(obj.formulaString), pattern, 'match');
 
-            % Remove duplicates to get unique variable names
-            requiredColumns = unique(tokens);
+                % Remove duplicates to get unique variable names
+                columnNames = unique(string(tokens));
+                return
+            end
+
+            % Check for presence of each column name in the formula string
+            isPresent = cellfun(@(col) contains(obj.formulaString, col), existingColumnNames);
+
+            % If none are present, return an empty string
+            if ~any(isPresent)
+                columnNames = string.empty;
+                return;
+            end
+
+            % Return the list of existing columns
+            columnNames = existingColumnNames(isPresent);
         end
+
+        
+        % % Get Required Column Names
+        % function requiredColumns = getRequiredColumns(obj)
+        %     % Returns a list of column names required for formula evaluation
+        %     % Returns: cell array of required column names
+
+        %     % Use regular expressions to extract variable names from the formula string
+        %     % Exclude function calls by ensuring they are not followed by '('
+        %     pattern = '(?<!\.)\b[a-zA-Z_]\w*\b(?!\s*\()'; % Matches valid MATLAB variable names not preceded by '.' and not followed by '('
+        %     tokens = regexp(char(obj.formulaString), pattern, 'match');
+
+        %     % Remove duplicates to get unique variable names
+        %     requiredColumns = unique(tokens);
+        % end
 
         
         % Validation

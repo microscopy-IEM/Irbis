@@ -31,7 +31,7 @@ classdef DataStore < handle
 
             % I input a decorator instead of the raw table store - because I want to include the categorization on the full table
             wrappedTableStoreHandle = TableStoreWrappedInFilter(obj.tableStoreHandle, obj.filteringStorageHandle);
-            obj.summarizedTablesStruct.(columnName) = SummarizedTableStore(columnName, wrappedTableStoreHandle, columnName);
+            obj.summarizedTablesStruct.(columnName) = SummarizedTableStore(columnName, wrappedTableStoreHandle, []);
 
             obj.summarizedFilteringStruct.(columnName) = FilteringStorage();
         end

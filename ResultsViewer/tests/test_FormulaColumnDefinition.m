@@ -27,7 +27,9 @@ classdef test_FormulaColumnDefinition < matlab.unittest.TestCase
             formulaString = "sin(Var1) + log(Var2) - Var3";
             obj = FormulaColumnDefinition("newColumn", formulaString);
 
-            requiredColumns = obj.getRequiredColumns();
+            % Test with provided column names
+            columnNames = ["Var1", "Var2", "Var3", "Var4"];
+            requiredColumns = obj.getRequiredColumns(columnNames);
             expectedColumns = ["Var1", "Var2", "Var3"];
 
             testCase.verifyEqual(sort(requiredColumns), sort(expectedColumns));
@@ -38,8 +40,10 @@ classdef test_FormulaColumnDefinition < matlab.unittest.TestCase
             formulaString = "sin(log(Var1)) + exp(Var2) - sqrt(Var3)";
             obj = FormulaColumnDefinition("newColumn", formulaString);
 
-            requiredColumns = obj.getRequiredColumns();
-            expectedColumns = ["Var1", "Var2", "Var3"];
+            % Test with subset of column names
+            columnNames = ["Var1", "Var2"];
+            requiredColumns = obj.getRequiredColumns(columnNames);
+            expectedColumns = ["Var1", "Var2"];
 
             testCase.verifyEqual(sort(requiredColumns), sort(expectedColumns));
         end
@@ -49,7 +53,9 @@ classdef test_FormulaColumnDefinition < matlab.unittest.TestCase
             formulaString = "Var1 + Var1 * Var2 - Var3 / Var1";
             obj = FormulaColumnDefinition("newColumn", formulaString);
 
-            requiredColumns = obj.getRequiredColumns();
+            % Test with all available columns
+            columnNames = ["Var1", "Var2", "Var3"];
+            requiredColumns = obj.getRequiredColumns(columnNames);
             expectedColumns = ["Var1", "Var2", "Var3"];
 
             testCase.verifyEqual(sort(requiredColumns), sort(expectedColumns));
@@ -60,7 +66,8 @@ classdef test_FormulaColumnDefinition < matlab.unittest.TestCase
             formulaString = "42 + sin(pi)";
             obj = FormulaColumnDefinition("newColumn", formulaString);
 
-            requiredColumns = obj.getRequiredColumns();
+            columnNames = ["Var1", "Var2"];
+            requiredColumns = obj.getRequiredColumns(columnNames);
             expectedColumns = string.empty();
 
             testCase.verifyEqual(requiredColumns, expectedColumns);
@@ -71,8 +78,21 @@ classdef test_FormulaColumnDefinition < matlab.unittest.TestCase
             formulaString = "Var1 + _Var2 - Var_3 + Var4_5";
             obj = FormulaColumnDefinition("newColumn", formulaString);
 
+            % Test with mixed available columns
+            columnNames = ["Var1", "_Var2", "OtherVar"];
+            requiredColumns = obj.getRequiredColumns(columnNames);
+            expectedColumns = ["Var1", "_Var2"];
+
+            testCase.verifyEqual(sort(requiredColumns), sort(expectedColumns));
+        end
+
+        function testGetRequiredColumnsWithNoColumnNames(testCase)
+            % Test getRequiredColumns method without providing column names
+            formulaString = "Var1 + Var2";
+            obj = FormulaColumnDefinition("newColumn", formulaString);
+
             requiredColumns = obj.getRequiredColumns();
-            expectedColumns = ["Var1", "_Var2", "Var_3", "Var4_5"];
+            expectedColumns = ["Var1", "Var2"];
 
             testCase.verifyEqual(sort(requiredColumns), sort(expectedColumns));
         end

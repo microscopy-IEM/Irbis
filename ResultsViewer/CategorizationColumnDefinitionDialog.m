@@ -109,9 +109,9 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
             addCategoryPanel(categoryGrid, columnNames, getColumnFcn, categoryScrollPanel);
             addCategoryPanel(categoryGrid, columnNames, getColumnFcn, categoryScrollPanel);
         
-            if nargin > 2
-                currentCategorization = varargin{3};
-                loadConditionsForRedefinition;
+            if nargin > 3
+                currentCategorization = varargin{4};
+                loadConditionsForRedefinition();
             end
         
             uiwait(groupingFig)
@@ -372,7 +372,7 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                     categorization = currentCategorization;
         
                     % Load the name of the categorization
-                    nameField.Value = categorization.CategorizationName;
+                    nameField.Value = categorization.getColumnName();
         
                     % Clear existing category panels
                     for i = length(categoryScrollPanel.UserData.CategoryPanels):-1:1
@@ -380,13 +380,14 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                     end
                     categoryScrollPanel.UserData.CategoryPanels = {};
         
-                    fields = fieldnames(categorization.Conditions);
+                    conditions = categorization.getConditions();
+                    fields = fieldnames(conditionss);
                     for i = 1:numel(fields)
                         [categoryPanel,criteriaGrid] = addCategoryPanel(categoryGrid, columnNames, getColumnFcn, categoryScrollPanel);
         
                         group = fields{i};
-                        groupName = categorization.Conditions.(group).name;
-                        conds = categorization.Conditions.(group).conditions;
+                        groupName = conditions.(group).name;
+                        conds = conditions.(group).conditions;
                         condFields = keys(conds);
         
                         categoryPanel.Children(1).Children(1).Value = groupName; % Set the category name

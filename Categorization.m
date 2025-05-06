@@ -146,7 +146,7 @@ classdef Categorization < handle
             end
         end
 
-        function columnNames = getRequiredColumns(obj)
+        function columnNames = getRequiredColumns(obj, existingColumnNames)
             % Returns a list of column names required for evaluation
             % Returns: cell array of unique column names
             columnNames = {};
@@ -157,6 +157,10 @@ classdef Categorization < handle
                 columnNames = [columnNames; condFields(:)];
             end
             columnNames = unique(columnNames);
+
+            assert(all(ismember(columnNames, existingColumnNames)), ...
+                'Categorization:MissingColumns', ...
+                'Some required columns are not present in the existing column names.');
         end
     end
 end

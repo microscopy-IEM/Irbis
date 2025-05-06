@@ -55,6 +55,16 @@ classdef ManualColumnDefinition < ColumnDefinitionInterface
             % Create an empty categorical column with specified categories
             data = categorical(strings(height(inputData), 1), obj.groupNames);
         end
+
+
+        function columnNames = getRequiredColumns(~, existingColumnNames)
+            if isempty(existingColumnNames)
+                columnNames = string.empty;
+            else
+                columnNames = existingColumnNames{1};
+                % manualColumnDefinition does not need any columns, but it will get the length of the table from the first column
+            end
+        end
         
         % Validation
         function isValid = validateRulesApplicabilityOnData(obj, inputData)

@@ -40,6 +40,7 @@ classdef SummarizedTableComponentHelper < handle
             obj.loadData();
         end
 
+
         function delete(obj)
             % delete the listeners
             if ~isempty(obj.tableStoreListener) && isvalid(obj.tableStoreListener)
@@ -53,6 +54,7 @@ classdef SummarizedTableComponentHelper < handle
             end
         end
 
+
         function setState(obj, processorState)
             % set the state of the processor
             if isfield(processorState, 'activeColumns')
@@ -60,6 +62,7 @@ classdef SummarizedTableComponentHelper < handle
             end
             obj.checkNodesByNodeData(obj.treeHandle, obj.activeColumns);
         end
+
 
         function calculateTreeData(obj)
             % disp('calculateTreeData')
@@ -87,6 +90,22 @@ classdef SummarizedTableComponentHelper < handle
                 end
 
                 obj.checkNodesByNodeData(obj.treeHandle, obj.activeColumns);
+            end
+
+            % user defined parameters
+            columnNamesUserDefined = obj.summarizedTableStoreHandle.getUserDefinedColumnNames();
+            columnNamesEditable = obj.summarizedTableStoreHandle.getEditableColumnNames();
+            if ~isempty(columnNamesUserDefined)
+                userDefinedNode = uitreenode(obj.treeHandle,'Text','user-defined');
+                for i = 1:length(columnNamesUserDefined)
+                    name = columnNamesUserDefined{i};
+                    node = uitreenode(userDefinedNode,'Text', name, 'NodeData', name);
+                    contextMenu = UserDefinedColumnContextMenu(node, name, obj);
+                    contextMenu.assignTo(node);
+                    if ismember(name, columnNamesEditable)
+                        node.Tag = 'editable';
+                    end
+                end
             end
         end
 
@@ -119,6 +138,7 @@ classdef SummarizedTableComponentHelper < handle
             obj.loadDataForGrouping();
         end
 
+
         function setActiveColumns(obj, activeColumns)
             % Set the active columns for the summarized table
             obj.activeColumns = activeColumns;
@@ -145,11 +165,35 @@ classdef SummarizedTableComponentHelper < handle
             obj.loadDataForGrouping();
         end
 
+
+        function createUserDefinedColumn(obj, type)
+            % create a user defined column
+
+            columnDefinitionObject = UserColumnDefinitionFactory.create(type, obj.summarizedTableStoreHandle);
+            if isempty(columnDefinitionObject)
+                return  % the user canceled the dialog or something went wrong
+            end
+
+            existingColumnNames = obj.summarizedTableStoreHandle.getColumnNames();
+            requiredColumnNames = columnDefinitionObject.getRequiredColumns(existingColumnNames);
+
+            requiredTableSubset = obj.summarizedTableStoreHandle.getTableSubsetByName(requiredColumnNames);
+            newColumnData = columnDefinitionObject.generateColumn(requiredTableSubset);
+            columnName = columnDefinitionObject.getColumnName();
+
+            obj.summarizedTableStoreHandle.addUserDefinedColumn(columnName, newColumnData, columnDefinitionObject);
+            if isequal(type, 'manual')
+                obj.summarizedTableStoreHandle.makeColumnEditable(columnName);
+            end
+        end
+
+
         function replaceData(obj)
             % replace the data in the data store
             obj.dataStoreHandle = obj.tableStateManagerHandle.getActiveDataStore();
             obj.loadData();
         end
+
 
         function loadData(obj)
             obj.tableStoreHandle = obj.dataStoreHandle.getTableStore();
@@ -160,6 +204,7 @@ classdef SummarizedTableComponentHelper < handle
 
             obj.findAndSetRowParameters();
         end
+
 
         function loadDataForGrouping(obj)
             obj.summarizedTableStoreHandle = obj.dataStoreHandle.getSummarizedTableStore(obj.rowParameter);

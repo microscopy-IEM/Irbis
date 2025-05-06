@@ -17,9 +17,7 @@ classdef (Sealed) TableStore < handle
         function obj = TableStore()
         end
 
-        % TO FIX - somewhat, the manual column settings are overwritten/not shown when hiding and showing columns
 
-        
         %% Set or add table data
             function setTableData(obj, newTableData)
                 % set the table data and notify the listeners
@@ -73,6 +71,9 @@ classdef (Sealed) TableStore < handle
 
 
             function subset = getTableSubsetByName(obj, columnNames)
+                disp('getTableSubsetByName')
+                disp(class(columnNames))
+                disp(columnNames)
                 subset = obj.tableData(:, columnNames);
             end
 
