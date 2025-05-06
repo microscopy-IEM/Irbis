@@ -12,7 +12,7 @@ classdef FormulaColumnDefinition < ColumnDefinitionInterface
             %        formulaString - string of the formula to be applied
             
             if ~isvarname(columnName)
-                error('"%s" is not a valid MATLAB variable name.', columnName);
+                error('MATLAB:invalidVariableName', '"%s" is not a valid MATLAB variable name.', columnName);
             end
             
             obj.columnName = columnName;
@@ -97,9 +97,25 @@ classdef FormulaColumnDefinition < ColumnDefinitionInterface
                 % Assign to new variable
                 fprintf('New column "%s" created successfully!\n', obj.columnName);
             catch ME
-                error('Error evaluating formula "%s": %s', obj.formulaString, ME.message);
+                error('MATLAB:InvalidFormula', 'Error evaluating formula "%s": %s', obj.formulaString, ME.message);
             end
         end
+
+
+        % Get Required Column Names
+        function requiredColumns = getRequiredColumns(obj)
+            % Returns a list of column names required for formula evaluation
+            % Returns: cell array of required column names
+
+            % Use regular expressions to extract variable names from the formula string
+            % Exclude function calls by ensuring they are not followed by '('
+            pattern = '(?<!\.)\b[a-zA-Z_]\w*\b(?!\s*\()'; % Matches valid MATLAB variable names not preceded by '.' and not followed by '('
+            tokens = regexp(char(obj.formulaString), pattern, 'match');
+
+            % Remove duplicates to get unique variable names
+            requiredColumns = unique(tokens);
+        end
+
         
         % Validation
         function isValid = validateRulesApplicabilityOnData(obj, inputData)

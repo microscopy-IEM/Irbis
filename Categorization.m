@@ -145,5 +145,18 @@ classdef Categorization < handle
                 categories(match) = groupName;
             end
         end
+
+        function columnNames = getRequiredColumns(obj)
+            % Returns a list of column names required for evaluation
+            % Returns: cell array of unique column names
+            columnNames = {};
+            fields = fieldnames(obj.Conditions);
+            for i = 1:numel(fields)
+                conds = obj.Conditions.(fields{i}).conditions;
+                condFields = keys(conds);
+                columnNames = [columnNames; condFields(:)];
+            end
+            columnNames = unique(columnNames);
+        end
     end
 end

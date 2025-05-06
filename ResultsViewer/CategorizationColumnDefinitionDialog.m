@@ -1,8 +1,8 @@
 classdef (Sealed) CategorizationColumnDefinitionDialog 
 
     methods (Static)
-        function [columnName, conditions] = show(tableData, numExistingCategories)
-            [columnName, conditions] = CategorizationColumnDefinitionDialog.dialogWindow(tableData, numExistingCategories);
+        function [columnName, conditions] = show(columnNames, getColumnFcn, numExistingCategories)
+            [columnName, conditions] = CategorizationColumnDefinitionDialog.dialogWindow(columnNames, getColumnFcn, numExistingCategories);
             if isempty(columnName) || isempty(conditions)
                 columnName = '';
                 conditions = [];
@@ -10,9 +10,9 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
             end
         end
 
-        function [columnName, conditions] = showExisting(tableData, existingCategorization)
+        function [columnName, conditions] = showExisting(columnNames, getColumnFcn, existingCategorization)
             numExistingCategories = 1;  % This is not necessary, as we are filling in the exiting name anyway
-            [columnName, conditions] = CategorizationColumnDefinitionDialog.dialogWindow(tableData, numExistingCategories, existingCategorization);
+            [columnName, conditions] = CategorizationColumnDefinitionDialog.dialogWindow(columnNames, getColumnFcn, numExistingCategories, existingCategorization);
             if isempty(columnName) || isempty(conditions)
                 columnName = '';
                 conditions = [];
@@ -26,10 +26,13 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
             % Create a sample table data
             if isempty(varargin)
                 tableData = table({'A'; 'B'; 'C'}, [1; 2; 3], [4; 5; 6], 'VariableNames', {'Col1', 'Col2', 'Col3'});
+                columnNames = tableData.Properties.VariableNames;
+                getColumnFcn = @(colName) tableData.(colName);
                 numberOfExistingCategorizations = 0;
             else
-                tableData = varargin{1};
-                numberOfExistingCategorizations = varargin{2};
+                columnNames = varargin{1};
+                getColumnFcn = varargin{2};
+                numberOfExistingCategorizations = varargin{3};
             end
         
             % Create a new figure for grouping window
@@ -93,7 +96,7 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
             categoryPlusButton = uibutton(buttonGrid, 'push', 'Text', 'Add category');
             categoryPlusButton.Layout.Row = 1;
             categoryPlusButton.Layout.Column = 1;
-            categoryPlusButton.ButtonPushedFcn = @(btn, event) addCategoryPanel(categoryGrid, tableData, categoryScrollPanel);
+            categoryPlusButton.ButtonPushedFcn = @(btn, event) addCategoryPanel(categoryGrid, columnNames, getColumnFcn, categoryScrollPanel);
             categoryPlusButton.Tooltip = 'Define new category.';
         
             % Add a save button
@@ -103,8 +106,8 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
             saveButton.ButtonPushedFcn = @(btn, event) saveCategories(categoryScrollPanel);
             saveButton.Tooltip = 'Confirm the categorization definition and close the window.';
         
-            addCategoryPanel(categoryGrid, tableData, categoryScrollPanel);
-            addCategoryPanel(categoryGrid, tableData, categoryScrollPanel);
+            addCategoryPanel(categoryGrid, columnNames, getColumnFcn, categoryScrollPanel);
+            addCategoryPanel(categoryGrid, columnNames, getColumnFcn, categoryScrollPanel);
         
             if nargin > 2
                 currentCategorization = varargin{3};
@@ -120,7 +123,7 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                 delete(fig);
             end
         
-            function [categoryPanel,criteriaGrid] = addCategoryPanel(categoryGrid, tableData, scrollPanel)
+            function [categoryPanel,criteriaGrid] = addCategoryPanel(categoryGrid, columnNames, getColumnFcn, scrollPanel)
                 % Create a panel for the new category
                 categoryPanel = uipanel(categoryGrid);
                 categoryPanel.Layout.Row = numel(categoryGrid.Children) + 1;
@@ -157,7 +160,7 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                 criteriaPlusButton = uibutton(panelGrid, 'push', 'Text', 'Add criteria');
                 criteriaPlusButton.Layout.Row = 1;
                 criteriaPlusButton.Layout.Column = 3;
-                criteriaPlusButton.ButtonPushedFcn = @(btn, event) addCriteriaRow(criteriaGrid, tableData, categoryPanel);
+                criteriaPlusButton.ButtonPushedFcn = @(btn, event) addCriteriaRow(criteriaGrid, columnNames, getColumnFcn, categoryPanel);
                 criteriaPlusButton.Tooltip = 'Add new criterion for the category definition.';
         
                 % Store UI components for dynamic management
@@ -169,10 +172,10 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                 n = numel(categoryGrid.Children);
                 categoryGrid.RowHeight = [repmat({'fit'}, 1, n), {5000}];
         
-                addCriteriaRow(criteriaGrid, tableData, categoryPanel);
+                addCriteriaRow(criteriaGrid, columnNames, getColumnFcn, categoryPanel);
             end
         
-            function addCriteriaRow(criteriaGrid, tableData, categoryPanel)
+            function addCriteriaRow(criteriaGrid, columnNames, getColumnFcn, categoryPanel)
                 % Get the current row position for the new criteria components
                 newRow = size(criteriaGrid.RowHeight, 2) + 1;
         
@@ -180,8 +183,8 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                 columnDropdown = uidropdown(criteriaGrid);
                 columnDropdown.Layout.Row = newRow;
                 columnDropdown.Layout.Column = 1;
-                columnDropdown.Items = tableData.Properties.VariableNames;
-                columnDropdown.ValueChangedFcn = @(dd, event) updateCriteriaRow(dd, criteriaGrid, tableData, newRow, categoryPanel);
+                columnDropdown.Items = columnNames;
+                columnDropdown.ValueChangedFcn = @(dd, event) updateCriteriaRow(dd, criteriaGrid, getColumnFcn, newRow, categoryPanel);
                 columnDropdown.Tooltip = 'Select the variable to base the categorization on.';
         
                 % Create a dropdown for operators
@@ -216,11 +219,12 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                 % criteriaGrid.RowHeight{newRow + 1} = 5000;
             end
         
-            function updateCriteriaRow(dd, criteriaGrid, tableData, row, categoryPanel)
+            function updateCriteriaRow(dd, criteriaGrid, getColumnFcn, row, categoryPanel)
                 column = dd.Value;
-                if iscategorical(tableData.(column))
+                columnData = getColumnFcn(column);
+                if iscategorical(columnData)
                     % Categorical variable
-                    updateToCategoricalCriteria(criteriaGrid, row, tableData.(column), categoryPanel);
+                    updateToCategoricalCriteria(criteriaGrid, row, columnData, categoryPanel);
                 else
                     % Numeric variable
                     updateToNumericCriteria(criteriaGrid, row, categoryPanel);
@@ -378,7 +382,7 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
         
                     fields = fieldnames(categorization.Conditions);
                     for i = 1:numel(fields)
-                        [categoryPanel,criteriaGrid] = addCategoryPanel(categoryGrid, tableData, categoryScrollPanel);
+                        [categoryPanel,criteriaGrid] = addCategoryPanel(categoryGrid, columnNames, getColumnFcn, categoryScrollPanel);
         
                         group = fields{i};
                         groupName = categorization.Conditions.(group).name;
@@ -392,7 +396,7 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                             condValue = conds(condFields{j});
                             column = condFields{j};
         
-                            if ~ismember(column, tableData.Properties.VariableNames)
+                            if ~ismember(column, columnNames)
                                 % the column used in definition does not exist in the current table
                                 delete(groupingFig)
                                 error('Categorization:ColumnNotInTable', ...
@@ -408,19 +412,19 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                                     categoryPanel.UserData.CriteriaComponents{criteriaNum}{2}.Value = comparator;
                                     categoryPanel.UserData.CriteriaComponents{criteriaNum}{3}.Value = value;
                                     if ~isequal(k,numel(condKeys))
-                                        addCriteriaRow(criteriaGrid, tableData, categoryPanel);
+                                        addCriteriaRow(criteriaGrid, columnNames, getColumnFcn, categoryPanel);
                                     end
                                     criteriaNum = criteriaNum + 1;
                                 end
                             else
                                 categoryPanel.UserData.CriteriaComponents{criteriaNum}{1}.Value = column;
                                 dd = categoryPanel.UserData.CriteriaComponents{criteriaNum}{1};
-                                updateCriteriaRow(dd,criteriaGrid,tableData,criteriaNum,categoryPanel);
+                                updateCriteriaRow(dd, criteriaGrid, getColumnFcn, criteriaNum, categoryPanel);
                                 checkNodesByName(categoryPanel.UserData.CriteriaComponents{criteriaNum}{3},condValue{1});
                                 criteriaNum = criteriaNum + 1;
                             end
                             if ~isequal(j,numel(condFields))
-                                addCriteriaRow(criteriaGrid, tableData, categoryPanel);
+                                addCriteriaRow(criteriaGrid, columnNames, getColumnFcn, categoryPanel);
                             end
                         end
                     end

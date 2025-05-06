@@ -188,8 +188,10 @@ classdef FullTableComponentHelper < handle
                 case 'categorization'
                     % open the dialog to edit the categorization
                     data = obj.tableStoreHandle.getTableData();
-                    % [newName, conditions] = categorizationDefinitionWindow(data, 1, CategorizationStorage(), userColumnDefinition);
-                    [newName, conditions] = CategorizationColumnDefinitionDialog.showExisting(data, userColumnDefinition);
+                    columnNames = obj.tableStoreHandle.getColumnNames();
+                    getColumnFcn = @(colName) obj.tableStoreHandle.getColumnData(colName);
+
+                    [newName, conditions] = CategorizationColumnDefinitionDialog.showExisting(columnNames, getColumnFcn, userColumnDefinition);
 
                     if isequal(newName, columnName)
                         userColumnDefinition.replaceRules(conditions);
@@ -354,9 +356,11 @@ classdef FullTableComponentHelper < handle
                 case 'Add categorization'
                     % display user interface to create a new column
                     data = obj.tableStoreHandle.getTableData();
-                    n = obj.tableStoreHandle.getNumDefinitionsOfType('categorization');
+                    columnNames = obj.tableStoreHandle.getColumnNames();
+                    getColumnFcn = @(colName) obj.tableStoreHandle.getColumnData(colName);
+                    numExistingCategories = obj.tableStoreHandle.getNumDefinitionsOfType('categorization');
 
-                    [name, conditions] = CategorizationColumnDefinitionDialog.show(data, n); % open the dialog to define the new column
+                    [name, conditions] = CategorizationColumnDefinitionDialog.show(columnNames, getColumnFcn, numExistingCategories); % open the dialog to define the new column
         
                     % extract the categorization and store it
                     newCategorization = Categorization(name, conditions);
@@ -481,8 +485,10 @@ classdef FullTableComponentHelper < handle
                 case 'categorization'
                     % open the dialog to edit the categorization
                     data = obj.tableStoreHandle.getTableData();
-                    % [newName, conditions] = categorizationDefinitionWindow(data, 1, CategorizationStorage(), userColumnDefinition);
-                    [newName, conditions] = CategorizationColumnDefinitionDialog.showExisting(data, userColumnDefinition);
+                    columnNames = obj.tableStoreHandle.getColumnNames();
+                    getColumnFcn = @(colName) obj.tableStoreHandle.getColumnData(colName);
+
+                    [newName, conditions] = CategorizationColumnDefinitionDialog.showExisting(columnNames, getColumnFcn, userColumnDefinition);
 
                     if isequal(newName, templateName)
                         userColumnDefinition.replaceRules(conditions);
@@ -754,9 +760,11 @@ classdef FullTableComponentHelper < handle
                 case 'Add categorization'
                     % display user interface to create a new column
                     data = obj.tableStoreHandle.getTableData();
-                    n = obj.tableStoreHandle.getNumDefinitionsOfType('categorization');
+                    columnNames = obj.tableStoreHandle.getColumnNames();
+                    getColumnFcn = @(colName) obj.tableStoreHandle.getColumnData(colName);
+                    numExistingCategories = obj.tableStoreHandle.getNumDefinitionsOfType('categorization');
 
-                    [name, conditions] = CategorizationColumnDefinitionDialog.show(data, n); % open the dialog to define the new column
+                    [name, conditions] = CategorizationColumnDefinitionDialog.show(columnNames, getColumnFcn, numExistingCategories); % open the dialog to define the new column
         
                     % extract the categorization and store it
                     newCategorization = Categorization(name, conditions);
