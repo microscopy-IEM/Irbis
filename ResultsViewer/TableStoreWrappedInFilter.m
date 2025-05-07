@@ -13,6 +13,7 @@ classdef TableStoreWrappedInFilter < handle
 
     methods
         function obj = TableStoreWrappedInFilter(tableStoreHandle, filteringStorageHandle)
+            % TO FIX - possibly instantiated multiple times (notify(obj, 'tableDataChanged') is done twice instead of once)
             if ~isa(tableStoreHandle, 'TableStore')
                 error('Expected a TableStore object');
             end

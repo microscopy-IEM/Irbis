@@ -22,76 +22,76 @@ classdef test_FormulaColumnDefinition < matlab.unittest.TestCase
                 'MATLAB:invalidVariableName');
         end
 
-        function testGetRequiredColumnsWithFunctions(testCase)
-            % Test getRequiredColumns method with functions in the formula
+        function testgetRequiredColumnNamesWithFunctions(testCase)
+            % Test getRequiredColumnNames method with functions in the formula
             formulaString = "sin(Var1) + log(Var2) - Var3";
             obj = FormulaColumnDefinition("newColumn", formulaString);
 
             % Test with provided column names
             columnNames = ["Var1", "Var2", "Var3", "Var4"];
-            requiredColumns = obj.getRequiredColumns(columnNames);
+            requiredColumns = obj.getRequiredColumnNames(columnNames);
             expectedColumns = ["Var1", "Var2", "Var3"];
 
             testCase.verifyEqual(sort(requiredColumns), sort(expectedColumns));
         end
 
-        function testGetRequiredColumnsWithNestedFunctions(testCase)
-            % Test getRequiredColumns method with nested functions in the formula
+        function testgetRequiredColumnNamesWithNestedFunctions(testCase)
+            % Test getRequiredColumnNames method with nested functions in the formula
             formulaString = "sin(log(Var1)) + exp(Var2) - sqrt(Var3)";
             obj = FormulaColumnDefinition("newColumn", formulaString);
 
             % Test with subset of column names
             columnNames = ["Var1", "Var2"];
-            requiredColumns = obj.getRequiredColumns(columnNames);
+            requiredColumns = obj.getRequiredColumnNames(columnNames);
             expectedColumns = ["Var1", "Var2"];
 
             testCase.verifyEqual(sort(requiredColumns), sort(expectedColumns));
         end
 
-        function testGetRequiredColumnsWithRepeatedVariables(testCase)
-            % Test getRequiredColumns method with repeated variables in the formula
+        function testgetRequiredColumnNamesWithRepeatedVariables(testCase)
+            % Test getRequiredColumnNames method with repeated variables in the formula
             formulaString = "Var1 + Var1 * Var2 - Var3 / Var1";
             obj = FormulaColumnDefinition("newColumn", formulaString);
 
             % Test with all available columns
             columnNames = ["Var1", "Var2", "Var3"];
-            requiredColumns = obj.getRequiredColumns(columnNames);
+            requiredColumns = obj.getRequiredColumnNames(columnNames);
             expectedColumns = ["Var1", "Var2", "Var3"];
 
             testCase.verifyEqual(sort(requiredColumns), sort(expectedColumns));
         end
 
-        function testGetRequiredColumnsWithNoVariables(testCase)
-            % Test getRequiredColumns method with no variables in the formula
+        function testgetRequiredColumnNamesWithNoVariables(testCase)
+            % Test getRequiredColumnNames method with no variables in the formula
             formulaString = "42 + sin(pi)";
             obj = FormulaColumnDefinition("newColumn", formulaString);
 
             columnNames = ["Var1", "Var2"];
-            requiredColumns = obj.getRequiredColumns(columnNames);
+            requiredColumns = obj.getRequiredColumnNames(columnNames);
             expectedColumns = string.empty();
 
             testCase.verifyEqual(requiredColumns, expectedColumns);
         end
 
-        function testGetRequiredColumnsWithEdgeCases(testCase)
-            % Test getRequiredColumns method with edge cases in the formula
+        function testgetRequiredColumnNamesWithEdgeCases(testCase)
+            % Test getRequiredColumnNames method with edge cases in the formula
             formulaString = "Var1 + _Var2 - Var_3 + Var4_5";
             obj = FormulaColumnDefinition("newColumn", formulaString);
 
             % Test with mixed available columns
             columnNames = ["Var1", "_Var2", "OtherVar"];
-            requiredColumns = obj.getRequiredColumns(columnNames);
+            requiredColumns = obj.getRequiredColumnNames(columnNames);
             expectedColumns = ["Var1", "_Var2"];
 
             testCase.verifyEqual(sort(requiredColumns), sort(expectedColumns));
         end
 
-        function testGetRequiredColumnsWithNoColumnNames(testCase)
-            % Test getRequiredColumns method without providing column names
+        function testgetRequiredColumnNamesWithNoColumnNames(testCase)
+            % Test getRequiredColumnNames method without providing column names
             formulaString = "Var1 + Var2";
             obj = FormulaColumnDefinition("newColumn", formulaString);
 
-            requiredColumns = obj.getRequiredColumns();
+            requiredColumns = obj.getRequiredColumnNames();
             expectedColumns = ["Var1", "Var2"];
 
             testCase.verifyEqual(sort(requiredColumns), sort(expectedColumns));

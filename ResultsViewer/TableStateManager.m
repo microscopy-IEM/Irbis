@@ -79,6 +79,7 @@ classdef TableStateManager < handle
         function generateTableProcessor(obj)
 
             if ~isempty(obj.tableProcessorHandle)
+                disp('TableStateManager:generateTableProcessor - deleting old table processor');
                 delete(obj.tableProcessorHandle);
             end
             obj.tableProcessorHandle = TableProcessorFactory.createProcessor(obj.tableType);
@@ -88,6 +89,7 @@ classdef TableStateManager < handle
         function generateTableComponentHelper(obj)
 
             if ~isempty(obj.tableComponentHelperHandle)
+                disp('TableStateManager:generateTableComponentHelper - deleting old table component helper');
                 delete(obj.tableComponentHelperHandle);
             end
             obj.tableComponentHelperHandle = TableComponentHelperFactory.create(obj.tableType);
@@ -97,6 +99,7 @@ classdef TableStateManager < handle
         function generateTableComponent(obj)
 
             if ~isempty(obj.tableComponentHandle)
+                disp('TableStateManager:generateTableComponent - deleting old table component');
                 delete(obj.tableComponentHandle);
             end
 

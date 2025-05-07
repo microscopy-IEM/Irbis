@@ -4,7 +4,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
 
         rowParameter = ''   % decides which summarized table is going to be used
         
-        filteredTable
+        filteredTable = table() 
         activeColumns = {}
 
         selectedTableCellsList (:,2) = [] % List of selected table cells nx2 array
@@ -169,6 +169,9 @@ classdef (Sealed) SummarizedTableProcessor < handle
 
 
         function replaceData(obj)
+            disp('SummarizedTableProcessor:replaceData')
+            disp(obj.rowParameter)
+            disp(obj.filteredTable)
             obj.dataStoreHandle = obj.stateManagerHandle.getActiveDataStore();
             obj.loadData();
         end

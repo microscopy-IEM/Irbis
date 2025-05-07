@@ -52,6 +52,16 @@ classdef Categorization < handle
                 end
             end
         end
+
+
+        function renameColumn(obj, newName)
+            % Rename with a new name
+            % Args: newName - string of desired column name
+            if ~isvarname(newName)
+                error('"%s" is not a valid MATLAB variable name.', newName);
+            end
+            obj.CategorizationName = newName;
+        end
         
         function listArray = updateTable(obj, listArray, timePoints)
             if istable(listArray)
@@ -146,7 +156,7 @@ classdef Categorization < handle
             end
         end
 
-        function columnNames = getRequiredColumns(obj, existingColumnNames)
+        function columnNames = getRequiredColumnNames(obj, existingColumnNames)
             % Returns a list of column names required for evaluation
             % Returns: cell array of unique column names
             columnNames = {};

@@ -102,7 +102,7 @@ classdef FormulaColumnDefinition < ColumnDefinitionInterface
         end
 
 
-        function columnNames = getRequiredColumns(obj, existingColumnNames)
+        function columnNames = getRequiredColumnNames(obj, existingColumnNames)
             % Finds which of the provided column names exist in the formula
             % Args: existingColumnNames - cell array of column names to check
             % Returns: cell array of column names that exist in the formula
@@ -133,7 +133,7 @@ classdef FormulaColumnDefinition < ColumnDefinitionInterface
 
         
         % % Get Required Column Names
-        % function requiredColumns = getRequiredColumns(obj)
+        % function requiredColumns = getRequiredColumnNames(obj)
         %     % Returns a list of column names required for formula evaluation
         %     % Returns: cell array of required column names
 

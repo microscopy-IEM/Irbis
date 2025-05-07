@@ -17,6 +17,8 @@ classdef SummarizedTableStore < handle
         rowNames = {}; % stores the names of the rows in the table
 
         tableStoreListener
+
+        % TO IMPLEMENT - before the ModalityDataStore is saved, clean the listeners and other temp variables
     end
 
     events
@@ -108,7 +110,7 @@ classdef SummarizedTableStore < handle
         function addUserDefinedColumn(obj, columnName, newData, columnDefinitionHandle)
             % Add a user-defined column to the store
             if ~ismember(columnName, obj.userDefinedColumns)
-                obj.userDefinedColumns{end+1} = columnName;
+                obj.userDefinedColumns{end+1} = char(columnName);
                 obj.cachedTableData.(columnName) = newData;
                 obj.userColumnDefinitions{end+1} = columnDefinitionHandle;
 
@@ -116,6 +118,19 @@ classdef SummarizedTableStore < handle
             else 
                 % Column already exists, do not add it again
                 error('Column "%s" already exists in the table.', columnName);
+            end
+        end
+
+
+        function updateUserDefinedColumn(obj, columnName, newData, userDefinitionHandle)
+            % Update the data of a user-defined column
+            if ismember(columnName, obj.userDefinedColumns)
+                obj.cachedTableData.(columnName) = newData;
+                idx = find(strcmp(obj.userDefinedColumns, columnName), 1);
+                obj.userColumnDefinitions{idx} = userDefinitionHandle;
+                notify(obj, 'tableDataChanged');
+            else
+                error('Column "%s" does not exist in the table.', columnName);
             end
         end
 
@@ -200,6 +215,21 @@ classdef SummarizedTableStore < handle
         end
 
 
+        function userColumnDefinition = getUserColumnDefinition(obj, columnName)
+            % Get the user column definition for a specific column name
+            if ismember(columnName, obj.userDefinedColumns)
+                idx = find(strcmp(obj.userDefinedColumns, columnName), 1);
+                if ~isempty(idx)
+                    userColumnDefinition = obj.userColumnDefinitions{idx};
+                else
+                    error('Column %s does not exist in the user-defined columns.', columnName);
+                end
+            else
+                error('Column %s is not a user-defined column.', columnName);
+            end
+        end
+
+
         function numDefinitionsOfType = getNumDefinitionsOfType(obj, definitionType)
             % get the number of user-defined columns of a specific type
             numDefinitionsOfType = 0;
@@ -214,11 +244,7 @@ classdef SummarizedTableStore < handle
         function subset = getTableSubsetByName(obj, columnNames)
 
             % Check if all requested columns exist in the cached data
-            disp('getTableSubsetByName')
-            disp(columnNames)
             missingColumns = setdiff(columnNames, obj.cachedTableData.Properties.VariableNames);
-            disp(class(missingColumns))
-            disp(missingColumns)
 
             if ~isempty(missingColumns)
                 missingUserDefinedColumns = intersect(cellstr(missingColumns), cellstr(obj.userDefinedColumns));
@@ -230,11 +256,12 @@ classdef SummarizedTableStore < handle
                     end
 
                     % Create the column using its definition
-                    defIdx = find(cellfun(@(x) strcmp(x.getColumnName(), colName), obj.columnDefinitionHandles));
+                    defIdx = find(cellfun(@(x) strcmp(x.getColumnName(), colName), obj.userColumnDefinitions));
                     if ~isempty(defIdx)
-                        requiredColumnNames = obj.columnDefinitionHandles{defIdx}.getRequiredColumnNames();
-                        requiredTableSubset = obj.tableStoreHandle.getTableSubsetByName(requiredColumnNames);
-                        newData = obj.columnDefinitionHandles{defIdx}.generateColumn(requiredTableSubset);
+                        existingColumnNames = obj.getColumnNames();
+                        requiredColumnNames = obj.userColumnDefinitions{defIdx}.getRequiredColumnNames(existingColumnNames);
+                        requiredTableSubset = obj.getTableSubsetByName(requiredColumnNames);    % user-defined columns are based on the summarized table
+                        newData = obj.userColumnDefinitions{defIdx}.generateColumn(requiredTableSubset);
                         obj.cachedTableData.(colName) = newData;
                     end
                     % Remove the column from the cached data
@@ -308,6 +335,58 @@ classdef SummarizedTableStore < handle
             obj.parentColumnNames(idx) = [];
             obj.parentColumnTypes(idx) = [];
 
+        end
+
+
+        function removeColumn(obj, columnName)
+            % remove the column from the table data - this happens in any case
+            % the column does not need to be in the table (different in TableStore)
+            if ismember(columnName, obj.cachedTableData.Properties.VariableNames)
+                obj.cachedTableData(:, columnName) = [];
+            end
+
+            % continue based on the type of column
+            if ismember(columnName, obj.userDefinedColumns)
+                % Remove the column from userDefinedColumns and userColumnDefinitions
+                idx = find(strcmp(obj.userDefinedColumns, columnName), 1);
+                obj.userDefinedColumns(idx) = [];
+                obj.userColumnDefinitions(idx) = [];
+            else
+                % Check if the column is predefined
+                idx = find(cellfun(@(x) strcmp(x.getColumnName(), columnName), obj.columnDefinitionHandles), 1);
+                if ~isempty(idx)
+                    % Remove the column definition from columnDefinitionHandles
+                    obj.columnDefinitionHandles(idx) = [];
+                end
+            end
+
+            % Notify listeners about the change
+            notify(obj, 'tableDataChanged');
+        end
+
+
+        function renameColumn(obj, oldName, newName)
+            if ~isvarname(newName)
+                error('"%s" is not a valid MATLAB variable name.', newName);
+            end
+
+            newNameInPredefined = any(cellfun(@(x) strcmp(x.getColumnName(), newName), obj.columnDefinitionHandles));
+            newNameInUserDefined = any(strcmp(obj.userDefinedColumns, newName));
+            if newNameInPredefined || newNameInUserDefined
+                error('A predefined column with the name "%s" already exists.', newName);
+            end
+
+            if ismember(oldName, obj.userDefinedColumns)
+                % Rename the column in userDefinedColumns and userColumnDefinitions
+                idx = find(strcmp(obj.userDefinedColumns, oldName), 1);
+                obj.userDefinedColumns{idx} = newName;
+                obj.userColumnDefinitions{idx}.renameColumn(newName);
+            else
+                % NOTE: This should not happen, as the names are coding the content and as such should not be changed
+                error('Column "%s" is not a user-defined column.', oldName);
+            end
+
+            notify(obj, 'tableDataChanged');
         end
 
 

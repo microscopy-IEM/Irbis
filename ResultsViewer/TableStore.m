@@ -316,6 +316,14 @@ classdef (Sealed) TableStore < handle
                 end
                 if ismember(oldName, obj.tableData.Properties.VariableNames)
                     obj.tableData.Properties.VariableNames{strcmp(obj.tableData.Properties.VariableNames, oldName)} = newName;
+
+                    % I also need to rename it in the user-defined columns, if applicable
+                    if ismember(oldName, obj.userDefinedColumns)
+                        idx = find(strcmp(obj.userDefinedColumns, oldName), 1);
+                        obj.userDefinedColumns{idx} = newName;
+                        obj.userColumnDefinitions{idx}.renameColumn(newName); % update the user definition object
+                        % TO OPTIMIZE - this might become deprecated if I switch columnDefinition to a value object
+                    end
                     notify(obj, 'tableDataChanged');
                 else
                     error('Column %s does not exist in the table.', oldName);

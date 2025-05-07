@@ -175,7 +175,7 @@ classdef SummarizedTableComponentHelper < handle
             end
 
             existingColumnNames = obj.summarizedTableStoreHandle.getColumnNames();
-            requiredColumnNames = columnDefinitionObject.getRequiredColumns(existingColumnNames);
+            requiredColumnNames = columnDefinitionObject.getRequiredColumnNames(existingColumnNames);
 
             requiredTableSubset = obj.summarizedTableStoreHandle.getTableSubsetByName(requiredColumnNames);
             newColumnData = columnDefinitionObject.generateColumn(requiredTableSubset);
@@ -188,8 +188,108 @@ classdef SummarizedTableComponentHelper < handle
         end
 
 
+        function removeColumn(obj, columnName)
+            % remove a column from the data store
+            obj.summarizedTableStoreHandle.removeColumn(columnName);
+
+            obj.activeColumns = obj.activeColumns(~strcmp(obj.activeColumns, columnName));
+        end
+
+
+        function renameColumn(obj, oldName, newName)
+            % rename a column in the data store
+            obj.summarizedTableStoreHandle.renameColumn(oldName, newName);
+            obj.activeColumns = obj.activeColumns(~strcmp(obj.activeColumns, oldName));
+        end
+
+
+        function editColumnDefinition(obj, columnName)
+
+            userColumnDefinition = obj.summarizedTableStoreHandle.getUserColumnDefinition(columnName);
+            definitionType = userColumnDefinition.getDefinitionType();
+
+            newColumnDefinitionObject = UserColumnDefinitionFactory.redefine(definitionType, obj.summarizedTableStoreHandle, userColumnDefinition);
+            if isempty(newColumnDefinitionObject)
+                return
+            end
+
+            newName = newColumnDefinitionObject.getColumnName();
+
+            existingColumnNames = obj.summarizedTableStoreHandle.getColumnNames();
+            requiredColumnNames = newColumnDefinitionObject.getRequiredColumnNames(existingColumnNames);
+
+            requiredTableSubset = obj.summarizedTableStoreHandle.getTableSubsetByName(requiredColumnNames);
+            newColumnData = newColumnDefinitionObject.generateColumn(requiredTableSubset);
+
+            if isequal(newName, columnName)
+                if isequal(definitionType, 'manual')
+                    % instead of creating the column anew, we need to update the existing manually set values
+                    oldGroupNames = userColumnDefinition.getGroupNames();
+                    newGroupNames = newColumnDefinitionObject.getGroupNames();
+
+                    oldColumnData = obj.summarizedTableStoreHandle.getTableSubsetByName(columnName);
+                    newColumnData = obj.applyGroupNameChanges(oldColumnData, oldGroupNames, newGroupNames);
+
+                    obj.summarizedTableStoreHandle.updateColumnDefinition(columnName, newColumnData, newColumnDefinitionObject);
+                    obj.summarizedTableStoreHandle.makeColumnEditable(columnName);
+                else
+                    obj.summarizedTableStoreHandle.updateColumnDefinition(columnName, newColumnData, newColumnDefinitionObject);
+                end
+            else
+                obj.summarizedTableStoreHandle.addUserDefinedColumn(newName, newColumnData, newColumnDefinitionObject);
+
+                if isequal(definitionType, 'manual')
+                    obj.summarizedTableStoreHandle.makeColumnEditable(newName);
+                end
+            end
+        end
+
+
+        function duplicateColumnDefinition(obj, columnName)
+            userColumnDefinition = obj.summarizedTableStoreHandle.getUserColumnDefinition(columnName);
+
+            existingNames = obj.summarizedTableStoreHandle.getUserDefinedColumnNames();
+            newName = SummarizedTableComponentHelper.getUnusedNameCopy(columnName, existingNames);
+
+            rules = userColumnDefinition.getRules();
+            definitionType = userColumnDefinition.getDefinitionType();
+
+            switch definitionType   % TO OPTIMIZE - this should be extracted, we depend on specifics here
+                % doing this is required because doing a deep copy of the object is not possible
+                case 'categorization'
+                    newColumnDefinition = Categorization(newName, rules);
+                case 'formula'
+                    newColumnDefinition = FormulaColumnDefinition(newName, rules);
+                case 'merged'
+                    newColumnDefinition = FormulaColumnDefinition(newName, rules);
+                    newColumnDefinition.setDefinitionType('merged');
+                case 'manual'
+                    newColumnDefinition = ManualColumnDefinition(newName, rules);
+            end
+
+            existingColumnNames = obj.summarizedTableStoreHandle.getColumnNames();
+            requiredColumnNames = newColumnDefinition.getRequiredColumnNames(existingColumnNames);
+
+            requiredTableSubset = obj.summarizedTableStoreHandle.getTableSubsetByName(requiredColumnNames);
+            newColumnData = newColumnDefinition.generateColumn(requiredTableSubset);
+
+            obj.summarizedTableStoreHandle.addUserDefinedColumn(newName, newColumnData, newColumnDefinition);
+            if isequal(definitionType, 'manual')
+                obj.summarizedTableStoreHandle.makeColumnEditable(newName);
+            end
+        end
+
+
+        function storeDefinitionAsTemplate(obj, columnName)
+            % do not do anything for now
+            % TO IMPLEMENT - decide how to deal with templates in summarized table
+        end
+
+
         function replaceData(obj)
             % replace the data in the data store
+            disp('SummarizedTableComponentHelper:replaceData')
+            disp(obj.rowParameter)
             obj.dataStoreHandle = obj.tableStateManagerHandle.getActiveDataStore();
             obj.loadData();
         end
@@ -215,8 +315,64 @@ classdef SummarizedTableComponentHelper < handle
 
             obj.calculateTreeData();
         end
+    end
 
-        
-        
+
+    methods (Access = private)
+        function newManualColumn = applyGroupNameChanges(~, manualColumn, oldGroupNames, newGroupNames)
+            % Determine added, renamed, and removed group names
+            addedGroups = newGroupNames((length(oldGroupNames) + 1):end);
+            newManualColumn = addcats(manualColumn, addedGroups);
+            
+            removedGroupsIdx = find(cellfun('isempty', newGroupNames));
+            removedGroupsIdx = removedGroupsIdx(removedGroupsIdx <= length(oldGroupNames)); % we care only about the groups that have a match in oldGroupNames
+            removedGroups = oldGroupNames(removedGroupsIdx);
+            newManualColumn = removecats(newManualColumn, removedGroups);
+
+            renamedGroupsIdx = find(~cellfun('isempty', newGroupNames) & ~strcmp(oldGroupNames, newGroupNames));
+            % Keep only renamedGroupsIdx with value max length of oldGroupNames
+            renamedGroupsIdx = renamedGroupsIdx(renamedGroupsIdx <= length(oldGroupNames)); % we care only about the groups that have a match in oldGroupNames
+            oldGroupNames = oldGroupNames(renamedGroupsIdx);
+            newGroupNames = newGroupNames(renamedGroupsIdx);
+            newManualColumn = renamecats(newManualColumn, oldGroupNames, newGroupNames);
+        end
+    end
+
+
+    methods (Static, Access = private)
+        function newName = getUnusedNameCopy(columnName, existingNames)
+
+            % Check if the columnName is not used at all
+            if ~any(strcmp(existingNames, columnName))
+                newName = columnName;
+                return;
+            end
+
+            % Initialize a set to track used numbers
+            usedNumbers = false(1, 1000); % Assuming a reasonable upper limit for numbers
+
+            % Generate a regular expression pattern to find versions of the name
+            pattern = strcat('^', regexptranslate('escape', columnName), '_(\d+)$');
+            
+            % Loop through the list and find all names that match the pattern
+            for i = 1:length(existingNames)
+                currentName = existingNames{i};
+                
+                % Check for columnName_num format
+                tokens = regexp(currentName, pattern, 'tokens');
+                if ~isempty(tokens)
+                    number = str2double(tokens{1}{1});
+                    if number > 0
+                    usedNumbers(number) = true; % Mark the number as used
+                    end
+                end
+            end
+            
+            % Find the lowest unused number
+            origNum = find(~usedNumbers, 1);
+            
+            % Assign the new name with the lowest possible number
+            newName = sprintf('%s_%d', columnName, origNum);
+        end
     end
 end

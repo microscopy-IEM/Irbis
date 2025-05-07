@@ -57,7 +57,7 @@ classdef ManualColumnDefinition < ColumnDefinitionInterface
         end
 
 
-        function columnNames = getRequiredColumns(~, existingColumnNames)
+        function columnNames = getRequiredColumnNames(~, existingColumnNames)
             if isempty(existingColumnNames)
                 columnNames = string.empty;
             else
