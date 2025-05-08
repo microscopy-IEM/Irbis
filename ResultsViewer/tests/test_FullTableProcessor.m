@@ -9,11 +9,6 @@ classdef test_FullTableProcessor < matlab.unittest.TestCase
         function createProcessor(testCase)
             % Create an instance of FullTableProcessor
             testCase.Processor = FullTableProcessor();
-
-            % Create mock objects for dependencies
-            import matlab.mock.TestCase;
-            [testCase.MockStateManager, ~] = TestCase.createMock();
-            [testCase.MockDataStore, ~] = TestCase.createMock();
         end
     end
 

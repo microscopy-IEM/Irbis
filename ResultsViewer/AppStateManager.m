@@ -11,7 +11,7 @@ classdef (Sealed) AppStateManager < handle
     %                      availableBranches = {{'branch1', 'branch2'}, {}}
     %                      This means 'model' has two branches, while 'tracks' has none.
 
-    properties (Access = ?matlab.unittest.TestCase)
+    properties (Access = ?matlab.unittest.TestCase) % Test case can access these properties, otherwise private
         appHandle
         
         modality char = ''  % active modality

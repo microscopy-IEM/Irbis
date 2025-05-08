@@ -269,7 +269,11 @@ classdef BatchLoader < handle
                     else
                         cellList = obj.enrichTablesWithMetadata(modelToLoad.(branch).List, infoToLoad, fileName, fileIdx);
                     end
-                    combinedTablesModel(branch) = {TableCombiner.combineAcrossTimepoints(cellList, currentIndex)};
+                    combinedTables = {TableCombiner.combineAcrossTimepoints(cellList, currentIndex)};
+                    if isempty(combinedTables{1})   % this throws away the branches with completely empty tables
+                        continue;  % skip empty tables
+                    end
+                    combinedTablesModel(branch) = combinedTables;
                     if isfield(modelToLoad.(branch), 'storedFilters')
                         filterings(branch) = {modelToLoad.(branch).storedFilters};
                     else

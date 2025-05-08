@@ -1,5 +1,5 @@
 classdef (Sealed) FullTableProcessor < handle
-    properties (Access = private)
+    properties (Access = ?matlab.unittest.TestCase)
         filteredTable
         activeColumns = {}
         dataStoreHandle

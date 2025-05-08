@@ -146,6 +146,13 @@ classdef TableCombiner
                 T.timePoint = repmat(tp, height(T), 1);
             end
             T.timePoint = categorical(T.timePoint); % this is because atm, the ResultsViewer expects this
+            % reorder the timepoints in ascending order
+            % this is needed to prevent weird order of timepoints in pivoted tables
+            if all(cellfun(@(x) ~isnan(str2double(x)), categories(T.timePoint)))
+                % TO OPTIMIZE - the condition counts with categories being strings
+                numericCategories = sort(str2double(categories(T.timePoint)));
+                T.timePoint = reordercats(T.timePoint, string(numericCategories));
+            end
 
             if ~ismember('cellIndex', T.Properties.VariableNames)
                 T.cellIndex = repmat(cellIdx, height(T), 1);
