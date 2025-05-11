@@ -303,6 +303,35 @@ classdef (Sealed) TableStore < handle
             end
 
 
+            function removeColumns(obj, columnNames)    % added to move notification to the end
+                % Remove multiple columns from the table data
+                if ~iscell(columnNames)
+                    columnNames = {columnNames};
+                end
+
+                for i = 1:numel(columnNames)
+                    columnName = columnNames{i};
+                    if ismember(columnName, obj.tableData.Properties.VariableNames)
+                        obj.tableData(:, columnName) = [];
+                        % Remove it also from user-defined, if applicable
+                        if ismember(columnName, obj.userDefinedColumns)
+                            idx = find(strcmp(obj.userDefinedColumns, columnName), 1);
+                            obj.userDefinedColumns(idx) = [];
+                            obj.userColumnDefinitions(idx) = [];
+                        end
+                        % Remove it also from editable, if applicable
+                        if ismember(columnName, obj.editableColumns)
+                            idx = find(strcmp(obj.editableColumns, columnName), 1);
+                            obj.editableColumns(idx) = [];
+                        end
+                    else
+                        % This can happen for throwaway columns - do not do anything
+                    end
+                end
+                notify(obj, 'tableDataChanged');
+            end
+
+
             function renameColumn(obj, oldName, newName)
                 % rename the column in the table data
                 % Check if new name is a valid MATLAB variable name
