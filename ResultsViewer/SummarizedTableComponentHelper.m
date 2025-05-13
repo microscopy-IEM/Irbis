@@ -295,6 +295,12 @@ classdef SummarizedTableComponentHelper < handle
         end
 
 
+        function editManualColumnValue(obj, columnName, rowName, newValue)
+            % edit the values in the manual column
+            obj.summarizedTableStoreHandle.editManualColumnValue(columnName, rowName, newValue);
+        end
+
+
         function loadData(obj)
             obj.tableStoreHandle = obj.dataStoreHandle.getTableStore();
             if ~isempty(obj.tableStoreListener) && isvalid(obj.tableStoreListener)

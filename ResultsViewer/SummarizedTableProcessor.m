@@ -78,6 +78,27 @@ classdef (Sealed) SummarizedTableProcessor < handle
             notify(obj, 'tableForDisplayChanged');
             notify(obj, 'tableSelectionChanged');
         end 
+
+        function columnEditability = getColumnEditability(obj)
+            columnEditability = obj.summarizedTableStoreHandle.getEditabilityOfColumns(obj.activeColumns);
+        end
+
+
+        function editManualColumnValue(obj, columnName, rowName, newValue)
+            % Locate the row and column indices for the specified rowName and columnName
+            rowIdx = find(strcmp(obj.filteredTable.Properties.RowNames, rowName));
+            colIdx = find(strcmp(obj.filteredTable.Properties.VariableNames, columnName));
+
+            if isempty(rowIdx) || isempty(colIdx)
+                error('FullTableProcessor:InvalidInput', 'Specified row or column does not exist in the table');
+            end
+
+            % Update the value in the filteredTable
+            obj.filteredTable{rowIdx, colIdx} = newValue;
+
+            % Notify listeners that the table has changed
+            notify(obj, 'tableForDisplayChanged');
+        end
     end
 
     methods

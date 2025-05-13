@@ -8,6 +8,8 @@ classdef SummarizedTableStore < handle
         columnDefinitionHandles = {}; % stores all defnitions of columns derived from the parent table
         userDefinedColumns = {};
         editableColumns = {};
+        editedValueMap = {}; % this is a dictionary for manually assigned values and corresponding row names
+            % cells are matched with editableColumns names
 
         tableStoreHandle
         userColumnDefinitions = {}; % handle to the user column definitions (NOT STORE)
@@ -140,7 +142,17 @@ classdef SummarizedTableStore < handle
             if ismember(columnName, obj.userDefinedColumns) && ~ismember(columnName, obj.editableColumns)   
                 % NOTE: with this, I assume that editable columns are always user defined
                 obj.editableColumns{end+1} = columnName;
+                obj.editedValueMap{end+1} = dictionary; % unconfigured in case I need to store different value types for differnt columns
                 notify(obj, 'tableDataChanged');
+            end
+        end
+
+
+        function idx = getEditableColumnIdx(obj, columnName)
+            % Get the index of an editable column
+            idx = find(strcmp(obj.editableColumns, columnName), 1);
+            if isempty(idx)
+                error('Column "%s" is not editable.', columnName);
             end
         end
 
@@ -148,14 +160,24 @@ classdef SummarizedTableStore < handle
         function editManualColumnValue(obj, columnName, rowName, newValue)
             % Edit the value of a manual column
             if ismember(columnName, obj.editableColumns) && ismember(columnName, obj.cachedTableData.Properties.VariableNames)
-                if ismember(rowName, obj.cachedTableData.Properties.RowNames)
-                    obj.cachedTableData{rowName, columnName} = newValue;
+                disp('Editing column value');
+                disp('rowName')
+                disp(rowName)
+                disp('rowNames')
+                disp(obj.cachedTableData.Properties.RowNames)
+                if ismember(rowName, obj.rowNames)
+                    rowNum = obj.getRowNumCorrespondingToName(rowName);
+                    obj.cachedTableData{rowNum, columnName} = newValue;
+                    idx = obj.getEditableColumnIdx(columnName);
+                    obj.editedValueMap{idx}(rowName) = newValue; % store the value in the dictionary
+                    disp(obj.editedValueMap{idx})
                 else
                     error('Row %s does not exist in the table.', rowName);
                 end
             else
                 error('Column %s does not exist or is not editable.', columnName);
             end
+            disp(obj.editedValueMap)
         end
 
 
@@ -250,10 +272,10 @@ classdef SummarizedTableStore < handle
                 missingUserDefinedColumns = intersect(cellstr(missingColumns), cellstr(obj.userDefinedColumns));
                 for i = length(missingUserDefinedColumns):-1:1
                     colName = missingUserDefinedColumns{i};
-                    % Remove the column from the cached data
-                    if ismember(colName, obj.cachedTableData.Properties.VariableNames)
-                        obj.cachedTableData.(colName) = [];
-                    end
+                    % Remove the column from the cached data - this should not happen as missingColumns are not in the cachedTableData
+                    % if ismember(colName, obj.cachedTableData.Properties.VariableNames)
+                    %     obj.cachedTableData.(colName) = [];
+                    % end
 
                     % Create the column using its definition
                     defIdx = find(cellfun(@(x) strcmp(x.getColumnName(), colName), obj.userColumnDefinitions));
@@ -266,6 +288,18 @@ classdef SummarizedTableStore < handle
                     end
                     % Remove the column from the cached data
                     % Create from the userDefinedColumnRules
+
+                    if ismember(colName, obj.editableColumns)
+                        idx = obj.getEditableColumnIdx(colName);
+                        editedValues = obj.editedValueMap{idx};
+                        usedRowNames = keys(editedValues);
+                        for k = 1:length(usedRowNames)
+                            rowName = usedRowNames{k};
+                            if ismember(rowName, obj.cachedTableData.Properties.RowNames)
+                                obj.cachedTableData{rowName, colName} = editedValues(rowName);
+                            end
+                        end
+                    end
                 end
                 % Find the column definitions for missing columns
 
@@ -308,6 +342,8 @@ classdef SummarizedTableStore < handle
             obj.extractRowNames();
 
             obj.cachedTableData = table();  % clear the cached data - done because filtering may have changed
+
+            % I have to keep the information about the manually set columns
 
             notify(obj, 'tableDataChanged');
         end
@@ -407,6 +443,14 @@ classdef SummarizedTableStore < handle
                 % nothing happens, no data
             end
         end
-    end
 
+        function rowNum = getRowNumCorrespondingToName(obj, rowName)
+            % Get the row number corresponding to a specific row name
+            if ismember(rowName, obj.rowNames)
+                rowNum = find(strcmp(obj.rowNames, rowName));
+            else
+                error('Row name "%s" does not exist in the table.', rowName);
+            end
+        end
+    end
 end
