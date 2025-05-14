@@ -160,24 +160,24 @@ classdef SummarizedTableStore < handle
         function editManualColumnValue(obj, columnName, rowName, newValue)
             % Edit the value of a manual column
             if ismember(columnName, obj.editableColumns) && ismember(columnName, obj.cachedTableData.Properties.VariableNames)
-                disp('Editing column value');
-                disp('rowName')
-                disp(rowName)
-                disp('rowNames')
-                disp(obj.cachedTableData.Properties.RowNames)
+                % disp('Editing column value');
+                % disp('rowName')
+                % disp(rowName)
+                % disp('rowNames')
+                % disp(obj.cachedTableData.Properties.RowNames)
                 if ismember(rowName, obj.rowNames)
                     rowNum = obj.getRowNumCorrespondingToName(rowName);
                     obj.cachedTableData{rowNum, columnName} = newValue;
                     idx = obj.getEditableColumnIdx(columnName);
                     obj.editedValueMap{idx}(rowName) = newValue; % store the value in the dictionary
-                    disp(obj.editedValueMap{idx})
+                    % disp(obj.editedValueMap{idx})
                 else
                     error('Row %s does not exist in the table.', rowName);
                 end
             else
                 error('Column %s does not exist or is not editable.', columnName);
             end
-            disp(obj.editedValueMap)
+            % disp(obj.editedValueMap)
         end
 
 
@@ -196,6 +196,19 @@ classdef SummarizedTableStore < handle
         function columnNames = getStatisticalColumnNames(obj)
             % Get the names of all columns in the store
             columnNames = cellfun(@(x) x.getColumnName(), obj.columnDefinitionHandles, 'UniformOutput', false);
+        end
+
+
+        function columnNames = getColumnNamesByCondition(obj, typeConditions)
+            % Get the names of columns that match a specific condition
+            % TO OPTIMIZE - this is just a quick fix so that I can call the method from UserColumnDefinitionFactory
+                % I do not want to implement this the basic way because it would require generating every column
+            if isequal(typeConditions, {'iscategorical', 'isnumeric'})
+                columnNames = obj.getColumnNames();
+                % TO OPTIMIZE - this is also not fully precise, as the formula might create strings etc.
+            else
+                columnNames = {};
+            end
         end
 
 
@@ -295,8 +308,10 @@ classdef SummarizedTableStore < handle
                         usedRowNames = keys(editedValues);
                         for k = 1:length(usedRowNames)
                             rowName = usedRowNames{k};
-                            if ismember(rowName, obj.cachedTableData.Properties.RowNames)
-                                obj.cachedTableData{rowName, colName} = editedValues(rowName);
+                            if ismember(rowName, obj.rowNames)
+                                disp('the row name is in rowNames')
+                                rowNum = obj.getRowNumCorrespondingToName(rowName);
+                                obj.cachedTableData{rowNum, colName} = editedValues(rowName);
                             end
                         end
                     end

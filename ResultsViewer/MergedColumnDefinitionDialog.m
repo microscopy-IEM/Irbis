@@ -54,8 +54,8 @@ classdef (Sealed) MergedColumnDefinitionDialog
     methods (Static, Access = private)
         function [value1, value2] = twoDropdownsInputDialog(options1, options2, varargin)
             % Outputs
-            value1 = "";
-            value2 = "";
+            value1 = '';
+            value2 = '';
         
             % Create modal figure
             d = uifigure('Name', 'Define Column', 'WindowStyle', 'modal', 'Position', [100 100 320 230]);
