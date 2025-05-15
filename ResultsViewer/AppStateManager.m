@@ -143,6 +143,12 @@ classdef (Sealed) AppStateManager < handle
                 processorHandle = processorHandles{1};
                 usedTableType = obj.tableType;
             end
+
+            % I need to delete the filtering menu state manager if it already exists
+            if isa(obj.filteringMenuStateManagerHandle, 'FilteringMenuStateManager') && isvalid(obj.filteringMenuStateManagerHandle)
+                delete(obj.filteringMenuStateManagerHandle);
+            end
+            
             obj.filteringMenuStateManagerHandle = FilteringMenuStateManager(obj, obj.appHandle, obj.activeDataStoreHandle, ...
                 usedTableType, processorHandle);
         end

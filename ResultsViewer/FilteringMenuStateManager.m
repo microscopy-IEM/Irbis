@@ -72,7 +72,8 @@ classdef FilteringMenuStateManager < handle
         end
 
         function setHandles(obj)
-            obj.filteringMenuComponentHandle.setHandles(obj.appStateManagerHandle, obj.dataStoreHandle, obj.tableProcessorHandle);
+            obj.filteringMenuComponentHandle.setHandles(obj, obj.dataStoreHandle, obj.tableProcessorHandle);
+            % appStateManagerHandle swapped for the filtering component manager - the app one is not needed
         end
 
         function dataStoreHandle = getActiveDataStore(obj)
