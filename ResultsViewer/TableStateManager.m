@@ -71,6 +71,14 @@ classdef TableStateManager < handle
             obj.setHandles();
         end
 
+
+        function silentlyLoadNewDataStore(obj)
+            % load the new data store without notifying listeners
+            % this is useful for setState - the table will be switched afterwards anyway
+            obj.dataStoreHandle = obj.appStateManagerHandle.getActiveDataStore();
+        end
+
+        
         function loadNewDataStore(obj)
             obj.dataStoreHandle = obj.appStateManagerHandle.getActiveDataStore();
             notify(obj, 'newModalityLoaded');
@@ -79,7 +87,7 @@ classdef TableStateManager < handle
         function generateTableProcessor(obj)
 
             if ~isempty(obj.tableProcessorHandle)
-                disp('TableStateManager:generateTableProcessor - deleting old table processor');
+                % disp('TableStateManager:generateTableProcessor - deleting old table processor');
                 delete(obj.tableProcessorHandle);
             end
             obj.tableProcessorHandle = TableProcessorFactory.createProcessor(obj.tableType);
@@ -89,7 +97,7 @@ classdef TableStateManager < handle
         function generateTableComponentHelper(obj)
 
             if ~isempty(obj.tableComponentHelperHandle)
-                disp('TableStateManager:generateTableComponentHelper - deleting old table component helper');
+                % disp('TableStateManager:generateTableComponentHelper - deleting old table component helper');
                 delete(obj.tableComponentHelperHandle);
             end
             obj.tableComponentHelperHandle = TableComponentHelperFactory.create(obj.tableType);
@@ -99,7 +107,7 @@ classdef TableStateManager < handle
         function generateTableComponent(obj)
 
             if ~isempty(obj.tableComponentHandle)
-                disp('TableStateManager:generateTableComponent - deleting old table component');
+                % disp('TableStateManager:generateTableComponent - deleting old table component');
                 delete(obj.tableComponentHandle);
             end
 

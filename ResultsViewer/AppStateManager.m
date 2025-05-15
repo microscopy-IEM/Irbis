@@ -148,7 +148,7 @@ classdef (Sealed) AppStateManager < handle
             if isa(obj.filteringMenuStateManagerHandle, 'FilteringMenuStateManager') && isvalid(obj.filteringMenuStateManagerHandle)
                 delete(obj.filteringMenuStateManagerHandle);
             end
-            
+
             obj.filteringMenuStateManagerHandle = FilteringMenuStateManager(obj, obj.appHandle, obj.activeDataStoreHandle, ...
                 usedTableType, processorHandle);
         end
@@ -339,6 +339,7 @@ classdef (Sealed) AppStateManager < handle
             if isfield(state, 'topTable')
                 if isfield(state.topTable, 'type')
                     % disp('AppStateManager: setState - Changing table type of the top table.');
+                    obj.topTableStateManagerHandle.silentlyLoadNewDataStore();  % load data store before the components are swapped
                     obj.changeTopTableType(state.topTable.type);
                         % this notifies PlotManager about change in tableProcessor
                 end

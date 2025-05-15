@@ -52,7 +52,7 @@ classdef FilteringMenuStateManager < handle
 
         function createNewComponent(obj)
 
-            disp('Creating new filtering menu component...');
+            % disp('Creating new filtering menu component...');
             obj.generateComponent();
             obj.setHandles();
         end
@@ -63,7 +63,7 @@ classdef FilteringMenuStateManager < handle
             end
 
             container = obj.appHandle.getFilteringMenuGridLayout();
-            disp(obj.tableType)
+            % disp(obj.tableType)
             obj.filteringMenuComponentHandle = FilteringMenuComponentFactory.create(obj.tableType, container);
 
             % set the position within the grid layout
