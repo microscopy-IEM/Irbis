@@ -288,8 +288,6 @@ classdef SummarizedTableComponentHelper < handle
 
         function replaceData(obj)
             % replace the data in the data store
-            disp('SummarizedTableComponentHelper:replaceData')
-            disp(obj.rowParameter)
             obj.dataStoreHandle = obj.tableStateManagerHandle.getActiveDataStore();
             obj.loadData();
         end

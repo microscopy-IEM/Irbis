@@ -190,9 +190,6 @@ classdef (Sealed) SummarizedTableProcessor < handle
 
 
         function replaceData(obj)
-            disp('SummarizedTableProcessor:replaceData')
-            disp(obj.rowParameter)
-            disp(obj.filteredTable)
             obj.dataStoreHandle = obj.stateManagerHandle.getActiveDataStore();
             obj.loadData();
         end
