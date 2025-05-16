@@ -71,10 +71,21 @@ classdef (Sealed) TableStore < handle
 
 
             function subset = getTableSubsetByName(obj, columnNames)
-                disp('getTableSubsetByName')
-                disp(class(columnNames))
-                disp(columnNames)
+                % disp('getTableSubsetByName')
+                % disp(class(columnNames))
+                % disp(columnNames)
                 subset = obj.tableData(:, columnNames);
+            end
+
+
+            function data = getColumnData(obj, columnName)
+                % get the data of a specific column
+                % differerce from getTableSubsetByName is that this one returns a vector, not a table
+                if ismember(columnName, obj.tableData.Properties.VariableNames)
+                    data = obj.tableData.(columnName);
+                else
+                    error('Column %s does not exist in the table.', columnName);
+                end
             end
 
 
