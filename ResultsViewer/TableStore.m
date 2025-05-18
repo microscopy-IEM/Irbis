@@ -33,6 +33,17 @@ classdef (Sealed) TableStore < handle
             end
 
 
+            function addColumn(obj, columnName, columnData)
+                % add a new column to the table data
+                if ~ismember(columnName, obj.tableData.Properties.VariableNames)
+                    obj.tableData.(columnName) = columnData;
+                    notify(obj, 'tableDataChanged');
+                else
+                    error('Column %s already exists in the table.', columnName);
+                end
+            end
+
+
             function addExistingUserColumnDefinitions(obj, userColumnDefinitions, columnsToRecalculate)
                 % disp('Adding existing user column definitions to the table data...')
                 % add existing user-defined columns to the table data
