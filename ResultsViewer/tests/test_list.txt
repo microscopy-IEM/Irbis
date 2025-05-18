@@ -5,4 +5,3 @@ ResultsViewer/tests/test_BatchLoader.m
 ResultsViewer/tests/test_DataStore.m
 ResultsViewer/tests/test_FilteringStorage.m
 ResultsViewer/tests/test_FormulaColumnDefinition.m
-ResultsViewer/tests/test_SummarizedTableStore.m

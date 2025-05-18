@@ -14,7 +14,7 @@ function runSelectedTests()
             files{end+1} = strtrim(line); %#ok<AGROW>
         end
     end
-    fclose(fid);
+    fclose(fid);    
 
     % Debug print: show what's read
     fprintf('Files read from %s:\n', listPath);
