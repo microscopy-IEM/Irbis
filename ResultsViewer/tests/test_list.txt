@@ -1,0 +1,8 @@
+ResultsViewer/tests/test_AppStateManager_changingTableType.m
+ResultsViewer/tests/test_AppStateManager_changingTableTypeWithData.m
+ResultsViewer/tests/test_AppStateManager_dataLoading.m
+ResultsViewer/tests/test_BatchLoader.m
+ResultsViewer/tests/test_DataStore.m
+ResultsViewer/tests/test_FilteringStorage.m
+ResultsViewer/tests/test_FormulaColumnDefinition.m
+ResultsViewer/tests/test_SummarizedTableStore.m
