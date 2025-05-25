@@ -1,6 +1,6 @@
 classdef (Sealed) SummarizedTableProcessor < handle
 
-    properties (Access = private)
+    properties (Access = ?matlab.unittest.TestCase)
 
         rowParameter = ''   % decides which summarized table is going to be used
         
@@ -69,6 +69,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
             % Set the state of the processor
             if isfield(processorState, 'activeColumns')
                 obj.activeColumns = processorState.activeColumns;
+                obj.processData();
             end
 
             if isfield(processorState, 'selectedTableCellsList')

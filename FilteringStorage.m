@@ -16,8 +16,10 @@ classdef FilteringStorage < GroupingStorageBaseClass
             conditions = struct();
             groupConditions = dictionary();
             operatorValueDict = dictionary(...
-                'greaterThan', range(1), ...
-                'lessThan', range(2));
+                'equalOrGreaterThan', range(1), ...
+                'equalOrLessThan', range(2));
+                % 250525: updated from open to closed interval
+                    % including edge values in the filter makes more sense to me, but can be discussed
             groupConditions(columnName) = {operatorValueDict};
             conditions.('group1') = struct('name', true, 'conditions', groupConditions);
             active = true;
@@ -68,10 +70,10 @@ classdef FilteringStorage < GroupingStorageBaseClass
                         % Update the conditions with new categories (categorical filter)
                         filterObj.Conditions.('group1').conditions(columnName) = {newCondition};
                     elseif strcmp(filterType, 'range')
-                        % Create operatorValueDict with 'greaterThan' and 'lessThan' for range filter
+                        % Create operatorValueDict with 'equalOrGreaterThan' and 'equalOrLessThan' for range filter
                         operatorValueDict = dictionary(...
-                            'greaterThan', newCondition(1), ...
-                            'lessThan', newCondition(2));
+                            'equalOrGreaterThan', newCondition(1), ...
+                            'equalOrLessThan', newCondition(2));
                         
                         % Update the conditions with the new range
                         filterObj.Conditions.('group1').conditions(columnName) = {operatorValueDict};
@@ -104,7 +106,11 @@ classdef FilteringStorage < GroupingStorageBaseClass
             if iscell(conditions)
                 organizedConditions = conditions;
             else
-                organizedConditions = [conditions('greaterThan'),conditions('lessThan')];
+                if isKey(conditions, 'equalOrGreaterThan') && isKey(conditions, 'equalOrLessThan')
+                    organizedConditions = [conditions('equalOrGreaterThan'), conditions('equalOrLessThan')];
+                else    % legacy option - open interval instead of closed
+                    organizedConditions = [conditions('greaterThan'),conditions('lessThan')];   
+                end
             end
         end
 

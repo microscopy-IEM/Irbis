@@ -72,7 +72,7 @@ classdef (Sealed) test_FilteringStorage < matlab.unittest.TestCase
             testCase.filteringStorage.addCategoricalFilter('Category', {'A', 'B'});
             testCase.verifyEqual(testCase.filteringStorage.getConditions('Value'), [1.5, 3.5], 'Range filter not set correctly');
             testCase.verifyEqual(testCase.filteringStorage.getConditions('Category'), categorical({'A', 'B'}), 'Categorical filter not set correctly');
-            testCase.verifyEqual(testCase.tableProcessorHandle.filteredTable.Value, [2.2], 'Filtered table not updated correctly after adding range filter');
+            testCase.verifyEqual(testCase.tableProcessorHandle.filteredTable.Value, 2.2, 'Filtered table not updated correctly after adding range filter');
             testCase.verifyEqual(testCase.tableProcessorHandle.filteredTable.Category, categorical({'B'}), 'Filtered table not updated correctly after adding categorical filter');
             testCase.verifyTrue(testCase.logicalFlag, 'Event not emitted after adding two filters');
             testCase.verifyEqual(testCase.eventCount, 2, 'Event count not incremented correctly after adding two filters');

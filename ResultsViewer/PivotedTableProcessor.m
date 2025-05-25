@@ -1,5 +1,5 @@
 classdef (Sealed) PivotedTableProcessor < handle
-    properties (Access = private)
+    properties (Access = ?matlab.unittest.TestCase)
         pivotedTable
         groupedDataParameter
         columnParameter

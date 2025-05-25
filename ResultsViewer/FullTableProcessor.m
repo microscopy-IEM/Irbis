@@ -84,7 +84,7 @@ classdef (Sealed) FullTableProcessor < handle
             end
 
             obj.selectedTableCellsList = selectedTableCellsList;
-            notify(obj, 'tableSelectionChanged');
+            notify(obj, 'tableSelectionChanged'); % TO OPTIMIZE - this again activates the component, which caused this in the first place
         end
 
         function setSelectedColumns(obj, columnNames)
@@ -93,7 +93,7 @@ classdef (Sealed) FullTableProcessor < handle
             end
 
             obj.activeColumns = columnNames;
-            notify(obj, 'tableForDisplayChanged');
+            notify(obj, 'tableForDisplayChanged');  
         end
 
 
@@ -188,6 +188,13 @@ classdef (Sealed) FullTableProcessor < handle
         % filtered table reflects the current state of the data and active filters.
         function processData(obj)
 
+            rowNames = {};
+            colNames = {};
+            if ~isempty(obj.selectedTableCellsList) && ~isempty(obj.filteredTable)
+                % Store selected row and column names
+                [rowNames, colNames] = obj.getSelectedRowAndColumnNames();
+            end
+
             obj.filteredTable = obj.tableStoreHandle.getTableData();
             % disp('FullTableProcessor:processData:filteredTable');
             % disp(obj.filteredTable);
@@ -197,9 +204,11 @@ classdef (Sealed) FullTableProcessor < handle
                 obj.filteredTable = obj.filteredTable(isKept, :);
             end
 
-            notify(obj, 'tableForDisplayChanged');
+            % Restore selection using rowNames and colNames as coordinate pairs
+            obj.selectedTableCellsList = obj.getSelectedCellsFromNames(rowNames, colNames);
 
-            % like this, it should be called either when data changes or when filter changes
+            notify(obj, 'tableForDisplayChanged');
+            notify(obj, 'tableSelectionChanged');
 
             % getTableForDisplay handles selecting active columns
         end
@@ -210,7 +219,6 @@ classdef (Sealed) FullTableProcessor < handle
             obj.dataStoreHandle = obj.stateManagerHandle.getActiveDataStore();
             obj.loadData();
         end
-
 
         function loadData(obj)
             obj.tableStoreHandle = obj.dataStoreHandle.getTableStore();
@@ -230,6 +238,85 @@ classdef (Sealed) FullTableProcessor < handle
             obj.activeColumns = intersect(obj.activeColumns, obj.tableStoreHandle.getColumnNames());
 
             obj.processData();
+        end
+
+        function [rowNamesOut, colNamesOut] = getSelectedRowAndColumnNames(obj)
+            % Returns two cell arrays: rowNamesOut and colNamesOut, each corresponding to the selected cells.
+            % The n-th element in rowNamesOut and n-th in colNamesOut represent one coordinate within the table.
+            % If the table does not have row names, row indices are used for rowNamesOut.
+
+            if isempty(obj.selectedTableCellsList)
+                rowNamesOut = {};
+                colNamesOut = {};
+                return;
+            end
+
+            displayedTable = obj.getTableForDisplay();
+            selectedRows = obj.selectedTableCellsList(:,1);
+            selectedCols = obj.selectedTableCellsList(:,2);
+
+            % Get row names or indices
+            if ~isempty(displayedTable.Properties.RowNames)
+                allRowNames = displayedTable.Properties.RowNames;
+            else
+                allRowNames = {};
+            end
+
+            allColNames = displayedTable.Properties.VariableNames;
+
+            nSelected = size(obj.selectedTableCellsList, 1);
+            rowNamesOut = cell(nSelected, 1);
+            colNamesOut = cell(nSelected, 1);
+
+            for k = 1:nSelected
+                rowIdx = selectedRows(k);
+                colIdx = selectedCols(k);
+
+                if ~isempty(allRowNames)
+                    rowNamesOut{k} = allRowNames{rowIdx};
+                else
+                    rowNamesOut{k} = rowIdx; % Use index if no row names
+                end
+                colNamesOut{k} = allColNames{colIdx};
+            end
+        end
+
+        function selectedCells = getSelectedCellsFromNames(obj, rowNames, colNames)
+            % Returns the selected cells based on the provided row and column names.
+            % The n-th element in rowNames and n-th in colNames represent one coordinate.
+            % If the table does not have row names, it uses row indices instead.
+
+            displayedTable = obj.getTableForDisplay();
+            if isempty(displayedTable) || isempty(rowNames) || isempty(colNames)
+                selectedCells = [];
+                return;
+            end
+
+            n = min(numel(rowNames), numel(colNames));
+            selectedCells = zeros(n, 2);
+
+            if ~isempty(displayedTable.Properties.RowNames)
+                allRowNames = displayedTable.Properties.RowNames;
+                for k = 1:n
+                    rowIdx = find(strcmp(allRowNames, rowNames{k}), 1);
+                    colIdx = find(strcmp(displayedTable.Properties.VariableNames, colNames{k}), 1);
+                    if ~isempty(rowIdx) && ~isempty(colIdx)
+                        selectedCells(k, :) = [rowIdx, colIdx];
+                    end
+                end
+            else
+                for k = 1:n
+                    rowIdx = rowNames{k};
+                    colIdx = find(strcmp(displayedTable.Properties.VariableNames, colNames{k}), 1);
+                    % Ensure rowIdx is a valid numeric index within the table
+                    if isnumeric(rowIdx) && isscalar(rowIdx) && rowIdx >= 1 && rowIdx <= height(displayedTable) && ~isempty(colIdx)
+                        selectedCells(k, :) = [rowIdx, colIdx];
+                    end
+                end
+            end
+
+            % Remove any rows with zeros (invalid matches)
+            selectedCells = selectedCells(all(selectedCells > 0, 2), :);
         end
     end
 end

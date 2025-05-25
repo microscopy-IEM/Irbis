@@ -1,5 +1,5 @@
 classdef TableStateManager < handle
-    properties (Access = private)
+    properties (Access = ?matlab.unittest.TestCase)
         dataStoreHandle
         appStateManagerHandle
         appHandle
