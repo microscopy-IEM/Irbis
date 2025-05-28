@@ -139,6 +139,93 @@ classdef (Sealed) test_twoTablesCombination < matlab.unittest.TestCase
             testCase.verifyEqual(topTableProcessor.selectedTableCellsList, selection, ...
                 'Top table should have the same selected cells as bottom table');
         end
+
+        function rowParameterChangeFromTop(testCase)
+            [processors, ~] = testCase.appStateManager.getTableProcessorHandles();
+            topTableProcessor = processors{1};
+            bottomTableProcessor = processors{2};
+
+            % Register listener for row parameter change
+            tempListener = topTableProcessor.addlistener('rowParameterChanged', @(src, event) testCase.incrementEventCount());
+            
+            % Change row parameter in top table
+            newRowParameter = 'AnotherCategory';
+            topTableProcessor.setRowParameter(newRowParameter);
+            
+            testCase.verifyEqual(testCase.eventCount, 1, 'Expected one event to be emitted on row parameter change');
+            testCase.resetEventCount();
+            delete(tempListener);
+
+            % Check if bottom table has the same row parameter
+            testCase.verifyEqual(bottomTableProcessor.rowParameter, newRowParameter, ...
+                'Bottom table should have the same row parameter as top table');
+
+            % disp(bottomTableProcessor.filteredTable)
+            % disp(bottomTableProcessor.filteredTable.Properties.VariableNames)
+
+            existingRowNames = categories(categorical({'first'; 'first'; 'second'; 'second'; 'third'; 'third'; 'first'; 'second'}));
+
+            testCase.verifyTrue(isequal(sort(bottomTableProcessor.filteredTable.Properties.RowNames), sort(existingRowNames)), ...
+                'Bottom table should not have any columns selected after changing row parameter');
+        end
+
+
+        function rowParameterChangeFromBottom(testCase)
+            [processors, ~] = testCase.appStateManager.getTableProcessorHandles();
+            topTableProcessor = processors{1};
+            bottomTableProcessor = processors{2};
+
+            % Register listener for row parameter change
+            tempListener = bottomTableProcessor.addlistener('rowParameterChanged', @(src, event) testCase.incrementEventCount());
+            
+            % Change row parameter in bottom table
+            newRowParameter = 'Category';
+            bottomTableProcessor.setRowParameter(newRowParameter);
+            
+            testCase.verifyEqual(testCase.eventCount, 1, 'Expected one event to be emitted on row parameter change');
+            testCase.resetEventCount();
+            delete(tempListener);
+
+            % Check if top table has the same row parameter
+            testCase.verifyEqual(topTableProcessor.rowParameter, newRowParameter, ...
+                'Top table should have the same row parameter as bottom table');
+
+            % disp(topTableProcessor.pivotedTable)
+            % disp(topTableProcessor.pivotedTable.Properties.VariableNames)
+
+            existingRowNames = categories(categorical({'A'; 'B'; 'A'; 'C'; 'B'; 'C'; 'A'; 'B'}));
+
+            testCase.verifyTrue(isequal(sort(topTableProcessor.pivotedTable.Properties.RowNames), sort(existingRowNames)), ...
+                'Top table should not have any columns selected after changing row parameter');
+        end
+
+
+        function filterBottomTable(testCase)
+            [processors, ~] = testCase.appStateManager.getTableProcessorHandles();
+            bottomTableProcessor = processors{2};
+
+            % disp(bottomTableProcessor.filteredTable)
+            summarizedTableBeforeFiltering = table(...
+                [3.5; 5; 5], ...
+                [0.6364; 3.7072; 8.4146], ...
+                'VariableNames', {'Value_mean_over_timePoint_mean', 'Score_std_over_timePoint_mean'}, ...
+                'RowNames', {'A'; 'B'; 'C'});
+            testCase.verifyEqual(round(bottomTableProcessor.filteredTable), round(summarizedTableBeforeFiltering), ...
+                'Bottom table should have the expected summarized data before filtering');
+            summarizedDataStoreHandle = testCase.appStateManager.bottomTableStateManagerHandle.getActiveDataStore();
+            rowParameter = 'Category';
+            summarizedFilteringStorage = summarizedDataStoreHandle.getSummarizedFilteringStorage(rowParameter);
+            summarizedFilteringStorage.addRangeFilter('Value_mean_over_timePoint_mean', [4, 10]);
+            summarizedTableAfterFiltering = table(...
+                [5; 5], ...
+                [3.7072; 8.4146], ...
+                'VariableNames', {'Value_mean_over_timePoint_mean', 'Score_std_over_timePoint_mean'}, ...
+                'RowNames', {'B'; 'C'});
+            testCase.verifyEqual(round(bottomTableProcessor.filteredTable), round(summarizedTableAfterFiltering), ...
+                'Bottom table should have the expected summarized data after filtering');
+
+            % disp(bottomTableProcessor.filteredTable)
+        end
     end
     
 
@@ -150,7 +237,8 @@ classdef (Sealed) test_twoTablesCombination < matlab.unittest.TestCase
                 categorical({'A'; 'B'; 'A'; 'C'; 'B'; 'C'; 'A'; 'B'}), ... % Categorical column
                 [10.5; 20.3; 15.8; 30.1; 25.7; 18.2; 22.9; 27.4], ... % Another numerical column
                 categorical([1; 1; 2; 2; 3; 3; 1; 2]), ... % New categorical column with values 1, 2, or 3
-                'VariableNames', {'Value', 'Category', 'Score', 'timePoint'});
+                categorical({'first'; 'second'; 'third'; 'second'; 'first'; 'third'; 'third'; 'first'}), ... % New categorical column with time points
+                'VariableNames', {'Value', 'Category', 'Score', 'timePoint', 'AnotherCategory'});
             testStruct.model.branch1.storedFilters = {FilteringStorage()};
             testStruct.model.branch1.storedCategorizations = {CategorizationStorage()};
 
@@ -158,7 +246,9 @@ classdef (Sealed) test_twoTablesCombination < matlab.unittest.TestCase
                 [9; 10; 11; 12], ... % Numerical column
                 categorical({'B'; 'C'; 'A'; 'C'}), ... % Categorical column
                 [12.1; 19.7; 23.5; 16.8], ... % Another numerical column
-                'VariableNames', {'Value', 'Category', 'Score'});
+                categorical([1; 2; 3; 1]), ... % timePoint categorical column with values 1, 2, 3, 1
+                categorical({'first'; 'second'; 'third'; 'second'}), ... % Another categorical column
+                'VariableNames', {'Value', 'Category', 'Score', 'timePoint', 'AnotherCategory'});
             % Create FilteringStorage and add example filters
             branch2FilteringStorage = FilteringStorage();
             % Add a range filter on 'Value' column (e.g., keep values between 10 and 12)
