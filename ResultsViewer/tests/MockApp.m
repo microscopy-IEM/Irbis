@@ -2,6 +2,8 @@
 classdef MockApp < handle
     properties
         MockGridLayout
+        currentModality = '';
+        currentBranch = '';
     end
     
     events
@@ -16,12 +18,24 @@ classdef MockApp < handle
             obj.MockGridLayout = uigridlayout(f, [10, 10]); % size adjusted to fit the requirements
         end
 
-        function modality = getActiveModality(~)
-            modality = '';
+        % these are just helper methods to get the desired output
+        function setModality(obj, modalityName)
+            obj.currentModality = modalityName;
+        end
+
+        function setBranch(obj, branchName)
+            obj.currentBranch = branchName;
+        end
+    end
+
+
+    methods % these simulate the methods from the actual app
+        function modality = getActiveModality(ojb)
+            modality = obj.currentModality;
         end
         
-        function branch = getActiveBranch(~)
-            branch = '';
+        function branch = getActiveBranch(obj)
+            branch = obj.currentBranch;
         end
 
         function layout = getTableComponentGridLayout(obj)

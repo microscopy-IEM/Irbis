@@ -112,8 +112,6 @@ classdef (Sealed) SummarizedTableProcessor < handle
                 % broader version: allow different column aggregation (timepoint, ...)
                 % narrower version: only one column aggregation (timepoint)
 
-            % TO IMPLEMENT - filtering
-
             if isempty(obj.summarizedTableStoreHandle)
                 obj.loadDataForGrouping();
                 return;

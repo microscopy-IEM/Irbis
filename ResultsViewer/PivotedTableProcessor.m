@@ -131,19 +131,23 @@ classdef (Sealed) PivotedTableProcessor < handle
             obj.aggregationFunction = func;
         end
 
+
         function result = getTableForDisplay(obj)
             result = obj.pivotedTable;
         end
+
 
         function setGroupedDataParameter(obj, parameter)
             obj.groupedDataParameter = parameter;
             obj.processData();
         end
 
+
         function setColumnParameter(obj, parameter)
             obj.columnParameter = parameter;
             obj.processData();
         end
+
 
         function setRowParameter(obj, parameter)
             obj.rowParameter = parameter;
@@ -151,12 +155,14 @@ classdef (Sealed) PivotedTableProcessor < handle
             notify(obj, 'rowParameterChanged');
         end
 
+
         function replaceData(obj)
             % this should be called when the data changes
 
             obj.dataStoreHandle = obj.stateManagerHandle.getActiveDataStore();
             obj.loadData();
         end
+
 
         function [name, type] = getRowParameterNameAndType(obj)
             % Returns the name and type of the row parameter
@@ -191,12 +197,14 @@ classdef (Sealed) PivotedTableProcessor < handle
             obj.processData();
         end
 
+
         function storeSelectedTableCellsList(obj, selectedTableCellsList)
             % Validates and stores the selected table cells
             obj.selectedTableCellsList = selectedTableCellsList;
             notify(obj, 'tableSelectionSyncRequired'); % added first, because syncing must be before plotting (to be able to combine the data)
             notify(obj, 'tableSelectionChanged'); % this is observed by DataFormatter that processes data for plotting - needs data from both tables, if applicable
         end
+
 
         function programmaticallySetRowSelection(obj, selectedRowsList)
             % convert row selection to selectedTableCellsList
@@ -217,9 +225,11 @@ classdef (Sealed) PivotedTableProcessor < handle
             notify(obj, 'tableSelectionSetProgrammatically')     % notify the component, since we do not have direct link to it
         end
 
+
         function selectedList = getSelectedTableCellsList(obj)
             selectedList = obj.selectedTableCellsList;
         end
+
 
         function [subtable, isCategorical] = getSelectedColumns(obj)
             if isempty(obj.selectedTableCellsList)
@@ -237,6 +247,7 @@ classdef (Sealed) PivotedTableProcessor < handle
             isCategorical = varfun(@iscategorical, subtable, 'OutputFormat', 'uniform');
         end
 
+
         function [subtable, isCategorical] = getSelectedRows(obj)
             selectedRowNumsInOrder = unique(obj.selectedTableCellsList(:,1), 'stable');
 
@@ -245,6 +256,7 @@ classdef (Sealed) PivotedTableProcessor < handle
             
             isCategorical = varfun(@iscategorical, subtable, 'OutputFormat', 'uniform');
         end
+
 
         function [subtable, isCategorical] = getSelected(obj)
             selectedRowNumsInOrder = unique(obj.selectedTableCellsList(:,1), 'stable');
@@ -265,6 +277,7 @@ classdef (Sealed) PivotedTableProcessor < handle
             processorState.rowParameter = obj.rowParameter;
             processorState.selectedTableCellsList = obj.selectedTableCellsList;
         end
+
 
         function setState(obj, processorState)
             % Set the state of the processor

@@ -23,6 +23,8 @@ classdef (Sealed) test_twoTablesCombination < matlab.unittest.TestCase
         end
     end
 
+
+
     methods (Test)
         function checkTopTableExistence(testCase)
             [processors, tableTypes] = testCase.appStateManager.getTableProcessorHandles();
@@ -33,7 +35,8 @@ classdef (Sealed) test_twoTablesCombination < matlab.unittest.TestCase
             testCase.verifyEqual(columnParameter, 'timePoint', 'Expected column parameter to be timePoint');
         end
 
-        function createBottomTable(testCase)
+
+        function bottomTableGetsCreated(testCase)
             % the row parameter must first be categorical to be able to create a bottom table
                 % decision because it is easier to get values for groups created from categorical variables
             [processors, ~] = testCase.appStateManager.getTableProcessorHandles();
@@ -45,7 +48,8 @@ classdef (Sealed) test_twoTablesCombination < matlab.unittest.TestCase
             testCase.verifyTrue(isShown, 'Bottom table should be created successfully');
         end
 
-        function clickFromTopReplicationIfBottomEmpty(testCase)
+
+        function clickFromTopIfBottomEmpty(testCase)
             [processors, tableTypes] = testCase.appStateManager.getTableProcessorHandles();
             topTableProcessor = processors{1};
             bottomTableProcessor = processors{2};
@@ -70,6 +74,7 @@ classdef (Sealed) test_twoTablesCombination < matlab.unittest.TestCase
             testCase.verifyEqual(bottomTableProcessor.selectedTableCellsList, zeros(0,2), ...
                 'Bottom table should not have any selected cells when it is empty');
         end
+
 
         function clickFromTopReplicatesToBottom(testCase)
             [processors, tableTypes] = testCase.appStateManager.getTableProcessorHandles();
@@ -119,6 +124,7 @@ classdef (Sealed) test_twoTablesCombination < matlab.unittest.TestCase
                 'Bottom table should have all columns selected for each selected row');
         end
 
+
         function clickFromBottomReplicatesToTop(testCase)
             [processors, ~] = testCase.appStateManager.getTableProcessorHandles();
             topTableProcessor = processors{1};
@@ -139,6 +145,7 @@ classdef (Sealed) test_twoTablesCombination < matlab.unittest.TestCase
             testCase.verifyEqual(topTableProcessor.selectedTableCellsList, selection, ...
                 'Top table should have the same selected cells as bottom table');
         end
+        
 
         function rowParameterChangeFromTop(testCase)
             [processors, ~] = testCase.appStateManager.getTableProcessorHandles();
@@ -212,6 +219,14 @@ classdef (Sealed) test_twoTablesCombination < matlab.unittest.TestCase
                 'RowNames', {'A'; 'B'; 'C'});
             testCase.verifyEqual(round(bottomTableProcessor.filteredTable), round(summarizedTableBeforeFiltering), ...
                 'Bottom table should have the expected summarized data before filtering');
+
+            % Check that it matches the visualzed table
+            bottomTableComponentHandle = testCase.appStateManager.bottomTableStateManagerHandle.tableComponentHandle;
+            shownTable = bottomTableComponentHandle.getTableData();
+
+            testCase.verifyEqual(round(shownTable), round(bottomTableProcessor.filteredTable), ...
+                'Bottom table component should show the summarized data before filtering');
+
             summarizedDataStoreHandle = testCase.appStateManager.bottomTableStateManagerHandle.getActiveDataStore();
             rowParameter = 'Category';
             summarizedFilteringStorage = summarizedDataStoreHandle.getSummarizedFilteringStorage(rowParameter);
@@ -225,6 +240,118 @@ classdef (Sealed) test_twoTablesCombination < matlab.unittest.TestCase
                 'Bottom table should have the expected summarized data after filtering');
 
             % disp(bottomTableProcessor.filteredTable)
+
+            % get table from the component and check that it mathches the filtered table
+            shownTable = bottomTableComponentHandle.getTableData();
+
+            testCase.verifyEqual(round(shownTable), round(bottomTableProcessor.filteredTable), ...
+                'Bottom table component should show the filtered summarized data');
+        end
+
+
+        function switchBranchAndTestUpdates(testCase)
+            % switch branch to branch2
+                % the app uses changeBranchForUserSelected to switch branches
+                % the problem is that it then asks the app for the branch - I would need to mock that
+            testCase.mockApp.setBranch('branch2');
+            testCase.appStateManager.changeBranchForUserSelected();     % this would normally be a listener callback
+
+            [processors, tableTypes] = testCase.appStateManager.getTableProcessorHandles();
+            testCase.verifyEqual(length(processors), 2, 'Expected two processors for top and bottom tables after branch switch');
+
+            testCase.verifyEqual(tableTypes{1}, 'Pivoted', 'Expected top table type to be Pivoted after branch switch');
+            testCase.verifyEqual(tableTypes{2}, 'Summarized', 'Expected bottom table type to be Summarized after branch switch');
+
+            topTableProcessor = processors{1};
+            bottomTableProcessor = processors{2};
+            
+            % For some reason, I am getting a table with only A and C rows, even though there should also be B
+            % There is a default filter applied on Value and Category columns
+            dataStoreHandle = testCase.appStateManager.topTableStateManagerHandle.getActiveDataStore();
+            filteringStorage = dataStoreHandle.getFilteringStorage();
+
+            existingFilterNames = filteringStorage.returnGroupingNames();
+            testCase.verifyEqual(existingFilterNames, {'Value', 'Category'}, 'Expected a filter on Value column for branch2');
+            filterRange = filteringStorage.getConditions('Value');
+            testCase.verifyEqual(filterRange, [10, 12], 'Expected filter on Value column to be [10, 12] for branch2');
+            % disp(topTableProcessor.getTableForDisplay());
+            % disp(bottomTableProcessor.getTableForDisplay());
+
+            % Check that the top table has the expected data after branch switch
+            expectedTopTableData = table(...
+                [NaN; 12], ...
+                [NaN; 10], ...
+                [11; NaN], ...
+                'VariableNames', {'1', '2', '3'}, ...
+                'RowNames', {'A'; 'C'});
+
+            testCase.verifyEqual(round(topTableProcessor.pivotedTable, 4), round(expectedTopTableData, 4), ...
+                'Top table should have the expected data after branch switch');
+
+            expectedBottomTableData = table(...
+                [11; 11], ...
+                [0; 2.0506], ...
+                'VariableNames', {'Value_mean_over_timePoint_mean', 'Score_std_over_timePoint_mean'}, ...
+                'RowNames', {'A'; 'C'});
+
+            testCase.verifyEqual(round(bottomTableProcessor.filteredTable, 4), round(expectedBottomTableData, 4), ...
+                'Bottom table should have the expected summarized data after branch switch');
+
+            % check that there are no filters for the summarized table for this branch
+            summarizedDataStoreHandle = testCase.appStateManager.bottomTableStateManagerHandle.getActiveDataStore();
+            rowParameter = 'Category';
+            summarizedFilteringStorage = summarizedDataStoreHandle.getSummarizedFilteringStorage(rowParameter);
+            existingFilterNames = summarizedFilteringStorage.returnGroupingNames();
+            testCase.verifyEmpty(existingFilterNames, 'Summarized filtering storage should not have any filters for branch2');
+        end
+
+
+        function turnOffCategoricalFilter(testCase)
+            % Turn off the categorical filter on 'Category' column in branch2
+            dataStoreHandle = testCase.appStateManager.topTableStateManagerHandle.getActiveDataStore();
+            filteringStorage = dataStoreHandle.getFilteringStorage();
+
+            % Check that the filter exists before turning it off
+            existingFilterNames = filteringStorage.returnGroupingNames();
+            testCase.verifyTrue(ismember('Category', existingFilterNames), 'Expected a filter on Category column for branch2');
+
+            tempListener = filteringStorage.addlistener('filtersChanged', @(src, event) testCase.incrementEventCount());
+            % Turn off the filter
+
+            % both of these filters exclude the row with B - we need to deactivate both
+            filteringStorage.inactivateFilter('Category');
+            filteringStorage.inactivateFilter('Value'); % Also turn off the Value filter
+
+            testCase.verifyEqual(testCase.eventCount, 2, 'Expected one event to be emitted on filter change per filter');
+            testCase.resetEventCount();
+            delete(tempListener);
+
+            % This does not seem to get propagated to the top table processors
+            
+            % The tables should now have 3 rows instead of 2
+            [processors, ~] = testCase.appStateManager.getTableProcessorHandles();
+            topTableProcessor = processors{1};
+            bottomTableProcessor = processors{2};
+
+            % Check that the top table has the expected data after branch switch
+            expectedTopTableData = table(...
+                [NaN; 9; 12], ...
+                [NaN; NaN; 10], ...
+                [11; NaN; NaN], ...
+                'VariableNames', {'1', '2', '3'}, ...
+                'RowNames', {'A'; 'B'; 'C'});
+
+            testCase.verifyEqual(round(topTableProcessor.pivotedTable, 4), round(expectedTopTableData, 4), ...
+                'Top table should have the expected data after branch switch');
+
+            expectedBottomTableData = table(...
+                [11; 9; 11], ...
+                [0; 0; 2.0506], ...
+                'VariableNames', {'Value_mean_over_timePoint_mean', 'Score_std_over_timePoint_mean'}, ...
+                'RowNames', {'A'; 'B'; 'C'});
+
+            testCase.verifyEqual(round(bottomTableProcessor.filteredTable, 4), round(expectedBottomTableData, 4), ...
+                'Bottom table should have the expected summarized data after branch switch');
         end
     end
     

@@ -309,7 +309,7 @@ classdef SummarizedTableStore < handle
                         for k = 1:length(usedRowNames)
                             rowName = usedRowNames{k};
                             if ismember(rowName, obj.rowNames)
-                                disp('the row name is in rowNames')
+                                % disp('the row name is in rowNames')
                                 rowNum = obj.getRowNumCorrespondingToName(rowName);
                                 obj.cachedTableData{rowNum, colName} = editedValues(rowName);
                             end
@@ -444,7 +444,7 @@ classdef SummarizedTableStore < handle
         function extractRowNames(obj)
             % get and store row names from the parent table to be able to combine them with calculated columns later
             parentTable = obj.tableStoreHandle.getTableSubsetByName(obj.groupingName);
-            disp(size(parentTable))
+            % disp(size(parentTable))
             if ~isempty(parentTable)
                 % Check if the grouping column is categorical
                 if iscategorical(parentTable.(obj.groupingName))

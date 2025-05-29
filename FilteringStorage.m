@@ -26,7 +26,7 @@ classdef FilteringStorage < GroupingStorageBaseClass
             filterObj = Filtering(columnName,conditions,active);
             obj.Groupings{end+1} = filterObj;
 
-            disp(['Added range filter for column: ', columnName]);
+            % disp(['Added range filter for column: ', columnName]);
 
             % Notify listeners that the filters have changed
             notify(obj, 'filtersChanged');
@@ -40,7 +40,7 @@ classdef FilteringStorage < GroupingStorageBaseClass
             filterObj = Filtering(columnName,conditions,active);
             obj.Groupings{end+1} = filterObj;
 
-            disp(['Added categorical filter for column: ', columnName]);
+            % disp(['Added categorical filter for column: ', columnName]);
 
             notify(obj, 'filtersChanged');
         end
