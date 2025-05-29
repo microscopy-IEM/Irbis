@@ -30,7 +30,7 @@ classdef MockApp < handle
 
 
     methods % these simulate the methods from the actual app
-        function modality = getActiveModality(ojb)
+        function modality = getActiveModality(obj)
             modality = obj.currentModality;
         end
         

@@ -574,6 +574,7 @@ classdef (Sealed) AppStateManager < handle
             obj.activeDataStoreHandle = obj.modalityDataStoreHandle.getModalityData(modalityPath);
 
             notify(obj, 'newModalityLoaded');
+            % TO OPTIMIZE - it might happen that processor might get updated after other things that depend on it
         end
 
 
