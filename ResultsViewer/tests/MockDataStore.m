@@ -14,6 +14,17 @@ classdef MockDataStore < handle
             % Initialize properties or perform any setup if needed
         end
 
+
+        function tableStore = getTableStore(obj)
+            tableStore = obj.tableStoreHandle;
+        end
+
+
+        function filteringStorage = getFilteringStorage(obj)
+            filteringStorage = obj.filteringStorageHandle;
+        end
+        
+
         function initialize(obj)
             tableStoreConstruction = TableStore();
             tableData = table(...

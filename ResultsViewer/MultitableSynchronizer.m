@@ -1,34 +1,81 @@
-classdef MultitableSynchronizer < handle
+classdef (Sealed) MultitableSynchronizer < handle
 
     % To deal with: 
     % - if one table is filtered, the other table gets the same filters
     % - if one table is sorted, the other table gets the same sort order
     % - sync row selection
 
-    properties
+    properties (Access = ?matlab.unittest.TestCase)
         topTableProcessorHandle 
         bottomTableProcessorHandle
 
         rowParameter
+
+        % listeneres - need to be deleted when the synchronizer is deleted
+        topSyncRequestListener
+        bottomSyncRequestListener
+        topRowParameterListener
+        bottomRowParameterListener
+        bottomFiltersListener
     end
 
     methods
         function obj = MultitableSynchronizer(rowParameter, topTableProcessorHandle, bottomTableProcessorHandle)
             obj.rowParameter = rowParameter;
             obj.topTableProcessorHandle = topTableProcessorHandle;
-            sourceTableId = 1;
-            addlistener(obj.topTableProcessorHandle, 'tableSelectionSyncRequired', @(~, ~) obj.changeSelectionInOtherTable(sourceTableId));
-            addlistener(obj.topTableProcessorHandle, 'rowParameterChanged', @(~, ~) obj.changeRowParameterInOtherTable(sourceTableId));
             obj.bottomTableProcessorHandle = bottomTableProcessorHandle;
+
+            obj.registerListeners();
+        end
+
+
+        function registerListeners(obj)
+            obj.deleteExistingListeners();  % delete existing listeners to avoid duplicates
+
+            sourceTableId = 1;
+            obj.topSyncRequestListener = addlistener(obj.topTableProcessorHandle, 'tableSelectionSyncRequired', @(~, ~) obj.changeSelectionInOtherTable(sourceTableId));
+            obj.topRowParameterListener = addlistener(obj.topTableProcessorHandle, 'rowParameterChanged', @(~, ~) obj.changeRowParameterInOtherTable(sourceTableId));
+            
             sourceTableId = 2;
-            addlistener(obj.bottomTableProcessorHandle, 'tableSelectionSyncRequired', @(~, ~) obj.changeSelectionInOtherTable(sourceTableId));
-            addlistener(obj.bottomTableProcessorHandle, 'rowParameterChanged', @(~, ~) obj.changeRowParameterInOtherTable(sourceTableId));
-            addlistener(obj.bottomTableProcessorHandle, 'newFiltersApplied', @(~, ~) obj.applyFiltersToOtherTable(sourceTableId));
+            obj.bottomSyncRequestListener = addlistener(obj.bottomTableProcessorHandle, 'tableSelectionSyncRequired', @(~, ~) obj.changeSelectionInOtherTable(sourceTableId));
+            obj.bottomRowParameterListener = addlistener(obj.bottomTableProcessorHandle, 'rowParameterChanged', @(~, ~) obj.changeRowParameterInOtherTable(sourceTableId));
+            obj.bottomFiltersListener = addlistener(obj.bottomTableProcessorHandle, 'newFiltersApplied', @(~, ~) obj.applyFiltersToOtherTable(sourceTableId));
                 % only the summarized table can be filtered by itself
+        end
+
+
+        function delete(obj)
+            % wrapped like this because I don't know if I can call delete() to just delete the listeners and not the whole app
+            obj.deleteExistingListeners();
+        end
+
+
+        function deleteExistingListeners(obj)
+            if ~isempty(obj.topSyncRequestListener) && isvalid(obj.topSyncRequestListener)
+                delete(obj.topSyncRequestListener);
+            end
+
+            if ~isempty(obj.bottomSyncRequestListener) && isvalid(obj.bottomSyncRequestListener)
+                delete(obj.bottomSyncRequestListener);
+            end
+
+            if ~isempty(obj.topRowParameterListener) && isvalid(obj.topRowParameterListener)
+                delete(obj.topRowParameterListener);
+            end
+
+            if ~isempty(obj.bottomRowParameterListener) && isvalid(obj.bottomRowParameterListener)
+                delete(obj.bottomRowParameterListener);
+            end
+
+            if ~isempty(obj.bottomFiltersListener) && isvalid(obj.bottomFiltersListener)
+                delete(obj.bottomFiltersListener);
+            end
         end
     end
 
-    methods (Access = private)
+
+
+    methods (Access = ?matlab.unittest.TestCase)
         function changeSelectionInOtherTable(obj, sourceTableId)
             if isequal(sourceTableId, 1)
                 sourceProcessor = obj.topTableProcessorHandle;

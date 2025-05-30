@@ -1,9 +1,14 @@
 classdef test_AppStateManager_changingTableType < testParent_AppStateManager
+
+    % properties inherited from testParent_AppStateManager
+        % appStateManager
+    
     methods (Test)
         function initialTableStateManagerIsEmpty(testCase)
             testCase.verifyEmpty(testCase.appStateManager.topTableStateManagerHandle, ...
                 'Initially, AppStateManager should report no table state manager.');
         end
+
 
         function initialTableProcessorsAreEmpty(testCase)
             [processorHandles, processorTypes] = testCase.appStateManager.getTableProcessorHandles();
@@ -13,11 +18,13 @@ classdef test_AppStateManager_changingTableType < testParent_AppStateManager
                 'Initially, AppStateManager should report no corresponding table types.');
         end
 
+
         function generateTableStateManager(testCase)
             testCase.appStateManager.generateTopTableStateManager();
             testCase.verifyNotEmpty(testCase.appStateManager.topTableStateManagerHandle, ...
                 'After generating table state manager, AppStateManager should have a table state manager.');
         end
+
 
         function loadData(testCase)
             testCase.appStateManager.storeDataFromStruct(testCase.createTestModelStruct());
@@ -32,6 +39,7 @@ classdef test_AppStateManager_changingTableType < testParent_AppStateManager
                 'After loading data, there should be table data.')
         end
 
+
         function changingTableTypeGeneratesTableStateManager(testCase)
             % NOTE: TableStateManager and FilteringMenuStateManager are asking app for grid layout
             %       this needs to be mocked in the MockApp
@@ -39,6 +47,7 @@ classdef test_AppStateManager_changingTableType < testParent_AppStateManager
             testCase.verifyNotEmpty(testCase.appStateManager.topTableStateManagerHandle, ...
                 'After changing table type, AppStateManager should have a table state manager.');
         end
+
 
         function changingTableTypeGeneratesTableProcessorFull(testCase)
             testCase.appStateManager.changeTopTableType("Full");
@@ -55,6 +64,7 @@ classdef test_AppStateManager_changingTableType < testParent_AppStateManager
                 % BE CAREFUL: we are using sting for the table type, not char
         end
 
+
         function changingTableTypeGeneratesTableProcessorPivoted(testCase)
             testCase.appStateManager.changeTopTableType("Pivoted");
             [processorHandles, processorTypes] = testCase.appStateManager.getTableProcessorHandles();
@@ -68,6 +78,7 @@ classdef test_AppStateManager_changingTableType < testParent_AppStateManager
             testCase.verifyEqual(processorTypes{1}, "Pivoted", ...
                 'After changing table type, AppStateManager should have a table processor of type ''Pivoted''.');
         end
+
 
         % function changingTableTypeGeneratesTableProcessorSummarized(testCase)   % This errors if there are no data - it expects a column but that one is empty
         %     testCase.appStateManager.changeTopTableType("Summarized");

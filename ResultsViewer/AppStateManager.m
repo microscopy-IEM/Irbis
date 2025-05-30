@@ -50,15 +50,14 @@ classdef (Sealed) AppStateManager < handle
             % Set default empty objects
             obj.activeDataStoreHandle = DataStore();    % TO OPTIMIZE - DataStore has arguments and sets properties in constructor
 
-            addlistener(obj.appHandle, 'modalityChangedByUser', @(~,~) obj.changeModalityForUserSelected());
-            addlistener(obj.appHandle, 'branchChangedByUser', @(~,~) obj.changeBranchForUserSelected());
+            obj.registerListeners();
         end
 
 
-        % function registerListeners(obj)       % TO OPTIMIZE - it might be safer not to register listeners from the constructor, as the object is not yet fully finished
-        %     addlistener(obj.appHandle, 'modalityChangedByUser', @(~,~) obj.changeModalityForUserSelected());
-        %     addlistener(obj.appHandle, 'branchChangedByUser', @(~,~) obj.changeBranchForUserSelected());
-        % end
+        function registerListeners(obj)       % TO OPTIMIZE - it might be safer not to register listeners from the constructor, as the object is not yet fully finished
+            addlistener(obj.appHandle, 'modalityChangedByUser', @(~,~) obj.changeModalityForUserSelected());
+            addlistener(obj.appHandle, 'branchChangedByUser', @(~,~) obj.changeBranchForUserSelected());
+        end
 
 
         function availableModalities = getAvailableModalities(obj)
@@ -212,6 +211,11 @@ classdef (Sealed) AppStateManager < handle
         function destroySummarized(obj)
             if isa(obj.bottomTableStateManagerHandle, 'handle') && isvalid(obj.bottomTableStateManagerHandle)
                 delete(obj.bottomTableStateManagerHandle)
+            end
+
+            % destroy also the multitable synchronizer, so that the outdated ones are not getting accummulated
+            if isa(obj.multitableSynchronizer, 'MultitableSynchronizer') && isvalid(obj.multitableSynchronizer)
+                delete(obj.multitableSynchronizer);
             end
 
             obj.generateFilteringMenuStateManager();

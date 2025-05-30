@@ -14,6 +14,7 @@ classdef (Sealed) test_filteringIntegration < matlab.unittest.TestCase
         eventCount = 0; % Counter for the number of times the event was emitted
     end
 
+
     methods (TestClassSetup)
         function setup(testCase)
             % Setup code that runs before each test
@@ -27,6 +28,7 @@ classdef (Sealed) test_filteringIntegration < matlab.unittest.TestCase
         end
     end
 
+
     methods (Test)
         function changingTableTypeGeneratesTableStateManager(testCase)
             % NOTE: TableStateManager and FilteringMenuStateManager are asking app for grid layout
@@ -36,13 +38,8 @@ classdef (Sealed) test_filteringIntegration < matlab.unittest.TestCase
                 'After changing table type, AppStateManager should have a table state manager.');
         end
 
+
         function filteringStorageSendsNotification(testCase)
-            % disp(testCase.appStateManager.getActiveModality()); 
-            % disp(testCase.appStateManager.getActiveBranch());
-
-            % disp(testCase.appStateManager.getAvailableModalities());
-            % disp(testCase.appStateManager.getAvailableBranches(testCase.appStateManager.getActiveModality()));
-
             currentDataStore = testCase.appStateManager.topTableStateManagerHandle.getActiveDataStore();
             filteringStorage = currentDataStore.getFilteringStorage();
 
@@ -59,6 +56,7 @@ classdef (Sealed) test_filteringIntegration < matlab.unittest.TestCase
             testCase.resetEventCount(); % Reset the event count for future tests  
             
         end
+
 
         function filteringStorageIsEmptyAfterDeletingFilter(testCase)
             currentDataStore = testCase.appStateManager.topTableStateManagerHandle.getActiveDataStore();
@@ -416,9 +414,11 @@ classdef (Sealed) test_filteringIntegration < matlab.unittest.TestCase
             testStruct.tracks.storedCategorizations = {CategorizationStorage()};
         end
 
+
         function incrementEventCount(testCase)
             testCase.eventCount = testCase.eventCount + 1;
         end
+
 
         function resetEventCount(testCase)
             testCase.eventCount = 0;
@@ -450,7 +450,7 @@ classdef (Sealed) test_filteringIntegration < matlab.unittest.TestCase
                 tblCat = originalTable(idx, :);
 
                 % Group by timePoint
-                [G, timePoints] = findgroups(tblCat.timePoint);
+                [G, ~] = findgroups(tblCat.timePoint);
 
                 % Calculate mean Value and mean Score for each timePoint in this category
                 meanValuePerTimePoint = splitapply(@mean, tblCat.Value, G);

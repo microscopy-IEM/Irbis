@@ -1,5 +1,5 @@
 classdef BatchLoader < handle
-    properties
+    properties (Access = ?matlab.unittest.TestCase)
         fileNamesAll = {}
         pathNamesAll = {}
         modalities
@@ -383,10 +383,9 @@ classdef BatchLoader < handle
         end
 
         function cleanEmptyModalities(obj)
-            if ismember('model', obj.modalities) && isempty(obj.combinedTablesModel)
+            if ismember('model', obj.modalities) && isempty(fieldnames(obj.combinedTablesModel))
+                % obj.combinedTablesModel is a struct - we need to that there are no fields, rather than checking for empty cell
                 obj.modalities = setdiff(obj.modalities, 'model');
-                % clean also unused branches
-
             end
             if ismember('tracks', obj.modalities) && isempty(obj.combinedTablesTracks)
                 obj.modalities = setdiff(obj.modalities, 'tracks');
