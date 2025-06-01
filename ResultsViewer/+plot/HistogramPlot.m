@@ -8,7 +8,16 @@ classdef HistogramPlot < plot.PlotInterface
             xData = data.xData;
 
             if isempty(groupData)
+                hold(axesHandle, 'on');
                 histogram(axesHandle, xData);
+
+                % Draw a line showing a threshold 
+                if isnumeric(xData)
+                    triangleThreshold = threshold.Triangle.compute(xData); % compute threshold and plot it
+                    xline(axesHandle, triangleThreshold, 'r--', 'LineWidth', 2, 'Label', ['Triangle Threshold: ' num2str(triangleThreshold)]);
+                end
+
+                hold(axesHandle, 'off');
             else
                 categoryList = unique(groupData);
 
