@@ -2,7 +2,11 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
 
     methods (Static)
         function [columnName, conditions] = show(columnNames, getColumnFcn, numExistingCategories)
-            [columnName, conditions] = CategorizationColumnDefinitionDialog.dialogWindow(columnNames, getColumnFcn, numExistingCategories);
+            if nargin < 3
+                [columnName, conditions] = CategorizationColumnDefinitionDialog.dialogWindow();
+            else
+                [columnName, conditions] = CategorizationColumnDefinitionDialog.dialogWindow(columnNames, getColumnFcn, numExistingCategories);
+            end
             if isempty(columnName) || isempty(conditions)
                 columnName = '';
                 conditions = [];
@@ -107,7 +111,7 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
             saveButton.Tooltip = 'Confirm the categorization definition and close the window.';
         
             addCategoryPanel(categoryGrid, columnNames, getColumnFcn, categoryScrollPanel);
-            addCategoryPanel(categoryGrid, columnNames, getColumnFcn, categoryScrollPanel);
+            % addCategoryPanel(categoryGrid, columnNames, getColumnFcn, categoryScrollPanel);
         
             if nargin > 3
                 currentCategorization = varargin{4};
@@ -122,8 +126,8 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                 conditions = [];
                 delete(fig);
             end
-        
-            function [categoryPanel,criteriaGrid] = addCategoryPanel(categoryGrid, columnNames, getColumnFcn, scrollPanel)
+
+            function [categoryPanel,criteriaGrid] = addEmptyCategoryPanel(categoryGrid, columnNames, getColumnFcn, scrollPanel)
                 % Create a panel for the new category
                 categoryPanel = uipanel(categoryGrid);
                 categoryPanel.Layout.Row = numel(categoryGrid.Children) + 1;
@@ -132,7 +136,7 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                 % Create a grid layout inside the category panel
                 panelGrid = uigridlayout(categoryPanel, [2, 3]);
                 panelGrid.RowHeight = {30, 'fit'};
-                panelGrid.ColumnWidth = {'1x', 100, 100};
+                panelGrid.ColumnWidth = {'1x', 100, 100, 'fit'};
         
                 % Create a text field for the category name
                 categoryNameField = uieditfield(panelGrid, 'text');
@@ -151,7 +155,7 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                 % Create a grid layout for criteria
                 criteriaGrid = uigridlayout(panelGrid);
                 criteriaGrid.Layout.Row = 2;
-                criteriaGrid.Layout.Column = [1 3];
+                criteriaGrid.Layout.Column = [1 4];
                 criteriaGrid.RowHeight = {};
                 criteriaGrid.ColumnWidth = {'1x', 58, '0.5x', 70};
                 criteriaGrid.Scrollable = 'on';
@@ -163,6 +167,13 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                 criteriaPlusButton.ButtonPushedFcn = @(btn, event) addCriteriaRow(criteriaGrid, columnNames, getColumnFcn, categoryPanel);
                 criteriaPlusButton.Tooltip = 'Add new criterion for the category definition.';
         
+                % Create a "Split by complement" button for this category
+                splitButton = uibutton(panelGrid, 'push', 'Text', 'Complement');
+                splitButton.Layout.Row = 1;
+                splitButton.Layout.Column = 4;
+                splitButton.ButtonPushedFcn = @(btn, event) createComplementaryCategories(categoryPanel, categoryGrid, columnNames, getColumnFcn, scrollPanel);
+                splitButton.Tooltip = 'Create complement categories for this definition.';
+        
                 % Store UI components for dynamic management
                 categoryPanel.UserData.CriteriaComponents = {}; % Store criteria components
         
@@ -171,9 +182,14 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
         
                 n = numel(categoryGrid.Children);
                 categoryGrid.RowHeight = [repmat({'fit'}, 1, n), {5000}];
+            end
         
+
+            function [categoryPanel,criteriaGrid] = addCategoryPanel(categoryGrid, columnNames, getColumnFcn, scrollPanel)
+                [categoryPanel,criteriaGrid] = addEmptyCategoryPanel(categoryGrid, columnNames, getColumnFcn, scrollPanel);
                 addCriteriaRow(criteriaGrid, columnNames, getColumnFcn, categoryPanel);
             end
+
         
             function addCriteriaRow(criteriaGrid, columnNames, getColumnFcn, categoryPanel)
                 % Get the current row position for the new criteria components
@@ -381,7 +397,7 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                     categoryScrollPanel.UserData.CategoryPanels = {};
         
                     conditions = categorization.getConditions();
-                    fields = fieldnames(conditionss);
+                    fields = fieldnames(conditions);
                     for i = 1:numel(fields)
                         [categoryPanel,criteriaGrid] = addCategoryPanel(categoryGrid, columnNames, getColumnFcn, categoryScrollPanel);
         
@@ -450,7 +466,6 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                 conditions = struct();
                 risingNum = 1;
                 for i = indexes
-                    % disp(i)
                     categoryPanel = scrollPanel.UserData.CategoryPanels{i};
                     categoryName = categoryNames{i}; % Get the category name
                     conditionsDict = dictionary(string.empty, {}); % Initialize with key and value types
@@ -516,12 +531,92 @@ classdef (Sealed) CategorizationColumnDefinitionDialog
                     conditions.(['group' num2str(risingNum)]) = categoryStruct;
                     risingNum = risingNum + 1;
                 end
-                % assignin('base', 'cats', conditions); % Save to workspace for further use
-                % disp(conditions)
             
                 uiresume(groupingFig);
                 delete(groupingFig);
             end 
+
+        function createComplementaryCategories(categoryPanel, categoryGrid, columnNames, getColumnFcn, scrollPanel)
+            % Gather all criteria from the current panel
+            existingConditions = categoryPanel.UserData.CriteriaComponents;
+            nConditions = numel(existingConditions);
+
+            % For each criterion, compute possible complement(s)
+            allOptions = cell(1, nConditions);
+            for i = 1:nConditions
+                currentOptions = cell(1, 2);
+                condition = existingConditions{i};
+                operator = condition{2}.Value;
+                valueComponent = condition{3};
+                if strcmp(valueComponent.Type, 'uicheckboxtree')
+                    % Categorical: get all categories, selected, and unselected
+                    allCategories = valueComponent.Children;
+                    allCatNames = {allCategories.Text};
+                    selected = {valueComponent.CheckedNodes.Text};
+                    unselected = setdiff(allCatNames, selected);
+                    currentOptions{1} = selected;
+                    currentOptions{2} = unselected;
+                else
+                    % Numeric: invert the operator
+                    currentOptions{1} = operator;
+                    currentOptions{2} = getComplementaryOperator(operator);
+                end
+                allOptions{i} = currentOptions;
+            end
+
+            % Generate all combinations
+            combos = combinations(allOptions{:});   % table where each row is one combination of conditions, and each column corresponds to one criteria
+            % for example, table( {{'1', '2'}; {'1', '2'}; {'3', '4'}; {'3', '4'}}, {'lessThan'; 'greaterThan'; 'lessThan'; 'greaterThan'}, 'VariableNames', {'Var1', 'Var2'})
+
+            for k = 2:height(combos)
+                
+                [newPanel, newGrid] = addEmptyCategoryPanel(categoryGrid, columnNames, getColumnFcn, scrollPanel);
+                % Set name
+                newPanel.Children(1).Children(1).Value = ['Complement_' num2str(k)];
+
+                % Go trough k-th row in combos table, store the values
+                for c = 1:width(combos)
+                    complementValue = combos{k, c};
+                    condition = existingConditions{c};
+                    columnName = condition{1}.Value;
+                    if strcmp(condition{3}.Type, 'uicheckboxtree')
+                        % Categorical: add the categories
+                        addCriteriaRow(newGrid, columnNames, getColumnFcn, newPanel);
+                        newPanel.UserData.CriteriaComponents{c}{1}.Value = columnName;
+                        dropdownField = newPanel.UserData.CriteriaComponents{c}{1};
+                        updateCriteriaRow(dropdownField, newGrid, getColumnFcn, c, newPanel);
+                        checkNodesByName(newPanel.UserData.CriteriaComponents{c}{3}, complementValue{1});
+                    else
+                        % Numeric: add the operator and value
+                        addCriteriaRow(newGrid, columnNames, getColumnFcn, newPanel);
+                        newPanel.UserData.CriteriaComponents{c}{1}.Value = columnName;
+                        newPanel.UserData.CriteriaComponents{c}{2}.Value = complementValue{1};
+                        newPanel.UserData.CriteriaComponents{c}{3}.Value = condition{3}.Value;
+                    end
+
+                end
+            end
+        end
+
+        function [complementaryOperator] = getComplementaryOperator(operator)
+            % Returns complement operator for a numeric criterion
+            switch operator
+                case 'greaterThan'
+                    complementaryOperator = 'equalOrLessThan';
+                case 'equalOrGreaterThan'
+                    complementaryOperator = 'lessThan';
+                case 'lessThan'
+                    complementaryOperator = 'equalOrGreaterThan';
+                case 'equalOrLessThan'
+                    complementaryOperator = 'greaterThan';
+                case 'equals'
+                    complementaryOperator = 'notEqual';
+                case 'notEqual'
+                    complementaryOperator = 'equals';
+                otherwise
+                    complementaryOperator = operator;
+            end
         end
     end
+end
 end
