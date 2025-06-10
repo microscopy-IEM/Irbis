@@ -1,5 +1,8 @@
 function checkNodesByName(tree, nodeNames)
     checkedNodes = [];
+    if isempty(nodeNames)
+        return
+    end
     if ~iscell(nodeNames)
         warning('Input nodeNames should be a cell array of strings.');  % Added if there is some problem with filter settings
         return

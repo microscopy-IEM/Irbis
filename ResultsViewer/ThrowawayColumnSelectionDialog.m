@@ -35,19 +35,27 @@ methods (Access = private)
             % Modality Dropdown
             uilabel(obj.UIFigure, 'Text', 'Modality:', 'Position', [10 470 60 22]);
             obj.ModalityDropDown = uidropdown(obj.UIFigure, ...
-                'Position', [80 470 100 22], ...
+                'Position', [80 470 200 22], ...
                 'Items', obj.appStateManagerHandle.getAvailableModalities(), ...
                 'ValueChangedFcn', @(src, evt)obj.refreshBranchAndCheckboxes());
 
             % Branch Dropdown
             uilabel(obj.UIFigure, 'Text', 'Branch:', 'Position', [10 440 60 22]);
             obj.BranchDropDown = uidropdown(obj.UIFigure, ...
-                'Position', [80 440 100 22], ...
+                'Position', [80 440 200 22], ...
                 'ValueChangedFcn', @(src, evt)obj.refreshCheckboxes());
+
+            % (Un)select all buttons
+            uibutton(obj.UIFigure, 'Text', 'Select all', ...
+                'Position', [10 405 80 20], ...
+                'ButtonPushedFcn', @(btn, event)obj.selectAll());
+            uibutton(obj.UIFigure, 'Text', 'Unselect all', ...
+                'Position', [95 405 80 20], ...
+                'ButtonPushedFcn', @(btn, event)obj.unselectAll());
 
             % List of checkboxes - ticked columns are excluded from storing
             obj.CheckBoxTree = uitree(obj.UIFigure, 'checkbox',...
-                'Position', [10 170 280 260], ...
+                'Position', [10 170 280 230], ...
                 'CheckedNodesChangedFcn', @(src, evt)obj.storeCurrentColumnSelection());
 
             % List of checkboxes for columns that are excluded but not present in the table
@@ -169,6 +177,25 @@ methods (Access = private)
             selectedCols = unique([selectedCols; missingCols]);
 
             obj.selectionStateHandle.setSelection(modality, branch, selectedCols);
+        end
+
+
+        function selectAll(obj)
+            % Select all checkboxes in the CheckBoxTree
+            tree = obj.CheckBoxTree;
+            allNames = {tree.Children.Text};
+            checkNodesByName(tree, allNames);
+
+            obj.storeCurrentColumnSelection();
+        end
+
+
+        function unselectAll(obj)
+            % Unselect all checkboxes in the CheckBoxTree
+            tree = obj.CheckBoxTree;
+            tree.CheckedNodes = [];
+
+            obj.storeCurrentColumnSelection();
         end
     end
 end
