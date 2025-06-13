@@ -102,19 +102,22 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
                 % boxplot(axesHandle, numericalData, categoricalData)   % X is numeric and g is categorical
 
-                boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.1);
+                boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.1,'JitterOutliers','on');
 
                 % https://www.mathworks.com/help/stats/boxplot.html#bu180jd-2
                 %    If x is a matrix, boxplot plots one box for each column of x.
                 %    If x is a matrix, then the grouping variables must contain one row for each column of x.
 
                 % Code for R2025a
-                ver = matlabRelease.Release;
-                if isequal(ver,'R2025a')
+                % ver = matlabRelease.Release;
 
-                    violinplot(axesHandle, categoricalData, numericalData)
+                % tf = ~isMATLABReleaseOlderThan("R2025a")
+
+                if ~isMATLABReleaseOlderThan("R2025a")
+
+                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
                     axesHandle.NextPlot = 'add';
-                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.1,'BoxWidth',0.05,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
+                    violinplot(axesHandle, categoricalData, numericalData)
                     axesHandle.NextPlot = 'replace';
 
                 end
@@ -134,20 +137,23 @@ classdef TwoVariablesPlot < plot.PlotInterface
                 
                 
                 % Code for R2025a
-                ver = matlabRelease.Release;
+                % ver = matlabRelease.Release;
 
-                if isequal(ver,'R2025a')
+                if ~isMATLABReleaseOlderThan("R2025a")
 
                     % numericalData = log10(numericalData);
                 
-                    v = violinplot(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData);
+                    % boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.3,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
+                    b = boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers','on');
+                    
                     axesHandle.NextPlot = 'add';                    
                     
-                    boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.05,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
+                    % v = violinplot(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData);
+                    
                     axesHandle.NextPlot = 'replace';
 
                     legendGroups = unique(groupData);
-                    legend(axesHandle, v, legendGroups, 'Location', 'best');
+                    legend(axesHandle, b, legendGroups, 'Location', 'best');
                     
 
                 end

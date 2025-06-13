@@ -6,6 +6,10 @@ function exportEvalFigFcn(sourceAx)
 
 f = figure;
 ax = copyobj(sourceAx,f);
+get(ax)
+
+ax.Position(1) = 50;
+ax.Position(2) = 50;
 
 btn = uibutton(f,'ButtonPushedFcn',@(src,evt)figStats(src,evt,ax),'Text','Anova','Position',[20 20 100 22]);
 

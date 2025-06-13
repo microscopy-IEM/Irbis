@@ -275,6 +275,7 @@ classdef orbitClass < handle
                       
                     case 'alt'
                                              
+                        src.Pointer = 'cross';
                         src.WindowButtonMotionFcn = @obj.dragRotate3D; 
                                       
                     case 'extend'
@@ -291,8 +292,8 @@ classdef orbitClass < handle
             obj.hFig.Pointer = 'arrow';
             % drawnow
             % 777
-            clc
-            pt = obj.hFig.Pointer
+            % clc
+            % pt = obj.hFig.Pointer
         end
     
         function dragRotate3D(obj,~, ~)
