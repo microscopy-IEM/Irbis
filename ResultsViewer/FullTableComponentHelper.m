@@ -484,7 +484,7 @@ classdef FullTableComponentHelper < handle
             switch definitionType
                 case 'categorization'
                     % open the dialog to edit the categorization
-                    data = obj.tableStoreHandle.getTableData();
+                    % data = obj.tableStoreHandle.getTableData();
                     columnNames = obj.tableStoreHandle.getColumnNames();
                     getColumnFcn = @(colName) obj.tableStoreHandle.getColumnData(colName);
 
@@ -766,12 +766,14 @@ classdef FullTableComponentHelper < handle
 
                     [name, conditions] = CategorizationColumnDefinitionDialog.show(columnNames, getColumnFcn, numExistingCategories); % open the dialog to define the new column
         
-                    % extract the categorization and store it
-                    newCategorization = Categorization(name, conditions);
+                    if ~isempty(name) && ~isempty(conditions)   % can be empty if the user cancels the dialog
+                        % extract the categorization and store it
+                        newCategorization = Categorization(name, conditions);
 
-                    % apply it to the table
-                    newColumnData = newCategorization.generateColumn(data);
-                    obj.tableStoreHandle.addUserDefinedColumn(name, newColumnData, newCategorization);                   
+                        % apply it to the table
+                        newColumnData = newCategorization.generateColumn(data);
+                        obj.tableStoreHandle.addUserDefinedColumn(name, newColumnData, newCategorization);    
+                    end               
 
             case 'Add formula'
                 % display user interface to create a new column

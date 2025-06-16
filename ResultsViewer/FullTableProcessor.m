@@ -106,7 +106,7 @@ classdef (Sealed) FullTableProcessor < handle
             if isempty(obj.selectedTableCellsList)
                 subtable = table();
                 isCategorical = [];
-                warning('FullTableProcessor:NoSelection', 'No cells are selected');
+                % warning('FullTableProcessor:NoSelection', 'No cells are selected');
                 return;
             end
 
