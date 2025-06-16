@@ -11,6 +11,7 @@ classdef (Sealed) TableStore < handle
 
     events
         tableDataChanged
+        userColumnDefinitionChanged    % event with event data passed
     end
 
     methods (Access = public)
@@ -261,6 +262,7 @@ classdef (Sealed) TableStore < handle
                     obj.userColumnDefinitions{end+1} = userDefinitionHandle; % store the user definition object
                     % obj.columnDefinitionStoreHandle.addUserDefinedColumn(columnName, userDefinitionHandle);
                     notify(obj, 'tableDataChanged');
+                    obj.notifyUserColumnDefinitionsChange('add', columnName);   % notification for the main app
                 else
                     error('Column %s already exists in the table.', columnName);
                 end
@@ -274,6 +276,7 @@ classdef (Sealed) TableStore < handle
                     idx = find(strcmp(obj.userDefinedColumns, columnName), 1);
                     obj.userColumnDefinitions{idx} = userDefinitionHandle;
                     notify(obj, 'tableDataChanged');
+                    obj.notifyUserColumnDefinitionsChange('update', columnName);   % notification for the main app
                 else
                     error('Column %s does not exist in the table.', columnName);
                 end
@@ -312,6 +315,7 @@ classdef (Sealed) TableStore < handle
                         idx = find(strcmp(obj.userDefinedColumns, columnName), 1);
                         obj.userDefinedColumns(idx) = [];
                         obj.userColumnDefinitions(idx) = [];
+                        obj.notifyUserColumnDefinitionsChange('remove', columnName);   % notification for the main app
                     end
                     % remove it also from editable, if applicable
                     if ismember(columnName, obj.editableColumns)
@@ -340,6 +344,7 @@ classdef (Sealed) TableStore < handle
                             idx = find(strcmp(obj.userDefinedColumns, columnName), 1);
                             obj.userDefinedColumns(idx) = [];
                             obj.userColumnDefinitions(idx) = [];
+                            obj.notifyUserColumnDefinitionsChange('remove', columnName);   % notification for the main app
                         end
                         % Remove it also from editable, if applicable
                         if ismember(columnName, obj.editableColumns)
@@ -374,6 +379,7 @@ classdef (Sealed) TableStore < handle
                         obj.userDefinedColumns{idx} = newName;
                         obj.userColumnDefinitions{idx}.renameColumn(newName); % update the user definition object
                         % TO OPTIMIZE - this might become deprecated if I switch columnDefinition to a value object
+                        obj.notifyUserColumnDefinitionsChange('rename', newName, oldName);   % notification for the main app
                     end
                     notify(obj, 'tableDataChanged');
                 else
@@ -415,6 +421,28 @@ classdef (Sealed) TableStore < handle
                     error('Column %s does not exist or is not editable.', columnName);
                 end
             end
+    end
+
+
+    methods (Access = private)
+        function notifyUserColumnDefinitionsChange(obj, typeOfChange, columnName, varargin)
+            % Notify listeners that user column definitions have changed
+            if isequal(typeOfChange, 'remove')
+                eventData = ColumnDefinitionEvent(columnName, typeOfChange, []);
+            else
+                % Here, I assume that this will be called after the change
+                userColumnDefinition = obj.getUserColumnDefinition(columnName);
+                eventData = ColumnDefinitionEvent(columnName, typeOfChange, userColumnDefinition);
+            end
+
+            if isequal(typeOfChange, 'rename') && ~isempty(varargin)
+                oldName = varargin{1};  % Old name is passed as an additional argument
+                eventData.setOldName(oldName);
+            end
+            
+            disp(['Notifying user column definition change: ', typeOfChange, ' for column: ', columnName]);
+            notify(obj, 'userColumnDefinitionChanged', eventData);
+        end
     end
 
 

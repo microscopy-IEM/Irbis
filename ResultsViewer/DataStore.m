@@ -4,8 +4,14 @@ classdef DataStore < handle
         tableStoreHandle TableStore = TableStore()
         summarizedTablesStruct struct
 
+        columnDefinitionChangeListener
+
         filteringStorageHandle FilteringStorage = FilteringStorage()
         summarizedFilteringStruct struct
+    end
+
+    events
+        userColumnDefinitionChanged
     end
 
     methods
@@ -15,6 +21,8 @@ classdef DataStore < handle
                 obj.summarizedTablesStruct = struct();
                 obj.filteringStorageHandle = filteringStorageHandle;
                 obj.summarizedFilteringStruct = struct();
+
+                obj.columnDefinitionChangeListener = addlistener(obj.tableStoreHandle, 'userColumnDefinitionChanged', @(src, event) obj.notifyUserColumnDefinitionChange(src, event));
             end
         end
 
@@ -66,6 +74,23 @@ classdef DataStore < handle
             if obj.hasSummarizedTableStore(columnName)
                 obj.summarizedTablesStruct = rmfield(obj.summarizedTablesStruct, columnName);
             end
+        end
+    end
+
+
+    methods (Access = private)
+        function notifyUserColumnDefinitionChange(obj, src, event)
+            % Notify the user about the column definition change
+            % This method is called when a column definition change occurs
+            % It creates a ColumnDefinitionEvent and notifies the listeners
+
+            % columnName = event.name;
+            % typeOfChange = event.typeOfChange;
+            % userDefinitionObject = event.userDefinitionObject;
+
+            % columnDefinitionEvent = ColumnDefinitionEvent(columnName, typeOfChange, userDefinitionObject);
+            disp(['Column definition changed: ', event.name, ' - ', event.typeOfChange]);
+            notify(obj, 'userColumnDefinitionChanged', event);
         end
     end
 

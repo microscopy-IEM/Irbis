@@ -30,6 +30,8 @@ classdef (Sealed) AppStateManager < handle
         multitableSynchronizer
 
         filteringMenuStateManagerHandle
+
+        columnDefinitionBridge  % Bridge for syncing user column definitions between the app and ResultsViewer
     end
 
     events
@@ -51,6 +53,15 @@ classdef (Sealed) AppStateManager < handle
             obj.activeDataStoreHandle = DataStore();    % TO OPTIMIZE - DataStore has arguments and sets properties in constructor
 
             obj.registerListeners();
+        end
+
+
+        function delete(obj)
+            % Destructor for AppStateManager
+            % Clean up listeners and handles
+            if ~isempty(obj.columnDefinitionBridge) && isvalid(obj.columnDefinitionBridge)
+                delete(obj.columnDefinitionBridge);
+            end
         end
 
 
@@ -375,6 +386,24 @@ classdef (Sealed) AppStateManager < handle
             % end
 
             % notify(obj, 'newModalityLoaded');   % added to ensure proper setup of the plotManager
+        end
+
+
+        function establishBridgeForColumnDefinitions(obj, mainAppHandle)
+            % Establish a bridge for column definitions between the app and ResultsViewer
+            % This allows the app to listen to changes in column definitions (and vice versa - TO IMPLEMENT)
+
+            obj.columnDefinitionBridge = ColumnDefinitionBridge(obj.modalityDataStoreHandle, mainAppHandle);
+        end
+
+
+        function burnBridgeForColumnDefinitions(obj)
+            % Burn the bridge for column definitions
+            % This is used when batch loading data, which causes the connection with main app to be lost
+            if ~isempty(obj.columnDefinitionBridge) && isvalid(obj.columnDefinitionBridge)
+                delete(obj.columnDefinitionBridge);
+                obj.columnDefinitionBridge = [];
+            end
         end
     end
 

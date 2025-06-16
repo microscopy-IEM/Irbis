@@ -16,7 +16,8 @@ classdef CategorizationStorage < handle
         end
 
         function replaceCategorization(obj, categorization)
-            idx = obj.findCategorizationIndexByName(categorization.CategorizationName);
+            name = categorization.getColumnName();
+            idx = obj.findCategorizationIndexByName(name);
             obj.Categorizations{idx} = categorization;
             % disp(obj.Categorizations)
         end
@@ -28,7 +29,7 @@ classdef CategorizationStorage < handle
             if idx > 0
                 % Get the existing categorization
                 existingCategorization = obj.Categorizations{idx};
-                existingCategorization.CategorizationName = newCategorizationName;
+                existingCategorization.renameColumn(newCategorizationName);
 
                 fprintf('Categorization "%s" has been renamed to "%s".\n', existingCategorizationName, newCategorizationName);
             else
