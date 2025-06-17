@@ -149,8 +149,12 @@ classdef FullTableComponentHelper < handle
 
 
         function removeColumn(obj, columnName)
-            % remove the column from the raw data
+            % remove the column from filters, if it is present
+            % added before the removal itself to avoid calculating filters with non-existing column
+            filteringStorageHandle = obj.dataStoreHandle.getFilteringStorage();
+            filteringStorageHandle.deleteGrouping(columnName);  % this will not do anything if the column is not present in the filters
 
+            % remove the column from the raw data
             obj.tableStoreHandle.removeColumn(columnName);
 
             % remove the column from the tree
@@ -165,8 +169,38 @@ classdef FullTableComponentHelper < handle
 
 
         function renameColumn(obj, oldName, newName)
+            % remove the column from filters, if it is present
+            filteringStorageHandle = obj.dataStoreHandle.getFilteringStorage();
+            
+            % I need to make sure that the filter is not triggered when the column is renamed
+            % only afterwards, I can change the filter
+            existingFilterNames = filteringStorageHandle.returnGroupingNames();
+            if ismember(oldName, existingFilterNames)
+                filterExists = true;
+                isActive = filteringStorageHandle.getActivationStatus(oldName);
+                disp(['Filter "', oldName, '" exists and is active: ', num2str(isActive)]);
+                if isActive
+                    filteringStorageHandle.inactivateFilter(oldName);  % deactivate the filter to avoid triggering it
+                    disp(['Filter "', oldName, '" deactivated before renaming.']);
+                end
+                filter = filteringStorageHandle.returnGrouping(oldName);
+                assignin("base", 'filter', filter);  % for debugging purposes, to see the filter object
+            else
+                filterExists = false;
+            end
+            
             % rename the column in the raw data
             obj.tableStoreHandle.renameColumn(oldName, newName);
+
+            % rename the column in the filters, if it is present
+            if filterExists
+                disp(['Renaming filter "', oldName, '" to "', newName, '".']);
+                filteringStorageHandle.renameFilteredColumn(oldName, newName);
+                if isActive
+                    % reactivate the filter if it was active before renaming
+                    filteringStorageHandle.activateFilter(newName);
+                end
+            end
 
             % % rename the column in the tree
             % if ~isempty(node)
@@ -178,6 +212,7 @@ classdef FullTableComponentHelper < handle
             % remove old name from active columns if it exists
             obj.activeColumns = obj.activeColumns(~strcmp(obj.activeColumns, oldName));
         end
+
 
         function editColumnDefinition(obj, columnName)
             

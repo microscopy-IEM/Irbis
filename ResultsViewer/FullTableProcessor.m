@@ -245,6 +245,8 @@ classdef (Sealed) FullTableProcessor < handle
             % The n-th element in rowNamesOut and n-th in colNamesOut represent one coordinate within the table.
             % If the table does not have row names, row indices are used for rowNamesOut.
 
+            % TO OPTIMIZE - this causes problem if a column is removed
+
             if isempty(obj.selectedTableCellsList)
                 rowNamesOut = {};
                 colNamesOut = {};
@@ -273,11 +275,35 @@ classdef (Sealed) FullTableProcessor < handle
                 colIdx = selectedCols(k);
 
                 if ~isempty(allRowNames)
-                    rowNamesOut{k} = allRowNames{rowIdx};
+                    if rowIdx <= length(allRowNames) && rowIdx > 0
+                        % Ensure rowIdx is within bounds of allRowNames
+                        rowNamesOut{k} = allRowNames{rowIdx};
+                    else
+                        % Mark this cell for deletion by setting empty values
+                        rowNamesOut{k} = '';
+                        % This will prevent processing of this invalid selection
+                    end
                 else
-                    rowNamesOut{k} = rowIdx; % Use index if no row names
+                    if isnumeric(rowIdx) && isscalar(rowIdx) && rowIdx >= 1 && rowIdx <= height(displayedTable)
+                        % Use numeric index if no row names
+                        rowNamesOut{k} = num2str(rowIdx);
+                    else
+                        rowNamesOut{k} = ''; % Mark this cell for deletion
+                    end
                 end
-                colNamesOut{k} = allColNames{colIdx};
+                if colIdx <= length(allColNames) && colIdx > 0
+                    % Ensure colIdx is within bounds of allColNames
+                    colNamesOut{k} = allColNames{colIdx};
+                else
+                    % Mark this cell for deletion by setting empty values
+                    colNamesOut{k} = '';
+                end
+              
+                % Remove entries with empty values (invalid selections)
+                if isempty(rowNamesOut{k}) || isempty(colNamesOut{k})
+                    rowNamesOut{k} = [];
+                    colNamesOut{k} = [];
+                end
             end
         end
 

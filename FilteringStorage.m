@@ -199,5 +199,35 @@ classdef FilteringStorage < GroupingStorageBaseClass
             deleteGrouping@GroupingStorageBaseClass(obj, name);
             notify(obj, 'filtersChanged');
         end
+
+        function renameFilteredColumn(obj, oldName, newName)
+            idx = obj.findGroupingIndexByName(oldName);
+            if idx > 0
+                filter = obj.Groupings{idx};
+                filter.Name = newName;
+
+                % The column name is also propagated into the conditions structure
+                % TO OPTIMIZE - rethink the structure of filters, this is unnecessarily complicated
+                % Update the key in the conditions dictionary
+                conditionsDict = filter.Conditions.('group1').conditions;
+                if isKey(conditionsDict, oldName)
+                    disp('It is a key in the conditions dictionary');
+                    % Get the condition value for the old key
+                    conditionValue = conditionsDict(oldName);
+                    % Remove the old key-value pair
+                    conditionsDict = remove(conditionsDict, oldName);
+                    % Add the same value with the new key
+                    conditionsDict(newName) = conditionValue;
+                    filter.Conditions.('group1').conditions = conditionsDict;
+                else
+                    disp('It is not a key in the conditions dictionary');
+                    % If the old name is not a key, we do not need to update the conditions
+                    % This might happen if the filter was created without a specific condition
+                end
+                notify(obj, 'filtersChanged');
+            else
+                warning(['Filter with name "', oldName, '" not found.']);
+            end
+        end
     end
 end
