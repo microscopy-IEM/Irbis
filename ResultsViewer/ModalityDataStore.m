@@ -71,11 +71,11 @@ classdef (Sealed) ModalityDataStore < handle
             % This method is called when a column definition change occurs
             % It creates a ColumnDefinitionEvent and notifies the listeners
 
-            if isempty(modalityPath)
-                disp(['Column definition changed in the root: ', event.name, ' - ', event.typeOfChange]);
-            else
-                disp(['Column definition changed in ', strjoin(modalityPath, '.'), ': ', event.name, ' - ', event.typeOfChange]);
-            end
+            % if isempty(modalityPath)
+            %     disp(['Column definition changed in the root: ', event.name, ' - ', event.typeOfChange]);
+            % else
+            %     disp(['Column definition changed in ', strjoin(modalityPath, '.'), ': ', event.name, ' - ', event.typeOfChange]);
+            % end
 
             event.setModalityPath(modalityPath);  % Add the modality path to the event for context
             

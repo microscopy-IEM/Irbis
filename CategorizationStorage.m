@@ -66,7 +66,7 @@ classdef CategorizationStorage < handle
             categorizationNames = cell(1, numel(obj.Categorizations));
             for i = 1:numel(obj.Categorizations)
                 cm = obj.Categorizations{i};
-                categorizationNames{i} = char(cm.CategorizationName);
+                categorizationNames{i} = char(cm.getColumnName());
             end
         end
 
@@ -121,7 +121,7 @@ classdef CategorizationStorage < handle
             % Helper method to find the index of a Categorization by its name
             idx = -1;
             for i = 1:numel(obj.Categorizations)
-                if strcmp(obj.Categorizations{i}.CategorizationName, categorizationName)
+                if strcmp(obj.Categorizations{i}.getColumnName(), categorizationName)
                     idx = i;
                     return;
                 end

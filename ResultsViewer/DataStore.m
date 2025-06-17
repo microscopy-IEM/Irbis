@@ -79,7 +79,7 @@ classdef DataStore < handle
 
 
     methods (Access = private)
-        function notifyUserColumnDefinitionChange(obj, src, event)
+        function notifyUserColumnDefinitionChange(obj, ~, event)
             % Notify the user about the column definition change
             % This method is called when a column definition change occurs
             % It creates a ColumnDefinitionEvent and notifies the listeners
@@ -89,7 +89,7 @@ classdef DataStore < handle
             % userDefinitionObject = event.userDefinitionObject;
 
             % columnDefinitionEvent = ColumnDefinitionEvent(columnName, typeOfChange, userDefinitionObject);
-            disp(['Column definition changed: ', event.name, ' - ', event.typeOfChange]);
+            % disp(['Column definition changed: ', event.name, ' - ', event.typeOfChange]);
             notify(obj, 'userColumnDefinitionChanged', event);
         end
     end

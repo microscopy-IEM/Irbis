@@ -440,7 +440,7 @@ classdef (Sealed) TableStore < handle
                 eventData.setOldName(oldName);
             end
             
-            disp(['Notifying user column definition change: ', typeOfChange, ' for column: ', columnName]);
+            % disp(['Notifying user column definition change: ', typeOfChange, ' for column: ', columnName]);
             notify(obj, 'userColumnDefinitionChanged', eventData);
         end
     end
