@@ -164,7 +164,6 @@ classdef FilteringStorage < GroupingStorageBaseClass
         end
 
         function activateFilter(obj, name)
-            disp(['Activating filter: ', name]);
             idx = obj.findGroupingIndexByName(name);
             if isequal(idx, -1)
                 error(['Filter with name "', name, '" not found.']);
@@ -176,7 +175,6 @@ classdef FilteringStorage < GroupingStorageBaseClass
         end
 
         function inactivateFilter(obj, name)
-            disp('inactivateFilter called');
             idx = obj.findGroupingIndexByName(name);
             if isequal(idx, -1)
                 error(['Filter with name "', name, '" not found.']);
