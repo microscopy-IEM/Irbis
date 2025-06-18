@@ -141,13 +141,20 @@ classdef FilteringStorage < GroupingStorageBaseClass
 
             filterArray = table();
 
+            % If the listArray is cell (table for each time point), we want to apply the filter to each table
+            if iscell(listArray)
+                timePoints = 1:numel(listArray);
+            else
+                timePoints = 1;
+            end
+
             for i = 1:numel(obj.Groupings)
                 cm = obj.Groupings{i};
                 if cm.Active
-                    filterArray = cm.updateFilterTable(listArray, filterArray, 1);
+                    filterArray = cm.updateFilterTable(listArray, filterArray, timePoints);
                 elseif isempty(cm.Active)
                     cm.Active = true;
-                    filterArray = cm.updateFilterTable(listArray, filterArray, 1);
+                    filterArray = cm.updateFilterTable(listArray, filterArray, timePoints);
                 end
                 
             end
@@ -155,6 +162,13 @@ classdef FilteringStorage < GroupingStorageBaseClass
             if ~isempty(filterArray) && istable(listArray)
                 filterLogicalArray = all(table2array(filterArray), 2);
                 isKept = filterLogicalArray;
+            elseif ~isempty(filterArray) && iscell(listArray)
+                % If listArray is a cell array of tables, we need to apply the filter to each table
+                isKept = cell(size(listArray));
+                for i = 1:numel(listArray)
+                    filterLogicalArray = all(table2array(filterArray{i}), 2);
+                    isKept{i} = filterLogicalArray;
+                end
             else
                 isKept = [];
             end

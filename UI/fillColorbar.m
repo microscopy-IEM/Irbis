@@ -1,6 +1,7 @@
 function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColumn, backgroundColor, modality)
     % Fills the colorbar with colors and labels, with a wider default segment for NaN/uncategorized values.
 
+    % disp('Filling colorbar...');
     % Check if a colormap other than 'random' is selected
     if isequal(colormapName, 'random')
         return;
@@ -28,37 +29,57 @@ function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColu
     end
 
     % Add an extra color for NaN or uncategorized values
-    if hasNaN
-        nColors = nColors + 1;
-    end
-
-    % Generate the colormap
-    cmapFcn = str2func(colormapName); % Convert colormap name to function handle
-    cmap = cmapFcn(nColors - 1); % Generate colors for valid values
-
-    % Assign a default color for NaN or uncategorized values
-    if strcmp(colormapName, 'gray')
-        defaultColor = [1, 0, 0]; % Red for gray colormap
-    else
-        defaultColor = [0.5, 0.5, 0.5]; % Gray for other colormaps
-    end
-    cmap = [cmap; defaultColor]; % Append default color
-
-    % Create coordinates for the colorbar
     defaultSegmentWidth = 0.05; % Proportion of the bar for the default color
-    validSegmentWidth = (1 - defaultSegmentWidth) / (nColors - 1); % Evenly split remaining width
-    x = [0:validSegmentWidth:(1 - defaultSegmentWidth), 1 - defaultSegmentWidth, 1]; % Include default segment
+    if hasNaN
+        % disp('has nan')
+        nColors = nColors + 1;
+
+        % Generate the colormap
+        cmapFcn = str2func(colormapName); % Convert colormap name to function handle
+        cmap = cmapFcn(nColors - 1); % Generate colors for valid values
+
+        % Assign a default color for NaN or uncategorized values
+        if strcmp(colormapName, 'gray')
+            defaultColor = [1, 0, 0]; % Red for gray colormap
+        else
+            defaultColor = [0.5, 0.5, 0.5]; % Gray for other colormaps
+        end
+        cmap = [cmap; defaultColor]; % Append default color
+
+        % Create coordinates for the colorbar
+        
+        validSegmentWidth = (1 - defaultSegmentWidth) / (nColors - 1); % Evenly split remaining width
+        x = [0:validSegmentWidth:(1 - defaultSegmentWidth), 1 - defaultSegmentWidth, 1]; % Include default segment
+
+    else
+        % disp('does not have nan')
+
+        % Generate the colormap
+        cmapFcn = str2func(colormapName); % Convert colormap name to function handle
+        cmap = cmapFcn(nColors); % Generate colors for valid values
+
+        % Create coordinates for the colorbar
+        validSegmentWidth = (1) / (nColors); % Evenly split remaining width
+        x = [0:validSegmentWidth:1, 1]; % Include default segment
+
+    end
 
     % Fixed Y-coordinates (colorbar height)
     y = [0, 0, 1, 1];
 
     % Plot the colorbar
+    % figure
+    % ax = gca;
     hold(colorbarAxesHandle, 'on');
+    % hold(ax, 'on');
     for i = 1:nColors
         fill(colorbarAxesHandle, [x(i), x(i + 1), x(i + 1), x(i)], y, cmap(i, :), ...
             'EdgeColor', 'none', 'Tag', 'colorbar');
+        % fill(ax, [x(i), x(i + 1), x(i + 1), x(i)], y, cmap(i, :), ...
+        %     'EdgeColor', 'none', 'Tag', 'colorbar');
     end
     hold(colorbarAxesHandle, 'off');
+    % hold(ax, 'off');
 
     % Calculate luminance to determine label text color
     % backgroundColor = app.PanelPlot.BackgroundColor; % Background color of the panel
