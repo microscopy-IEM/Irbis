@@ -3,6 +3,13 @@
 
 function exportEvalFigFcn(sourceAx)
 
+boxCharts = findobj(sourceAx,'Type','BoxChart');
+if isempty(boxCharts)
+    disp('nob box plot found')
+    return
+end
+
+clc
 
 f = figure;
 ax = copyobj(sourceAx,f);
@@ -11,41 +18,54 @@ get(ax)
 ax.Position(1) = 50;
 ax.Position(2) = 50;
 
+ax.Units = 'normalized';
+
+ax.Position(3) = 0.9;
+ax.Position(4) = 0.9;
+
 btn = uibutton(f,'ButtonPushedFcn',@(src,evt)figStats(src,evt,ax),'Text','Anova','Position',[20 20 100 22]);
 
 % detect boxCharts in figure
 boxCharts = findobj(ax,'Type','BoxChart');
 
+delete(findobj(ax,'Type','ViolinPlot'))
+
+% get(boxCharts(1))
+
 
 % read data from axes
-[T,cGroupNames,groupNames] = readBoxChartData(boxCharts);
+[T,cGroupNames,groupNames] = readBoxChartData(boxCharts)
 assignin("base","T",T)
 
 nColorGroups = size(cGroupNames,1)
 nGroups = size(groupNames,1)
 nBoxCharts = nColorGroups;
 
+ax.NextPlot = 'add';
+
 xv = -1:1/((nBoxCharts-1)/2):1;
 
     for groupInd = 1:nGroups
 
-        group = groupNames(groupInd);
+        group = groupNames(groupInd)
         
         for cGroupInd = 1:nColorGroups
             
             currentBoxChartObj = boxCharts(cGroupInd);
             
             colorGroup = cGroupNames(cGroupInd);
-            
+            % get(currentBoxChartObj)
+                    
             xMain = groupInd;
             sectionWidth = 1/nBoxCharts;
             nSections = (nBoxCharts-1)*0.5;
 
-            relGroupWidth = boxCharts(groupInd).ColorGroupWidth;
+            % relGroupWidth = boxCharts(groupInd).ColorGroupWidth;
+            relGroupWidth = boxCharts(cGroupInd).ColorGroupWidth;
             absGroupWidth = relGroupWidth * sectionWidth * nSections;
 
             % use seriesIndex to identify current chart position
-            seriesIndex = currentBoxChartObj.SeriesIndex
+            seriesIndex = currentBoxChartObj.SeriesIndex;
             xPos = xv(seriesIndex)*absGroupWidth+xMain;
             
             % get data of current group
@@ -53,29 +73,57 @@ xv = -1:1/((nBoxCharts-1)/2):1;
 
             % calculate stats
             dataMean = mean(data);
+            dataSTD = std(data);
             
-            bw = currentBoxChartObj.BoxWidth;
-            % w = bw*absGroupWidth/2*0.95;
-            w = bw*absGroupWidth/2;
-            line([xPos-w,xPos+w],[dataMean dataMean],'LineStyle',':','Color',currentBoxChartObj.BoxMedianLineColor,'LineWidth',currentBoxChartObj.LineWidth)
+            % bw = currentBoxChartObj.BoxWidth;
+            
+            % if nBoxCharts > 1
+            %     w = bw*absGroupWidth/1;
+            % else
+            %     w = currentBoxChartObj.BoxWidth/2;
+            % end
+                     
+            % line(ax,[xPos-w,xPos+w],[dataMean dataMean],'LineStyle',':','Color',currentBoxChartObj.BoxMedianLineColor,'LineWidth',currentBoxChartObj.LineWidth)
+            sc = scatter(ax,xPos,dataMean,20,'Marker','o','MarkerEdgeColor',currentBoxChartObj.BoxMedianLineColor,'LineWidth',currentBoxChartObj.LineWidth);
+            % line(ax,[xPos-w,xPos+w],[dataMean dataMean],'LineStyle',':','Color','r','LineWidth',currentBoxChartObj.LineWidth)
 
-            % md = median(data);
-            % line([xPos-w,xPos+w],[md md],'LineStyle',':','Color','r','LineWidth',2)
+            % sc.DataTipTemplate.DataTipRows(3:end) = [];
+
+            sc.DataTipTemplate.DataTipRows(1).Label = 'Group';
+            sc.DataTipTemplate.DataTipRows(1).Value = {group};         
+
+            sc.DataTipTemplate.DataTipRows(2).Label = 'Color group';
+            sc.DataTipTemplate.DataTipRows(2).Value = {currentBoxChartObj.DisplayName};
+            sc.DataTipTemplate.DataTipRows(3).Label = "Mean"; 
+            sc.DataTipTemplate.DataTipRows(3).Value = dataMean;
+            sc.DataTipTemplate.DataTipRows(4).Label = "STD"; 
+            sc.DataTipTemplate.DataTipRows(4).Value = dataSTD;
+
+            
+
+            % dtRows = [dataTipTextRow("STD",dataSTD),dataTipTextRow("Group",group)];
+            % sc.DataTipTemplate.DataTipRows(end+1:end+2) = dtRows;
+
 
         end
 
     end
 
 
-% b = boxchart(groupdata,data,'BoxWidth',0.05)
-% b = boxchart(groupdata,data,'GroupByColor', cGroupData,'ButtonDownFcn',@normTest,'BoxWidth',0.5,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on')
+    % v = violinplot(groupdata,data,'GroupByColor', cGroupData,'ButtonDownFcn',@normTest,DensityDirection="positive",FaceColor=[0.2 0.2 0.2],DensityWidth=0.8);
 
+    T{:,2}
 
-% b = boxchart(groupdata,data,'ButtonDownFcn',@normTest,'BoxWidth',0.4,'MarkerStyle','.','JitterOutliers','on','Notch','on');
-% b.ColorGroupWidth = 0.6;
+    vshift = 0.05
 
+    cG = findgroups(T{:,1});
+    v = violinplot(ax,cG,T{:,3},'GroupByColor',T{:,2},DensityDirection="positive",FaceColor=[0.2 0.2 0.2],DensityWidth=0.8);
+    % v = violinplot(groupdata,data)
 
-% v = violinplot(groupdata,data)
+    for i = 1:length(v)
+        % v(i).YData
+        v(i).XData =  v(i).XData + vshift;
+    end
 
 end
 
@@ -97,6 +145,8 @@ function [T,cGroupNames,groupNames] = readBoxChartData(boxCharts)
         cGroupNames{i} = boxCharts(i).DisplayName;
         
     end
+
+    cGroupNames{1} = 'none';
 
         % create combined label for cGroup
         cGroupNamesStr = strjoin(string(cGroupNames),'_');

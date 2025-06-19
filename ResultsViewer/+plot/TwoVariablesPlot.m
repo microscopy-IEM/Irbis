@@ -115,10 +115,13 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
                 if ~isMATLABReleaseOlderThan("R2025a")
 
-                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
+                    % boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
+
+                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers','on');
                     axesHandle.NextPlot = 'add';
-                    violinplot(axesHandle, categoricalData, numericalData)
-                    axesHandle.NextPlot = 'replace';
+                    
+                    % violinplot(axesHandle, categoricalData, numericalData)
+                    % axesHandle.NextPlot = 'replace';
 
                 end
 
@@ -153,7 +156,10 @@ classdef TwoVariablesPlot < plot.PlotInterface
                     axesHandle.NextPlot = 'replace';
 
                     legendGroups = unique(groupData);
-                    legend(axesHandle, b, legendGroups, 'Location', 'best');
+                    % legend(axesHandle, b, legendGroups, 'Location', 'best');
+                    legend(axesHandle, b, legendGroups, 'Location', 'northeast');
+
+                    
                     
 
                 end
