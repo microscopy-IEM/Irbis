@@ -11,9 +11,13 @@ end
 
 clc
 
+parentFigure = ancestor(sourceAx,'figure','toplevel');
+
+
 f = figure;
+f.Theme = parentFigure.Theme;
 ax = copyobj(sourceAx,f);
-get(ax)
+% get(ax)
 
 ax.Position(1) = 50;
 ax.Position(2) = 50;
@@ -26,7 +30,7 @@ ax.Position(4) = 0.9;
 btn = uibutton(f,'ButtonPushedFcn',@(src,evt)figStats(src,evt,ax),'Text','Anova','Position',[20 20 100 22]);
 
 % detect boxCharts in figure
-boxCharts = findobj(ax,'Type','BoxChart');
+boxCharts = findobj(ax,'Type','BoxChart')
 
 delete(findobj(ax,'Type','ViolinPlot'))
 
@@ -47,7 +51,7 @@ xv = -1:1/((nBoxCharts-1)/2):1;
 
     for groupInd = 1:nGroups
 
-        group = groupNames(groupInd)
+        group = groupNames(groupInd);
         
         for cGroupInd = 1:nColorGroups
             
@@ -74,14 +78,7 @@ xv = -1:1/((nBoxCharts-1)/2):1;
             % calculate stats
             dataMean = mean(data);
             dataSTD = std(data);
-            
-            % bw = currentBoxChartObj.BoxWidth;
-            
-            % if nBoxCharts > 1
-            %     w = bw*absGroupWidth/1;
-            % else
-            %     w = currentBoxChartObj.BoxWidth/2;
-            % end
+       
                      
             % line(ax,[xPos-w,xPos+w],[dataMean dataMean],'LineStyle',':','Color',currentBoxChartObj.BoxMedianLineColor,'LineWidth',currentBoxChartObj.LineWidth)
             sc = scatter(ax,xPos,dataMean,20,'Marker','o','MarkerEdgeColor',currentBoxChartObj.BoxMedianLineColor,'LineWidth',currentBoxChartObj.LineWidth);
@@ -99,10 +96,11 @@ xv = -1:1/((nBoxCharts-1)/2):1;
             sc.DataTipTemplate.DataTipRows(4).Label = "STD"; 
             sc.DataTipTemplate.DataTipRows(4).Value = dataSTD;
 
-            
+            v = violinplot(data,DensityDirection="positive",FaceColor=[0.2 0.2 0.2],DensityWidth=0.2);
 
-            % dtRows = [dataTipTextRow("STD",dataSTD),dataTipTextRow("Group",group)];
-            % sc.DataTipTemplate.DataTipRows(end+1:end+2) = dtRows;
+            get(v)
+            v.XData = xPos*ones(size(data))+0.05;
+
 
 
         end
@@ -112,19 +110,28 @@ xv = -1:1/((nBoxCharts-1)/2):1;
 
     % v = violinplot(groupdata,data,'GroupByColor', cGroupData,'ButtonDownFcn',@normTest,DensityDirection="positive",FaceColor=[0.2 0.2 0.2],DensityWidth=0.8);
 
-    T{:,2}
+    % cGrupes = unique(T{:,2})
 
-    vshift = 0.05
+    T = sortrows(T,1,'descend');
 
-    cG = findgroups(T{:,1});
-    v = violinplot(ax,cG,T{:,3},'GroupByColor',T{:,2},DensityDirection="positive",FaceColor=[0.2 0.2 0.2],DensityWidth=0.8);
-    % v = violinplot(groupdata,data)
+    % T
 
-    for i = 1:length(v)
-        % v(i).YData
-        v(i).XData =  v(i).XData + vshift;
-    end
+    vshift = 0.05;
 
+    % % cGroupNames{i} = boxCharts(i).DisplayName;
+    % 
+    % G = findgroups(T{:,1});
+    % cG = categorical(T{:,2});
+    % v = violinplot(ax,G,T{:,3},'GroupByColor',cG,DensityDirection="positive",FaceColor=[0.5 0.5 0.5],DensityWidth=0.8);
+    % % v = violinplot(ax,T{:,1},T{:,3},'GroupByColor',T{:,2},DensityDirection="positive",FaceColor=[0.5 0.5 0.5],DensityWidth=0.8);
+    % % v = violinplot(groupdata,data)
+    % 
+    % for i = 1:length(v)
+    %     % v(i).YData
+    %     v(i).XData =  v(i).XData + vshift;
+    % end
+    % 
+    % get(v(1))
 end
 
 function [T,cGroupNames,groupNames] = readBoxChartData(boxCharts)
@@ -146,7 +153,7 @@ function [T,cGroupNames,groupNames] = readBoxChartData(boxCharts)
         
     end
 
-    cGroupNames{1} = 'none';
+    % cGroupNames{1} = 'none';
 
         % create combined label for cGroup
         cGroupNamesStr = strjoin(string(cGroupNames),'_');
@@ -176,7 +183,10 @@ function [T,cGroupNames,groupNames] = readBoxChartData(boxCharts)
     
     end
 
-    cGroupNames = categorical(cGroupNames);
+    cGroupNames = categorical(cGroupNames)
+
+    % cGroupNames = reordercats(cGroupNames)
+ % 555
     
 end
 
