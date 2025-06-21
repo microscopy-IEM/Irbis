@@ -6,7 +6,7 @@ function baseStructs = getBaseStruct(varargin)
     %     2: timeDependencyType
     %     3: nTimePoints
 
-    irbisVersion = 1.14;
+    irbisVersion = 1.15; % Updated from 1.14 to 1.15 on 21.6.2025
 
     structTypes = {'info','timeline','tools','views','results','planes','tracks','points','model'};
     timeDependencyType = {'timeDependent','timeIndependent'};
@@ -306,20 +306,20 @@ function List = createEmptyList(structType,varargin)
 
         case 'tracks'
 
-            varNames = {'id';'xyz';'frame_i';'color';'length';'nOfNaN';'maxGap';'meanDisp';'ovArea';'ovDist';'meanX';'meanY';'MSD5';'MSDr2';'zone';'type'};
-            varTypes = {'double','cell','cell','cell','double','double','double','double','double','double','double','double','double','double','double','string'};
+            varNames = {'id';'xyz';'frame_i';'color';'length';'nOfNaN';'maxGap';'meanDisp';'ovArea';'ovDist';'meanX';'meanY';'MSD5';'MSDr2';'zone';'type'; 'timePoint'; 'excluded'};
+            varTypes = {'double','cell','cell','cell','double','double','double','double','double','double','double','double','double','double','double','string', 'categorical', 'logical'};
 
         case 'points'
 
-            varNames = ["id","frame","x","y","z","uncertainty_xy","uncertainty_z","height","maxIntensity",'inArea'];
-            varTypes = ["double","double","double","double","double","double","double","double","double",'logical'];
+            varNames = ["id","frame","x","y","z","uncertainty_xy","uncertainty_z","height","maxIntensity",'inArea', 'timePoint', 'excluded'];
+            varTypes = ["double","double","double","double","double","double","double","double","double",'logical', 'categorical', 'logical'];
 
         case 'model'
 
             % TO OPTIMIZE - add volume, surface, ... right away? 
 
-            varNames = ["groupId","Points","Mesh","name","prevTPid","nextTPid","parent","children","volume","surface","positionShift","color","excluded"];
-            varTypes = ["double","cell","cell","string","double","double","cell","cell","double","double","cell","cell","logical"];
+            varNames = ["groupId","Points","Mesh","name","prevTPid","nextTPid","parent","children","volume","surface","positionShift","color","excluded", "timePoint"];
+            varTypes = ["double","cell","cell","string","double","double","cell","cell","double","double","cell","cell","logical", "categorical"];
         
             if ismember('derived',specialTypes)
                 addedNames = ["CentreLine","RadiusVect","ZScale","Contours","MiddlePoints","RadiusScale"];

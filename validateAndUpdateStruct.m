@@ -343,6 +343,75 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
         end
     end
 
+    if loadedIrbisVersion < 1.15
+        % adding column 'excluded' to the tracks and points table 
+        existingTimePoints = string(1:loadedStruct.timeline.nTimePoints);
+        if isfield(loadedStruct,'tracks')
+            if ~isempty(loadedStruct.tracks)
+                for idx = 1:numel(loadedStruct.tracks.tracksList)
+                    List = loadedStruct.tracks.tracksList{idx};
+                    if istable(List)
+                        % Add 'excluded' column if it does not exist
+                        variableNames = string(List.Properties.VariableNames);
+                        if ~ismember('excluded',variableNames)
+                            tableHeight = height(List);
+                            loadedStruct.tracks.tracksList{idx}.excluded = false(tableHeight, 1);
+                        end
+
+                        % Add 'timePoint' column if it does not exist
+                        if ~ismember('timePoint',variableNames)
+                            timePoint = {num2str(loadedStruct.timeline.currentIndex.tracks(idx))}
+                            loadedStruct.tracks.tracksList{idx}.timePoint = categorical(repmat(timePoint,height(List),1), existingTimePoints);
+                        end
+                    end
+                end
+            end
+        end 
+
+        if isfield(loadedStruct,'points')
+            if ~isempty(loadedStruct.points)
+                for idx = 1:numel(loadedStruct.points.pointsList)
+                    List = loadedStruct.points.pointsList{idx};
+                    if istable(List)
+                        variableNames = string(List.Properties.VariableNames);
+                        % Add 'excluded' column if it does not exist
+                        if ~ismember('excluded',variableNames)
+                            tableHeight = height(List);
+                            loadedStruct.points.pointsList{idx}.excluded = false(tableHeight, 1);
+                        end
+
+                        % Add 'timePoint' column if it does not exist
+                        if ~ismember('timePoint',variableNames)
+                            timePoint = {num2str(loadedStruct.timeline.currentIndex.points(idx))}
+                            loadedStruct.points.pointsList{idx}.timePoint = categorical(repmat(timePoint,height(List),1), existingTimePoints);
+                        end
+                    end
+                end
+            end
+        end
+
+        if isfield(loadedStruct,'model')
+            if ~isempty(loadedStruct.model)
+                branches = loadedStruct.model.branches;
+                for branchNum = 1:numel(branches)
+                    branch = branches{branchNum};
+        
+                    for idx = 1:numel(loadedStruct.model.(branch).List)
+                        List = loadedStruct.model.(branch).List{idx};
+                        if istable(List)
+                            variableNames = string(List.Properties.VariableNames);
+                            % Add 'timePoint' column if it does not exist
+                            if ~ismember('timePoint',variableNames)
+                                timePoint = {num2str(loadedStruct.timeline.currentIndex.model.(branch)(idx))}
+                                loadedStruct.model.(branch).List{idx}.timePoint = categorical(repmat(timePoint,height(List),1), existingTimePoints);
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
     % change the Irbis version - CHANGE FOR THE NEWEST
     % getBaseStruct('irbisVersion')
     disp(['new irbis version = ' num2str(getBaseStruct('irbisVersion'))])
