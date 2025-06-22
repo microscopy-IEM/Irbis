@@ -98,7 +98,7 @@ xv = -1:1/((nBoxCharts-1)/2):1;
 
             v = violinplot(data,DensityDirection="positive",FaceColor=[0.2 0.2 0.2],DensityWidth=0.2);
 
-            get(v)
+            % get(v)
             v.XData = xPos*ones(size(data))+0.05;
 
 
@@ -107,16 +107,24 @@ xv = -1:1/((nBoxCharts-1)/2):1;
 
     end
 
+    % get(ax)
+
+    % get(v)
+
+    ax.XTick = ax.XTick(1:end-1);
+
 
     % v = violinplot(groupdata,data,'GroupByColor', cGroupData,'ButtonDownFcn',@normTest,DensityDirection="positive",FaceColor=[0.2 0.2 0.2],DensityWidth=0.8);
 
     % cGrupes = unique(T{:,2})
 
-    T = sortrows(T,1,'descend');
+    % T = sortrows(T,1,'descend');
 
     % T
 
-    vshift = 0.05;
+    % vshift = 0.05;
+
+    legend(boxCharts)
 
     % % cGroupNames{i} = boxCharts(i).DisplayName;
     % 
