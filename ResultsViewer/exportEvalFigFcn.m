@@ -34,16 +34,20 @@ boxCharts = findobj(ax,'Type','BoxChart')
 
 delete(findobj(ax,'Type','ViolinPlot'))
 
-% get(boxCharts(1))
+get(boxCharts(1))
 
+cWidth = boxCharts(1).ColorGroupWidth;
 
 % read data from axes
-[T,cGroupNames,groupNames] = readBoxChartData(boxCharts)
+[T,cGroupNames,groupNames] = readBoxChartData(boxCharts);
 assignin("base","T",T)
+assignin("base","b",boxCharts(1))
 
 nColorGroups = size(cGroupNames,1)
 nGroups = size(groupNames,1)
 nBoxCharts = nColorGroups;
+
+w = 1/nBoxCharts;
 
 ax.NextPlot = 'add';
 
@@ -96,10 +100,25 @@ xv = -1:1/((nBoxCharts-1)/2):1;
             sc.DataTipTemplate.DataTipRows(4).Label = "STD"; 
             sc.DataTipTemplate.DataTipRows(4).Value = dataSTD;
 
+            
+
             v = violinplot(data,DensityDirection="positive",FaceColor=[0.2 0.2 0.2],DensityWidth=0.2);
 
             % get(v)
-            v.XData = xPos*ones(size(data))+0.05;
+
+            % vshift = 0.05;
+
+            if nBoxCharts == 1
+
+                vshift = currentBoxChartObj.BoxWidth/2 +  currentBoxChartObj.BoxWidth/2*0.2;
+            else
+
+                vshift = currentBoxChartObj.BoxWidth*absGroupWidth;
+                densitiWidth = absGroupWidth*0.8;
+
+                % v.DensityWidth = densitiWidth;
+            end
+            v.XData = xPos*ones(size(data))+vshift;
 
 
 
@@ -111,7 +130,7 @@ xv = -1:1/((nBoxCharts-1)/2):1;
 
     % get(v)
 
-    ax.XTick = ax.XTick(1:end-1);
+    % ax.XTick = ax.XTick(1:end-1);
 
 
     % v = violinplot(groupdata,data,'GroupByColor', cGroupData,'ButtonDownFcn',@normTest,DensityDirection="positive",FaceColor=[0.2 0.2 0.2],DensityWidth=0.8);
@@ -150,7 +169,7 @@ function [T,cGroupNames,groupNames] = readBoxChartData(boxCharts)
     end
 
     T = [];
-    nBoxCharts = length(boxCharts);
+    nBoxCharts = length(boxCharts)
     
     % extract color group names
     cGroupNames = cell([nBoxCharts,1]);
@@ -158,8 +177,18 @@ function [T,cGroupNames,groupNames] = readBoxChartData(boxCharts)
     for i = 1:nBoxCharts
               
         cGroupNames{i} = boxCharts(i).DisplayName;
+
+        if isempty(boxCharts(i).DisplayName)
+            cGroupNames{i} = 'nan';
+        end
         
     end
+
+    cGroupNames
+
+    % get(boxCharts)
+
+    % isempty(cGroupNames)
 
     % cGroupNames{1} = 'none';
 
@@ -191,7 +220,7 @@ function [T,cGroupNames,groupNames] = readBoxChartData(boxCharts)
     
     end
 
-    cGroupNames = categorical(cGroupNames)
+    cGroupNames = categorical(cGroupNames);
 
     % cGroupNames = reordercats(cGroupNames)
  % 555
