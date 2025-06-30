@@ -1,0 +1,5 @@
+Installed 250630, IS
+
+Relevant part of the Bioformats Image MATLAB toolbox: https://www.mathworks.com/matlabcentral/fileexchange/129249-bioformats-image-toolbox
+Already copied with the Bioformats 8.2.0 folder downloaded from: https://downloads.openmicroscopy.org/bio-formats/8.2.0/artifacts/bfmatlab.zip
+- The original toolbox version used 8.1.1, I switched it for the newer one.

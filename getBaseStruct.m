@@ -142,13 +142,14 @@ function baseStructs = getBaseStruct(varargin)
                 planes.nPlanes = [];
                 planes.nChannels = [];
                 planes.nTimePoints = [];
+                planes.bitDepth = 16;                               % bit depth of the image data (8, 16, 32)
         
                 planes.spacialRef = imref2d();
                 
                 % reference image default settings
-                planes.refImParam.plane = [];
+                % UNUSED - removed for 1.15: planes.refImParam.plane = [];
                 planes.refImParam.depth = [];
-                planes.refImParam.channel = [];                % channel used as reference image (synaptic marker, membrane marker...)
+                planes.refImParam.channel = 1;                % channel used as reference image (synaptic marker, membrane marker...)
         
                 % added during cropping
                 planes.timeDrift = [];

@@ -1,0 +1,9 @@
+{
+  "BioformatsImage.BioformatsImage":
+  {
+     "inputs":
+     [
+        {"name":"filename", "kind":"required", "type":[["file=*.nd2"], ["char"]]}
+     ]
+  }
+}   
