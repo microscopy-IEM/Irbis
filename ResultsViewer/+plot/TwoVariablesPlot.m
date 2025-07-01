@@ -7,6 +7,8 @@ classdef TwoVariablesPlot < plot.PlotInterface
             xData = data.xData;
             yData = data.yData;
 
+            
+            
             if isnumeric(xData) && isnumeric(yData)
                 % Check if both xData and yData are numeric
                 obj.plotScatter(data, axesHandle);
@@ -85,6 +87,10 @@ classdef TwoVariablesPlot < plot.PlotInterface
             yData = data.yData;
             groupData = data.groupData;
 
+            % SK
+            % data
+            
+
             % Decide, which of the columns is categorical
             if iscategorical(xData)
                 categoricalData = xData;
@@ -119,9 +125,16 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
                     boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers','on');
                     axesHandle.NextPlot = 'add';
+
+                    axData = axesHandle.UserData
                     
                     % violinplot(axesHandle, categoricalData, numericalData)
                     % axesHandle.NextPlot = 'replace';
+
+                    axesHandle.UserData = data;
+
+                    axData = axesHandle.UserData
+                    999
 
                 end
 
@@ -144,6 +157,10 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
                 if ~isMATLABReleaseOlderThan("R2025a")
 
+                    axesHandle.UserData = data;
+
+                    axData = axesHandle.UserData
+
                     % numericalData = log10(numericalData);
                 
                     % boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.3,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
@@ -157,7 +174,9 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
                     legendGroups = unique(groupData);
                     % legend(axesHandle, b, legendGroups, 'Location', 'best');
-                    legend(axesHandle, b, legendGroups, 'Location', 'northeast');
+                    l = legend(axesHandle, b, legendGroups, 'Location', 'northeast');
+                    l.Title.String = data.groupLabel;
+                    l.Title.Interpreter = 'none';
 
                     
                     
@@ -171,6 +190,8 @@ classdef TwoVariablesPlot < plot.PlotInterface
             xData = data.xData;
             yData = data.yData;
             groupData = data.groupData;
+
+            axesHandle.UserData = data;
 
             % xCategories = unique(xData);
             % yCategories = unique(yData);
