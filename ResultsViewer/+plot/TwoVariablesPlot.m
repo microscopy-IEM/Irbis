@@ -7,6 +7,7 @@ classdef TwoVariablesPlot < plot.PlotInterface
             xData = data.xData;
             yData = data.yData;
 
+            axesHandle.TickLabelInterpreter = 'none';
             
             
             if isnumeric(xData) && isnumeric(yData)
@@ -22,8 +23,8 @@ classdef TwoVariablesPlot < plot.PlotInterface
                 error('Invalid data types for xData and yData. Both must be numeric or categorical, or one must be categorical and the other numeric.');
             end
             
-            xlabel(axesHandle, data.xLabel);
-            ylabel(axesHandle, data.yLabel);
+            % xlabel(axesHandle, data.xLabel);
+            % ylabel(axesHandle, data.yLabel);
             
     
             % if isempty(groupData)
@@ -51,6 +52,9 @@ classdef TwoVariablesPlot < plot.PlotInterface
             xData = data.xData;
             yData = data.yData;
             groupData = data.groupData;
+
+            xlabel(axesHandle, data.xLabel);
+            ylabel(axesHandle, data.yLabel);
 
             if isempty(groupData)
                 scatter(axesHandle, xData, yData);
@@ -87,17 +91,18 @@ classdef TwoVariablesPlot < plot.PlotInterface
             yData = data.yData;
             groupData = data.groupData;
 
-            % SK
-            % data
-            
-
+          
             % Decide, which of the columns is categorical
             if iscategorical(xData)
                 categoricalData = xData;
+                categoricalLabel = data.xLabel;
                 numericalData = yData;
+                numericalLabel = data.yLabel
             elseif iscategorical(yData)
                 categoricalData = yData;
+                categoricalLabel = data.yLabel;
                 numericalData = xData;
+                numericalLabel = data.xLabel
             else
                 error('Neither xData nor yData is categorical.')
             end
@@ -126,15 +131,11 @@ classdef TwoVariablesPlot < plot.PlotInterface
                     boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers','on');
                     axesHandle.NextPlot = 'add';
 
-                    axData = axesHandle.UserData
-                    
-                    % violinplot(axesHandle, categoricalData, numericalData)
-                    % axesHandle.NextPlot = 'replace';
 
-                    axesHandle.UserData = data;
+                    % axesHandle.UserData.groupLabel = data.xLabel;
+                    % axesHandle.UserData.cGroupLabel = data.groupLabel;
 
-                    axData = axesHandle.UserData
-                    999
+                  
 
                 end
 
@@ -157,10 +158,6 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
                 if ~isMATLABReleaseOlderThan("R2025a")
 
-                    axesHandle.UserData = data;
-
-                    axData = axesHandle.UserData
-
                     % numericalData = log10(numericalData);
                 
                     % boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.3,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
@@ -175,15 +172,29 @@ classdef TwoVariablesPlot < plot.PlotInterface
                     legendGroups = unique(groupData);
                     % legend(axesHandle, b, legendGroups, 'Location', 'best');
                     l = legend(axesHandle, b, legendGroups, 'Location', 'northeast');
-                    l.Title.String = data.groupLabel;
-                    l.Title.Interpreter = 'none';
+                    % l.Title.String = data.groupLabel;
+                    % l.Title.Interpreter = 'none';
 
-                    
-                    
 
                 end
                
             end
+
+            % Assign group and colorGroup label to axces userdata
+            axesHandle.UserData.groupLabel = categoricalLabel;
+            axesHandle.UserData.cGroupLabel = data.groupLabel;
+
+            % xlabel(axesHandle, categoricalLabel);
+            % ylabel(axesHandle, numericalLabel);
+
+            axesHandle.YLabel.String = numericalLabel;
+            axesHandle.YLabel.Interpreter = 'none';
+
+            axesHandle.XLabel.String = categoricalLabel;
+            axesHandle.XLabel.Interpreter = 'none';
+
+           
+
         end
 
         function plotCategoricalScatter(~, data, axesHandle)
@@ -192,6 +203,9 @@ classdef TwoVariablesPlot < plot.PlotInterface
             groupData = data.groupData;
 
             axesHandle.UserData = data;
+
+            xlabel(axesHandle, data.xLabel);
+            ylabel(axesHandle, data.yLabel);
 
             % xCategories = unique(xData);
             % yCategories = unique(yData);
