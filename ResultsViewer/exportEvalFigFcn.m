@@ -311,23 +311,43 @@ clc
 
     % s.(aov.FactorNames{1}).SumOfSquares
 
-    nFactors = length(aov.FactorNames)
+    nFactors = length(aov.FactorNames);
+    if twoWay
+        nFactors = nFactors+1;
+    end
 
     totalErr = s.SumOfSquares(end)
 
 
-    s.SizeEffect = nan(height(s),1);
+    s.EffectSize = nan(height(s),1);
+    s.EffectSizeSummary = cell(height(s),1)
+    % s.EffectSizeSummary = nan(height(s),1);
 
     for factorInd = 1:nFactors
 
         factorErr = s.SumOfSquares(factorInd);
-        sizeEffect(factorInd) = factorErr/totalErr;
+        EffectSize = factorErr/totalErr;
 
-        s.SizeEffect(factorInd) = sizeEffect(factorInd);
+        s.EffectSize(factorInd) = EffectSize;
+
+        
+
+        if EffectSize < 0.01
+            effectSizeDesc = 'no effect';
+        elseif EffectSize < 0.06
+            effectSizeDesc = 'small';
+        elseif EffectSize < 0.14
+            effectSizeDesc = 'medium';
+        elseif EffectSize > 0.14
+            effectSizeDesc = 'large';
+        end
+
+        s.EffectSizeSummary(factorInd) = {effectSizeDesc};
+
 
     end
 
-    sizeEffect
+    EffectSize
 
     
     s
