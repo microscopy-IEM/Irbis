@@ -113,7 +113,7 @@ function exportEvalFigFcn(sourceAx)
     
                 
     
-                v = violinplot(data,DensityDirection="positive",FaceColor=[0.2 0.2 0.2],DensityWidth=0.2);
+                v = violinplot(data,DensityDirection="positive",FaceColor=[0.3 0.3 0.3],DensityWidth=0.2);
     
                 % get(v)
     
@@ -124,7 +124,7 @@ function exportEvalFigFcn(sourceAx)
                     vshift = currentBoxChartObj.BoxWidth/2 +  currentBoxChartObj.BoxWidth/2*0.2;
                 else
     
-                    vshift = currentBoxChartObj.BoxWidth*absGroupWidth;
+                    vshift = currentBoxChartObj.BoxWidth*absGroupWidth*1.5;
                     densitiWidth = absGroupWidth*0.8;
     
                     % v.DensityWidth = densitiWidth;
@@ -156,10 +156,10 @@ function exportEvalFigFcn(sourceAx)
     
         l = legend(boxCharts);
         get(l)
-        l.Title.String = origLegend.Title.String;
-        l.Title.Interpreter = 'none';
+        % l.Title.String = origLegend.Title.String;
+        % l.Title.Interpreter = 'none';
         l.Box = 'off';
-        get(l)
+        % get(l)
         % % cGroupNames{i} = boxCharts(i).DisplayName;
         % 
         % G = findgroups(T{:,1});
@@ -246,12 +246,18 @@ end
 
 function figStats(src,evt,ax)
 clc
-    get(src)
-    evt
+    % get(src)
+    % evt
 
     Tall = [];
 
-    boxCharts = findobj(ax,'Type','BoxChart')
+    boxCharts = findobj(ax,'Type','BoxChart');
+
+
+    g1Name = ax.UserData.groupLabel
+    g2Name = ax.UserData.cGroupLabel
+
+    twoWay = ~isempty(g2Name);
 
     if isempty(boxCharts)
         return
@@ -272,32 +278,28 @@ clc
         % g1 = g1(~TF);
         % g2 = g2(~TF);
         
-        
-        % T = table(g1,g2,d1,VariableNames=["g1" "g2" "data"])
-        T = table(g1,g2,d1,VariableNames=["subunit" "cTerm" "data"]);
+      
+        if twoWay
+            T = table(g1,g2,d1,VariableNames=[g1Name g2Name "data"]);
+        else
+            T = table(g1,d1,VariableNames=[g1Name "data"]);
+        end
         
         Tall = [Tall;T];
 
-        get(boxCharts(i))
+        % get(boxCharts(i))
     
     end
 
-    Tall
+    % Tall
 
     aov = anova(Tall,"data",'ModelSpecification','full')
 
-    % ax = src.Parent
-
-    g1Name = ax.XLabel.String
-    l = findobj(ax.Parent,'Type','Legend');
-    get(l)
-    g2Name = l.Title.String
-
-    % l.Title.String = ''
-
+    assignin("base","aov",aov)
+    
     % m = multcompare(aov,["subunit" "cTerm" ])
 
-    m = multcompare(aov,aov.FactorNames)
+    results = multcompare(aov,aov.FactorNames)
 
     % stats(aov,'summary')
 
@@ -307,17 +309,78 @@ clc
     % s.F(isnan(s.F)) = ' ';
     s.pValue = double(s.pValue);
 
-    f = figure;
+    % s.(aov.FactorNames{1}).SumOfSquares
+
+    nFactors = length(aov.FactorNames);
+    if twoWay
+        nFactors = nFactors+1;
+    end
+
+    totalErr = s.SumOfSquares(end)
+
+
+    s.EffectSize = nan(height(s),1);
+    s.EffectSizeSummary = cell(height(s),1)
+    % s.EffectSizeSummary = nan(height(s),1);
+
+    for factorInd = 1:nFactors
+
+        factorErr = s.SumOfSquares(factorInd);
+        EffectSize = factorErr/totalErr;
+
+        s.EffectSize(factorInd) = EffectSize;
+
+        
+
+        if EffectSize < 0.01
+            effectSizeDesc = 'no effect';
+        elseif EffectSize < 0.06
+            effectSizeDesc = 'small';
+        elseif EffectSize < 0.14
+            effectSizeDesc = 'medium';
+        elseif EffectSize > 0.14
+            effectSizeDesc = 'large';
+        end
+
+        s.EffectSizeSummary(factorInd) = {effectSizeDesc};
+
+
+    end
+
+    EffectSize
+
+    
+    s
+    
+
+    assignin("base","s",s)
+    assignin("base","results",results)
+
+    h = height(results)*12;
+    if h > 800
+        h = 800;
+    elseif h < 100
+        h = 100;
+    end
+
+    f = figure(2);
+    clf(f);
+    f.Name = 'Anova summary';
     f.Position = [100,100,850,240];
     t = uitable;
     t.Position = [20,20,800,200];
     t.Data = s;
+    t.Units = 'normalized';
 
-    f1 = figure;
-    f1.Position = [100,100,850,240];
+    f1 = figure(3);
+    clf(f1);
+    f.Name = 'Multiple comparison test';
+    f1.Position = [100,400,850,h+40];
     t = uitable;
-    t.Position = [20,20,800,200];
-    t.Data = m;
+    t.Position = [20,20,800,h];
+    t.Data = results;
+    % get(t)
+    t.Units = 'normalized';
 
     % disp(s)
     
