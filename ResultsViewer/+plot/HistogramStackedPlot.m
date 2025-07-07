@@ -16,8 +16,6 @@ classdef HistogramStackedPlot < plot.PlotInterface
 
                 categoryList = unique(groupData);
 
-                mask = groupData == categoryList(1);
-
                 if isnumeric(xData)
                     nBins = sqrt(length(categoryList)) * 10;
                     % nBins = 500;
@@ -28,6 +26,7 @@ classdef HistogramStackedPlot < plot.PlotInterface
                     counts = zeros(length(categoryList), length(binEdges) - 1);
                 
                     for i = 1:length(categoryList)
+                        mask = groupData == categoryList(i);
                         dataToPlot = xData(mask, :, :);
                         counts(i, :) = histcounts(dataToPlot, binEdges);
                     end
@@ -37,6 +36,7 @@ classdef HistogramStackedPlot < plot.PlotInterface
                 else
                     counts = zeros(length(categoryList), length(categories(xData)));
                     for i = 1:length(categoryList)
+                        mask = groupData == categoryList(i);
                         dataToPlot = xData(mask, :, :);
                         counts(i, :) = histcounts(dataToPlot);
                     end
