@@ -102,7 +102,8 @@ classdef PlotManager < handle
         function plotData(obj, data)
 
             plotter = obj.getPlotter();
-            cla(obj.axesHandle);
+            % cla(obj.axesHandle);
+            obj.cleanPlot();
 
             % TO IMPLEMENT - add an additional processing that would add jitter to the data
 
