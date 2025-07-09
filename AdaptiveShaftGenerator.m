@@ -21,7 +21,7 @@ classdef (Sealed) AdaptiveShaftGenerator
         sizeIm = 100 % size of the image in which the contours are calculated
         realCenterDim
 
-        structuringElementRadius = 3 % radius of the structuring element used in morphological operations
+        structuringElementRadius = 2 % radius of the structuring element used in morphological operations
     end
 
     methods
@@ -58,7 +58,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             radii = obj.calculateRadii(middlePointsArray, contoursArray);
         end
 
-        function contours = runInParallel(obj, ax, A, B, centreline, vertices)
+        function contours = runInParallel(obj, ax, A, B, vertices)
             % run in parallel
             nPos = size(A, 1);
             contours = cell(1, nPos);
@@ -76,7 +76,8 @@ classdef (Sealed) AdaptiveShaftGenerator
             end
         end
 
-        function contours = runInSerial(obj, ax, A, B, centreline, vertices)
+
+        function contours = runInSerial(obj, ax, A, B, vertices)
             % run in serial
             nPos = size(A, 1);
             contours = cell(1, nPos);
@@ -94,7 +95,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             end
         end
 
-        function vertices = getVerticesInCuboid(obj, ax, ROIdepth, ROIsize, cuboidOrigin, rotationDegrees, vertices)
+        function vertices = getVerticesInCuboid(obj, ~, ROIdepth, ROIsize, cuboidOrigin, rotationDegrees, vertices)
             % disp('here')
             % disp(size(vertices))
             % disp('try with graphical ROI')
@@ -206,7 +207,7 @@ classdef (Sealed) AdaptiveShaftGenerator
         end
 
 
-        function inside = isInRotatedCuboid(obj, P, pos, dims, rotXYZdeg)
+        function inside = isInRotatedCuboid(~, P, pos, dims, rotXYZdeg)
             % P         N×3 [x y z] point cloud  (double | single)
             % pos       [xmin ymin zmin]         (corner BEFORE rotation)
             % dims      [dx dy dz]               (edge lengths ≥ 0)
@@ -246,7 +247,13 @@ classdef (Sealed) AdaptiveShaftGenerator
                 return;
             end
 
+            % new way of calculating contours
             contours = obj.calculateContourMorphologically(verticesInCuboid, pointA, pointB);
+
+            % old way - using active contours
+            % contours = IS_active_contour(pointA, pointB, verticesInCuboid,'RadiusScaling',obj.radiusFactor, ...
+            % 'Iterations',obj.Iterations,'ContractionBias',obj.ContractionBias, ...
+            % 'SmoothFactor',obj.SmoothFactor,'sizeIm',obj.sizeIm,'realCenterDim',obj.realCenterDim,'initialRadius',obj.initialRadius);
         end
 
 
@@ -300,19 +307,11 @@ classdef (Sealed) AdaptiveShaftGenerator
 
         function result = calculateContourMorphologically(obj, pointsInROI, pointA, pointB)
 
-            sizeIm = obj.sizeIm;
-            realCenterDim = obj.realCenterDim;
+            obj.sizeIm = obj.sizeIm;
+            obj.realCenterDim = obj.realCenterDim;
             radiusScaling = obj.radiusFactor;
 
-            % parameters for active contour algorithm:
-            Iterations = obj.Iterations;
-            ContractionBias = obj.ContractionBias;
-            SmoothFactor = obj.SmoothFactor;
-
-            initialRadius = obj.initialRadius;
-
             % predefined lists:
-            pointsRotated = [];
             pointsRescaled = [];
             contourRescaled = [];
 
@@ -346,18 +345,18 @@ classdef (Sealed) AdaptiveShaftGenerator
             end
 
             % projecting the point cloud onto a plane and rescaling the dimensions:
-            pointsRescaled(:,1) = (pointsRotated(:,1))*sizeIm/realCenterDim + sizeIm/2;
+            pointsRescaled(:,1) = (pointsRotated(:,1))*obj.sizeIm/obj.realCenterDim + obj.sizeIm/2;
             pointsRescaled(:,2) = 0;
-            pointsRescaled(:,3) = (pointsRotated(:,3))*sizeIm/realCenterDim + sizeIm/2;
+            pointsRescaled(:,3) = (pointsRotated(:,3))*obj.sizeIm/obj.realCenterDim + obj.sizeIm/2;
 
             % transforming the projected and rescaled points into a binary image:
-            binaryImage = zeros(sizeIm,sizeIm);
+            binaryImage = zeros(obj.sizeIm,obj.sizeIm);
 
             for i=1:size(pointsRescaled,1)
 
                 xR = pointsRescaled(i,1);
                 yR = pointsRescaled(i,3);
-                if xR >= 1 && xR <= sizeIm && yR >= 1 && yR <= sizeIm
+                if xR >= 1 && xR <= obj.sizeIm && yR >= 1 && yR <= obj.sizeIm
                     binaryImage(round(yR),round(xR)) = 255;
                 end
             end
@@ -367,21 +366,6 @@ classdef (Sealed) AdaptiveShaftGenerator
 
             % assignin("base", "binaryImage", binaryImage)
 
-            % tic
-            % active contour algorithm:
-
-            squaredDist = pointsRescaled(:,1).^2 + pointsRescaled(:,2).^2;
-            [minDistanceSqrt,index] = min(squaredDist);
-
-            % disp('minimum radius')
-            % disp(index)
-            % disp(sqrt(minDistanceSqrt))
-            minDistance = sqrt(minDistanceSqrt);
-
-            % figure
-            % imshow(binaryImage,[])
-            % r = drawcircle("Center",[sizeIm/2,sizeIm/2],'Radius',initialRadius,'Visible','on');
-            % mask = createMask(r);
 
             % % Adjust the mask: remove areas with positive values in binaryImage
             %     % this should avoid expansion to the white areas and formation of bubbles and bulges
@@ -396,10 +380,15 @@ classdef (Sealed) AdaptiveShaftGenerator
 
             simpCont = obj.doRollingBall(binaryImage);
 
+            if isempty(simpCont)
+                result = [];
+                return;
+            end
+
             % rescaling contour back into the um within the plane:
-            contourRescaled(:,1) = ((simpCont(:,1)-sizeIm/2)*(realCenterDim)/sizeIm)*radiusScaling;
+            contourRescaled(:,1) = ((simpCont(:,1)-obj.sizeIm/2)*(obj.realCenterDim)/obj.sizeIm)*radiusScaling;
             contourRescaled(:,2) = zeros(size(simpCont,1),1);
-            contourRescaled(:,3) = ((simpCont(:,2)-sizeIm/2)*(realCenterDim)/sizeIm)*radiusScaling;
+            contourRescaled(:,3) = ((simpCont(:,2)-obj.sizeIm/2)*(obj.realCenterDim)/obj.sizeIm)*radiusScaling;
 
             R_inv = R';
 
@@ -418,6 +407,11 @@ classdef (Sealed) AdaptiveShaftGenerator
 
             %% --- 2½.  Keep only the most-central black blob -------------------------
             CC     = bwconncomp(Ibin);                         % find all foreground blobs
+            if isempty(CC)
+                disp('No blobs found in the image');
+                outlineCoordinates = [];
+                return;
+            end
             stats  = regionprops(CC, 'Centroid', 'PixelIdxList', 'BoundingBox');  % get their centroids, pixel indices and bounding boxes
 
             % Sometimes, when there was a black area at the edges, its centroid was close to centre -> choosen instead of the central blob
@@ -466,6 +460,11 @@ classdef (Sealed) AdaptiveShaftGenerator
 
             %% --- 4. Extract the outline ---------------------------------------------
             B = bwboundaries(Ismoothed);               % cell array of [row col] coords
+            if isempty(B)
+                disp('No boundaries found in the smoothed image');
+                outlineCoordinates = [];
+                return;
+            end
             px = B{1}(:,2);  py = B{1}(:,1);         % x = columns, y = rows
             outlineCoordinates = [B{1}(:,2), B{1}(:,1)];  % [x y] order for vecnorm
             % Keep only every second point in the outline
@@ -473,6 +472,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             % size(outlineCoordinates)
 
             assignin('base', 'outlineCoordinates', outlineCoordinates)
+            % figure, imshow(Ismoothed,[])
 
             % Check if outline touches the edge of the image
             imSize = size(Ismoothed);
@@ -489,5 +489,132 @@ classdef (Sealed) AdaptiveShaftGenerator
 
 
         end
+
+    end
+
+    methods (Static)
+
+        function mesh = generateMesh(contourPoints, middlePoints, smoothingFactor)
+            contourPointNormals = AdaptiveShaftGenerator.calculateNormals(contourPoints, middlePoints);
+
+            % assignin('base', 'contourPointNormals', contourPointNormals);
+            % unique without anything sorts the values in ascending order
+                % this can cause problems as the first point might not have the lowest value
+                % to fix this, 'stable' is used - prevents sorting
+            [~,~,middlePointsIdx] = unique(middlePoints(:,1),'stable');
+
+            % assignin('base', 'contourPoints', contourPoints);
+            % assignin('base', 'contourPointNormals', contourPointNormals);
+            % add start plug
+            idx = 1;
+            [startPlugPoints, startPlugPointNormals] = AdaptiveShaftGenerator.addPlug(contourPoints, contourPointNormals, middlePoints, middlePointsIdx, idx);
+
+            % add end plug
+            idx = max(middlePointsIdx);
+            [endPlugPoints, endPlugPointNormals] = AdaptiveShaftGenerator.addPlug(contourPoints, contourPointNormals, middlePoints, middlePointsIdx, idx);
+
+            contourPoints = [startPlugPoints; contourPoints; endPlugPoints];
+            contourPointNormals = [startPlugPointNormals; contourPointNormals; endPlugPointNormals];
+
+            assignin('base', 'contourPoints', contourPoints);
+            assignin('base', 'contourPointNormals', contourPointNormals);
+
+            mesh = AdaptiveShaftGenerator.reconstructMesh(contourPoints, contourPointNormals);
+            mesh = AdaptiveShaftGenerator.smoothMesh(mesh, smoothingFactor);
+        end
+
+        function mesh = generateScaledMesh(contourPoints, middlePoints, selectedRadius, meanRadius, smoothingFactor)
+            contourPointNormals = AdaptiveShaftGenerator.calculateNormals(contourPoints, middlePoints);
+            contourPoints = AdaptiveShaftGenerator.changeRadius(contourPoints, contourPointNormals, selectedRadius, meanRadius);
+
+            [~,~,middlePointsIdx] = unique(middlePoints(:,1),'stable');
+            % add start plug
+            idx = 1;
+            [startPlugPoints, startPlugPointNormals] = AdaptiveShaftGenerator.addPlug(contourPoints, contourPointNormals, middlePoints, middlePointsIdx, idx);
+
+            % add end plug
+            idx = max(middlePointsIdx);
+            [endPlugPoints, endPlugPointNormals] = AdaptiveShaftGenerator.addPlug(contourPoints, contourPointNormals, middlePoints, middlePointsIdx, idx);
+
+            contourPoints = [startPlugPoints; contourPoints; endPlugPoints];
+            contourPointNormals = [startPlugPointNormals; contourPointNormals; endPlugPointNormals];
+
+            mesh = AdaptiveShaftGenerator.reconstructMesh(contourPoints, contourPointNormals);
+            mesh = AdaptiveShaftGenerator.smoothMesh(mesh, smoothingFactor); 
+        end
+
+        function contourPointNormals = calculateNormals(contourPoints, middlePoints)
+
+            % Calculate direction vectors from center points to contour points
+            directionVectors = contourPoints - middlePoints;
+            
+            % Normalize all vectors at once (row-wise)
+            magnitudes = sqrt(sum(directionVectors.^2, 2));
+            contourPointNormals = directionVectors ./ magnitudes(:, ones(1, 3));
+        end
+
+        function contourPoints = changeRadius(contourPoints, contourPointNormals, selectedRadius, meanRadius)
+
+            % calculate proportion to enlarge or shring the shaft
+            k = selectedRadius-meanRadius;
+        
+            contourPoints = contourPoints + contourPointNormals.*k;
+        end
+
+        function [plugPoints, plugPointNormals] = addPlug(contourPoints, contourPointNormals, middlePoints, middlePointsIdx, idx)
+            contourIdx = middlePointsIdx == idx;
+
+            selectedContourPoints = contourPoints(contourIdx,:);
+            selectedContourPointNormals = contourPointNormals(contourIdx,:);
+
+            selectedMiddlePointIdx = find(middlePointsIdx == idx, 1);
+            middlePoint = middlePoints(selectedMiddlePointIdx,:);
+
+            % calculate radiuses between middle point of contour and points of the contour
+            radiuses = pdist2(middlePoint,selectedContourPoints);
+
+            innerRing1 = selectedContourPoints - selectedContourPointNormals.*radiuses'.*0.6;
+            innerRing2 = selectedContourPoints - selectedContourPointNormals.*radiuses'.*0.3;
+
+            plugPoints = [middlePoint; innerRing2; innerRing1];
+
+            if idx == max(middlePointsIdx)
+                pointBidx = find(middlePointsIdx == (max(middlePointsIdx)-1),1);
+            elseif idx == 1
+                pointBidx = find(middlePointsIdx == 2,1);
+            end
+            pointB = middlePoints(pointBidx,:);
+            plugNormal = (middlePoint-pointB)/norm(middlePoint-pointB);
+
+            plugPointNormals = repmat(plugNormal,size(plugPoints,1),1);
+        end
+
+
+        function mesh = reconstructMesh(vertices, normals)
+            % prepare points as input to Python
+            verticesNumpy = py.numpy.array(vertices);
+            % prepare normals as input to Python
+            normalsNumpy = py.numpy.array(normals);
+
+            % generate mesh by Poisson surface reconstruction
+            depth = 9;
+            % Initialize the struct with vertices and vertex normals
+            mesh_data{1} = struct('vertices', verticesNumpy, ...
+                                    'vertexNormals', normalsNumpy);
+
+            [nObjects, meshCell, ~] = reconstruct_mesh_python(depth,mesh_data,0);
+
+            mesh = meshCell{1};
+            if nObjects > 1
+                disp('there is something wrong - more than one shaft is produced')
+            end
+        end
+
+        function mesh = smoothMesh(mesh, smoothingFactor)
+            if smoothingFactor > 0
+                mesh = smoothSurfaceMesh(mesh, smoothingFactor);
+            end
+        end
+
     end
 end
