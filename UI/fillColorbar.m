@@ -1,9 +1,9 @@
-function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColumn, backgroundColor, modality)
+function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColumn, backgroundColor, modality,pickedColor)
     % Fills the colorbar with colors and labels, with a wider default segment for NaN/uncategorized values.
 
     % disp('Filling colorbar...');
     % Check if a colormap other than 'random' is selected
-    if isequal(colormapName, 'random')
+    if isequal(colormapName, 'random') || isequal(colormapName, 'singlecolor')
         return;
     end
 
@@ -58,6 +58,11 @@ function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColu
         cmapFcn = str2func(colormapName); % Convert colormap name to function handle
         cmap = cmapFcn(nColors); % Generate colors for valid values
 
+        if isequal(colormapName,'gray')
+            pickedColor = repmat(pickedColor,nColors,1);            
+            cmap = cmap.*pickedColor;         
+        end
+
         % Create coordinates for the colorbar
         validSegmentWidth = (1) / (nColors); % Evenly split remaining width
         x = [0:validSegmentWidth:1, 1]; % Include default segment
@@ -95,7 +100,8 @@ function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColu
         minVal = min(columnData, [], 'omitnan'); % Ignore NaN values
         maxVal = max(columnData, [], 'omitnan');
         tickValues = linspace(0, 1 - defaultSegmentWidth, 6); % Normalized tick positions for valid values
-        tickLabels = arrayfun(@(v) sprintf('%.2g', v), linspace(minVal, maxVal, 6), 'UniformOutput', false);
+        % tickLabels = arrayfun(@(v) sprintf('%.2g', v), linspace(minVal, maxVal, 6), 'UniformOutput', false);
+        tickLabels = arrayfun(@(v) sprintf('%.2f', v), linspace(minVal, maxVal, 6), 'UniformOutput', false);
 
         for i = 1:length(tickValues)
             text(colorbarAxesHandle, tickValues(i), -0.2, tickLabels{i}, ...

@@ -62,7 +62,7 @@ classdef PlotManager < handle
 
         function findRequiredParametersNum(obj)
             switch obj.plotType
-                case {'histogram', 'stacked histogram', 'histogram with cdf', 'line histogram'}
+                case {'histogram', 'stacked histogram', 'histogram with cdf', 'line histogram', 'ratio bar plot'}
                     obj.requiredParametersNum = 1;
                 case 'two variables'
                     obj.requiredParametersNum = 2;
@@ -102,7 +102,8 @@ classdef PlotManager < handle
         function plotData(obj, data)
 
             plotter = obj.getPlotter();
-            cla(obj.axesHandle);
+            % cla(obj.axesHandle);
+            obj.cleanPlot();
 
             % TO IMPLEMENT - add an additional processing that would add jitter to the data
 
@@ -129,6 +130,8 @@ classdef PlotManager < handle
                     plotter = plot.LineAveragedPlot();
                 case 'radial density histogram'
                     plotter = plot.RadialDensityHistogramPlot();
+                case 'ratio bar plot'
+                    plotter = plot.RatioBarPlot();
                 otherwise
                     error('Unsupported plot type.');
             end
