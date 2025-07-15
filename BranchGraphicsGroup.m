@@ -117,8 +117,8 @@ classdef BranchGraphicsGroup < handle
 
         function setColor(obj, color)
             arguments
-            obj
-            color % Can be either a 1x3 double array or cell array of 1x3 doubles
+                obj
+                color % Can be either a 1x3 double array or cell array of 1x3 doubles
             end
             
             % Store the color property

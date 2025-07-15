@@ -266,9 +266,11 @@ function baseStructs = getBaseStruct(varargin)
                 end
 
                 % General model features
-                % timeDrift = repmat({[0 0 0]},1,nTimePoints);
                 model.timeDrift = zeros(nTimePoints,3);
                 model.timeDriftCorrected = 0;
+
+                % List of columns that are affected by time drift correction
+                model.driftCorrectedColumns = {'Mesh','Points','CentreLine','Contours','MiddlePoints','cuttingPlaneCentre'};
         
                 baseStructs.model = model;
 
