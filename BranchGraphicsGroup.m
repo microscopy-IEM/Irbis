@@ -7,7 +7,7 @@ classdef BranchGraphicsGroup < handle
     % object creation, deletion, visibility, appearance, and interactive features.
     %
     % Properties:
-    %   objectIdArray      - Cell array containing IDs of graphics objects
+    %   objectIdArray      - Numeric array containing IDs of graphics objects
     %   GraphicsHandles    - Array of graphics object handles 
     %   excluded           - Logical array marking objects to exclude from operations
     %   visible            - Visibility state of objects ("on"/"off")
@@ -40,8 +40,9 @@ classdef BranchGraphicsGroup < handle
     properties
         GraphicsHandles % Array of graphics object handles
         objectIdArray              % Array of object IDs
+        groupIdArray
         excluded          % Logical array indicating which objects are excluded from operations
-        selected    % Logical array indicating which objects are selected
+        selected    % Numerical array containing indices of selected objects from objectIdArray
 
         visible = "on" % Visibility state of the objects
         pickableParts = "visible" % Pickable parts of the objects
@@ -55,16 +56,29 @@ classdef BranchGraphicsGroup < handle
         callbackEnabled
         selectionColor
         
-        contextMenuHandle % Context menu handle for right-click actions
+        contextMenuGenerator % Function that can be called to generate context menu object
 
         tag
+
+        branch % Reference to the branch this group belongs to
+
+        showBoundingBox = false % Flag to show bounding box around the object
     end
 
     methods
         % Constructor
-        function obj = BranchGraphicsGroup(parentAxes, tag, lightingMethod, selectionColor, transparency, color)
+        function obj = BranchGraphicsGroup(parentAxes, branch, lightingMethod, selectionColor, transparency, color)
+            arguments
+                parentAxes matlab.graphics.axis.Axes
+                branch char
+                lightingMethod {mustBeMember(lightingMethod, ["gouraud", "flat"])}
+                selectionColor (1,3) double {mustBeInRange(selectionColor, 0, 1)}
+                transparency (1,1) double {mustBeInRange(transparency, 0, 1)}
+                color % Can be either (1,3) double or cell array of (1,3) doubles
+            end
             obj.parentAxes = parentAxes;
-            obj.tag = tag;
+            obj.branch = branch;
+            obj.tag = [branch 'MeshPlot'];
             obj.lightingMethod = lightingMethod;
             obj.selectionColor = selectionColor;
             obj.transparency = transparency;
@@ -86,7 +100,7 @@ classdef BranchGraphicsGroup < handle
                 obj
                 method {mustBeMember(method, ["gouraud", "flat"])}
             end
-            set(obj.GraphicsHandles(~obj.excluded), 'FaceLighting', method);
+            set(obj.GraphicsHandles, 'FaceLighting', method);
         end
 
         function setTransparency(obj, alpha)
@@ -94,7 +108,7 @@ classdef BranchGraphicsGroup < handle
                 obj
                 alpha (1,1) {mustBeInRange(alpha, 0, 1)}
             end
-            set(obj.GraphicsHandles(~obj.excluded), 'FaceAlpha', alpha);
+            set(obj.GraphicsHandles, 'FaceAlpha', alpha);
         end
 
         function setExcluded(obj, excluded)
@@ -102,6 +116,8 @@ classdef BranchGraphicsGroup < handle
                 obj
                 excluded (1,:) logical
             end
+            % passing the logical array counts with having the objects up to date with the table
+            % this is probably reasonable, because the ids also require this
             obj.excluded = excluded;
             set(obj.GraphicsHandles(obj.excluded), 'Visible', 'off');
             set(obj.GraphicsHandles(~obj.excluded), 'Visible', obj.visible);
@@ -125,86 +141,180 @@ classdef BranchGraphicsGroup < handle
             obj.color = color;
             
             if isa(color, 'double')
-            % Single color for all non-excluded objects
-            mustBeInRange(color, 0, 1);
-            set(obj.GraphicsHandles(~obj.excluded), 'FaceColor', color);
+                % Single color for all non-excluded objects
+                mustBeInRange(color, 0, 1);
+                set(obj.GraphicsHandles, 'FaceColor', color);
             elseif iscell(color)
-            % Individual color for each object
-            if length(color) ~= length(obj.GraphicsHandles)
-                error('Number of colors must match number of graphics objects');
-            end
-            for i = 1:length(obj.GraphicsHandles)
-                if ~obj.excluded(i)
-                mustBeInRange(color{i}, 0, 1);
-                set(obj.GraphicsHandles(i), 'FaceColor', color{i});
+                % Individual color for each object
+                if length(color) ~= length(obj.GraphicsHandles)
+                    error('Number of colors must match number of graphics objects');
                 end
-            end
+                for i = 1:length(obj.GraphicsHandles)
+                    if ~obj.excluded(i)
+                    mustBeInRange(color{i}, 0, 1);
+                    set(obj.GraphicsHandles(i), 'FaceColor', color{i});
+                    end
+                end
             else
-            error('Color must be either a 1x3 double array or cell array of 1x3 doubles');
+                error('Color must be either a 1x3 double array or cell array of 1x3 doubles');
             end
         end
 
         function deselectAllAndChangeSelectionForId(obj, id)
-
-            idx = find(strcmp(id, obj.objectIdArray), 1);
-
-            if isempty(idx)
-                error('Object with ID "%s" not found in the group.', id);
-            end
-
-            selectionState = obj.selected(idx);
-            obj.selected(:) = false; % Deselect all objects
-            obj.selected(idx) = ~selectionState; % Toggle the selection state of the specified object
-
-            obj.setSelected(obj.selected, obj.contextMenuHandle); % Update the selection state of all objects
-        end
-
-        function changeSelectionForId(obj)
-            idx = find(strcmp(id, obj.objectIdArray), 1);
+            idx = find(id == obj.objectIdArray, 1);
 
             if isempty(idx)
-                error('Object with ID "%s" not found in the group.', id);
+                error('Object with ID "%d" not found in the group.', id);
             end
 
-            selectionState = obj.selected(idx);
-            obj.selected(idx) = ~selectionState; % Toggle the selection state of the specified object
+            % Check if the id is already selected
+            isSelected = ismember(id, obj.selected);
+            obj.selected = []; % Deselect all objects
+            if ~isSelected
+                obj.selected = idx; % Select only this object if it wasn't selected
+            end
 
-            obj.setSelected(obj.selected, obj.contextMenuHandle); % Update the selection state of all objects
+            obj.setSelected(obj.selected); % Update the selection state of all objects
         end
+
+        function changeSelectionForId(obj, id)
+            idx = find(id == obj.objectIdArray, 1);
+
+            if isempty(idx)
+                warning('Object with ID "%d" not found in the group.', id);
+                return
+            end
+
+            % Check if the id is already selected
+            currentSelection = obj.selected;
+            if ismember(idx, currentSelection)
+                % Remove from selection
+                obj.selected = currentSelection(currentSelection ~= idx);
+            else
+                % Add to selection
+                obj.selected = [currentSelection idx];
+            end
+
+            obj.setSelected(obj.selected); % Update the selection state of all objects
+        end
+
+        function turnIndividualSelectionOn(obj, id)
+            % Turn on selection for a specific object by ID
+            disp(class(id))
+            disp(['Turning on selection for object with ID: ' num2str(id)]);
+            idx = find(id == obj.objectIdArray, 1);
+            if isempty(idx)
+                warning('Object with ID "%d" not found in the group.', id);
+                return
+            end
+            if ~ismember(idx, obj.selected)
+                obj.selected = [obj.selected idx]; % Add to selected indices
+            end
+            set(obj.GraphicsHandles(idx), 'Selected', "on", 'FaceColor', obj.selectionColor); % Update the graphics object
+        end
+
+        function turnIndividualSelectionOff(obj, id)
+            % Turn off selection for a specific object by ID
+            idx = find(id == obj.objectIdArray, 1);
+            if isempty(idx)
+                warning('Object with ID "%d" not found in the group.', id);
+                return
+            end
+            % Remove index from selected array
+            obj.selected = obj.selected(obj.selected ~= idx);
+            % Update the graphics object
+            if iscell(obj.color)
+                objectColor = obj.color{idx};
+            else
+                objectColor = obj.color;
+            end
+            set(obj.GraphicsHandles(idx), 'Selected', "off", 'FaceColor', objectColor);
+        end
+
+        function toggleIndividualSelection(obj, id)
+            % Toggle selection for a specific object by ID
+            idx = find(id == obj.objectIdArray, 1);
+            if isempty(idx)
+                warning('Object with ID "%d" not found in the group.', id);
+                return
+            end
+            if obj.selected(idx)
+                obj.turnIndividualSelectionOff(id); % Turn off selection if it is currently on
+            else
+                obj.turnIndividualSelectionOn(id); % Turn on selection if it is currently off
+            end
+        end
+
+        function toggleIndividualSelectionAndDeselectOthers(obj, id)
+            % Deselect all objects and toggle selection for a specific object by ID
+            isSelected = ismember(id, obj.selected);
+            obj.selected = []; % Deselect all objects
+            % Toggle selection for a specific object by ID
+            idx = find(id == obj.objectIdArray, 1);
+            if isempty(idx)
+                warning('Object with ID "%d" not found in the group.', id);
+                return
+            end
+            if isSelected
+                obj.turnIndividualSelectionOff(id); % Turn off selection if it is currently on
+            else
+                obj.turnIndividualSelectionOn(id); % Turn on selection if it is currently off
+            end
+        end
+
+
 
         function deselectAll(obj)
-            obj.selected(:) = false; % Deselect all objects
-            obj.setSelected(obj.selected, obj.contextMenuHandle); % Update the selection state of all objects
+            obj.selected = []; % Clear the selection array
+            obj.setSelected(obj.selected); % Update the selection state of all objects
         end
 
-        function setSelected(obj, selected, contextMenuHandle)
+        function setSelected(obj, selectedIndices)
             arguments
                 obj
-                selected (1,:) logical
-                contextMenuHandle
+                selectedIndices (1,:) {mustBeNumeric}
             end
-            obj.selected = selected;
+            obj.selected = selectedIndices;
+            
+            % Create a logical mask for all objects
+            isSelected = ismember(obj.objectIdArray, selectedIndices(:));
+            
             % Set the selected property for each graphics object
-            set(obj.GraphicsHandles(obj.selected), 'Selected', "on");
-            set(obj.GraphicsHandles(~obj.selected), 'Selected', "off");
+            set(obj.GraphicsHandles(isSelected), 'Selected', "on");
+            set(obj.GraphicsHandles(~isSelected), 'Selected', "off");
 
             % Update the selection color for selected objects
-            set(obj.GraphicsHandles(obj.selected), 'FaceColor', obj.selectionColor);
+            set(obj.GraphicsHandles(isSelected), 'FaceColor', obj.selectionColor);
+            
             % Reset the color for non-selected objects
             if iscell(obj.color)
                 for i = 1:length(obj.GraphicsHandles)
-                    if ~obj.selected(i) && ~obj.excluded(i)
+                    if ~isSelected(i) && ~obj.excluded(i)
                         set(obj.GraphicsHandles(i), 'FaceColor', obj.color{i});
                     end
                 end
             else
-                set(obj.GraphicsHandles(~obj.selected), 'FaceColor', obj.color);
+                set(obj.GraphicsHandles(~isSelected), 'FaceColor', obj.color);
             end
+        end
 
-            % Add contextMenu function to selected objects
-            if ~isempty(contextMenuHandle) && isvalid(contextMenuHandle)
-                set(obj.GraphicsHandles(obj.selected), 'ContextMenu', contextMenuHandle);
+
+        function selectedIds = getSelectedIds(obj)
+            % Get IDs of all selected objects
+            selectedIds = obj.selected;
+        end
+
+        function selectedGroupIds = getSelectedGroupIds(obj)
+            % Get group IDs of all selected objects
+            disp(obj.objectIdArray)
+            isSelected = ismember(obj.objectIdArray, obj.selected(:))
+            if numel(obj.selected) > 0
+                disp('here here')
+                ismember(obj.objectIdArray, obj.selected(1))
             end
+            disp('Group IDs: ');
+            disp(obj.groupIdArray)
+            selectedGroupIds = obj.groupIdArray(isSelected);
         end
 
         function setSelectionColor(obj, color)
@@ -213,12 +323,31 @@ classdef BranchGraphicsGroup < handle
                 color (1,3) double {mustBeInRange(color, 0, 1)}
             end
             obj.selectionColor = color;
-            set(obj.GraphicsHandles(obj.selected), 'FaceColor', color);
+            isSelected = ismember(obj.objectIdArray, obj.selected(:));
+            set(obj.GraphicsHandles(isSelected), 'FaceColor', color);
+        end
+
+
+        function hideUnselected(obj)
+            % Hide all unselected objects
+            isSelected = ismember(obj.objectIdArray, obj.selected(:));
+            set(obj.GraphicsHandles(~isSelected), 'Visible', 'off');
+            set(obj.GraphicsHandles(isSelected), 'Visible', obj.visible);
+        end
+
+        function resetVisibility(obj)
+            % Cancel hiding of unselected objects
+            set(obj.GraphicsHandles, 'Visible', obj.visible);
+        end
+
+        function visibleIds = getVisibleIds(obj)
+            % Get IDs of all visible objects
+            visibleIds = obj.objectIdArray(~obj.excluded & strcmp({obj.GraphicsHandles.Visible}, 'on'));
         end
 
         % Method to delete graphics objects explicitly
         function deleteGraphics(obj)
-            if isvalid(obj.GraphicsHandles)
+            if ~isempty(obj.GraphicsHandles) & isvalid(obj.GraphicsHandles)
                 delete(obj.GraphicsHandles);
             end
             obj.GraphicsHandles = matlab.graphics.Graphics.empty();
@@ -230,19 +359,24 @@ classdef BranchGraphicsGroup < handle
         end
 
         function deleteObjects(obj, objectIds)
+            arguments
+                obj
+                objectIds (:,1) double  % Column vector of object IDs to delete
+            end
             % Delete objects with specified IDs
             if isempty(objectIds)
                 return;
             end
 
             for i = 1:numel(objectIds)
-                idx = find(strcmp(obj.objectIdArray, objectIds{i}), 1);
+                idx = find(obj.objectIdArray == objectIds(i), 1);
                 if ~isempty(idx) && isvalid(obj.GraphicsHandles(idx))
                     delete(obj.GraphicsHandles(idx));
                     obj.GraphicsHandles(idx) = [];
                     obj.objectIdArray(idx) = [];
+                    obj.groupIdArray(idx) = []; % Remove the group ID for the deleted object
                     obj.excluded(idx) = []; % Remove the excluded status for the deleted object
-                    obj.selected(idx) = []; % Remove the selected status for the deleted object
+                    obj.selected(obj.selected == i) = []; % Remove the id from selected array
 
                     % Do the same for color, if it is a cell array
                     if iscell(obj.color)
@@ -252,12 +386,23 @@ classdef BranchGraphicsGroup < handle
             end
         end
 
-        function initializeGroup(obj, verticesArray, facesArray, idArray, buttonDownCallback)
+        function initializeGroup(obj, verticesArray, facesArray, idArray, groupIdArray, contextMenuGenerator, buttonDownCallback)
+            arguments
+                obj
+                verticesArray (:,1) cell % Cell array of vertex matrices
+                facesArray (:,1) cell    % Cell array of face matrices
+                idArray (:,1) double     % Column vector of object IDs
+                groupIdArray (:,1) double % Column vector of group IDs
+                contextMenuGenerator function_handle % Function to generate context menu
+                buttonDownCallback function_handle = [] % Optional callback for button press
+            end
+
+            obj.deleteGraphics(); % Clear existing graphics handles
 
             % Check if the input is empty
             if isempty(verticesArray) || isempty(facesArray) || isempty(idArray)
-                obj.GraphicsHandles = matlab.graphics.Graphics.empty();
-                obj.objectIdArray = {};
+                obj.objectIdArray = [];
+                obj.selected = []; % Initialize empty selection
                 return;
             end
         
@@ -269,16 +414,20 @@ classdef BranchGraphicsGroup < handle
                 obj.buttonDownCallback = buttonDownCallback;
             end
 
+            obj.contextMenuGenerator = contextMenuGenerator;
+
             nObjects = numel(idArray);
             obj.GraphicsHandles = gobjects(nObjects,1);
             obj.objectIdArray = idArray;
+            obj.groupIdArray = groupIdArray;
+            obj.selected = []; % Initialize empty selection
         
             % Loop through each object and plot it
             for i = 1:numel(idArray)
                 % Extract vertices and faces for the current object
                 vertices = verticesArray{i};
                 faces = facesArray{i};
-                id = idArray{i};
+                id = idArray(i);
         
                 % Determine color for this object based on color type
                 if iscell(obj.color)
@@ -293,7 +442,7 @@ classdef BranchGraphicsGroup < handle
         
         end
 
-        function addGraphicsObjects(obj, verticesArray, facesArray, idArray, color)
+        function addGraphicsObjects(obj, verticesArray, facesArray, idArray, groupIdArray, color, excluded, isSelected)
             % Adds new graphics objects to the group or updates existing ones with the same ID
             
             % Check for empty inputs
@@ -327,7 +476,7 @@ classdef BranchGraphicsGroup < handle
             updateIdxMap = zeros(numel(idArray), 1);
             
             for i = 1:numel(idArray)
-                existingIdx = find(strcmp(obj.objectIdArray, idArray{i}), 1);
+                existingIdx = find(obj.objectIdArray == idArray(i), 1);
                 if ~isempty(existingIdx)
                     updateIndices(i) = true;
                     updateIdxMap(i) = existingIdx;
@@ -345,7 +494,7 @@ classdef BranchGraphicsGroup < handle
                 end
                 
                 % Create new object
-                objectHandle = obj.plotObject(verticesArray{originalIdx}, facesArray{originalIdx}, idArray{originalIdx}, color{originalIdx}, obj.visible, "off");
+                objectHandle = obj.plotObject(verticesArray{originalIdx}, facesArray{originalIdx}, idArray(originalIdx), color{originalIdx}, obj.visible, isSelected);
                 obj.GraphicsHandles(existingIdx) = objectHandle;
                 
                 % Maintain exclusion status
@@ -368,8 +517,8 @@ classdef BranchGraphicsGroup < handle
                 oldExcluded = obj.excluded;
                 
                 obj.GraphicsHandles = gobjects(newSize, 1);
-                obj.objectIdArray = cell(newSize, 1);
-                obj.excluded = false(newSize, 1);
+                obj.objectIdArray = zeros(newSize, 1);
+                obj.excluded = false(newSize, 1);   % TO FIX
                 
                 % Copy existing data
                 obj.GraphicsHandles(1:currentSize) = oldHandles;
@@ -381,9 +530,10 @@ classdef BranchGraphicsGroup < handle
                     idx = currentSize + i;
                     originalIdx = newObjIndices(i);
                     
-                    objectHandle = obj.plotObject(verticesArray{originalIdx}, facesArray{originalIdx}, idArray{originalIdx}, color{originalIdx}, obj.visible, "off");
+                    objectHandle = obj.plotObject(verticesArray{originalIdx}, facesArray{originalIdx}, idArray(originalIdx), color{originalIdx}, obj.visible, isSelected);
                     obj.GraphicsHandles(idx) = objectHandle;
-                    obj.objectIdArray{idx} = idArray{originalIdx};
+                    obj.objectIdArray(idx) = idArray(originalIdx);
+                    obj.groupIdArray(idx) = groupIdArray(originalIdx);
                 end
             end
         end
@@ -398,17 +548,17 @@ classdef BranchGraphicsGroup < handle
             %   colorCol    - Name of column containing color data (optional)
             %
             % Returns:
-            %   verticesArray - Cell array of vertices in objectIdArray order
-            %   facesArray    - Cell array of faces in objectIdArray order
-            %   colorArray    - Cell array of colors in objectIdArray order (if specified)
+            %   verticesArray - Cell array of vertices in objectIdArray order (Nx1)
+            %   facesArray    - Cell array of faces in objectIdArray order (Nx1)
+            %   colorArray    - Cell array of colors in objectIdArray order (Nx1) (if specified)
             
             % Validate inputs
             arguments
                 obj
-                dataTable table
-                verticesCol string
-                facesCol string
-                colorCol string = ""
+                dataTable table  % Table with row names as object IDs
+                verticesCol string  % Column name for vertices data
+                facesCol string     % Column name for faces data
+                colorCol string = "" % Optional column name for color data
             end
             
             % Check if table has row names
@@ -427,11 +577,11 @@ classdef BranchGraphicsGroup < handle
             
             % For each ID in objectIdArray, find corresponding row in table
             for i = 1:n
-                currentId = obj.objectIdArray{i};
-                rowIdx = find(strcmp(tableIds, currentId));
+                currentId = obj.objectIdArray(i);
+                rowIdx = find(strcmp(tableIds, num2str(currentId)));
                 
                 if isempty(rowIdx)
-                    warning('Object ID "%s" not found in table', currentId);
+                    warning('Object ID "%d" not found in table', currentId);
                     verticesArray{i} = [];
                     facesArray{i} = [];
                     colorArray{i} = [];
@@ -455,7 +605,28 @@ classdef BranchGraphicsGroup < handle
             end
         end
 
+        function updateGroupIdArray(obj, newGroupIdArray)
+            arguments
+                obj
+                newGroupIdArray (:,1) double  % Column vector of new group IDs
+            end
+            % Update the groupIdArray with a new array
+            if length(newGroupIdArray) ~= length(obj.groupIdArray)
+                error('New group ID array must have the same length as the existing one.');
+            end
+            obj.groupIdArray = newGroupIdArray;
+        end
+
         function objectHandle = plotObject(obj, vertices, faces, id, color, visibilityStatus, selectionStatus)
+            arguments
+                obj
+                vertices (:,3) double     % Nx3 matrix of vertex coordinates
+                faces (:,:) double        % Face connectivity matrix
+                id (1,1) double          % Object ID
+                color                    % Either (1,3) double for RGB or cell containing RGB
+                visibilityStatus string {mustBeMember(visibilityStatus, ["on", "off"])}
+                selectionStatus string {mustBeMember(selectionStatus, ["on", "off"])}
+            end
 
             % Create a patch object for the current object
             objectHandle = patch(obj.parentAxes, 'Vertices', vertices, 'Faces', faces, 'UserData', id);
@@ -470,6 +641,8 @@ classdef BranchGraphicsGroup < handle
             
             % Properties depending on the group state
             objectHandle.Tag = obj.tag;
+            objectHandle.UserData = id; % Store ID in UserData
+            objectHandle.PickableParts = obj.pickableParts; % Set pickable parts
             objectHandle.FaceAlpha = obj.transparency;
             objectHandle.FaceLighting = obj.lightingMethod;
             if obj.callbackEnabled
@@ -481,6 +654,60 @@ classdef BranchGraphicsGroup < handle
             % Constant properties
             objectHandle.LineStyle = 'none';
             objectHandle.SelectionHighlight = 'off'; % blocked default highlight (we do it by changing color)
+
+            objectHandle.ContextMenu = obj.contextMenuGenerator(id, obj); % Obj passed to be able to call getSelectedIds method from context menu functions
+        end
+
+        function plotBoundingBox(obj)
+            % Plot bounding boxes around selected objects or all objects if none selected
+            
+            if ~obj.showBoundingBox
+                % Delete existing bounding boxes if they exist
+                delete(findobj(obj.parentAxes, 'Tag', [obj.tag '_BoundingBox']));
+                return;
+            end
+            
+            % Delete existing bounding boxes first
+            delete(findobj(obj.parentAxes, 'Tag', [obj.tag '_BoundingBox']));
+            
+            % Determine which objects to show bounding boxes for
+            objectsToShow = find(~obj.excluded);
+            if ~isempty(obj.selected)
+                objectsToShow = obj.selected;
+            end
+            
+            % Plot bounding box for each selected/visible object
+            for i = objectsToShow'
+                if ~isvalid(obj.GraphicsHandles(i))
+                    continue;
+                end
+                
+                % Get vertices of the object
+                vertices = obj.GraphicsHandles(i).Vertices;
+                
+                % Calculate min and max for each dimension
+                minX = min(vertices(:,1));
+                maxX = max(vertices(:,1));
+                minY = min(vertices(:,2));
+                maxY = max(vertices(:,2));
+                minZ = min(vertices(:,3));
+                maxZ = max(vertices(:,3));
+                
+                % Calculate position and size for drawcuboid
+                position = [minX, minY, minZ, maxX-minX, maxY-minY, maxZ-minZ];
+                
+                % Create cuboid for the bounding box
+                h = drawcuboid('Position', position, 'Parent', obj.parentAxes, ...
+                              'Color', [0.2, 0.6, 1.0], ... % Light blue color
+                              'FaceAlpha', 0.1, ...        % Mostly transparent
+                              'SelectedColor', [0.2, 0.6, 1.0], ...
+                              'Tag', [obj.tag '_BoundingBox'], ...
+                              'Interactable', false, ...    % Make it non-interactive
+                              'Label', '');                 % No label
+                              
+                % Store object ID in UserData
+                h.UserData = obj.objectIdArray(i);
+            end
         end
     end
 end

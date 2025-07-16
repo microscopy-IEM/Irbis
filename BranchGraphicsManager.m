@@ -1,7 +1,7 @@
 classdef BranchGraphicsManager < handle
 
     properties
-        dataStruct struct
+        dataStruct
 
         parentAxes % Parent axes for the graphics objects
         lightingMethod
@@ -29,8 +29,20 @@ classdef BranchGraphicsManager < handle
                     % This will also delete the objects in the group
             end
             
-            tag = [branch 'MeshPlot'];
-            groupHandle = BranchGraphicsGroup(obj.parentAxes, tag, obj.lightingMethod, obj.selectionColor, transparency, color);
+            groupHandle = BranchGraphicsGroup(obj.parentAxes, branch, obj.lightingMethod, obj.selectionColor, transparency, color);
+            obj.dataStruct.(branch) = groupHandle; % Store the new group handle in the data structure
+        end
+
+        function groupHandle = createNewExtendedGroup(obj, branch, transparency, color)
+            % Create a new group handle for the specified branch
+            obj.validateBranchExistence(branch);
+            if ~isempty(obj.dataStruct.(branch))
+                delete(obj.dataStruct.(branch)); % Delete existing group handle if it exists
+                    % This will also delete the objects in the group
+            end
+            
+            groupHandle = ExtendedBranchGraphicsGroup(obj.parentAxes, branch, obj.lightingMethod, obj.selectionColor, transparency, color);
+            obj.dataStruct.(branch) = groupHandle; % Store the new group handle in the data structure
         end
 
         function groupHandle = getExistingGroup(obj, branch)
