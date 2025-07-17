@@ -56,18 +56,22 @@ classdef BranchGraphicsGroup < handle
         callbackEnabled
         selectionColor
         
-        contextMenuGenerator % Function that can be called to generate context menu object
+        contextMenu % Context menu handle that needs to be assigned to selected graphics objects
 
+        currentId = []  % Id of the last right-clicked object, used for context menu actions
+        
         tag
 
         branch % Reference to the branch this group belongs to
 
         showBoundingBox = false % Flag to show bounding box around the object
+
+        idLabel
     end
 
     methods
         % Constructor
-        function obj = BranchGraphicsGroup(parentAxes, branch, lightingMethod, selectionColor, transparency, color)
+        function obj = BranchGraphicsGroup(parentAxes, branch, lightingMethod, selectionColor, transparency, color, contextMenuGenerator)
             arguments
                 parentAxes matlab.graphics.axis.Axes
                 branch char
@@ -75,6 +79,7 @@ classdef BranchGraphicsGroup < handle
                 selectionColor (1,3) double {mustBeInRange(selectionColor, 0, 1)}
                 transparency (1,1) double {mustBeInRange(transparency, 0, 1)}
                 color % Can be either (1,3) double or cell array of (1,3) doubles
+                contextMenuGenerator function_handle % Function to generate context menu
             end
             obj.parentAxes = parentAxes;
             obj.branch = branch;
@@ -84,6 +89,44 @@ classdef BranchGraphicsGroup < handle
             obj.transparency = transparency;
             obj.color = color;
             obj.visible = "on";
+            obj.contextMenu = contextMenuGenerator(obj); % Store the context menu generator function
+
+            obj.idLabel = text(parentAxes,'FontSize', 20, 'Color', [1,1,1], 'PickableParts', 'none');   %'Tag','objectIDText',
+        end
+
+
+        function branch = getBranch(obj)
+            % Method to get the branch name
+            branch = obj.branch;
+        end
+
+
+        function rightClickedId = getRightClickedId(obj)
+            % Method to get the ID of the last right-clicked object
+            rightClickedId = obj.currentId;
+        end
+
+
+        function setRightClickedId(obj, id)
+            % Method to set the ID of the last right-clicked object
+            obj.currentId = id;
+        end
+
+
+        function resetRightClickedId(obj)
+            % Method to reset the ID of the last right-clicked object
+            obj.currentId = [];
+        end
+
+
+        function useNonstandardCallback(obj, nonstandardCallbackFunction)
+            % The stored callback still remains the default one
+            set(obj.GraphicsHandles, 'ButtonDownFcn', nonstandardCallbackFunction);
+        end
+
+
+        function resetCallback(obj)
+            set(obj.GraphicsHandles, 'ButtonDownFcn', obj.buttonDownCallback);
         end
 
         % Method to update visibility
@@ -93,7 +136,19 @@ classdef BranchGraphicsGroup < handle
                 state {mustBeMember(state, ["on", "off"])}
             end
             set(obj.GraphicsHandles(~obj.excluded), 'Visible', state);
+            set(obj.idLabel, 'Visible', state); % Update visibility of the ID label
         end
+
+
+        function setIdLabelVisibility(obj, state)
+            % Set visibility of the ID label
+            arguments
+                obj
+                state {mustBeMember(state, ["on", "off"])}
+            end
+            set(obj.idLabel, 'Visible', state);
+        end
+
 
         function setLightingMethod(obj, method)
             arguments
@@ -207,10 +262,18 @@ classdef BranchGraphicsGroup < handle
                 warning('Object with ID "%d" not found in the group.', id);
                 return
             end
-            if ~ismember(idx, obj.selected)
-                obj.selected = [obj.selected idx]; % Add to selected indices
+            if ~ismember(id, obj.selected)
+                obj.selected = [obj.selected id]; % Add to selected indices
             end
             set(obj.GraphicsHandles(idx), 'Selected', "on", 'FaceColor', obj.selectionColor); % Update the graphics object
+
+            % Update the ID label
+            groupId = obj.groupIdArray(idx);
+            if groupId == 0
+                groupId = '-'; % Handle case where groupId is zero
+            end
+            obj.idLabel.String = [num2str(id) ' (' num2str(groupId) ')'];
+            obj.idLabel.Position = mean(obj.GraphicsHandles(idx).Vertices(), 1);
         end
 
         function turnIndividualSelectionOff(obj, id)
@@ -221,7 +284,7 @@ classdef BranchGraphicsGroup < handle
                 return
             end
             % Remove index from selected array
-            obj.selected = obj.selected(obj.selected ~= idx);
+            obj.selected = obj.selected(obj.selected ~= id);
             % Update the graphics object
             if iscell(obj.color)
                 objectColor = obj.color{idx};
@@ -229,6 +292,7 @@ classdef BranchGraphicsGroup < handle
                 objectColor = obj.color;
             end
             set(obj.GraphicsHandles(idx), 'Selected', "off", 'FaceColor', objectColor);
+            obj.idLabel.String = '';
         end
 
         function toggleIndividualSelection(obj, id)
@@ -238,7 +302,8 @@ classdef BranchGraphicsGroup < handle
                 warning('Object with ID "%d" not found in the group.', id);
                 return
             end
-            if obj.selected(idx)
+            isSelected = ismember(id, obj.selected);
+            if isSelected
                 obj.turnIndividualSelectionOff(id); % Turn off selection if it is currently on
             else
                 obj.turnIndividualSelectionOn(id); % Turn on selection if it is currently off
@@ -248,7 +313,7 @@ classdef BranchGraphicsGroup < handle
         function toggleIndividualSelectionAndDeselectOthers(obj, id)
             % Deselect all objects and toggle selection for a specific object by ID
             isSelected = ismember(id, obj.selected);
-            obj.selected = []; % Deselect all objects
+            obj.deselectAll();
             % Toggle selection for a specific object by ID
             idx = find(id == obj.objectIdArray, 1);
             if isempty(idx)
@@ -267,6 +332,7 @@ classdef BranchGraphicsGroup < handle
         function deselectAll(obj)
             obj.selected = []; % Clear the selection array
             obj.setSelected(obj.selected); % Update the selection state of all objects
+            obj.idLabel.String = '';
         end
 
         function setSelected(obj, selectedIndices)
@@ -306,16 +372,27 @@ classdef BranchGraphicsGroup < handle
 
         function selectedGroupIds = getSelectedGroupIds(obj)
             % Get group IDs of all selected objects
-            disp(obj.objectIdArray)
-            isSelected = ismember(obj.objectIdArray, obj.selected(:))
-            if numel(obj.selected) > 0
-                disp('here here')
-                ismember(obj.objectIdArray, obj.selected(1))
-            end
-            disp('Group IDs: ');
-            disp(obj.groupIdArray)
+            % disp(obj.objectIdArray)
+            isSelected = ismember(obj.objectIdArray, obj.selected(:));
+            % if numel(obj.selected) > 0
+            %     disp('here here')
+            %     ismember(obj.objectIdArray, obj.selected(1))
+            % end
+            % disp('Group IDs: ');
+            % disp(obj.groupIdArray)
             selectedGroupIds = obj.groupIdArray(isSelected);
         end
+
+
+        function groupId = getGroupIdForObjectId(obj, objectId)
+            % Get the group ID for a specific object ID
+            idx = find(obj.objectIdArray == objectId, 1);
+            if isempty(idx)
+                error('Object with ID "%d" not found in the group.', objectId);
+            end
+            groupId = obj.groupIdArray(idx);
+        end
+
 
         function setSelectionColor(obj, color)
             arguments
@@ -386,14 +463,13 @@ classdef BranchGraphicsGroup < handle
             end
         end
 
-        function initializeGroup(obj, verticesArray, facesArray, idArray, groupIdArray, contextMenuGenerator, buttonDownCallback)
+        function initializeGroup(obj, verticesArray, facesArray, idArray, groupIdArray, buttonDownCallback)
             arguments
                 obj
                 verticesArray (:,1) cell % Cell array of vertex matrices
                 facesArray (:,1) cell    % Cell array of face matrices
                 idArray (:,1) double     % Column vector of object IDs
                 groupIdArray (:,1) double % Column vector of group IDs
-                contextMenuGenerator function_handle % Function to generate context menu
                 buttonDownCallback function_handle = [] % Optional callback for button press
             end
 
@@ -413,8 +489,6 @@ classdef BranchGraphicsGroup < handle
                 obj.callbackEnabled = true;
                 obj.buttonDownCallback = buttonDownCallback;
             end
-
-            obj.contextMenuGenerator = contextMenuGenerator;
 
             nObjects = numel(idArray);
             obj.GraphicsHandles = gobjects(nObjects,1);
@@ -655,7 +729,9 @@ classdef BranchGraphicsGroup < handle
             objectHandle.LineStyle = 'none';
             objectHandle.SelectionHighlight = 'off'; % blocked default highlight (we do it by changing color)
 
-            objectHandle.ContextMenu = obj.contextMenuGenerator(id, obj); % Obj passed to be able to call getSelectedIds method from context menu functions
+            objectHandle.ContextMenu = obj.contextMenu; % Obj passed to be able to call getSelectedIds method from context menu functions
+
+            obj.idLabel.String = '';
         end
 
         function plotBoundingBox(obj)

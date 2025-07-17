@@ -21,7 +21,7 @@ classdef BranchGraphicsManager < handle
             obj.selectionColor = selectionColor;
         end
 
-        function groupHandle = createNewGroup(obj, branch, transparency, color)
+        function groupHandle = createNewGroup(obj, branch, transparency, color, contextMenuGenerator)
             % Create a new group handle for the specified branch
             obj.validateBranchExistence(branch);
             if ~isempty(obj.dataStruct.(branch))
@@ -29,11 +29,12 @@ classdef BranchGraphicsManager < handle
                     % This will also delete the objects in the group
             end
             
-            groupHandle = BranchGraphicsGroup(obj.parentAxes, branch, obj.lightingMethod, obj.selectionColor, transparency, color);
+            groupHandle = BranchGraphicsGroup(obj.parentAxes, branch, obj.lightingMethod, obj.selectionColor, transparency, color, contextMenuGenerator);
+             % Create a new BranchGraphicsGroup object
             obj.dataStruct.(branch) = groupHandle; % Store the new group handle in the data structure
         end
 
-        function groupHandle = createNewExtendedGroup(obj, branch, transparency, color)
+        function groupHandle = createNewExtendedGroup(obj, branch, transparency, color, contextMenuGenerator)
             % Create a new group handle for the specified branch
             obj.validateBranchExistence(branch);
             if ~isempty(obj.dataStruct.(branch))
@@ -41,7 +42,8 @@ classdef BranchGraphicsManager < handle
                     % This will also delete the objects in the group
             end
             
-            groupHandle = ExtendedBranchGraphicsGroup(obj.parentAxes, branch, obj.lightingMethod, obj.selectionColor, transparency, color);
+            groupHandle = ExtendedBranchGraphicsGroup(obj.parentAxes, branch, obj.lightingMethod, obj.selectionColor, transparency, color, contextMenuGenerator);
+             % Create a new ExtendedBranchGraphicsGroup object
             obj.dataStruct.(branch) = groupHandle; % Store the new group handle in the data structure
         end
 

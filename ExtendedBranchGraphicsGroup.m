@@ -8,9 +8,9 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
     end
 
     methods
-        function obj = ExtendedBranchGraphicsGroup(parentAxes, branch, lightingMethod, selectionColor, transparency, color)
+        function obj = ExtendedBranchGraphicsGroup(parentAxes, branch, lightingMethod, selectionColor, transparency, color, contextMenuGenerator)
             % Constructor for the ExtendedBranchGraphicsGroup class
-            obj@BranchGraphicsGroup(parentAxes, branch, lightingMethod, selectionColor, transparency, color);
+            obj@BranchGraphicsGroup(parentAxes, branch, lightingMethod, selectionColor, transparency, color, contextMenuGenerator);
             obj.supportingGraphicsHandles = matlab.graphics.Graphics.empty();
         end
 
