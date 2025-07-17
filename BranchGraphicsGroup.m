@@ -215,43 +215,22 @@ classdef BranchGraphicsGroup < handle
             end
         end
 
-        function deselectAllAndChangeSelectionForId(obj, id)
+
+        function updateIdLabel(obj, id)
+            % Update the ID label
             idx = find(id == obj.objectIdArray, 1);
-
-            if isempty(idx)
-                error('Object with ID "%d" not found in the group.', id);
-            end
-
-            % Check if the id is already selected
-            isSelected = ismember(id, obj.selected);
-            obj.selected = []; % Deselect all objects
-            if ~isSelected
-                obj.selected = idx; % Select only this object if it wasn't selected
-            end
-
-            obj.setSelected(obj.selected); % Update the selection state of all objects
-        end
-
-        function changeSelectionForId(obj, id)
-            idx = find(id == obj.objectIdArray, 1);
-
             if isempty(idx)
                 warning('Object with ID "%d" not found in the group.', id);
                 return
             end
-
-            % Check if the id is already selected
-            currentSelection = obj.selected;
-            if ismember(idx, currentSelection)
-                % Remove from selection
-                obj.selected = currentSelection(currentSelection ~= idx);
-            else
-                % Add to selection
-                obj.selected = [currentSelection idx];
+            groupId = obj.groupIdArray(idx);
+            if groupId == 0
+                groupId = '-'; % Handle case where groupId is zero
             end
-
-            obj.setSelected(obj.selected); % Update the selection state of all objects
+            obj.idLabel.String = [num2str(id) ' (' num2str(groupId) ')'];
+            obj.idLabel.Position = mean(obj.GraphicsHandles(idx).Vertices(), 1);
         end
+
 
         function turnIndividualSelectionOn(obj, id)
             % Turn on selection for a specific object by ID
@@ -267,13 +246,7 @@ classdef BranchGraphicsGroup < handle
             end
             set(obj.GraphicsHandles(idx), 'Selected', "on", 'FaceColor', obj.selectionColor); % Update the graphics object
 
-            % Update the ID label
-            groupId = obj.groupIdArray(idx);
-            if groupId == 0
-                groupId = '-'; % Handle case where groupId is zero
-            end
-            obj.idLabel.String = [num2str(id) ' (' num2str(groupId) ')'];
-            obj.idLabel.Position = mean(obj.GraphicsHandles(idx).Vertices(), 1);
+            obj.updateIdLabel(id); % Update the ID label position and text
         end
 
         function turnIndividualSelectionOff(obj, id)
@@ -433,6 +406,13 @@ classdef BranchGraphicsGroup < handle
         % Destructor (when class instance is deleted)
         function delete(obj)
             obj.deleteGraphics();
+            if ~isempty(obj.idLabel) && isvalid(obj.idLabel)
+                delete(obj.idLabel); % Delete the ID label if it exists
+            end
+            if ~isempty(obj.contextMenu) && isvalid(obj.contextMenu)
+                disp('Deleting context menu');
+                delete(obj.contextMenu); % Delete the context menu if it exists
+            end
         end
 
         function deleteObjects(obj, objectIds)
@@ -518,6 +498,17 @@ classdef BranchGraphicsGroup < handle
 
         function addGraphicsObjects(obj, verticesArray, facesArray, idArray, groupIdArray, color, excluded, isSelected)
             % Adds new graphics objects to the group or updates existing ones with the same ID
+            
+            arguments
+                obj
+                verticesArray (:,1) cell    % Cell array of vertex matrices
+                facesArray (:,1) cell       % Cell array of face matrices
+                idArray (:,1) double        % Column vector of object IDs
+                groupIdArray (:,1) double = [] % Column vector of group IDs (optional)
+                color = []                  % Optional color specification
+                excluded (:,1) logical = [] % Optional exclusion flags (keep for later implementation)
+                isSelected string {mustBeMember(isSelected, ["on", "off"])} = "off" % Selection state
+            end
             
             % Check for empty inputs
             if isempty(verticesArray) || isempty(facesArray) || isempty(idArray)
@@ -689,6 +680,12 @@ classdef BranchGraphicsGroup < handle
                 error('New group ID array must have the same length as the existing one.');
             end
             obj.groupIdArray = newGroupIdArray;
+
+            lastSelectedId = obj.selected(end);
+            % Update the ID label for the last selected object
+            if ~isempty(lastSelectedId)
+                obj.updateIdLabel(lastSelectedId);
+            end
         end
 
         function objectHandle = plotObject(obj, vertices, faces, id, color, visibilityStatus, selectionStatus)

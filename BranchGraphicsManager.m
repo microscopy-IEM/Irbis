@@ -21,6 +21,17 @@ classdef BranchGraphicsManager < handle
             obj.selectionColor = selectionColor;
         end
 
+        function delete(obj)
+            % Destructor for the BranchGraphicsManager class
+            fields = fieldnames(obj.dataStruct);
+            for i = 1:numel(fields)
+                branch = fields{i};
+                if ~isempty(obj.dataStruct.(branch)) && isvalid(obj.dataStruct.(branch))
+                    delete(obj.dataStruct.(branch)); % Delete the group handle
+                end
+            end
+        end
+
         function groupHandle = createNewGroup(obj, branch, transparency, color, contextMenuGenerator)
             % Create a new group handle for the specified branch
             obj.validateBranchExistence(branch);
