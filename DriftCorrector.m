@@ -28,7 +28,7 @@ classdef (Sealed) DriftCorrector
                 
                 columnToAdjust = T.(parameter);
                 if iscell(columnToAdjust)                     % heterogeneous (objects in cells)
-                    columnToAdjust = cellfun(@(obj) translateObject(obj, drift), columnToAdjust, ...
+                    columnToAdjust = cellfun(@(obj) DriftCorrector.translateObject(obj, drift), columnToAdjust, ...
                                 'UniformOutput', false);
                     
                 elseif isnumeric(columnToAdjust)              % numeric array per row
