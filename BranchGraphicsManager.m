@@ -60,7 +60,7 @@ classdef BranchGraphicsManager < handle
 
             % Create a selection listener for the new group
             if ~isfield(obj.selectionListenerStruct, branch)
-                obj.selectionListenerStruct.(branch) = addlistener(groupHandle, 'selectedIds', 'PostSet', @(src, event) obj.handleSelectionChange(src, event, branch));
+                obj.selectionListenerStruct.(branch) = addlistener(groupHandle, 'selectedIds', 'PostSet', @(~, ~) obj.handleSelectionChange(branch));
             end
         end
 
@@ -152,7 +152,7 @@ classdef BranchGraphicsManager < handle
         end
 
 
-        function handleSelectionChange(obj, src, event, branch)
+        function handleSelectionChange(obj, branch)
             % Handle selection change event for the specified branch
             if isfield(obj.dataStruct, branch) && ~isempty(obj.dataStruct.(branch))
                 groupHandle = obj.dataStruct.(branch);
@@ -168,6 +168,31 @@ classdef BranchGraphicsManager < handle
 
             % disp(src)
             % disp(event)
+        end
+
+
+        function clearSelection(obj, branch)
+            % Clear the selection for the specified branch
+            obj.validateBranchExistence(branch);
+            if ~isempty(obj.dataStruct.(branch))
+                obj.dataStruct.(branch).setSelected([]); % Clear the selection in the group handle
+            end
+        end
+
+
+        function setSelection(obj, selectedIdsByTimePoint, branch)
+            % Set the selection for the specified branch
+            obj.validateBranchExistence(branch);
+            if ~isempty(obj.dataStruct.(branch))
+                currentTimePoint = obj.getCurrentTimePoint(); % Get the current time point using the function handle
+                if isKey(selectedIdsByTimePoint, currentTimePoint)
+                    selectedIds = selectedIdsByTimePoint(currentTimePoint); % Get the selected IDs for the current time point
+                    selectedIds = cell2mat(selectedIds{1}); % Get the selected IDs for the current time point
+                    obj.dataStruct.(branch).setSelected(selectedIds); % Set the selection in the group handle
+                else
+                    obj.dataStruct.(branch).setSelected([]); % Clear the selection if no IDs are provided for the current time point
+                end
+            end
         end
     end
 end
