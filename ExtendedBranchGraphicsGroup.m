@@ -358,7 +358,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
         end
 
 
-        function initializeExtendedGroup(obj, verticesArray, facesArray, dataArray, idArray, groupIdArray, buttonDownCallback)
+        function initializeExtendedGroup(obj, verticesArray, facesArray, dataArray, idArray, groupIdArray, isExcluded, buttonDownCallback)
             arguments
                 obj BranchGraphicsGroup
                 verticesArray (:, 1) cell
@@ -366,10 +366,11 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 dataArray (:, 1) cell
                 idArray (1,:) {mustBeNumeric}
                 groupIdArray (1,:) {mustBeNumeric}
+                isExcluded (1,:) logical
                 buttonDownCallback function_handle
             end
 
-            obj.initializeGroup(obj, verticesArray, facesArray, idArray, groupIdArray, buttonDownCallback);
+            obj.initializeGroup(obj, verticesArray, facesArray, idArray, groupIdArray, isExcluded, buttonDownCallback);
 
             obj.deleteSupportingGraphics; % Clear existing supporting graphics handles
 

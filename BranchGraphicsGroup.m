@@ -61,9 +61,11 @@ classdef BranchGraphicsGroup < handle
 
         branch % Reference to the branch this group belongs to
 
-        showBoundingBox = false % Flag to show bounding box around the object
+        boundingBoxShown = false % Flag to show bounding box around the object
 
         idLabel
+
+        updateGraphicsInfotext
     end
 
 
@@ -96,6 +98,16 @@ classdef BranchGraphicsGroup < handle
             obj.contextMenu = contextMenuGenerator(obj); % Store the generated context menu
 
             obj.idLabel = text(parentAxes,'FontSize', 20, 'Color', [1,1,1], 'PickableParts', 'none');   %'Tag','objectIDText',
+        end
+
+
+        function setInfotextFunction(obj, updateFunction)
+            % Set the function handle to update the graphics infotext
+            arguments
+                obj
+                updateFunction function_handle
+            end
+            obj.updateGraphicsInfotext = updateFunction; % Store the function handle
         end
 
 
@@ -265,6 +277,13 @@ classdef BranchGraphicsGroup < handle
                 set(obj.GraphicsHandles(idx), 'Selected', "on", 'FaceColor', obj.selectionColor); % Update the graphics object
             end
             obj.updateIdLabel(id); % Update the ID label position and text
+
+            if ~isempty(obj.updateGraphicsInfotext)
+                % Call the infotext update function if it is set
+                obj.updateGraphicsInfotext(obj.branch, id, obj.selectedIds);
+            end
+
+            obj.plotBoundingBox();
         end
 
 
@@ -287,6 +306,13 @@ classdef BranchGraphicsGroup < handle
                 set(obj.GraphicsHandles(idx), 'Selected', "off", 'FaceColor', objectColor);
             end
             obj.idLabel.String = '';
+
+            if ~isempty(obj.updateGraphicsInfotext)
+                % Call the infotext update function if it is set
+                obj.updateGraphicsInfotext(obj.branch, [], obj.selectedIds);
+            end
+
+            obj.hideBoundingBox();
         end
 
 
@@ -330,6 +356,12 @@ classdef BranchGraphicsGroup < handle
             
             % Create a logical mask for all objects
             isSelected = ismember(obj.objectIdArray, selectedIndices(:));
+
+            % infotext is updated before checking GraphicsHandles, because there might be just supporting graphics
+            if ~isempty(obj.updateGraphicsInfotext)
+                % Call the infotext update function if it is set
+                obj.updateGraphicsInfotext(obj.branch, [], obj.selectedIds);
+            end
             
             % Set the selected property for each graphics object
             if isempty(obj.GraphicsHandles)
@@ -351,6 +383,8 @@ classdef BranchGraphicsGroup < handle
             else
                 set(obj.GraphicsHandles(~isSelected), 'FaceColor', obj.color);
             end
+
+            obj.hideBoundingBox();
         end
 
 
@@ -388,7 +422,9 @@ classdef BranchGraphicsGroup < handle
                 return; % No graphics handles to update
             end
             isSelected = ismember(obj.objectIdArray, obj.selectedIds(:));
-            set(obj.GraphicsHandles(isSelected), 'FaceColor', color);
+            if ~isempty(obj.GraphicsHandles)
+                set(obj.GraphicsHandles(isSelected), 'FaceColor', color);
+            end
         end
 
 
@@ -480,13 +516,14 @@ classdef BranchGraphicsGroup < handle
         end
 
 
-        function initializeGroup(obj, verticesArray, facesArray, idArray, groupIdArray, buttonDownCallback)
+        function initializeGroup(obj, verticesArray, facesArray, idArray, groupIdArray, isExcluded, buttonDownCallback)
             arguments
                 obj
                 verticesArray (:,1) cell % Cell array of vertex matrices
                 facesArray (:,1) cell    % Cell array of face matrices
                 idArray (:,1) double     % Column vector of object IDs
                 groupIdArray (:,1) double % Column vector of group IDs
+                isExcluded (:,1) logical = false % Logical array indicating which objects are excluded
                 buttonDownCallback function_handle = [] % Optional callback for button press
             end
 
@@ -510,7 +547,7 @@ classdef BranchGraphicsGroup < handle
             obj.objectIdArray = idArray;
             obj.groupIdArray = groupIdArray;
             obj.selectedIds = []; % Initialize empty selection
-            obj.excluded = false(nObjects, 1); % Initialize exclusion status for all objects
+            obj.excluded = isExcluded; % Initialize exclusion status for all objects
         
             % Loop through each object and plot it
             for i = 1:numel(idArray)
@@ -525,7 +562,7 @@ classdef BranchGraphicsGroup < handle
                 else
                     objectColor = obj.color;
                 end
-                objectHandle = obj.plotObject(vertices, faces, id, objectColor, obj.visible, "off");
+                objectHandle = obj.plotObject(vertices, faces, id, objectColor, obj.visible, "off", obj.excluded(i));
                 obj.GraphicsHandles(i) = objectHandle;
             end
         end
@@ -596,7 +633,7 @@ classdef BranchGraphicsGroup < handle
                 end
                 
                 % Create new object
-                objectHandle = obj.plotObject(verticesArray{originalIdx}, facesArray{originalIdx}, idArray(originalIdx), color{originalIdx}, obj.visible, isSelected);
+                objectHandle = obj.plotObject(verticesArray{originalIdx}, facesArray{originalIdx}, idArray(originalIdx), color{originalIdx}, obj.visible, isSelected, obj.excluded(originalIdx));
                 obj.GraphicsHandles(existingIdx) = objectHandle;
                 
                 % Maintain exclusion status
@@ -633,7 +670,7 @@ classdef BranchGraphicsGroup < handle
                     idx = currentSize + i;
                     originalIdx = newObjIndices(i);
                     
-                    objectHandle = obj.plotObject(verticesArray{originalIdx}, facesArray{originalIdx}, idArray(originalIdx), color{originalIdx}, obj.visible, isSelected);
+                    objectHandle = obj.plotObject(verticesArray{originalIdx}, facesArray{originalIdx}, idArray(originalIdx), color{originalIdx}, obj.visible, isSelected, obj.excluded(originalIdx));
                     obj.GraphicsHandles(idx) = objectHandle;
                     obj.objectIdArray(idx) = idArray(originalIdx);
                     obj.groupIdArray(idx) = groupIdArray(originalIdx);
@@ -663,7 +700,7 @@ classdef BranchGraphicsGroup < handle
         end
 
 
-        function objectHandle = plotObject(obj, vertices, faces, id, color, visibilityStatus, selectionStatus)
+        function objectHandle = plotObject(obj, vertices, faces, id, color, visibilityStatus, selectionStatus, isExcluded)
             arguments
                 obj
                 vertices (:,3) double     % Nx3 matrix of vertex coordinates
@@ -672,12 +709,16 @@ classdef BranchGraphicsGroup < handle
                 color                    % Either (1,3) double for RGB or cell containing RGB
                 visibilityStatus string {mustBeMember(visibilityStatus, ["on", "off"])}
                 selectionStatus string {mustBeMember(selectionStatus, ["on", "off"])}
+                isExcluded (1,1) logical = false % Exclusion status for the object
             end
 
             % Create a patch object for the current object
             objectHandle = patch(obj.parentAxes, 'Vertices', vertices, 'Faces', faces, 'UserData', id);
         
             % Individually set properties
+            if isExcluded
+                visibilityStatus = "off"; % If excluded, set visibility to off
+            end
             objectHandle.Visible = visibilityStatus; % Set visibility
 
             objectHandle.FaceColor = color; % Set face color
@@ -704,7 +745,7 @@ classdef BranchGraphicsGroup < handle
         function plotBoundingBox(obj)
             % Plot bounding boxes around selected objects or all objects if none selected
             
-            if ~obj.showBoundingBox
+            if ~obj.boundingBoxShown
                 % Delete existing bounding boxes if they exist
                 delete(findobj(obj.parentAxes, 'Tag', [obj.tag '_BoundingBox']));
                 return;
@@ -714,43 +755,73 @@ classdef BranchGraphicsGroup < handle
             delete(findobj(obj.parentAxes, 'Tag', [obj.tag '_BoundingBox']));
             
             % Determine which objects to show bounding boxes for
-            objectsToShow = find(~obj.excluded);
-            if ~isempty(obj.selectedIds)
-                objectsToShow = obj.selectedIds;
+            if isempty(obj.selectedIds)
+                return
+            end
+
+            % for id = obj.selectedIds
+            %     obj.plotSingleBoundingBox(id);
+            % end
+
+            obj.plotSingleBoundingBox(obj.selectedIds(end)); % Plot bounding boxes for the last selected object
+        end
+
+
+        function hideBoundingBox(obj)
+            % Hide bounding boxes around objects
+            % This method deletes the bounding boxes without changing the visibility of the objects themselves
+            delete(findobj(obj.parentAxes, 'Tag', [obj.tag '_BoundingBox']));
+        end
+
+
+        function plotSingleBoundingBox(obj, id)
+            idx = find(obj.objectIdArray == id, 1);
+            
+            % Plot bounding box
+            if isempty(obj.GraphicsHandles) || ~isvalid(obj.GraphicsHandles(idx))
+                return
             end
             
-            % Plot bounding box for each selected/visible object
-            for i = objectsToShow'
-                if ~isvalid(obj.GraphicsHandles(i))
-                    continue;
-                end
-                
-                % Get vertices of the object
-                vertices = obj.GraphicsHandles(i).Vertices;
-                
-                % Calculate min and max for each dimension
-                minX = min(vertices(:,1));
-                maxX = max(vertices(:,1));
-                minY = min(vertices(:,2));
-                maxY = max(vertices(:,2));
-                minZ = min(vertices(:,3));
-                maxZ = max(vertices(:,3));
-                
-                % Calculate position and size for drawcuboid
-                position = [minX, minY, minZ, maxX-minX, maxY-minY, maxZ-minZ];
-                
-                % Create cuboid for the bounding box
-                h = drawcuboid('Position', position, 'Parent', obj.parentAxes, ...
-                              'Color', [0.2, 0.6, 1.0], ... % Light blue color
-                              'FaceAlpha', 0.1, ...        % Mostly transparent
-                              'SelectedColor', [0.2, 0.6, 1.0], ...
-                              'Tag', [obj.tag '_BoundingBox'], ...
-                              'Interactable', false, ...    % Make it non-interactive
-                              'Label', '');                 % No label
-                              
-                % Store object ID in UserData
-                h.UserData = obj.objectIdArray(i);
+            % Get vertices of the object
+            vertices = obj.GraphicsHandles(idx).Vertices;
+            
+            % Calculate min and max for each dimension
+            minX = min(vertices(:,1));
+            maxX = max(vertices(:,1));
+            minY = min(vertices(:,2));
+            maxY = max(vertices(:,2));
+            minZ = min(vertices(:,3));
+            maxZ = max(vertices(:,3));
+            
+            % Calculate position and size for drawcuboid
+            position = [minX, minY, minZ, maxX-minX, maxY-minY, maxZ-minZ];
+            
+            % Create cuboid for the bounding box
+            h = drawcuboid('Position', position, 'Parent', obj.parentAxes, ...
+                            'Color', [0.2, 0.6, 1.0], ... % Light blue color
+                            'FaceAlpha', 0.1, ...        % Mostly transparent
+                            'SelectedColor', [0.2, 0.6, 1.0], ...
+                            'Tag', [obj.tag '_BoundingBox'], ...
+                            'InteractionsAllowed', 'none', ...    % Make it non-interactive
+                            'Label', '');                 % No label
+                            
+            % Store object ID in UserData
+            h.UserData = obj.objectIdArray(idx);
+        end
+
+
+        function setBoundingBoxVisibility(obj, isShown)
+            % Set visibility of bounding boxes
+            arguments
+                obj
+                isShown logical
             end
+            if isShown
+                obj.boundingBoxShown = true;
+            else
+                obj.boundingBoxShown = false;
+            end
+            obj.plotBoundingBox(); % Update bounding boxes based on the new visibility state
         end
     end
 end

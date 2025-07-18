@@ -10,6 +10,9 @@ classdef BranchGraphicsManager < handle
         selectionListenerStruct % Structure to hold selection listeners for each branch
 
         getCurrentTimePoint % Function handle to get the current time point
+
+        graphicsInfotextHandle % Handle for the graphics infotext in the upper left corner
+        updateGraphicsInfotext  % Function handle to update the graphics infotext
     end
 
 
@@ -31,6 +34,13 @@ classdef BranchGraphicsManager < handle
             obj.selectionColor = selectionColor;
 
             obj.getCurrentTimePoint = getCurrentTimePoint; % Store the function handle to get the current time point
+        end
+
+
+        function setInfotextProperties(obj, infotextHandle, updateInfotextFunction)
+            % Set the infotext properties for the graphics manager
+            obj.graphicsInfotextHandle = infotextHandle;
+            obj.updateGraphicsInfotext = updateInfotextFunction;
         end
 
 
@@ -57,6 +67,7 @@ classdef BranchGraphicsManager < handle
             groupHandle = BranchGraphicsGroup(obj.parentAxes, branch, obj.lightingMethod, obj.selectionColor, transparency, color, contextMenuGenerator);
              % Create a new BranchGraphicsGroup object
             obj.dataStruct.(branch) = groupHandle; % Store the new group handle in the data structure
+            groupHandle.setInfotextFunction(obj.updateGraphicsInfotext); % Set the infotext update function for the group
 
             % Create a selection listener for the new group
             if ~isfield(obj.selectionListenerStruct, branch)
@@ -76,6 +87,12 @@ classdef BranchGraphicsManager < handle
             groupHandle = ExtendedBranchGraphicsGroup(obj.parentAxes, branch, obj.lightingMethod, obj.selectionColor, transparency, color, contextMenuGenerator);
              % Create a new ExtendedBranchGraphicsGroup object
             obj.dataStruct.(branch) = groupHandle; % Store the new group handle in the data structure
+            groupHandle.setInfotextFunction(obj.updateGraphicsInfotext); % Set the infotext update function for the group
+
+            % Create a selection listener for the new group
+            if ~isfield(obj.selectionListenerStruct, branch)
+                obj.selectionListenerStruct.(branch) = addlistener(groupHandle, 'selectedIds', 'PostSet', @(~, ~) obj.handleSelectionChange(branch));
+            end
         end
 
 
@@ -158,10 +175,10 @@ classdef BranchGraphicsManager < handle
                 groupHandle = obj.dataStruct.(branch);
                 selectedIds = groupHandle.getSelectedIds();
                 currentTimePoint = obj.getCurrentTimePoint(); % Get the current time point using the function handle
-                disp(['Selection changed for branch "' branch '": ' num2str(selectedIds) ' in time point ' num2str(obj.getCurrentTimePoint()) '.']);
+                % disp(['Selection changed for branch "' branch '": ' num2str(selectedIds) ' in time point ' num2str(obj.getCurrentTimePoint()) '.']);
                 % Additional logic can be added here to handle selection changes
             else
-                disp(['No group handle found for branch "' branch '" in time point ' num2str(obj.getCurrentTimePoint()) '.']);
+                % disp(['No group handle found for branch "' branch '" in time point ' num2str(obj.getCurrentTimePoint()) '.']);
             end
 
             notify(obj, 'selectionChanged', SelectionSyncData(branch, selectedIds, currentTimePoint));
