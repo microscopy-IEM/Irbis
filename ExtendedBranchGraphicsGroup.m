@@ -71,20 +71,70 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
 
             setColor@BranchGraphicsGroup(obj, color);
             
-            % Set the same color for supporting graphics
-            if isa(color, 'double')
-                set(obj.supportingGraphicsHandles, obj.colorIdentifier, color);
-            elseif iscell(color)
-                % Lenght check is already done in the parent method
+            % Apply colors to supporting graphics using the same logic as parent
+            obj.applySupportingColors();
+        end
+
+
+        function setBranchColor(obj, color)
+            arguments
+                obj BranchGraphicsGroup
+                color (1,3) double {mustBeInRange(color, 0, 1)}
+            end
+            % Set the branch-wide color
+            setBranchColor@BranchGraphicsGroup(obj, color);
+            if ~obj.isColorcoded
+                obj.applySupportingColors();
+            end
+        end
+
+
+        function setColorArray(obj, colorArray)
+            arguments
+                obj BranchGraphicsGroup
+                colorArray (:,1) cell % Cell array of 1x3 doubles
+            end
+            % Set individual colors for each object
+            setColorArray@BranchGraphicsGroup(obj, colorArray);
+            if obj.isColorcoded
+                obj.applySupportingColors();
+            end
+        end
+
+
+        function setColorCoded(obj, isColorcoded)
+            arguments
+                obj BranchGraphicsGroup
+                isColorcoded (1,1) logical
+            end
+            % Switch between color-coded and branch color modes
+            setColorCoded@BranchGraphicsGroup(obj, isColorcoded);
+            obj.applySupportingColors();
+        end
+
+
+        function applySupportingColors(obj)
+            % Apply colors to supporting graphics objects based on current color mode
+            if isempty(obj.supportingGraphicsHandles)
+                return; % No supporting graphics handles to update
+            end
+            
+            if obj.isColorcoded && ~isempty(obj.colorArray)
+                % Use individual colors
                 for i = 1:length(obj.supportingGraphicsHandles)
                     isSelected = ismember(obj.objectIdArray(i), obj.selectedIds(:));
                     if ~isSelected
-                        % Set the color for each supporting graphics handle
-                        set(obj.supportingGraphicsHandles(i), obj.colorIdentifier, color{i});
+                        mustBeInRange(obj.colorArray{i}, 0, 1);
+                        set(obj.supportingGraphicsHandles(i), obj.colorIdentifier, obj.colorArray{i});
                     end
                 end
             else
-                error('Unsupported color format. Use a double or a cell array of colors.');
+                % Use branch color
+                if ~isempty(obj.branchColor)
+                    mustBeInRange(obj.branchColor, 0, 1);
+                    isSelected = ismember(obj.objectIdArray, obj.selectedIds(:));
+                    set(obj.supportingGraphicsHandles(~isSelected), obj.colorIdentifier, obj.branchColor);
+                end
             end
         end
 
@@ -120,10 +170,11 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
             idx = find(id == obj.objectIdArray, 1);
             if ~isempty(obj.supportingGraphicsHandles)
                 
-                if iscell(obj)
-                    objectColor = obj.color{idx}; % Get the color for the specific object
+                % Use the new color logic based on color mode
+                if obj.isColorcoded && ~isempty(obj.colorArray)
+                    objectColor = obj.colorArray{idx};
                 else
-                    objectColor = obj.color; % Use the default color for the group
+                    objectColor = obj.branchColor;
                 end
 
                 set(obj.supportingGraphicsHandles(idx), 'Selected', obj.selectedIds, ...
@@ -204,15 +255,15 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
             % Update the selection color for selected objects
             set(obj.supportingGraphicsHandles(isSelected), obj.colorIdentifier, obj.selectionColor);
             
-            % Reset the color for non-selected objects
-            if iscell(obj.color)
+            % Reset the color for non-selected objects based on color mode
+            if obj.isColorcoded && ~isempty(obj.colorArray)
                 for i = 1:length(obj.supportingGraphicsHandles)
                     if ~isSelected(i)
-                        set(obj.supportingGraphicsHandles(i), obj.colorIdentifier, obj.color{i});
+                        set(obj.supportingGraphicsHandles(i), obj.colorIdentifier, obj.colorArray{i});
                     end
                 end
             else
-                set(obj.supportingGraphicsHandles(~isSelected), obj.colorIdentifier, obj.color);
+                set(obj.supportingGraphicsHandles(~isSelected), obj.colorIdentifier, obj.branchColor);
             end
         end
 
@@ -346,11 +397,11 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 end
                 id = idArray(i);
         
-                % Determine color for this object based on color type
-                if iscell(obj.color)
-                    objectColor = obj.color{i};
+                % Determine color for this object based on color mode
+                if obj.isColorcoded && ~isempty(obj.colorArray)
+                    objectColor = obj.colorArray{i};
                 else
-                    objectColor = obj.color;
+                    objectColor = obj.branchColor;
                 end
                 objectHandle = obj.plotSupportingObject(datapoints, id, objectColor, obj.visible, "off");
                 obj.supportingGraphicsHandles(i) = objectHandle;
@@ -358,7 +409,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
         end
 
 
-        function initializeExtendedGroup(obj, verticesArray, facesArray, dataArray, idArray, groupIdArray, isExcluded, buttonDownCallback)
+        function initializeExtendedGroup(obj, verticesArray, facesArray, dataArray, idArray, groupIdArray, colorArray, isExcluded, buttonDownCallback)
             arguments
                 obj BranchGraphicsGroup
                 verticesArray (:, 1) cell
@@ -366,11 +417,12 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 dataArray (:, 1) cell
                 idArray (1,:) {mustBeNumeric}
                 groupIdArray (1,:) {mustBeNumeric}
-                isExcluded (1,:) logical
-                buttonDownCallback function_handle
+                colorArray (:,1) cell = {}
+                isExcluded (1,:) logical = false(1, numel(idArray))
+                buttonDownCallback function_handle = []
             end
 
-            obj.initializeGroup(obj, verticesArray, facesArray, idArray, groupIdArray, isExcluded, buttonDownCallback);
+            obj.initializeGroup(verticesArray, facesArray, idArray, groupIdArray, colorArray, isExcluded, buttonDownCallback);
 
             obj.deleteSupportingGraphics; % Clear existing supporting graphics handles
 
@@ -387,11 +439,11 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 datapoints = dataArray{i};
                 id = idArray(i);
         
-                % Determine color for this object based on color type
-                if iscell(obj.color)
-                    objectColor = obj.color{i};
+                % Determine color for this object based on color mode
+                if obj.isColorcoded && ~isempty(obj.colorArray)
+                    objectColor = obj.colorArray{i};
                 else
-                    objectColor = obj.color;
+                    objectColor = obj.branchColor;
                 end
                 objectHandle = obj.plotSupportingObject(datapoints, id, objectColor, obj.visible, "off");
                 obj.supportingGraphicsHandles(i) = objectHandle;
@@ -434,14 +486,14 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
         end
 
 
-        function addSupportingObjects(obj, dataArray, idArray, groupIdArray, color, isExcluded, isSelected)
+        function addSupportingObjects(obj, dataArray, idArray, groupIdArray, colorArray, isExcluded, isSelected)
             % Add supporting objects to the group
             arguments
                 obj BranchGraphicsGroup
                 dataArray (:, 1) cell
                 idArray (1,:) {mustBeNumeric}
                 groupIdArray (1,:) {mustBeNumeric}
-                color (1,:) double
+                colorArray (:,1) cell = {} % Optional cell array of colors for individual objects
                 isExcluded (1,:) logical = false(1, numel(idArray))
                 isSelected (1,:) logical = false(1, numel(idArray))
             end
@@ -456,19 +508,13 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
             end
             
             % Handle color input for new objects
-            if isempty(color)
-                if iscell(obj.color)
-                    color = obj.color;  % Use existing cell array of colors
-                else
-                    color = repmat({obj.color}, numel(idArray), 1);  % Use group's default color
-                end
+            if length(colorArray) ~= length(idArray)
+                error('Number of colors must match number of objects');
             end
-
-            % Validate color dimensions
-            if ~iscell(color)
-                % Single color for all objects - convert to cell array
-                color = repmat(color, numel(idArray), 1);  % Create cell array of repeated colors
+            if isempty(obj.colorArray)
+                obj.colorArray = repmat({obj.branchColor}, length(obj.objectIdArray), 1);
             end
+            color = colorArray;
 
             % Identify which objects to update vs. which to add new
             updateIndices = false(numel(idArray), 1);
@@ -503,6 +549,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 if obj.excluded(existingIdx)
                     set(objectHandle, 'Visible', 'off');
                 end
+                obj.colorArray{existingIdx} = color{originalIdx};
             end
             
             % Add new objects
@@ -537,6 +584,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                     obj.supportingGraphicsHandles(idx) = objectHandle;
                     obj.objectIdArray(idx) = idArray(originalIdx);
                     obj.groupIdArray(idx) = groupIdArray(originalIdx);
+                    obj.colorArray{idx} = color{originalIdx};
                 end
             end
 

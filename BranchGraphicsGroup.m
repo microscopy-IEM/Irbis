@@ -11,7 +11,9 @@ classdef BranchGraphicsGroup < handle
     %   GraphicsHandles    - Array of graphics object handles 
     %   excluded           - Logical array marking objects to exclude from operations
     %   visible            - Visibility state of objects ("on"/"off")
-    %   color             - Color specification for objects (1x3 or Nx3 RGB values)
+    %   branchColor       - Single color for all objects when not color-coded (1x3 RGB)
+    %   colorArray        - Individual colors for each object when color-coded (cell array of 1x3 RGB)
+    %   isColorcoded      - Boolean flag indicating if objects use individual colors
     %   transparency      - Alpha value for object transparency (0-1)
     %   lightingMethod    - Lighting method ("gouraud"/"flat")
     %   parentAxes        - Handle to parent axes containing the objects
@@ -24,7 +26,10 @@ classdef BranchGraphicsGroup < handle
     %   setLightingMethod  - Set lighting method for non-excluded objects
     %   setTransparency    - Set transparency level for non-excluded objects
     %   setExcluded        - Set which objects are excluded from group operations
-    %   setColor          - Set color for non-excluded objects
+    %   setColor          - Set color based on current color mode (branch or individual)
+    %   setBranchColor    - Set single color for all objects (branch mode)
+    %   setColorArray     - Set individual colors for each object (color-coded mode)
+    %   setColorCoded     - Switch between color-coded and branch color modes
     %   deleteGraphics    - Delete all graphics objects in the group
     %   initializeGroup   - Create initial set of graphics objects
     %   addGraphicsObjects - Add or update objects in the group
@@ -33,8 +38,10 @@ classdef BranchGraphicsGroup < handle
     %
     % Example:
     %   axes = gca;
-    %   group = BranchGraphicsGroup(axes, 'myGroup', 'gouraud', 0.5, [1 0 0]);
-    %   group.initializeGroup(vertices, faces, ids, @clickCallback);
+    %   group = BranchGraphicsGroup(axes, 'myGroup', 'gouraud', [1 0 0], 0.5, [0 1 0], @contextMenuGen);
+    %   group.initializeGroup(vertices, faces, ids, groupIds, colors, [], @clickCallback);
+    %   group.setColorCoded(true); % Switch to individual color mode
+    %   group.setColorArray(cellArrayOfColors); % Set individual colors
 
     properties
         GraphicsHandles % Array of graphics object handles
@@ -45,13 +52,16 @@ classdef BranchGraphicsGroup < handle
         visible = "on" % Visibility state of the objects
         pickableParts = "visible" % Pickable parts of the objects
 
-        color
+        branchColor      % Single color for all objects when not color-coded
+        colorArray       % Individual colors for each object when color-coded
         transparency
         lightingMethod
 
         parentAxes % Parent axes for the graphics objects
         buttonDownCallback % Callback function for button down press
         selectionColor
+
+        isColorcoded = false
         
         contextMenu % Context menu handle that needs to be assigned to selected graphics objects
 
@@ -93,7 +103,7 @@ classdef BranchGraphicsGroup < handle
             obj.lightingMethod = lightingMethod;
             obj.selectionColor = selectionColor;
             obj.transparency = transparency;
-            obj.color = color;
+            obj.branchColor = color;  % Store as branchColor instead of color
             obj.visible = "on";
             obj.contextMenu = contextMenuGenerator(obj); % Store the generated context menu
 
@@ -220,27 +230,85 @@ classdef BranchGraphicsGroup < handle
                 color % Can be either a 1x3 double array or cell array of 1x3 doubles
             end
             
-            % Store the color property
-            obj.color = color;
+            % Store the color property based on color coding mode
+            if obj.isColorcoded
+                obj.colorArray = color;
+            else
+                obj.branchColor = color;
+            end
             
-            if isa(color, 'double')
-                % Single color for all non-excluded objects
-                mustBeInRange(color, 0, 1);
-                set(obj.GraphicsHandles, 'FaceColor', color);
-            elseif iscell(color)
-                % Individual color for each object
-                if (length(color) ~= length(obj.objectIdArray)) % Graphics handles can be empty, if extended wrapper is used
-                    error('Number of colors must match number of graphics objects');
-                end
+            obj.applyColors();
+        end
+
+
+        function setBranchColor(obj, color)
+            arguments
+                obj
+                color (1,3) double {mustBeInRange(color, 0, 1)}
+            end
+            % Set the branch-wide color
+            obj.branchColor = color;
+            if ~obj.isColorcoded
+                obj.applyColors();
+            end
+        end
+
+
+        function setColorArray(obj, colorArray)
+            arguments
+                obj
+                colorArray (:,1) cell % Cell array of 1x3 doubles
+            end
+            % Set individual colors for each object
+            if length(colorArray) ~= length(obj.objectIdArray)
+                error('Number of colors must match number of graphics objects');
+            end
+            obj.colorArray = colorArray;
+            if obj.isColorcoded
+                obj.applyColors();
+            end
+        end
+
+
+        function setColorCoded(obj, isColorcoded)
+            arguments
+                obj
+                isColorcoded (1,1) logical
+            end
+            % Switch between color-coded and branch color modes
+            obj.isColorcoded = isColorcoded;
+            obj.applyColors();
+        end
+
+
+        function colorcodingOn = isColorcodingOn(obj)
+            % Check if color coding is currently enabled
+            colorcodingOn = obj.isColorcoded;
+        end
+
+
+        function applyColors(obj)
+            % Apply colors to graphics objects based on current color mode
+            if isempty(obj.GraphicsHandles)
+                return; % No graphics handles to update
+            end
+            
+            if obj.isColorcoded && ~isempty(obj.colorArray)
+                % Use individual colors
                 for i = 1:length(obj.GraphicsHandles)
                     isSelected = ismember(obj.objectIdArray(i), obj.selectedIds(:));
                     if ~isSelected
-                        mustBeInRange(color{i}, 0, 1);
-                        set(obj.GraphicsHandles(i), 'FaceColor', color{i});
+                        mustBeInRange(obj.colorArray{i}, 0, 1);
+                        set(obj.GraphicsHandles(i), 'FaceColor', obj.colorArray{i});
                     end
                 end
             else
-                error('Color must be either a 1x3 double array or cell array of 1x3 doubles');
+                % Use branch color
+                if ~isempty(obj.branchColor)
+                    mustBeInRange(obj.branchColor, 0, 1);
+                    isSelected = ismember(obj.objectIdArray, obj.selectedIds(:));
+                    set(obj.GraphicsHandles(~isSelected), 'FaceColor', obj.branchColor);
+                end
             end
         end
 
@@ -296,11 +364,11 @@ classdef BranchGraphicsGroup < handle
             end
             % Remove index from selected array
             obj.selectedIds = obj.selectedIds(obj.selectedIds ~= id);
-            % Update the graphics object
-            if iscell(obj.color)
-                objectColor = obj.color{idx};
+            % Update the graphics object color based on color mode
+            if obj.isColorcoded && ~isempty(obj.colorArray)
+                objectColor = obj.colorArray{idx};
             else
-                objectColor = obj.color;
+                objectColor = obj.branchColor;
             end
             if ~isempty(obj.GraphicsHandles)
                 set(obj.GraphicsHandles(idx), 'Selected', "off", 'FaceColor', objectColor);
@@ -373,15 +441,15 @@ classdef BranchGraphicsGroup < handle
             % Update the selection color for selected objects
             set(obj.GraphicsHandles(isSelected), 'FaceColor', obj.selectionColor);
             
-            % Reset the color for non-selected objects
-            if iscell(obj.color)
+            % Reset the color for non-selected objects based on color mode
+            if obj.isColorcoded && ~isempty(obj.colorArray)
                 for i = 1:length(obj.GraphicsHandles)
                     if ~isSelected(i)
-                        set(obj.GraphicsHandles(i), 'FaceColor', obj.color{i});
+                        set(obj.GraphicsHandles(i), 'FaceColor', obj.colorArray{i});
                     end
                 end
             else
-                set(obj.GraphicsHandles(~isSelected), 'FaceColor', obj.color);
+                set(obj.GraphicsHandles(~isSelected), 'FaceColor', obj.branchColor);
             end
 
             obj.hideBoundingBox();
@@ -510,21 +578,22 @@ classdef BranchGraphicsGroup < handle
                 % Update selected array - remove IDs that were deleted
                 obj.selectedIds = setdiff(obj.selectedIds, objectIds);
                 
-                % Update colors if it's a cell array
-                if iscell(obj.color)
-                    obj.color(isToDelete) = [];
+                % Update colors if it's a cell array (color-coded mode)
+                if obj.isColorcoded && ~isempty(obj.colorArray)
+                    obj.colorArray(isToDelete) = [];
                 end
             end
         end
 
 
-        function initializeGroup(obj, verticesArray, facesArray, idArray, groupIdArray, isExcluded, buttonDownCallback)
+        function initializeGroup(obj, verticesArray, facesArray, idArray, groupIdArray, colorArray, isExcluded, buttonDownCallback)
             arguments
                 obj
                 verticesArray (:,1) cell % Cell array of vertex matrices
                 facesArray (:,1) cell    % Cell array of face matrices
                 idArray (:,1) double     % Column vector of object IDs
                 groupIdArray (:,1) double % Column vector of group IDs
+                colorArray (:,1) cell = {} % Optional cell array of colors for individual objects
                 isExcluded (:,1) logical = false % Logical array indicating which objects are excluded
                 buttonDownCallback function_handle = [] % Optional callback for button press
             end
@@ -536,6 +605,14 @@ classdef BranchGraphicsGroup < handle
                 obj.objectIdArray = [];
                 obj.selectedIds = []; % Initialize empty selection
                 return;
+            end
+
+            % Handle color array input
+            if ~isempty(colorArray)
+                if length(colorArray) ~= length(idArray)
+                    error('Number of colors must match number of objects');
+                end
+                obj.colorArray = colorArray;
             end
         
             if isempty(buttonDownCallback)
@@ -558,18 +635,18 @@ classdef BranchGraphicsGroup < handle
                 faces = facesArray{i};
                 id = idArray(i);
         
-                % Determine color for this object based on color type
-                if iscell(obj.color)
-                    objectColor = obj.color{i};
+                % Determine color for this object based on color mode
+                if obj.isColorcoded && ~isempty(obj.colorArray)
+                    objectColor = obj.colorArray{i};
                 else
-                    objectColor = obj.color;
+                    objectColor = obj.branchColor;
                 end
                 objectHandle = obj.plotObject(vertices, faces, id, objectColor, obj.visible, "off", obj.excluded(i));
                 obj.GraphicsHandles(i) = objectHandle;
             end
         end
 
-        function addGraphicsObjects(obj, verticesArray, facesArray, idArray, groupIdArray, color, isExcluded, isSelected)
+        function addGraphicsObjects(obj, verticesArray, facesArray, idArray, groupIdArray, colorArray, isExcluded, isSelected)
             % Adds new graphics objects to the group or updates existing ones with the same ID
             
             arguments
@@ -577,8 +654,8 @@ classdef BranchGraphicsGroup < handle
                 verticesArray (:,1) cell    % Cell array of vertex matrices
                 facesArray (:,1) cell       % Cell array of face matrices
                 idArray (:,1) double        % Column vector of object IDs
-                groupIdArray (:,1) double = [] % Column vector of group IDs (optional)
-                color = []                  % Optional color specification
+                groupIdArray (:,1) double   % Column vector of group IDs
+                colorArray (:,1) cell       % Cell array of colors for individual objects
                 isExcluded (:,1) logical = [] % Optional exclusion flags (keep for later implementation)
                 isSelected string {mustBeMember(isSelected, ["on", "off"])} = "off" % Selection state
             end
@@ -590,24 +667,18 @@ classdef BranchGraphicsGroup < handle
 
             % If group is empty, initialize it instead
             if isempty(obj.objectIdArray)
-                obj.initializeGroup(verticesArray, facesArray, idArray, obj.buttonDownCallback);
+                obj.initializeGroup(verticesArray, facesArray, idArray, groupIdArray, colorArray, isExcluded, obj.buttonDownCallback);
                 return;
             end
 
             % Handle color input for new objects
-            if isempty(color)
-                if iscell(obj.color)
-                    color = obj.color;  % Use existing cell array of colors
-                else
-                    color = repmat({obj.color}, numel(idArray), 1);  % Use group's default color
-                end
+            if length(colorArray) ~= length(idArray)
+                error('Number of colors must match number of objects');
             end
-
-            % Validate color dimensions
-            if ~iscell(color)
-                % Single color for all objects - convert to cell array
-                color = repmat(color, numel(idArray), 1);  % Create cell array of repeated colors
+            if isempty(obj.colorArray)
+                obj.colorArray = repmat({obj.branchColor}, length(obj.objectIdArray), 1);
             end
+            color = colorArray;
 
             % Identify which objects to update vs. which to add new
             updateIndices = false(numel(idArray), 1);
@@ -642,6 +713,7 @@ classdef BranchGraphicsGroup < handle
                 if obj.excluded(existingIdx)
                     set(objectHandle, 'Visible', 'off');
                 end
+                obj.colorArray{existingIdx} = color{originalIdx};
             end
             
             % Add new objects
@@ -676,6 +748,7 @@ classdef BranchGraphicsGroup < handle
                     obj.GraphicsHandles(idx) = objectHandle;
                     obj.objectIdArray(idx) = idArray(originalIdx);
                     obj.groupIdArray(idx) = groupIdArray(originalIdx);
+                    obj.colorArray{idx} = color{originalIdx};
                 end
             end
 
