@@ -447,7 +447,6 @@ Initialize(varargin{:})
             'WindowButtonUpFcn',        {@WindowButtonUpCallback3D}, ...
             'WindowButtonMotionFcn',    {@WindowButtonMotionCallback3D}, ...
             'WindowScrollWheelFcn',     {@WindowScrollWheelFcn3D}, ...
-            'WindowKeyPressFcn',        {@WindowKeyPressCallback3D}, ...
             'WindowKeyReleaseFcn',      {@WindowKeyReleaseCallback3D}, ...
             'KeyPressFcn',              {@KeyPressCallback3D});
 
@@ -719,19 +718,19 @@ Initialize(varargin{:})
     end
 %--------------------------------------------------------------------------
 %==========================================================================
-    function WindowKeyPressCallback3D(src, evnt)
-        % only for specific moments when enter or escape is used
-        % correspondent callback in the figure empty for most of the time
+    % function WindowKeyPressCallback3D(src, evnt)
+    %     % only for specific moments when enter or escape is used
+    %     % correspondent callback in the figure empty for most of the time
 
-        % disp('in WindowKeyPressCallback3D')
+    %     % disp('in WindowKeyPressCallback3D')
 
-        % IS changed 240312
+    %     % IS changed 240312
 
-        switch evnt.Key
-            case {'return','escape'}
-                appInstance.evaluateAfterEnterfcn(evnt);
-        end
-    end
+    %     switch evnt.Key
+    %         case {'return','escape'}
+    %             appInstance.evaluateAfterEnterfcn(evnt);
+    %     end
+    % end
 %--------------------------------------------------------------------------
 %==========================================================================
     function WindowKeyReleaseCallback3D(src, evnt)
