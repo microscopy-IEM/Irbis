@@ -7,6 +7,8 @@ classdef BranchGraphicsManager < handle
         lightingMethod
         selectionColor
 
+        lastSelectedBranch
+
         selectionListenerStruct % Structure to hold selection listeners for each branch
 
         getCurrentTimePoint % Function handle to get the current time point
@@ -181,6 +183,8 @@ classdef BranchGraphicsManager < handle
                 % disp(['No group handle found for branch "' branch '" in time point ' num2str(obj.getCurrentTimePoint()) '.']);
             end
 
+            obj.lastSelectedBranch = branch; % Update the last selected branch
+
             notify(obj, 'selectionChanged', SelectionSyncData(branch, selectedIds, currentTimePoint));
 
             % disp(src)
@@ -210,6 +214,12 @@ classdef BranchGraphicsManager < handle
                     obj.dataStruct.(branch).setSelected([]); % Clear the selection if no IDs are provided for the current time point
                 end
             end
+        end
+
+
+        function lastSelectedBranch = getLastSelectedBranch(obj)
+            % Get the last selected branch
+            lastSelectedBranch = obj.lastSelectedBranch;
         end
     end
 end
