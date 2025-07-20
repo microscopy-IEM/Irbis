@@ -669,6 +669,16 @@ Initialize(varargin{:})
             RotateMouse3D();
         end
         ZoomMouseExtend3D();
+
+        % Function from the main app to show the voxel intensity under the cursor
+        % Should be activated only if not other operation is in progress
+        axesInteractionOn = fIsDragAllowed || fIsZoomExtend3DAllowed || fIsRotate3DAllowed;
+        if ~axesInteractionOn 
+            axi = GetCurrentAxesIndex();    % This by itself is true even if axes are hidden under the left panel
+            if isequal(axi, 1)
+                appInstance.showVoxelIntensity();
+            end
+        end
     end
 %--------------------------------------------------------------------------
 %==========================================================================
