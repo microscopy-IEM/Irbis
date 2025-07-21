@@ -315,6 +315,12 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
         end
 
 
+        function deleteGraphics(obj)
+            obj.deleteSupportingGraphics; % Delete supporting graphics handles
+            deleteGraphics@BranchGraphicsGroup(obj); % Call the parent class delete method
+        end
+
+
         function deleteSupportingGraphics(obj)
             % Delete all supporting graphics handles
             if ~isempty(obj.supportingGraphicsHandles)
@@ -361,6 +367,8 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 buttonDownCallback function_handle
                 tag (1, :) char = 'SupportingGraphics'
             end
+
+            disp('Initializing supporting graphics objects...');
 
             obj.deleteSupportingGraphics; % Clear existing supporting graphics handles
 
@@ -461,6 +469,9 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 visibilityStatus (1,1) string {mustBeMember(visibilityStatus, ["on", "off"])}
                 selectionStatus string {mustBeMember(selectionStatus, ["on", "off"])} = "off"
             end
+
+            disp('Plotting supporting object...');
+            disp(visibilityStatus);
 
             % Create the graphics object based on the specified type
             if strcmp(obj.plotType, "line")

@@ -767,9 +767,10 @@ classdef BranchGraphicsGroup < handle
             end
             obj.groupIdArray = newGroupIdArray;
 
-            lastSelectedId = obj.selectedIds(end);
-            % Update the ID label for the last selected object
-            if ~isempty(lastSelectedId)
+            lastIdx = numel(obj.selectedIds);
+            if ~isequal(lastIdx, 0)
+                % If there are selected objects, update the ID label for the last selected object
+                lastSelectedId = obj.selectedIds(lastIdx);
                 obj.updateIdLabel(lastSelectedId);
             end
         end
