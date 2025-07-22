@@ -125,8 +125,9 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     driftVect = fig.UserData.driftVect;
     cropRect2D = fig.UserData.cropRect2D;
 
-    xCropOffset = cropRect2D(1);
-    yCropOffset = cropRect2D(2);
+    % BUGFIX 250722 - added -1 - if there was no drift, the resulting drift was -1.
+    xCropOffset = cropRect2D(1) - 1;
+    yCropOffset = cropRect2D(2) - 1;
 
     for currentTimePoint = 1:nTimePoints
         
@@ -270,6 +271,8 @@ function runRegistration(fig)
 
     % set zero shift for target timePoint
     tforms{targetTimePoint} = transltform2d(0,0);
+
+    tforms
     
 
     temp = zProjections;
@@ -292,6 +295,8 @@ function runRegistration(fig)
 
         tform = preRegister(FIXED, MOVING, sigma, method);
 
+        tform
+
         tforms{currentTimePoint} = tform;
         
         tform.A = round(tform.A);
@@ -306,6 +311,8 @@ function runRegistration(fig)
         driftVect{currentTimePoint} = [xt,yt,zt];
 
     end
+
+    assignin('base', 'tforms',tforms)
 
     fig.UserData.driftVect = driftVect;
 
@@ -393,8 +400,9 @@ function runRegistration(fig)
     % 2D cropr ectangle for preview
     cropRect2D = [x0 y0 xsize-x0+xt ysize-y0+yt];
 
-    xCropOffset = cropRect2D(1);
-    yCropOffset = cropRect2D(2);
+     
+    % xCropOffset = cropRect2D(1);
+    % yCropOffset = cropRect2D(2);
 
     % driftVect
 

@@ -374,44 +374,48 @@ classdef (Sealed) FullTableProcessor < handle
                 return;
             end
 
-            n = min(numel(rowNames), numel(colNames));
-            selectedCells = zeros(n, 2);
+            try     % added because I was getting some comparsion error for ismember - TO OPTIMIZE - find out why
+                n = min(numel(rowNames), numel(colNames));
+                selectedCells = zeros(n, 2);
 
-            if ~isempty(displayedTable.Properties.RowNames)
-                allRowNames = displayedTable.Properties.RowNames;
-                allColNames = displayedTable.Properties.VariableNames;
-                
-                % Create logical matrices for matching
-                [~, rowFound] = ismember(rowNames, allRowNames);
-                [~, colFound] = ismember(colNames, allColNames);
-                
-                % Find valid matches (both row and column found)
-                validMatches = rowFound > 0 & colFound > 0;
-                
-                % Fill the selectedCells array
-                selectedCells(validMatches, 1) = rowFound(validMatches);
-                selectedCells(validMatches, 2) = colFound(validMatches);
-            else
-                allColNames = displayedTable.Properties.VariableNames;
-                
-                % Convert rowNames to numeric if possible
-                rowIdxs = str2double(rowNames);
-                validRows = ~isnan(rowIdxs) & rowIdxs >= 1 & rowIdxs <= height(displayedTable);
-                
-                % Find column indices
-                [~, colIdxs] = ismember(colNames, allColNames);
-                validCols = colIdxs > 0;
-                
-                % Find valid matches (both row and column are valid)
-                validMatches = validRows & validCols;
-                
-                % Fill the selectedCells array
-                selectedCells(validMatches, 1) = rowIdxs(validMatches);
-                selectedCells(validMatches, 2) = colIdxs(validMatches);
+                if ~isempty(displayedTable.Properties.RowNames)
+                    allRowNames = displayedTable.Properties.RowNames;
+                    allColNames = displayedTable.Properties.VariableNames;
+                    
+                    % Create logical matrices for matching
+                    [~, rowFound] = ismember(rowNames, allRowNames);
+                    [~, colFound] = ismember(colNames, allColNames);
+                    
+                    % Find valid matches (both row and column found)
+                    validMatches = rowFound > 0 & colFound > 0;
+                    
+                    % Fill the selectedCells array
+                    selectedCells(validMatches, 1) = rowFound(validMatches);
+                    selectedCells(validMatches, 2) = colFound(validMatches);
+                else
+                    allColNames = displayedTable.Properties.VariableNames;
+                    
+                    % Convert rowNames to numeric if possible
+                    rowIdxs = str2double(rowNames);
+                    validRows = ~isnan(rowIdxs) & rowIdxs >= 1 & rowIdxs <= height(displayedTable);
+                    
+                    % Find column indices
+                    [~, colIdxs] = ismember(colNames, allColNames);
+                    validCols = colIdxs > 0;
+                    
+                    % Find valid matches (both row and column are valid)
+                    validMatches = validRows & validCols;
+                    
+                    % Fill the selectedCells array
+                    selectedCells(validMatches, 1) = rowIdxs(validMatches);
+                    selectedCells(validMatches, 2) = colIdxs(validMatches);
+                end
+
+                % Remove any rows with zeros (invalid matches)
+                selectedCells = selectedCells(all(selectedCells > 0, 2), :);
+            catch
+                selectedCells = [];
             end
-
-            % Remove any rows with zeros (invalid matches)
-            selectedCells = selectedCells(all(selectedCells > 0, 2), :);
         end
     end
 end
