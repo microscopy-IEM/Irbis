@@ -73,7 +73,8 @@ classdef (Sealed) UserColumnDefinitionFactory
                     end
 
                     if isequal(newName, oldName)
-                        columnDefinitionObject = existingColumnDefinitionObject.replaceRules(conditions);
+                        existingColumnDefinitionObject.replaceRules(conditions);
+                        columnDefinitionObject = existingColumnDefinitionObject;
                         % as the categorizationDefinition is a handle object, this returns the same handle as was provided
                         % TO OPTIMIZE - in the future, possibly change it from handle to pass-by-value object
                     else
@@ -91,7 +92,8 @@ classdef (Sealed) UserColumnDefinitionFactory
                     end
 
                     if isequal(newName, oldName)
-                        columnDefinitionObject = existingColumnDefinitionObject.replaceRules(newRules);
+                        existingColumnDefinitionObject.replaceRules(newRules);
+                        columnDefinitionObject = existingColumnDefinitionObject;
                     else
                         columnDefinitionObject = FormulaColumnDefinition(newName, newRules);
                     end
@@ -122,7 +124,7 @@ classdef (Sealed) UserColumnDefinitionFactory
 
                 case 'manual'
                     existingGroupNames = existingColumnDefinitionObject.getGroupNames(); 
-                    [newName, newRules] = ManualColumnDefinitionDialog.showExisting(existingGroupNames); 
+                    [newName, newRules] = ManualColumnDefinitionDialog.showExisting(oldName, existingGroupNames); 
                     
                     if isempty(newName) || isempty(newRules)
                         columnDefinitionObject = [];
@@ -130,7 +132,10 @@ classdef (Sealed) UserColumnDefinitionFactory
                     end
                     
                     if isequal(newName, existingColumnDefinitionObject.getColumnName())
-                        columnDefinitionObject = existingColumnDefinitionObject.replaceGroupNames(newRules);
+                        % columnDefinitionObject = existingColumnDefinitionObject.replaceRules(newRules);
+                        existingColumnDefinitionObject.replaceRules(newRules);
+                        columnDefinitionObject = existingColumnDefinitionObject;
+                        % rules exchanged within the shared handle class
                     else
                         newRules = newRules(~cellfun('isempty', newRules)); % Filter out empty group names
                         columnDefinitionObject = ManualColumnDefinition(newName, newRules);
