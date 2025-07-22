@@ -31,6 +31,13 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 return; % No supporting graphics to update
             end
             set(obj.supportingGraphicsHandles(~obj.excluded), 'Visible', visibility);
+
+            partiallyVisible = isequal(obj.visible, 'on') || isequal(obj.supportingGraphicsVisible, 'on');
+            if partiallyVisible
+                set(obj.idLabel, 'Visible', 'on');
+            else
+                set(obj.idLabel, 'Visible', 'off');
+            end
         end
 
 
@@ -139,6 +146,27 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
         end
 
 
+        function updateIdLabel(obj, id)
+            % Update the ID label for the selected object
+            arguments
+                obj BranchGraphicsGroup
+                id {mustBeNumeric, mustBePositive}
+            end
+
+            updateIdLabel@BranchGraphicsGroup(obj, id);
+            if isempty(obj.GraphicsHandles) && ~isempty(obj.supportingGraphicsHandles)
+                xPos = mean([obj.supportingGraphicsHandles.XData], 2);
+                yPos = mean([obj.supportingGraphicsHandles.YData], 2);
+                zPos = mean([obj.supportingGraphicsHandles.ZData], 2);
+
+                obj.idLabel.Position = [xPos, yPos, zPos];
+            end
+
+            obj.idLabel.Visible = "on";     % TO OPTIMIZE - this might not be necessary if it is switched properly elsewhere
+                % the problem at the moment is that setting setVisibility turns label visibility off, even if centreline is still visible
+        end
+
+
         function turnIndividualSelectionOn(obj, id)
             arguments
                 obj BranchGraphicsGroup
@@ -151,7 +179,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
             % Ensure that supporting graphics are also updated
             idx = find(id == obj.objectIdArray, 1);
             if ~isempty(obj.supportingGraphicsHandles) 
-                set(obj.supportingGraphicsHandles(idx), 'Selected', obj.selectedIds, ...
+                set(obj.supportingGraphicsHandles(idx), 'Selected', "on", ...
                     obj.colorIdentifier, obj.selectionColor);   % For Line objects, use 'Color' instead of 'FaceColor'
             end
         end
@@ -177,7 +205,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                     objectColor = obj.branchColor;
                 end
 
-                set(obj.supportingGraphicsHandles(idx), 'Selected', obj.selectedIds, ...
+                set(obj.supportingGraphicsHandles(idx), 'Selected', "off", ...
                     obj.colorIdentifier, objectColor);   % For Line objects, use 'Color' instead of 'FaceColor'
             end
         end
@@ -316,6 +344,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
 
 
         function deleteGraphics(obj)
+            % disp('Deleting ExtendedBranchGraphicsGroup object and its supporting graphics...');
             obj.deleteSupportingGraphics; % Delete supporting graphics handles
             deleteGraphics@BranchGraphicsGroup(obj); % Call the parent class delete method
         end
@@ -368,7 +397,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 tag (1, :) char = 'SupportingGraphics'
             end
 
-            disp('Initializing supporting graphics objects...');
+            % disp('Initializing supporting graphics objects...');
 
             obj.deleteSupportingGraphics; % Clear existing supporting graphics handles
 
@@ -470,8 +499,8 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 selectionStatus string {mustBeMember(selectionStatus, ["on", "off"])} = "off"
             end
 
-            disp('Plotting supporting object...');
-            disp(visibilityStatus);
+            % disp('Plotting supporting object...');
+            % disp(visibilityStatus);
 
             % Create the graphics object based on the specified type
             if strcmp(obj.plotType, "line")

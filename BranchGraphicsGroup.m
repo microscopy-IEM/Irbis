@@ -325,7 +325,10 @@ classdef BranchGraphicsGroup < handle
                 groupId = '-'; % Handle case where groupId is zero
             end
             obj.idLabel.String = [num2str(id) ' (' num2str(groupId) ')'];
-            obj.idLabel.Position = mean(obj.GraphicsHandles(idx).Vertices(), 1);
+            if ~isempty(obj.GraphicsHandles) && isvalid(obj.GraphicsHandles(idx))
+                obj.idLabel.Position = mean(obj.GraphicsHandles(idx).Vertices(), 1);
+                disp('position set')
+            end
         end
 
 
@@ -344,6 +347,7 @@ classdef BranchGraphicsGroup < handle
             if ~isempty(obj.GraphicsHandles)
                 set(obj.GraphicsHandles(idx), 'Selected', "on", 'FaceColor', obj.selectionColor); % Update the graphics object
             end
+            disp(['Turning on selection for object with ID: ' num2str(id)]);
             obj.updateIdLabel(id); % Update the ID label position and text
 
             if ~isempty(obj.updateGraphicsInfotext)
@@ -532,6 +536,16 @@ classdef BranchGraphicsGroup < handle
         end
 
 
+        function deleteMainGraphics(obj)
+            % TO OPTIMIZE - this method addded next to the deleteGraphics, because deletegraphics is extended in child class
+            % however, when I want to call this from the initializeGroup method, I want to delete only the main graphics, not the supporting ones
+            if ~isempty(obj.GraphicsHandles) & isvalid(obj.GraphicsHandles)
+                delete(obj.GraphicsHandles);
+            end
+            obj.GraphicsHandles = matlab.graphics.Graphics.empty();
+        end
+
+
         % Destructor (when class instance is deleted)
         function delete(obj)
             obj.deleteGraphics();
@@ -598,7 +612,10 @@ classdef BranchGraphicsGroup < handle
                 buttonDownCallback function_handle = [] % Optional callback for button press
             end
 
-            obj.deleteGraphics(); % Clear existing graphics handles
+            % disp('before deleting graphics')
+            obj.deleteMainGraphics();
+            % obj.deleteGraphics();
+                % If I am in the child class, this will call the child class method, even though this method is defined only in parent
 
             % Check if the input is empty
             if isempty(verticesArray) || isempty(facesArray) || isempty(idArray)
