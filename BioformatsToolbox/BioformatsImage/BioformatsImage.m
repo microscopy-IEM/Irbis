@@ -315,9 +315,11 @@ classdef BioformatsImage
         function zSpacing = get.zSpacing(obj)
             try
                 zSpacing = double(obj.metadata.getPixelsPhysicalSizeZ(0).value());
-            catch
+            catch ME
                 disp('caught exception in get.zSpacing, setting default value');
                 zSpacing = 0; % default if not available
+                % I considered rethrowing the error to be caught and displayed as uialert
+                % but that would prevent the rest of the loading from completing
             end
         end
 

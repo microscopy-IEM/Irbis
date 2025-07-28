@@ -26,7 +26,7 @@ function planes = importPlanesNew(figureH, varargin)
     try
         reader = BioformatsImage(fullPath);
         assignin('base', 'reader', reader); % Assign to base workspace for debugging
-    catch
+    catch ME
         planes = [];
         disp('Error reading file with BioformatsImage. Please convert it to tiff first in ImageJ.');
         return
@@ -50,7 +50,16 @@ function planes = importPlanesNew(figureH, varargin)
 
     % Information about individual pixel/voxel
     planes.pixel_size = reader.pxSize(1);                               % pixel size in defined units (micrometeres)
-    planes.z_spacing = reader.zSpacing;                                      % default z-spacing for single plane images                         
+    % if the zSpacing has not been loaded correctly and the data is a z-stack, display an uialert and set it to 1
+    if (nPlanes > 1) && isequal(reader.zSpacing, 0)
+        planes.z_spacing = 1; 
+        uialert(figureH, ...
+            'Z-spacing not available in metadata. Please set it manually.', ...
+            'Warning', 'Icon', 'warning');
+    else
+        planes.z_spacing = reader.zSpacing; 
+    end
+                                         % default z-spacing for single plane images                         
     bitDepth = reader.bitDepth;
     planes.bitDepth = bitDepth;
 
