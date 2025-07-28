@@ -523,7 +523,9 @@ classdef BranchGraphicsGroup < handle
                 visibleIds = []; % No graphics handles to check visibility
                 return;
             end
-            visibleIds = obj.objectIdArray(~obj.excluded & strcmp({obj.GraphicsHandles.Visible}, 'on'));
+
+            % strcmp({obj.GraphicsHandles.Visible}, 'on') - this is a row vector -> needs to be transposed with .'
+            visibleIds = obj.objectIdArray(~obj.excluded & strcmp({obj.GraphicsHandles.Visible}, 'on').');
         end
 
 
