@@ -87,6 +87,8 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
         function plotBoxplot(~, data, axesHandle)
 
+            jitterState = 'on';
+
             xData = data.xData;
             yData = data.yData;
             groupData = data.groupData;
@@ -129,7 +131,7 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
                     % boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
 
-                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers','on');
+                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers',jitterState);
                     axesHandle.NextPlot = 'add';
 
 
@@ -138,7 +140,7 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
                 else
 
-                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.1,'JitterOutliers','on');
+                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.1,'JitterOutliers',jitterState);
 
                   
 
@@ -150,23 +152,20 @@ classdef TwoVariablesPlot < plot.PlotInterface
                 % if this is a matrix, it cannot be combined with yData!
                 categoricalData = permute(categoricalData, [1, 3, 2]); 
                 groupData = permute(groupData, [1, 3, 2]);
-
                 
 
                  % https://www.mathworks.com/help/matlab/ref/boxchart.html
                 %    ydata must be a vector, and cgroupdata must have the same length as ydata
                 %    you cannot specify xgroupdata when ydata is a matrix.
-                
-                
+                                
                 % Code for R2025a
-                % ver = matlabRelease.Release;
-
+          
                 if ~isMATLABReleaseOlderThan("R2025a")
 
                     % numericalData = log10(numericalData);
                 
                     % boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.3,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
-                    b = boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers','on');
+                    b = boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers',jitterState);
                     
                     legendGroups = unique(groupData);
                     l = legend(axesHandle, b, legendGroups, 'Location', 'northeast');
@@ -175,10 +174,23 @@ classdef TwoVariablesPlot < plot.PlotInterface
                     axesHandle.NextPlot = 'add';                    
                     
                     % v = violinplot(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData);                    
-                                       
-                    mergeCategories = 0;
+                                      
+             
+                    % determine if both group and cGroup data have same categories
+                    C1 = categories(categoricalData);
+                    C2 = categories(groupData);
+                    tf = iscategory(categorical(C1),C2);
+                    concatenateCategories = all(tf);
+                    
+                    % TO OPTIMIZE - do not concatenate if the group and
+                    % cGroup data are logical (problem is that we store
+                    % logical as categorical with true/false categories
 
-                    if mergeCategories
+                    islogical(categoricalData)
+                    
+                    if concatenateCategories
+
+                        disp('two categorical columns concatenated')
 
                         axesHandle.NextPlot = 'replace';
                         xDataDuplicated = cat(1,numericalData,numericalData);
@@ -193,9 +205,8 @@ classdef TwoVariablesPlot < plot.PlotInterface
                         
                         cGroupData = cat(1,G,cG);
                                      
-                        b = boxchart(axesHandle, categoricalDataMerged, xDataDuplicated, 'GroupByColor', cGroupData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers','on');
-                        
-                        % 
+                        b = boxchart(axesHandle, categoricalDataMerged, xDataDuplicated, 'GroupByColor', cGroupData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers',jitterState);
+                                                 
                         legendGroups = unique(cGroupData);
                         l = legend(axesHandle, b, legendGroups, 'Location', 'northeast');
                         l.Interpreter = 'none';

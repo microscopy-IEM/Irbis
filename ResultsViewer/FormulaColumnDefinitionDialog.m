@@ -6,13 +6,14 @@ classdef (Sealed) FormulaColumnDefinitionDialog
             prompt = {'New column name:', 'Formula:'};
             dlgTitle = 'Define new column';
             numLines = 1;
-            defaultAns = {'', ''};
+            % defaultAns = {'', ''};
+            defaultAns = {'Dlog', 'log10(MSD5)'}; % temporal
             input = inputdlg(prompt, dlgTitle, numLines, defaultAns);
 
             % Check if the user pressed cancel
             if isempty(input)
                 columnName = '';
-                formulaString = [];
+                formulaString = [];                
                 return;
             end
 
