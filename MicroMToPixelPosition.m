@@ -1,9 +1,25 @@
 % function that gets uM position of an object and return its position in pixel coordinates of the screen
 function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
 
+    clc
+
+    disp(ax.CameraUpVector)
+    % ax.CameraUpVector = [0 0 1];
+
     %% get current rotation of the axes
-    elevation = ax.View(2);
-    azimuth = wrapTo360(ax.View(1));
+    % elevation = ax.View(2);
+    % azimuth = wrapTo360(ax.View(1));
+
+    sightVector = ax.CameraPosition - ax.CameraTarget;
+    azimuth = -atan2d(-sightVector(1), -sightVector(2))
+
+    if ax.CameraUpVector(3) < 0
+        azimuth = azimuth + 180
+    end
+
+    a = [0 0 1];
+    elevation = acosd(dot(a, sightVector)/norm(sightVector));
+    elevation = 90 - elevation
 
     %% get the absolute position of the bounding box lower right corner in pixels
 
@@ -13,8 +29,16 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
 
     currentObject = ax.Parent;
 
+    cycle = 0;
     while true
+        % cycle = cycle + 1
+        % if ~isa(currentObject, 'matlab.ui.container.GridLayout')
+        %     disp(class(currentObject))
+        %     currentObject
+        % end
+        % currentObject
         pos = currentObject.Position;
+        % disp(pos)
         xParentPix = xParentPix + pos(1);
         yParentPix = yParentPix + pos(2);
         if isa(currentObject,'matlab.ui.Figure')
@@ -22,6 +46,9 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
         end
         currentObject = currentObject.Parent;
     end
+
+    xParentPix = xParentPix - (ax.InnerPosition(1) - ax.OuterPosition(1));
+    yParentPix = yParentPix - (ax.InnerPosition(2) - ax.OuterPosition(2));
 
     % p1Pos = ax.Parent.Position;
     % xP1 = p1Pos(1);
@@ -52,8 +79,13 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
         
     % axes limits in microM
     xLimMic = ax.XLim(2)-ax.XLim(1);
-    yLimMic = ax.YLim(2)-ax.YLim(1); 
+    yLimMic = ax.YLim(2)-ax.YLim(1);
     zLimMic = ax.ZLim(2)-ax.ZLim(1);
+
+    if isempty(MicroMArray)
+        MicroMArray = get(ax, 'currentpoint');
+        MicroMArray = MicroMArray(1,1:3);
+    end
     
     % coordinate position in microM
     xCMic = MicroMArray(:,1)-ax.XLim(1);
@@ -61,6 +93,16 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     zCMic = MicroMArray(:,3)-ax.ZLim(1);
 
     %% calculate the relative position of the coordinate in respect to the bounding box in pixels 
+
+    % xSign = 1;
+    % if ax.XDir == "reverse"
+    %     xSign = -1;
+    % end
+
+    % ySign = 1;
+    % if ax.YDir == "reverse"
+    %     ySign = -1;
+    % end
 
     % calculating proportional contribution by x and y, depending on the rotation
     xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
@@ -72,13 +114,13 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     xYratio = 1 + xYratio;
     end
     % reversed y - minus sign in sign(-sind(azimuth)) instead of plus
-    yXratio = sign(-sind(azimuth))*yCMic/yLimMic;
-    if sign(-sind(azimuth)) < 0
+    yXratio = sign(sind(azimuth))*yCMic/yLimMic;
+    if sign(sind(azimuth)) < 0
     yXratio = 1 + yXratio;
     end
     % reversed y - minus sign in sign(-cosd(azimuth)) instead of plus
-    yYratio = sign(-cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
-    if sign(-cosd(azimuth))*sign(sind(elevation)) < 0
+    yYratio = sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
+    if sign(cosd(azimuth))*sign(sind(elevation)) < 0
     yYratio = 1 + yYratio;
     end    
 
@@ -89,19 +131,69 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     sinRE = abs(sind(elevation))/(abs(sind(elevation))+abs(cosd(elevation)));
     cosRE = abs(cosd(elevation))/(abs(sind(elevation))+abs(cosd(elevation)));
 
+    % sinREw = sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth)))/(cosRE*zLimMic+sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth))));
+    % cosREw = cosRE*zLimMic/(cosRE*zLimMic+sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth))));
+
     sinREw = sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth)))/(cosRE*zLimMic+sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth))));
     cosREw = cosRE*zLimMic/(cosRE*zLimMic+sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth))));
 
     %% get the absolute position in pixels
 
+    % disp('ratio')
+    % cosRatio
+    % yXratio
+    % % abs(xLimMic*cosd(azimuth))/(abs(xLimMic*cosd(azimuth)) + abs(yLimMic*sind(azimuth)))
+    % (xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
+    % (yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
+    % xXratio*(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
+    % yXratio*(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
+    % xXratio*(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio)) + yXratio*(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
+
     xCPix = xParentPix + x0Pix + xPix*xXratio*(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio)) + xPix*yXratio*(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio));
     yCPix = yParentPix + y0Pix + yPix*sinREw*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*sinREw*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*cosREw*(zCMic)/zLimMic;
+
+    if ax.CameraUpVector(3) < 0
+        yCPix = yParentPix + y0Pix + yPix*sinREw*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*sinREw*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*cosREw*(zLimMic-zCMic)/zLimMic;
+    end
+
+    % if ax.CameraUpVector(3) < 0
+    %     yCPix = yParentPix + y0Pix + yPix*sinREw*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*sinREw*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) - yPix*cosREw*(zCMic)/zLimMic;
+    % end
+    % xCPix = xParentPix + x0Pix + xPix*xXratio*(yLimMic*cosRatio/(yLimMic*cosRatio+xLimMic*sinRatio)) + xPix*yXratio*(xLimMic*sinRatio/(yLimMic*cosRatio+xLimMic*sinRatio));
+    % yCPix = yParentPix + y0Pix + yPix*sinREw*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*sinREw*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*cosREw*(zCMic)/zLimMic;
 
     % set(ax,'PlotBoxAspectRatio',[1,1,1]);
 
     PixelPos = [xCPix,yCPix];
 
-    % set(0,'PointerLocation',[xCPix,yCPix])
+    % set(ax, 'Box', 'on');
+
+    % set(0,'PointerLocation',[xParentPix  + x0Pix,yParentPix + y0Pix]);
+    % pause(1)
+    % % set(0,'PointerLocation',[xParentPix + x0Pix + xPix,yParentPix + y0Pix]);
+    % % pause(1)
+    % set(0,'PointerLocation',[xParentPix + x0Pix + xPix,yParentPix + y0Pix + yPix]);
+    % pause(1)
+
+    % ax.View
+
+    % a = [0 1];
+    % sightVector = ax.CameraPosition - ax.CameraTarget;
+    % b = -sightVector(1:2);
+    % azimuth = acosd(dot(a, b)/norm(b))
+    % s = sign(dot(a, b))
+
+    % -atan2d(-sightVector(1), -sightVector(2))
+
+    % a = [0 0 1];
+    % sightVector = ax.CameraPosition - ax.CameraTarget;
+    % elevation = acosd(dot(a, sightVector)/norm(sightVector))
+    % s = sign(dot(a, sightVector))
+    % elevation2 = 90 - elevation
+
+    set(0,'PointerLocation',[xCPix,yCPix])
+
+    assignin('base', 'ax', ax);
 
 
 end

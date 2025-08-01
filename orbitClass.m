@@ -288,9 +288,9 @@ classdef orbitClass < handle
         end
 
         function actionEnds(obj,~,~)
-            % obj.hFig.WindowButtonMotionFcn = [];
+            obj.hFig.WindowButtonMotionFcn = [];
 
-            obj.hFig.WindowButtonMotionFcn = obj.origCallbacks.WindowButtonMotionFcn;
+            % obj.hFig.WindowButtonMotionFcn = obj.origCallbacks.WindowButtonMotionFcn;
             obj.hFig.Pointer = 'arrow';
             % drawnow
             % 777
