@@ -10,8 +10,28 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     % elevation = ax.View(2);
     % azimuth = wrapTo360(ax.View(1));
 
+    xSign = 1;
+    if ax.XDir == "reverse"
+        xSign = -1;
+    end
+
+    ySign = 1;
+    if ax.YDir == "reverse"
+        ySign = -1;
+    end
+
+    disp(ax.CameraPosition)
+    disp(ax.CameraTarget)
+    % sightVector =  ax.CameraTarget - ax.CameraPosition
+    % azimuth = -atan2d(xSign*sightVector(1), ySign*sightVector(2))
+
     sightVector = ax.CameraPosition - ax.CameraTarget;
-    azimuth = -atan2d(-sightVector(1), -sightVector(2))
+    % azimuth = -atan2d(-xSign*sightVector(1), -ySign*sightVector(2))
+
+    disp('original view')
+    disp(ax.View)
+
+    azimuth = atan2d(ax.CameraUpVector(1), ax.CameraUpVector(2));
 
     if ax.CameraUpVector(3) < 0
         azimuth = azimuth + 180
@@ -20,6 +40,11 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     a = [0 0 1];
     elevation = acosd(dot(a, sightVector)/norm(sightVector));
     elevation = 90 - elevation
+
+    if isequal(elevation, 90) || isequal(elevation, -90)
+        % if the elevation is 90 or -90, the projection of sight to xy plane is zero
+        azimuth = atan2d(ax.CameraUpVector(1), ax.CameraUpVector(2));
+    end
 
     %% get the absolute position of the bounding box lower right corner in pixels
 
@@ -94,33 +119,23 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
 
     %% calculate the relative position of the coordinate in respect to the bounding box in pixels 
 
-    % xSign = 1;
-    % if ax.XDir == "reverse"
-    %     xSign = -1;
-    % end
-
-    % ySign = 1;
-    % if ax.YDir == "reverse"
-    %     ySign = -1;
-    % end
-
     % calculating proportional contribution by x and y, depending on the rotation
-    xXratio = sign(cosd(azimuth))*xCMic/xLimMic;
-    if sign(cosd(azimuth)) < 0
+    xXratio = xSign*sign(cosd(azimuth))*xCMic/xLimMic;
+    if xSign*sign(cosd(azimuth)) < 0
     xXratio = 1 + xXratio;
     end
-    xYratio = sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
-    if sign(-sind(azimuth))*sign(sind(elevation)) < 0
+    xYratio = xSign*sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
+    if xSign*sign(-sind(azimuth))*sign(sind(elevation)) < 0
     xYratio = 1 + xYratio;
     end
     % reversed y - minus sign in sign(-sind(azimuth)) instead of plus
-    yXratio = sign(sind(azimuth))*yCMic/yLimMic;
-    if sign(sind(azimuth)) < 0
+    yXratio = ySign*sign(sind(azimuth))*yCMic/yLimMic;
+    if ySign*sign(sind(azimuth)) < 0
     yXratio = 1 + yXratio;
     end
     % reversed y - minus sign in sign(-cosd(azimuth)) instead of plus
-    yYratio = sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
-    if sign(cosd(azimuth))*sign(sind(elevation)) < 0
+    yYratio = ySign*sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
+    if ySign*sign(cosd(azimuth))*sign(sind(elevation)) < 0
     yYratio = 1 + yYratio;
     end    
 
