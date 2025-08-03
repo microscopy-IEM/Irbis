@@ -26,12 +26,12 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     % azimuth = -atan2d(xSign*sightVector(1), ySign*sightVector(2))
 
     sightVector = ax.CameraPosition - ax.CameraTarget;
-    % azimuth = -atan2d(-xSign*sightVector(1), -ySign*sightVector(2))
+    azimuth = -atan2d(-xSign*sightVector(1), -ySign*sightVector(2))
 
     disp('original view')
     disp(ax.View)
 
-    azimuth = atan2d(ax.CameraUpVector(1), ax.CameraUpVector(2));
+    % azimuth = atan2d(ax.CameraUpVector(1), ax.CameraUpVector(2))
 
     if ax.CameraUpVector(3) < 0
         azimuth = azimuth + 180
@@ -41,10 +41,11 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
     elevation = acosd(dot(a, sightVector)/norm(sightVector));
     elevation = 90 - elevation
 
-    if isequal(elevation, 90) || isequal(elevation, -90)
+    % if isequal(elevation, 90) || isequal(elevation, -90)
         % if the elevation is 90 or -90, the projection of sight to xy plane is zero
-        azimuth = atan2d(ax.CameraUpVector(1), ax.CameraUpVector(2));
-    end
+        azimuth2 = -atan2d(-xSign*ax.CameraUpVector(1), -ySign*ax.CameraUpVector(2))    % elevation negative
+        azimuth2 = -atan2d(xSign*ax.CameraUpVector(1), ySign*ax.CameraUpVector(2))  % elevation positive
+    % end
 
     %% get the absolute position of the bounding box lower right corner in pixels
 
