@@ -17,8 +17,11 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
         
     t = tiledlayout(pan,'flow');
     t.Tag = 'figLayout';
-    t.TileSpacing = 'compact';
-    t.Padding = 'compact';
+    % t.TileSpacing = 'compact';
+    t.TileSpacing = 'tight';
+    % t.Padding = 'compact';
+    t.Padding = 'tight';
+
     
     pan.Layout.Row = 1;
     pan.Layout.Column = [1 9];
@@ -29,7 +32,7 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     methodDropDown.Layout.Row = 2;
     methodDropDown.Layout.Column =  2;
     
-     sliderLabel = uilabel(customGrid, ...
+    sliderLabel = uilabel(customGrid, ...
         "Text","Sigma");
     sliderLabel.Layout.Row = 2;
     sliderLabel.Layout.Column = 3;
@@ -260,6 +263,7 @@ function runRegistration(fig)
     %% Estimate drift
     
     resizeFactor = 2;
+    
     % FIXED = imresize(zProjections(:,:,targetTimePoint),1/resizeFactor);
     tforms = cell(1,nTimePoints);
 
@@ -272,7 +276,7 @@ function runRegistration(fig)
     % set zero shift for target timePoint
     tforms{targetTimePoint} = transltform2d(0,0);
 
-    tforms
+    % tforms
     
 
     temp = zProjections;
@@ -295,18 +299,18 @@ function runRegistration(fig)
 
         tform = preRegister(FIXED, MOVING, sigma, method);
 
-        tform
+        % tform
 
         tforms{currentTimePoint} = tform;
         
         tform.A = round(tform.A);
         % temp(:,:,currentTimePoint) = imwarp(temp(:,:,currentTimePoint),tform,"OutputView",imref2d(size(FIXED_)));
 
-        xt = tform.Translation(1);
-        yt = tform.Translation(2);
+        xt = tform.Translation(1)*resizeFactor;
+        yt = tform.Translation(2)*resizeFactor;
 
         % adding zero z component;
-        zt = 0;
+        zt = 0*resizeFactor;
 
         driftVect{currentTimePoint} = [xt,yt,zt];
 
@@ -437,19 +441,19 @@ function runRegistration(fig)
 
         end
 
-
-        finalTforms{currentTimePoint} = tform;
+        finalTforms{currentTimePoint} = tform;        
 
         zProjectionsRegistered(:,:,currentTimePoint) = imwarp(zProjections(:,:,currentTimePoint),tform,"OutputView",imref2d(size(FIXED_)));
 
     end
 
     
-
     % zProjectionsRegistered = temp;
 
     fig.UserData.tforms = finalTforms;
     fig.UserData.zProjectionsRegistered = zProjectionsRegistered;
+    fig.UserData.driftVect = driftVect;
+
 
     updatePlot(fig)  
 
@@ -548,6 +552,7 @@ function resetButtonPushed(fig)
     % reset the calculated drift correction
     zstack = fig.UserData.zstack;
     nTimePoints = size(zstack,4);
+    driftVect = cell(1,nTimePoints);
     for currentTimePoint = 1:nTimePoints
         driftVect{currentTimePoint} = [0,0,0];
     end
@@ -562,17 +567,16 @@ function updatePlot(fig)
     t = findobj(fig,'Tag','figLayout');
     delete(t.Children)
     
-
     % targetTimePoint = fig.UserData.targetTimePoint;
 
-    zProjections = fig.UserData.zProjections;
+    % zProjections = fig.UserData.zProjections;
     zProjectionsRegistered = fig.UserData.zProjectionsRegistered;
     zstack = fig.UserData.zstack;
 
     nTimePoints = size(zstack,4);
 
      % create vector to pair target and resgistrating time points
-     tragetDropDownH = findobj(fig,'Tag','targetTimePoint');
+    tragetDropDownH = findobj(fig,'Tag','targetTimePoint');
     targetMethod = tragetDropDownH.Value;
     switch targetMethod
         
@@ -589,19 +593,19 @@ function updatePlot(fig)
     end
     % TPvect = (1:nTimePoints)-1;
     
-    allAx = [];
-
+   
     cropRect2D = fig.UserData.cropRect2D;
 
     driftVect = fig.UserData.driftVect;
-    
+  
+
     for currentTimePoint = 2:nTimePoints
 
         targetTimePoint = TPvect(currentTimePoint);
-       
-        ax1 = nexttile(t);
 
-        allAx = [allAx ax1];
+        ax1 = nexttile(t);
+        ax1.Interactions = [zoomInteraction panInteraction]; % enable only two interactions
+           
 
         % orig = zProjections(:,:,targetTimePoint);
         orig = zProjectionsRegistered(:,:,targetTimePoint);
@@ -612,7 +616,9 @@ function updatePlot(fig)
 
         imshowpair(orig,registered,"Scaling","joint","Parent",ax1)
         ax1.Title.String = ['Time point ' num2str(currentTimePoint) ' vs. ' num2str(targetTimePoint)];
-        ax1.XLabel.String = ['correction [pix] = x: ' num2str(driftVect{currentTimePoint}(1)), ' , y: ' num2str(driftVect{currentTimePoint}(2))];
+        % ax1.XLabel.String = ['correction [pix] = x: ' num2str(driftVect{currentTimePoint}(1)), ' , y: ' num2str(driftVect{currentTimePoint}(2))];
+        ax1.XLabel.String = {['correction [pix] = x: ' num2str(driftVect{currentTimePoint}(1)), ' , y: ' num2str(driftVect{currentTimePoint}(2))];['Total correction = x: code to add']};
+        % ax1.XLabel.String = ['correction [pix] = x: ' num2str(xt), ' , y: ' num2str(yt)];
 
 
         roi = drawrectangle(ax1,'Position',cropRect2D,'Color','r','FaceAlpha',0.05);
@@ -620,7 +626,8 @@ function updatePlot(fig)
         addlistener(roi,'ROIMoved',@roiMoved);
 
     end
-
+        
+    allAx = t.Children;
     linkaxes(allAx,'xy')
 
 end
@@ -632,5 +639,7 @@ end
 function roiMoved(src,evt)
 
     evt.CurrentPosition
+
+    src
 
 end
