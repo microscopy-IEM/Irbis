@@ -19,6 +19,8 @@ classdef orbitClass < handle
         xMax2D = Inf;
         orbitOn = 1;
         origCallbacks = [];
+        keypressExtension = [];
+        keyreleaseExtension = [];
     end
 
     methods
@@ -82,7 +84,8 @@ classdef orbitClass < handle
             obj.hFig.WindowButtonDownFcn = @(src, ~) obj.actionBegins(src);
             obj.hFig.WindowButtonUpFcn = @(~, ~) obj.actionEnds();
             obj.hFig.WindowScrollWheelFcn = @(~, evt) obj.zoom(evt);  
-            obj.hFig.WindowKeyPressFcn = @(~, evt) obj.keyPressCallback3D(evt);
+            obj.hFig.WindowKeyPressFcn = @(~, evt) obj.keyPressed(evt);
+            obj.hFig.WindowKeyReleaseFcn = @(~, evt) obj.keyReleased(evt);
             obj.hFig.WindowButtonMotionFcn = obj.origCallbacks.WindowButtonMotionFcn;
 
         end
@@ -94,6 +97,7 @@ classdef orbitClass < handle
             obj.hFig.WindowButtonUpFcn = [];
             obj.hFig.WindowScrollWheelFcn = [];        
             obj.hFig.WindowKeyPressFcn = [];
+            obj.hFig.WindowKeyReleaseFcn = [];
             obj.hFig.WindowButtonMotionFcn = [];
 
         end
@@ -104,6 +108,7 @@ classdef orbitClass < handle
             obj.origCallbacks.WindowButtonUpFcn     = obj.hFig.WindowButtonUpFcn;
             obj.origCallbacks.WindowScrollWheelFcn  = obj.hFig.WindowScrollWheelFcn;
             obj.origCallbacks.WindowKeyPressFcn     = obj.hFig.WindowKeyPressFcn;
+            obj.origCallbacks.WindowKeyReleaseFcn   = obj.hFig.WindowKeyReleaseFcn;
             obj.origCallbacks.WindowButtonMotionFcn = obj.hFig.WindowButtonMotionFcn;           
 
         end
@@ -114,6 +119,7 @@ classdef orbitClass < handle
             obj.hFig.WindowButtonUpFcn      = obj.origCallbacks.WindowButtonUpFcn;
             obj.hFig.WindowScrollWheelFcn   = obj.origCallbacks.WindowScrollWheelFcn;
             obj.hFig.WindowKeyPressFcn      = obj.origCallbacks.WindowKeyPressFcn;
+            obj.hFig.WindowKeyReleaseFcn    = obj.origCallbacks.WindowKeyReleaseFcn;
             obj.hFig.WindowButtonMotionFcn  = obj.origCallbacks.WindowButtonMotionFcn;           
 
         end
@@ -122,9 +128,53 @@ classdef orbitClass < handle
         function resetButtonDownCallback(obj)
 
             % reset the button down callback to the original one
-            obj.hFig.WindowButtonDownFcn = obj.origCallbacks.WindowButtonDownFcn;
+            obj.hFig.WindowButtonDownFcn = @(src, ~) obj.actionBegins(src);
 
         end
+
+
+        function resetButtonUpCallback(obj)
+
+            % reset the button up callback to the original one
+            obj.hFig.WindowButtonUpFcn = @(~, ~) obj.actionEnds();
+        end
+
+
+        function extendWindowKeyPressCallback(obj, keyPressCallback)
+
+            % extend the key press callback to handle other keys
+            obj.keypressExtension = keyPressCallback;
+
+            % TO OPTIMIZE - handling src and evt might not be correct if needed
+
+        end
+
+
+        function extendWindowKeyReleaseCallback(obj, keyReleaseCallback)
+
+            % extend the key release callback to handle other keys
+            obj.keyreleaseExtension = keyReleaseCallback;
+
+            % TO OPTIMIZE - handling src and evt might not be correct if needed
+
+        end
+
+
+        function overrideWindowKeyPressCallback(obj, keyPressCallback)
+
+            % override the key press callback
+            obj.hFig.WindowKeyPressFcn = keyPressCallback;
+        end
+
+
+        function resetWindowKeyPressCallback(obj)
+
+            % reset the key press callback to the original one added by orbitTool
+            obj.hFig.WindowKeyPressFcn = @(~, evt) obj.keyPressed(evt);
+
+        end
+
+
 
         function switchOrbitOff(obj)
 
@@ -493,6 +543,32 @@ classdef orbitClass < handle
         end
 
 
+        function keyPressed(obj, evt)
+            if ~obj.inActiveArea
+                if isa(obj.keypressExtension, 'function_handle')
+                    % just call the keypress function supplied
+                    obj.keypressExtension(evt);
+                end
+                return
+            end
+
+            switch obj.mode
+                case '2D'
+                    obj.keyPressCallback2D(obj.hFig, evt);
+                case '3D'
+                    obj.keyPressCallback3D(evt);
+            end
+        end
+
+
+        function keyReleased(obj, evt)
+            if isa(obj.keyreleaseExtension, 'function_handle')
+                % just call the keyrelease function supplied
+                obj.keyreleaseExtension(evt);
+            end
+        end
+
+
         function keyPressCallback3D(obj, evt)      
             
             dx = 0.05;
@@ -512,9 +588,9 @@ classdef orbitClass < handle
     
                 end
             end
-            
-            % evt.Key                      
-            
+
+            % TO OPTIMIZE - the modifiers cannot work, as we use them for scrolling -> override keypress
+
             switch evt.Key
             
                 case 'leftarrow'
@@ -553,10 +629,13 @@ classdef orbitClass < handle
                         obj.resetView
                     end
 
+                otherwise
+                    if ~isempty(obj.keypressExtension) && isa(obj.keypressExtension, 'function_handle')
+                        % just call the keypress function supplied
+                        obj.keypressExtension(evt);
+                    end
+                    return  % do not reset centre of rotation
             end
-
-            % disp(obj.hAx.View)
-            
 
             if ctrlPressed
                 % TO OPTIMIZE move this to keyRelease callback later
@@ -566,10 +645,11 @@ classdef orbitClass < handle
            
         end
 
-        function keyPressCallback2D(obj,src,evt) 
-
-
-
+        function keyPressCallback2D(obj, evt) 
+            if ~isempty(obj.keypressExtension) && isa(obj.keypressExtension, 'function_handle')
+                % just call the keypress function supplied
+                obj.keypressExtension(evt);
+            end
         end
     end
 end
