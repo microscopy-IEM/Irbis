@@ -3,21 +3,18 @@ classdef orbitClass < handle
     %   Detailed explanation goes here
 
     properties
-        hAx
-        hFig
-        startXonFig = [];
-        startYonFig = [];
-        azStart = [];
-        elStart = [];
-        observationDist = [];
-        axPosStart = [];
-        axZoom = [];
-        angleStep = [];
-        cameraTarget = []
+        hAx     % currently active axes
+        hFig    % figure containing the axes
+        startXonFig = [];   % x position of the mouse when the action begins, 2D, in pixels
+        startYonFig = [];   % y position of the mouse when the action begins, 2D, in pixels
+        axPosStart = [];   % starting position of the axes
+        axZoom = [];   % zoom level of the axes
+        angleStep = 5;   % step size for rotating the view
+        cameraTarget = [];
         cameraPosition = [];
-        inActiveArea = [];
-        mode = [];
-        axesInfo = [];
+        inActiveArea = false;  % whether the mouse is in the active area of any of the axes
+        mode = [];  % '2D' or '3D' - mode of the active axes
+        existingAxes = [];
         startXonAxes = [];
         xMax2D = Inf;
         orbitOn = 1;
@@ -25,111 +22,71 @@ classdef orbitClass < handle
     end
 
     methods
+
         function obj = orbitClass(varargin)
 
-            ax = varargin{1};
+            axes = varargin{1};
             if nargin == 2
-                mode = varargin{2};
+                modes = varargin{2};
             else
-                mode(1:numel(ax)) = {'3D'};
+                modes(1:numel(axes)) = {'3D'};
             end
 
-            % saveOrigCallbacks(obj);
-            
-            cax = 1;
-            obj.hAx = ax(cax); 
+            % make the first axes active
+            activeId = 1;
+            obj.hAx = axes(activeId); 
             obj.hFig = ancestor(obj.hAx, 'figure');
-            obj.mode = mode{cax};
-            
-            
+            obj.mode = modes{activeId};
+            obj.axZoom = obj.hAx.CameraViewAngle;
+            obj.hAx.CameraViewAngleMode = 'manual'; % manual only for 3D
+
             % Create and activate a pointer manager for the figure:
             iptPointerManager(obj.hFig, 'enable');
 
-            for i = 1:numel(ax)
+            for i = 1:numel(axes)
 
-                cax = ax(i);
-     
-                pb.enterFcn = @(hFig,cp)obj.setActiveAxes(hFig,cp,true,cax);
-                pb.exitFcn = @(hFig,cp)obj.setActiveAxes(hFig,cp,false,cax);
-                pb.traverseFcn = [];
-            
-                % can be assigned to any graphical object (axes or uipanel...)
-                iptSetPointerBehavior(cax,pb)
+                cax = axes(i);
+                obj.setHoveringBehavior(cax);
 
-                cax.Units = "pixels";
-                % cax.CameraViewAngleMode = 'manual';
+                % cax.Units = "pixels";
 
-                obj.axesInfo{i}.axh = cax;               
-                obj.axesInfo{i}.mode = mode{i};                 
-        
-            end     
+                obj.existingAxes{i}.handle = cax;               
+                obj.existingAxes{i}.mode = modes{i};                 
+            end
 
-            % hPan = ancestor(obj.hAx, 'uipanel');
-            % cax = hPan;
-            % pb.enterFcn = @(hFig,cp)obj.setActiveAxes(hFig,cp,true,cax);
-            % pb.exitFcn = @(hFig,cp)obj.setActiveAxes(hFig,cp,false,cax);
-            % pb.traverseFcn = [];
-            % % 
-            % % can be assigned to any graphical object (axes or uipanel...)
-            iptSetPointerBehavior(cax,pb)
-
-
-
-                      
             obj.cameraTarget = camtarget(obj.hAx);
             obj.cameraPosition = campos(obj.hAx);
                  
-            
-            %% Default constants
-            
-            obj.angleStep = 5;                          
-            obj.hAx.CameraViewAngleMode = 'manual'; % manual only for 3D
-            obj.axZoom = obj.hAx.CameraViewAngle;
-                        
-            setCentreOfRotation(obj,obj.cameraTarget)            
+            obj.setCentreOfRotation(obj.cameraTarget); 
 
-            obj.setCallbacks            
+            obj.saveOrigCallbacks;
+            obj.setCallbacks;            
 
         end
+
+
+        function setHoveringBehavior(obj, ax)
+
+            % set the pointer behavior for hovering over the axes - activates the axes under cursor
+            behavior.enterFcn = @(~, ~)obj.setActiveAxes(ax, true);
+            behavior.exitFcn = @(~, ~)obj.setActiveAxes(ax, false);
+            behavior.traverseFcn = [];
+
+            % behavior can be assigned to any graphical object (axes or uipanel...)
+            iptSetPointerBehavior(ax, behavior);
+        end
+
 
         function setCallbacks(obj)
 
-            % switch obj.mode
-            %     case '2D'
-            %         obj.setCallbacks2D
-            %     case '3D'
-            %         obj.setCallbacks3D
-            % end
-
-            obj.hFig.WindowButtonDownFcn = @obj.actionBegin;
-            obj.hFig.WindowButtonUpFcn = @obj.actionEnds;
-            obj.hFig.WindowScrollWheelFcn = @obj.zoom;  
-            obj.hFig.WindowKeyPressFcn = @obj.keyPressCallback3D;
-
+            obj.hFig.WindowButtonDownFcn = @(src, ~) obj.actionBegins(src);
+            obj.hFig.WindowButtonUpFcn = @(~, ~) obj.actionEnds();
+            obj.hFig.WindowScrollWheelFcn = @(~, evt) obj.zoom(evt);  
+            obj.hFig.WindowKeyPressFcn = @(~, evt) obj.keyPressCallback3D(evt);
+            obj.hFig.WindowButtonMotionFcn = obj.origCallbacks.WindowButtonMotionFcn;
 
         end
 
-        % function setCallbacks3D(obj)
-        % 
-        %     % obj.hFig.WindowButtonDownFcn = @obj.actionBegin3D;
-        %     obj.hFig.WindowButtonDownFcn = @obj.actionBegin;
-        %     obj.hFig.WindowButtonUpFcn = @obj.actionEnds;
-        %     % obj.hFig.WindowScrollWheelFcn = @obj.zoom3D;
-        %     obj.hFig.WindowScrollWheelFcn = @obj.zoom;  
-        %     obj.hFig.WindowKeyPressFcn = @obj.keyPressCallback3D;
-        % 
-        % end
-        % 
-        % function setCallbacks2D(obj)
-        % 
-        %     % obj.hFig.WindowButtonDownFcn = @obj.actionBegin2D;
-        %     obj.hFig.WindowButtonDownFcn = @obj.actionBegin;
-        %     obj.hFig.WindowButtonUpFcn = @obj.actionEnds;
-        %     % obj.hFig.WindowScrollWheelFcn = @obj.zoom2D;    
-        %     obj.hFig.WindowScrollWheelFcn = @obj.zoom;  
-        %     obj.hFig.WindowKeyPressFcn = @obj.keyPressCallback2D;
-        % 
-        % end
 
         function removeCallbacks(obj)
 
@@ -148,8 +105,6 @@ classdef orbitClass < handle
             obj.origCallbacks.WindowScrollWheelFcn  = obj.hFig.WindowScrollWheelFcn;
             obj.origCallbacks.WindowKeyPressFcn     = obj.hFig.WindowKeyPressFcn;
             obj.origCallbacks.WindowButtonMotionFcn = obj.hFig.WindowButtonMotionFcn;           
-            % obj.origCallbacks.WindowKeyReleaseFcn   = obj.hFig.WindowKeyReleaseFcn;
-            % obj.origCallbacks.CreateFcn             = obj.hFig.CreateFcn;
 
         end
 
@@ -160,23 +115,21 @@ classdef orbitClass < handle
             obj.hFig.WindowScrollWheelFcn   = obj.origCallbacks.WindowScrollWheelFcn;
             obj.hFig.WindowKeyPressFcn      = obj.origCallbacks.WindowKeyPressFcn;
             obj.hFig.WindowButtonMotionFcn  = obj.origCallbacks.WindowButtonMotionFcn;           
-            % obj.hFig.WindowKeyReleaseFcn    = obj.origCallbacks.WindowKeyReleaseFcn;
-            % obj.hFig.CreateFcn              = obj.origCallbacks.CreateFcn;
-
 
         end
 
         function switchOrbitOff(obj)
 
             obj.orbitOn = false;
-            obj.removeCallbacks;
-            % obj.resetOrigCallbacks;
+            % obj.removeCallbacks;
+            obj.resetOrigCallbacks;
             
         end
 
         function switchOrbitOn(obj)
 
             obj.orbitOn = true;
+            obj.setCallbacks;
 
         end
 
@@ -197,28 +150,29 @@ classdef orbitClass < handle
                 zct = mean(src.ZData,'all');
     
                 newCentreOfRotation = [xct,yct,zct];
-                setCentreOfRotation(obj,newCentreOfRotation)         
+                obj.setCentreOfRotation(newCentreOfRotation)         
              
             end
 
         end
 
-        function actionBegin(obj,src,~)
 
-            switch obj.mode
-                case '2D'
-                    actionBegin2D(obj,src,[])
-                case '3D'
-                    actionBegin3D(obj,src,[])
-            end
-
-        end
-
-        function actionBegin2D(obj,src,~)
+        function actionBegins(obj, src)
 
             if ~obj.inActiveArea
                 return
             end
+
+            switch obj.mode
+                case '2D'
+                    obj.actionBegins2D(src)
+                case '3D'
+                    obj.actionBegins3D(src)
+            end
+
+        end
+
+        function actionBegins2D(obj,src)
 
             crd = get(obj.hAx, 'CurrentPoint');
             obj.startXonAxes = crd(1);
@@ -242,24 +196,12 @@ classdef orbitClass < handle
         end
 
        
-        function actionBegin3D(obj,src,~)
-
-            if ~obj.inActiveArea
-                return
-            end
+        function actionBegins3D(obj,src)
 
             crd = get(obj.hFig, 'CurrentPoint');
             obj.startXonFig = crd(1);
             obj.startYonFig = crd(2);
-                
-            % subtract origin (camera target) to convert cartesian to sherical system origin = camera_position-camera_target
-    
-            xd = obj.cameraPosition(1)-obj.cameraTarget(1);
-            yd = obj.cameraPosition(2)-obj.cameraTarget(2);
-            zd = obj.cameraPosition(3)-obj.cameraTarget(3);
-            
-            [obj.azStart,obj.elStart,obj.observationDist] = cart2sph(xd,yd,zd);        
-    
+
             obj.axPosStart = obj.hAx.Position;
         
             clickType = get(src, 'SelectionType');
@@ -276,34 +218,28 @@ classdef orbitClass < handle
                     case 'alt'
                                              
                         src.Pointer = 'cross';
-                        src.WindowButtonMotionFcn = @obj.dragRotate3D; 
+                        src.WindowButtonMotionFcn = @(~, ~) obj.dragRotate3D; 
                                       
                     case 'extend'
     
                         src.Pointer = 'hand';
-                        src.WindowButtonMotionFcn = @obj.dragPan3D;              
+                        src.WindowButtonMotionFcn = @(~, ~) obj.dragPan3D;              
                         
                 end
             
         end
 
-        function actionEnds(obj,~,~)
-            obj.hFig.WindowButtonMotionFcn = [];
+        function actionEnds(obj)
+            % obj.hFig.WindowButtonMotionFcn = [];
 
-            % obj.hFig.WindowButtonMotionFcn = obj.origCallbacks.WindowButtonMotionFcn;
+            obj.hFig.WindowButtonMotionFcn = obj.origCallbacks.WindowButtonMotionFcn;
             obj.hFig.Pointer = 'arrow';
-            % drawnow
-            % 777
-            % clc
-            % pt = obj.hFig.Pointer
-        end
-    
-        function dragRotate3D(obj,~, ~)
 
-            if ~isequal(obj.mode,'3D')
-                return
-            end
-        
+        end
+
+    
+        function dragRotate3D(obj)
+
             crd = get(obj.hFig, 'CurrentPoint');
             x = crd(1);
             y = crd(2);           
@@ -314,19 +250,20 @@ classdef orbitClass < handle
     
             obj.startXonFig = x;
             obj.startYonFig = y;
-                                   
-            camorbit(obj.hAx,dx/obj.angleStep,dy/obj.angleStep)
 
-            % text(obj.hAx,1,1,num2str(crd))
-            % disp(obj.hAx.View)
-          % crd
+            % check whether the plot is upside down - if so, x rotates in the opposite direction
+            if obj.hAx.CameraUpVector(3) < 0
+                upSign = -1;
+            else
+                upSign = 1;
+            end
+
+            camorbit(obj.hAx,upSign*dx/obj.angleStep,dy/obj.angleStep)
+
         end
 
-        function dragPan3D(obj,~, ~)
-       
-            if ~obj.inActiveArea || ~isequal(obj.mode,'3D')
-                return
-            end
+
+        function dragPan3D(obj)
     
             crd = get(obj.hFig, 'CurrentPoint');
             x = crd(1);
@@ -341,6 +278,7 @@ classdef orbitClass < handle
             obj.hAx.Position = axPosNew;
 
         end
+
 
         function dragPan2D(obj,~,~)
 
@@ -373,24 +311,26 @@ classdef orbitClass < handle
 
         end
 
-        function zoom(obj,src,evt)
 
-            switch obj.mode
-                case '2D'
-                    zoom2D(obj,src,evt)
-                case '3D'
-                    zoom3D(obj,src,evt)
-            end
-
-        end
-
-        function zoom2D(obj,~,evt)
-
-            dir = evt.VerticalScrollCount;
+        function zoom(obj,evt)
 
             if ~obj.inActiveArea
                 return
             end
+
+            switch obj.mode
+                case '2D'
+                    zoom2D(obj,evt)
+                case '3D'
+                    zoom3D(obj,evt)
+            end
+
+        end
+
+
+        function zoom2D(obj,evt)
+
+            dir = evt.VerticalScrollCount;
     
             % obj.xMax = 40;            
             crd = get(obj.hAx, 'CurrentPoint');
@@ -409,15 +349,10 @@ classdef orbitClass < handle
             newXLim(newXLim > obj.xMax2D) = obj.xMax2D;
            
             obj.hAx.XLim = newXLim;
-
-
         end
 
-        function zoom3D(obj,~,evt)
-      
-            if ~obj.inActiveArea
-                return
-            end
+
+        function zoom3D(obj,evt)
     
             crd = get(obj.hAx, 'CurrentPoint');
         
@@ -443,7 +378,8 @@ classdef orbitClass < handle
 
         end
 
-        function setCentreOfRotation(obj,newCentreOfRotation)
+
+        function setCentreOfRotation(obj, newCentreOfRotation)
         
             axTightPosOld = obj.hAx.tightPosition;
            
@@ -478,6 +414,7 @@ classdef orbitClass < handle
        
         end
 
+
         function resetCentreOfRotation(obj)
            
             % set centre of rotation to centre of axis
@@ -485,9 +422,10 @@ classdef orbitClass < handle
             yct = (obj.hAx.YLim(2)-obj.hAx.YLim(1))/2 + obj.hAx.YLim(1);
             zct = (obj.hAx.ZLim(2)-obj.hAx.ZLim(1))/2 + obj.hAx.ZLim(1);
 
-            setCentreOfRotation(obj,[xct,yct,zct]);
+            obj.setCentreOfRotation([xct,yct,zct]);
        
         end
+
 
         function resetView(obj)
         
@@ -517,18 +455,14 @@ classdef orbitClass < handle
             sceneWidth = obj.hAx.XLim(2)-obj.hAx.XLim(1);
             sceneHeight = obj.hAx.YLim(2)-obj.hAx.YLim(1);        
             longestSceneEdge = max([sceneWidth,sceneHeight]);
-            obj.observationDist = longestSceneEdge/2/tand(obj.axZoom/2);
+            observationDist = longestSceneEdge/2/tand(obj.axZoom/2);
             xct = obj.cameraTarget(1);
             yct = obj.cameraTarget(2);
-            campos(obj.hAx,[xct,yct,obj.observationDist])
-
-            
-
-
-      
+            campos(obj.hAx,[xct,yct,observationDist])
         end
 
-        function setActiveAxes(obj,src,cp,status,ax)
+
+        function setActiveAxes(obj, ax, status)
                       
             if ~obj.orbitOn
                 return
@@ -537,29 +471,20 @@ classdef orbitClass < handle
             obj.inActiveArea = status;
                       
             if status
-    
                 obj.hAx = ax;
                 obj.axZoom = obj.hAx.CameraViewAngle;  
       
-                for i = 1:2
-                
-                    if isequal(obj.axesInfo{i}.axh,ax)
-                                        
-                        obj.mode = obj.axesInfo{i}.mode;
-    
+                for i = 1:numel(obj.existingAxes)
+                    if isequal(obj.existingAxes{i}.handle,ax)
+                        obj.mode = obj.existingAxes{i}.mode;
                     end
-                    
                 end    
-                
-                % obj.setCallbacks
-
-            else
-                % obj.removeCallbacks
             end
 
         end
 
-        function keyPressCallback3D(obj,~,evt)      
+
+        function keyPressCallback3D(obj, evt)      
             
             dx = 0.05;
             zoomStep = 0.1;

@@ -1,15 +1,100 @@
-% function that gets uM position of an object and return its position in pixel coordinates of the screen
-function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
+function positionPix = MicroMToPixelPosition(positionUM, ax)
 
     clc
+    % Assumptions: 
+    %   - We manually change the position of the camera position and target, and CameraViewAngle
+    %   - CameraUpVector automatically adjusts to the other parameters
+    %   - DataAspectRatio of axes is set to [1 1 1], PlotBoxAspectRatio corresponds to the axes aspect ratio
+    %   - positionUM is in the same units (micrometers in our case) as the 3D system of the axes
 
-    disp(ax.CameraUpVector)
-    % ax.CameraUpVector = [0 0 1];
+    % get information about axes organization and rotation
+    [xSign, ySign, zSign] = getAxesDirection(ax);
 
-    %% get current rotation of the axes
-    % elevation = ax.View(2);
-    % azimuth = wrapTo360(ax.View(1));
+    [azimuth, elevation, isUpsideDown] = calculateRotation(ax, xSign, ySign, zSign);
+    % disp(ax.View)
 
+    [xPosUM, yPosUM, zPosUM] = getMicromPosition(ax, positionUM);
+    [xRangeUM, yRangeUM, zRangeUM] = getAxesRanges(ax);
+
+    [xFractionToWidth, xFractionToHeight] = calculateXaxisContributions(azimuth, elevation, xSign, xPosUM, xRangeUM);
+    [yFractionToWidth, yFractionToHeight] = calculateYaxisContributions(azimuth, elevation, ySign, yPosUM, yRangeUM);
+
+    % calculate the horizontal position within the bounding box
+    [xWidth, yWidth] = calculateWidthDivision(azimuth, xRangeUM, yRangeUM);
+
+    [widthPix, heightPix] = calculateBoundingBoxSize(ax);
+
+    xContributionToWidth = xFractionToWidth * xWidth * widthPix;
+    yContributionToWidth = yFractionToWidth * yWidth * widthPix;
+
+    xInsidePix = xContributionToWidth + yContributionToWidth;
+    
+    % calculate the vertical position within the bounding box
+    [xHeight, yHeight, zHeight] = calculateHeightDivision(azimuth, elevation, xRangeUM, yRangeUM, zRangeUM);
+
+    xContributionToHeight = xFractionToHeight * xHeight * heightPix;
+    yContributionToHeight = yFractionToHeight * yHeight * heightPix;
+
+    zFractionToHeight = calculateZaxisContribution(zPosUM, zRangeUM, isUpsideDown);
+    zContributionToHeight = zFractionToHeight * zHeight * heightPix;
+
+    yInsidePix = xContributionToHeight + yContributionToHeight + zContributionToHeight;
+
+    % sum all origin positions to get the absolute position in pixels
+    [xParentPix, yParentPix] = calculateContainerOrigin(ax);
+    [xOriginPix, yOriginPix] = calculateBoundingBoxOrigin(ax);
+
+    xAbsolutePix = xParentPix + xOriginPix + xInsidePix;
+    yAbsolutePix = yParentPix + yOriginPix + yInsidePix;
+
+    positionPix = [xAbsolutePix, yAbsolutePix];
+
+    % set(0,'PointerLocation',[xParentPix,yParentPix])
+    % pause(0.3)
+
+    % set(0, 'PointerLocation',[xParentPix+xOriginPix,yParentPix+yOriginPix])
+    % pause(0.3)
+
+    % set(0,'PointerLocation',[xAbsolutePix,yAbsolutePix])
+
+    assignin('base', 'ax', ax);
+end
+
+
+%% HELPER FUNCTIONS
+
+function [azimuth, elevation, isUpsideDown] = calculateRotation(ax, xSign, ySign, zSign)
+    sightVector = ax.CameraPosition - ax.CameraTarget;
+
+    z = [0 0 1*zSign];
+    elevation = acosd(dot(z, sightVector)/norm(sightVector));
+    elevation = 90 - elevation;
+
+    upVector = ax.CameraUpVector;
+    isUpsideDown = false;
+
+    if isequal(elevation, 90)
+        % if the elevation is 90 or -90, the projection of sight to xy plane is zero
+        azimuth = -atan2d(zSign*xSign*upVector(1), zSign*ySign*upVector(2));
+    elseif isequal(elevation, -90)
+        azimuth = -atan2d(-zSign*xSign*upVector(1), -zSign*ySign*upVector(2));
+    else
+        azimuth = -atan2d(-xSign*sightVector(1), -ySign*sightVector(2));
+
+        if upVector(3) < 0
+            azimuth = azimuth + 180;
+            isUpsideDown = true;
+        end
+    end
+
+    if zSign < 0
+        azimuth = azimuth + 180;
+    end
+    
+end
+
+
+function [xSign, ySign, zSign] = getAxesDirection(ax)
     xSign = 1;
     if ax.XDir == "reverse"
         xSign = -1;
@@ -20,51 +105,46 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
         ySign = -1;
     end
 
-    disp(ax.CameraPosition)
-    disp(ax.CameraTarget)
-    % sightVector =  ax.CameraTarget - ax.CameraPosition
-    % azimuth = -atan2d(xSign*sightVector(1), ySign*sightVector(2))
+    zSign = 1;
+    if ax.ZDir == "reverse"
+        zSign = -1;
+    end
+end
 
-    sightVector = ax.CameraPosition - ax.CameraTarget;
-    azimuth = -atan2d(-xSign*sightVector(1), -ySign*sightVector(2))
 
-    disp('original view')
-    disp(ax.View)
+function [xPosUM, yPosUM, zPosUM] = getMicromPosition(ax, positionUM)
+    % extract the x, y, and z position in micrometers
 
-    % azimuth = atan2d(ax.CameraUpVector(1), ax.CameraUpVector(2))
-
-    if ax.CameraUpVector(3) < 0
-        azimuth = azimuth + 180
+    if isempty(positionUM)
+        % if the position is empty, use the current point instead - mainly for debugging
+        positionUM = get(ax, 'currentpoint');
+        positionUM = positionUM(1, 1:3);
     end
 
-    a = [0 0 1];
-    elevation = acosd(dot(a, sightVector)/norm(sightVector));
-    elevation = 90 - elevation
+    xPosUM = positionUM(1);
+    yPosUM = positionUM(2);
+    zPosUM = positionUM(3);
+end
 
-    % if isequal(elevation, 90) || isequal(elevation, -90)
-        % if the elevation is 90 or -90, the projection of sight to xy plane is zero
-        azimuth2 = -atan2d(-xSign*ax.CameraUpVector(1), -ySign*ax.CameraUpVector(2))    % elevation negative
-        azimuth2 = -atan2d(xSign*ax.CameraUpVector(1), ySign*ax.CameraUpVector(2))  % elevation positive
-    % end
 
-    %% get the absolute position of the bounding box lower right corner in pixels
+function [xRangeUM, yRangeUM, zRangeUM] = getAxesRanges(ax)
+    % get the ranges of the axes in micrometers
+    xRangeUM = ax.XLim(2) - ax.XLim(1);
+    yRangeUM = ax.YLim(2) - ax.YLim(1);
+    zRangeUM = ax.ZLim(2) - ax.ZLim(1);
+end
 
-    % get overall position of the parent structures
+
+
+function [xParentPix, yParentPix] = calculateContainerOrigin(ax)
+    % calculate starting pixel position of the axes container
     xParentPix = 0;
     yParentPix = 0;
 
     currentObject = ax.Parent;
 
-    cycle = 0;
     while true
-        % cycle = cycle + 1
-        % if ~isa(currentObject, 'matlab.ui.container.GridLayout')
-        %     disp(class(currentObject))
-        %     currentObject
-        % end
-        % currentObject
         pos = currentObject.Position;
-        % disp(pos)
         xParentPix = xParentPix + pos(1);
         yParentPix = yParentPix + pos(2);
         if isa(currentObject,'matlab.ui.Figure')
@@ -72,144 +152,104 @@ function PixelPos = MicroMToPixelPosition(MicroMArray,ax)
         end
         currentObject = currentObject.Parent;
     end
+end
 
-    xParentPix = xParentPix - (ax.InnerPosition(1) - ax.OuterPosition(1));
-    yParentPix = yParentPix - (ax.InnerPosition(2) - ax.OuterPosition(2));
 
-    % p1Pos = ax.Parent.Position;
-    % xP1 = p1Pos(1);
-    % yP1 = p1Pos(2);
-    % p2Pos = ax.Parent.Parent.Position;
-    % xP2 = p2Pos(1);
-    % yP2 = p2Pos(2);
-    % p3Pos = ax.Parent.Parent.Parent.Position;
-    % xP3 = p3Pos(1);
-    % yP3 = p3Pos(2);
-    % p4Pos = ax.Parent.Parent.Parent.Parent.Position;
-    % xP4 = p4Pos(1);
-    % yP4 = p4Pos(2);
-    % isa(ax.Parent.Parent.Parent.Parent,'matlab.ui.Figure')
-    % 
-    % xParentPix = xP1 + xP2 + xP3 + xP4 -3;
-    % yParentPix = yP1 + yP2 + yP3 + yP4 -1;
 
- 
-    %% get dimensions of the axes object
+function [widthPix, heightPix] = calculateBoundingBoxSize(ax)
 
-    % dimensions of axes in pixels
-    tighPos = ax.tightPosition;
-    x0Pix = tighPos(1);
-    y0Pix = tighPos(2);
-    xPix = tighPos(3);
-    yPix = tighPos(4);
-        
-    % axes limits in microM
-    xLimMic = ax.XLim(2)-ax.XLim(1);
-    yLimMic = ax.YLim(2)-ax.YLim(1);
-    zLimMic = ax.ZLim(2)-ax.ZLim(1);
-
-    if isempty(MicroMArray)
-        MicroMArray = get(ax, 'currentpoint');
-        MicroMArray = MicroMArray(1,1:3);
-    end
-    
-    % coordinate position in microM
-    xCMic = MicroMArray(:,1)-ax.XLim(1);
-    yCMic = MicroMArray(:,2)-ax.YLim(1);
-    zCMic = MicroMArray(:,3)-ax.ZLim(1);
-
-    %% calculate the relative position of the coordinate in respect to the bounding box in pixels 
-
-    % calculating proportional contribution by x and y, depending on the rotation
-    xXratio = xSign*sign(cosd(azimuth))*xCMic/xLimMic;
-    if xSign*sign(cosd(azimuth)) < 0
-    xXratio = 1 + xXratio;
-    end
-    xYratio = xSign*sign(-sind(azimuth))*sign(sind(elevation))*xCMic/xLimMic;
-    if xSign*sign(-sind(azimuth))*sign(sind(elevation)) < 0
-    xYratio = 1 + xYratio;
-    end
-    % reversed y - minus sign in sign(-sind(azimuth)) instead of plus
-    yXratio = ySign*sign(sind(azimuth))*yCMic/yLimMic;
-    if ySign*sign(sind(azimuth)) < 0
-    yXratio = 1 + yXratio;
-    end
-    % reversed y - minus sign in sign(-cosd(azimuth)) instead of plus
-    yYratio = ySign*sign(cosd(azimuth))*sign(sind(elevation))*yCMic/yLimMic;
-    if ySign*sign(cosd(azimuth))*sign(sind(elevation)) < 0
-    yYratio = 1 + yYratio;
-    end    
-
-    % calculating contribution of axes weighted by their length
-    cosRatio = abs(cosd(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
-    sinRatio = abs(sind(azimuth))/(abs(cosd(azimuth)) + abs(sind(azimuth)));
-
-    sinRE = abs(sind(elevation))/(abs(sind(elevation))+abs(cosd(elevation)));
-    cosRE = abs(cosd(elevation))/(abs(sind(elevation))+abs(cosd(elevation)));
-
-    % sinREw = sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth)))/(cosRE*zLimMic+sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth))));
-    % cosREw = cosRE*zLimMic/(cosRE*zLimMic+sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth))));
-
-    sinREw = sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth)))/(cosRE*zLimMic+sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth))));
-    cosREw = cosRE*zLimMic/(cosRE*zLimMic+sinRE*(xLimMic*abs(sind(azimuth))+yLimMic*abs(cosd(azimuth))));
-
-    %% get the absolute position in pixels
-
-    % disp('ratio')
-    % cosRatio
-    % yXratio
-    % % abs(xLimMic*cosd(azimuth))/(abs(xLimMic*cosd(azimuth)) + abs(yLimMic*sind(azimuth)))
-    % (xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
-    % (yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
-    % xXratio*(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
-    % yXratio*(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
-    % xXratio*(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio)) + yXratio*(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio))
-
-    xCPix = xParentPix + x0Pix + xPix*xXratio*(xLimMic*cosRatio/(xLimMic*cosRatio+yLimMic*sinRatio)) + xPix*yXratio*(yLimMic*sinRatio/(xLimMic*cosRatio+yLimMic*sinRatio));
-    yCPix = yParentPix + y0Pix + yPix*sinREw*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*sinREw*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*cosREw*(zCMic)/zLimMic;
-
-    if ax.CameraUpVector(3) < 0
-        yCPix = yParentPix + y0Pix + yPix*sinREw*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*sinREw*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*cosREw*(zLimMic-zCMic)/zLimMic;
-    end
-
-    % if ax.CameraUpVector(3) < 0
-    %     yCPix = yParentPix + y0Pix + yPix*sinREw*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*sinREw*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) - yPix*cosREw*(zCMic)/zLimMic;
-    % end
-    % xCPix = xParentPix + x0Pix + xPix*xXratio*(yLimMic*cosRatio/(yLimMic*cosRatio+xLimMic*sinRatio)) + xPix*yXratio*(xLimMic*sinRatio/(yLimMic*cosRatio+xLimMic*sinRatio));
-    % yCPix = yParentPix + y0Pix + yPix*sinREw*xYratio*(xLimMic*sinRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*sinREw*yYratio*(yLimMic*cosRatio/(xLimMic*sinRatio+yLimMic*cosRatio)) + yPix*cosREw*(zCMic)/zLimMic;
-
-    % set(ax,'PlotBoxAspectRatio',[1,1,1]);
-
-    PixelPos = [xCPix,yCPix];
-
-    % set(ax, 'Box', 'on');
-
-    % set(0,'PointerLocation',[xParentPix  + x0Pix,yParentPix + y0Pix]);
-    % pause(1)
-    % % set(0,'PointerLocation',[xParentPix + x0Pix + xPix,yParentPix + y0Pix]);
-    % % pause(1)
-    % set(0,'PointerLocation',[xParentPix + x0Pix + xPix,yParentPix + y0Pix + yPix]);
-    % pause(1)
-
-    % ax.View
-
-    % a = [0 1];
-    % sightVector = ax.CameraPosition - ax.CameraTarget;
-    % b = -sightVector(1:2);
-    % azimuth = acosd(dot(a, b)/norm(b))
-    % s = sign(dot(a, b))
-
-    % -atan2d(-sightVector(1), -sightVector(2))
-
-    % a = [0 0 1];
-    % sightVector = ax.CameraPosition - ax.CameraTarget;
-    % elevation = acosd(dot(a, sightVector)/norm(sightVector))
-    % s = sign(dot(a, sightVector))
-    % elevation2 = 90 - elevation
-
-    set(0,'PointerLocation',[xCPix,yCPix])
-
-    assignin('base', 'ax', ax);
-
+    tightPos = ax.tightPosition;
+    widthPix = tightPos(3);
+    heightPix = tightPos(4);
 
 end
+
+
+function [xOriginPix, yOriginPix] = calculateBoundingBoxOrigin(ax)
+    % calculate the origin of the bounding box in pixels
+
+    tightPosition = ax.tightPosition;
+
+    % TO OPTIMIZE - make sure this holds with different setup
+    xOriginPix = tightPosition(1) - (ax.InnerPosition(1) - ax.OuterPosition(1));
+    yOriginPix = tightPosition(2) - (ax.InnerPosition(2) - ax.OuterPosition(2));
+end
+
+
+
+function [xFractionToWidth, xFractionToHeight] = calculateXaxisContributions(azimuth, elevation, xSign, xPosUM, xRangeUM)
+
+    % contribution of the world x axis to the x axis in 2D space
+    xFractionToWidth = xSign*sign(cosd(azimuth))*xPosUM/xRangeUM;
+    if xSign*sign(cosd(azimuth)) < 0
+        xFractionToWidth = 1 + xFractionToWidth;
+    end
+
+    % contribution of the world x axis to the y axis in 2D space
+    xFractionToHeight = xSign*sign(-sind(azimuth))*sign(sind(elevation))*xPosUM/xRangeUM;
+    if xSign*sign(-sind(azimuth))*sign(sind(elevation)) < 0
+        xFractionToHeight = 1 + xFractionToHeight;
+    end
+end
+
+
+function [yFractionToWidth, yFractionToHeight] = calculateYaxisContributions(azimuth, elevation, ySign, yPosUM, yRangeUM)
+    % reversed y - minus sign in sign(-sind(azimuth)) instead of plus
+    % contribution of the world y axis to the x axis in 2D space
+
+    yFractionToWidth = ySign*sign(sind(azimuth))*yPosUM/yRangeUM;
+    if ySign*sign(sind(azimuth)) < 0
+        yFractionToWidth = 1 + yFractionToWidth;
+    end
+
+    % reversed y - minus sign in sign(-cosd(azimuth)) instead of plus
+    % contribution of the world y axis to the y axis in 2D space
+    yFractionToHeight = ySign*sign(cosd(azimuth))*sign(sind(elevation))*yPosUM/yRangeUM;
+    if ySign*sign(cosd(azimuth))*sign(sind(elevation)) < 0
+        yFractionToHeight = 1 + yFractionToHeight;
+    end   
+end
+
+
+function zFractionToHeight = calculateZaxisContribution(zPosUM, zRangeUM, isUpsideDown)
+    % contribution of the world z axis to the y axis in 2D space
+    zFractionToHeight = zPosUM/zRangeUM;
+
+    if isUpsideDown
+        zFractionToHeight = (zRangeUM - zPosUM)/zRangeUM;
+    end
+    
+end
+
+
+function [xWidth, yWidth] = calculateWidthDivision(azimuth, xRangeUM, yRangeUM)
+    % calculating contribution of wold x and y axes to the 2D x axis
+
+    cosSinSum = xRangeUM*abs(cosd(azimuth)) + yRangeUM*abs(sind(azimuth));
+
+    xWidth = xRangeUM*abs(cosd(azimuth))/cosSinSum;
+    yWidth = yRangeUM*abs(sind(azimuth))/cosSinSum;
+end
+
+
+function [xHeight, yHeight, zHeight] = calculateHeightDivision(azimuth, elevation, xRangeUM, yRangeUM, zRangeUM)
+
+    % the relative contribution of xy is the opposite as to the width -> sin for x and cos for y 
+    % the contribution of xy is determined by sin of elevation - 0 corresponds to no xy contribution
+    xyRatio = abs(sind(elevation))*(xRangeUM*abs(sind(azimuth)) + yRangeUM*abs(cosd(azimuth)));
+    % z contribution depends on cos of elevation - maximum contribution when elevation is 0
+    zRatio = abs(cosd(elevation))*zRangeUM;
+
+    % the relative contributions need to be divided by their sum
+    elevationCosSinSum = xyRatio + zRatio;
+
+    xyHeight = xyRatio/elevationCosSinSum;
+    zHeight = zRatio/elevationCosSinSum;
+
+    azimuthCosSinSum = xRangeUM*abs(sind(azimuth)) + yRangeUM*abs(cosd(azimuth));
+    xHeight = xyHeight * xRangeUM * abs(sind(azimuth)) / azimuthCosSinSum;
+    yHeight = xyHeight * yRangeUM * abs(cosd(azimuth)) / azimuthCosSinSum;
+end
+
+    
+
