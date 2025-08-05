@@ -327,7 +327,7 @@ classdef BranchGraphicsGroup < handle
             obj.idLabel.String = [num2str(id) ' (' num2str(groupId) ')'];
             if ~isempty(obj.GraphicsHandles) && isvalid(obj.GraphicsHandles(idx))
                 obj.idLabel.Position = mean(obj.GraphicsHandles(idx).Vertices(), 1);
-                disp('position set')
+                % disp('position set')
             end
         end
 
@@ -346,6 +346,7 @@ classdef BranchGraphicsGroup < handle
             end
             if ~isempty(obj.GraphicsHandles)
                 set(obj.GraphicsHandles(idx), 'Selected', "on", 'FaceColor', obj.selectionColor); % Update the graphics object
+                set(obj.GraphicsHandles(idx), 'ContextMenu', obj.contextMenu);
             end
             disp(['Turning on selection for object with ID: ' num2str(id)]);
             obj.updateIdLabel(id); % Update the ID label position and text
@@ -376,6 +377,7 @@ classdef BranchGraphicsGroup < handle
             end
             if ~isempty(obj.GraphicsHandles)
                 set(obj.GraphicsHandles(idx), 'Selected', "off", 'FaceColor', objectColor);
+                set(obj.GraphicsHandles(idx), 'ContextMenu', []);
             end
             obj.idLabel.String = '';
 
@@ -455,6 +457,10 @@ classdef BranchGraphicsGroup < handle
             else
                 set(obj.GraphicsHandles(~isSelected), 'FaceColor', obj.branchColor);
             end
+
+            % Make sure context menu is assigned only to selected objects
+            set(obj.GraphicsHandles(isSelected), 'ContextMenu', obj.contextMenu); 
+            set(obj.GraphicsHandles(~isSelected), 'ContextMenu', []); % Remove context menu from unselected objects
 
             obj.hideBoundingBox();
         end
@@ -831,7 +837,12 @@ classdef BranchGraphicsGroup < handle
             objectHandle.LineStyle = 'none';
             objectHandle.SelectionHighlight = 'off'; % blocked default highlight (we do it by changing color)
 
-            objectHandle.ContextMenu = obj.contextMenu; % Obj passed to be able to call getSelectedIds method from context menu functions
+            if isequal(selectionStatus, "on") 
+                objectHandle.ContextMenu = obj.contextMenu; 
+                objectHandle.FaceColor = obj.selectionColor; % Set selection color
+            else
+                objectHandle.ContextMenu = []; % Remove context menu if not selected
+            end
 
             obj.idLabel.String = '';
         end
