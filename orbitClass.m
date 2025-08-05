@@ -87,6 +87,8 @@ classdef orbitClass < handle
             obj.hFig.WindowKeyPressFcn = @(~, evt) obj.keyPressed(evt);
             obj.hFig.WindowKeyReleaseFcn = @(~, evt) obj.keyReleased(evt);
             obj.hFig.WindowButtonMotionFcn = obj.origCallbacks.WindowButtonMotionFcn;
+            obj.hFig.KeyPressFcn = obj.origCallbacks.KeyPressFcn;
+            obj.hFig.KeyReleaseFcn = obj.origCallbacks.KeyReleaseFcn;
 
         end
 
@@ -99,8 +101,11 @@ classdef orbitClass < handle
             obj.hFig.WindowKeyPressFcn = [];
             obj.hFig.WindowKeyReleaseFcn = [];
             obj.hFig.WindowButtonMotionFcn = [];
+            obj.hFig.KeyPressFcn = [];
+            obj.hFig.KeyReleaseFcn = [];
 
         end
+
 
         function saveOrigCallbacks(obj)
 
@@ -109,9 +114,12 @@ classdef orbitClass < handle
             obj.origCallbacks.WindowScrollWheelFcn  = obj.hFig.WindowScrollWheelFcn;
             obj.origCallbacks.WindowKeyPressFcn     = obj.hFig.WindowKeyPressFcn;
             obj.origCallbacks.WindowKeyReleaseFcn   = obj.hFig.WindowKeyReleaseFcn;
-            obj.origCallbacks.WindowButtonMotionFcn = obj.hFig.WindowButtonMotionFcn;           
+            obj.origCallbacks.WindowButtonMotionFcn = obj.hFig.WindowButtonMotionFcn;
+            obj.origCallbacks.KeyPressFcn         = obj.hFig.KeyPressFcn;
+            obj.origCallbacks.KeyReleaseFcn       = obj.hFig.KeyReleaseFcn;      
 
         end
+
 
         function resetOrigCallbacks(obj)
 
@@ -120,7 +128,9 @@ classdef orbitClass < handle
             obj.hFig.WindowScrollWheelFcn   = obj.origCallbacks.WindowScrollWheelFcn;
             obj.hFig.WindowKeyPressFcn      = obj.origCallbacks.WindowKeyPressFcn;
             obj.hFig.WindowKeyReleaseFcn    = obj.origCallbacks.WindowKeyReleaseFcn;
-            obj.hFig.WindowButtonMotionFcn  = obj.origCallbacks.WindowButtonMotionFcn;           
+            obj.hFig.WindowButtonMotionFcn  = obj.origCallbacks.WindowButtonMotionFcn;
+            obj.hFig.KeyPressFcn            = obj.origCallbacks.KeyPressFcn;
+            obj.hFig.KeyReleaseFcn          = obj.origCallbacks.KeyReleaseFcn;      
 
         end
 
@@ -160,9 +170,23 @@ classdef orbitClass < handle
         end
 
 
+        function overrideWindowKeyReleaseCallback(obj, keyReleaseCallback)
+
+            obj.hFig.WindowKeyReleaseFcn = keyReleaseCallback;
+
+        end
+
+
+        function resetWindowKeyReleaseCallback(obj)
+
+            % reset the key release callback to the original one added by orbitTool
+            obj.hFig.WindowKeyReleaseFcn = @(~, evt) obj.keyReleased(evt);
+
+        end
+
+
         function overrideWindowKeyPressCallback(obj, keyPressCallback)
 
-            % override the key press callback
             obj.hFig.WindowKeyPressFcn = keyPressCallback;
         end
 
@@ -175,6 +199,36 @@ classdef orbitClass < handle
         end
 
 
+        function overrideScrollWheelCallback(obj, scrollWheelCallback)
+
+            obj.hFig.WindowScrollWheelFcn = scrollWheelCallback;
+
+        end
+
+
+        function resetScrollWheelCallback(obj)
+
+            % reset the scroll wheel callback to the original one added by orbitTool
+            obj.hFig.WindowScrollWheelFcn = @(~, evt) obj.zoom(evt);
+
+        end
+
+
+        function overrideButtonDownCallback(obj, buttonDownCallback)
+
+            obj.hFig.WindowButtonDownFcn = buttonDownCallback;
+
+        end
+
+
+        function resetButtonMotionCallback(obj)
+
+            % reset the button motion callback to the original one read from the main app
+            obj.hFig.WindowButtonMotionFcn = obj.origCallbacks.WindowButtonMotionFcn;
+
+        end
+
+
 
         function switchOrbitOff(obj)
 
@@ -183,6 +237,7 @@ classdef orbitClass < handle
             obj.resetOrigCallbacks;
             
         end
+
 
         function switchOrbitOn(obj)
 
@@ -265,6 +320,7 @@ classdef orbitClass < handle
             clickType = get(src, 'SelectionType');
                 
                 switch clickType
+                    % https://www.mathworks.com/help/matlab/ref/matlab.ui.figure.html - selectionType triggered in different ways
                     case 'normal'
                
                         % resetCentreOfRotation(obj)                    
@@ -276,7 +332,12 @@ classdef orbitClass < handle
                     case 'alt'
                                              
                         src.Pointer = 'cross';
-                        src.WindowButtonMotionFcn = @(~, ~) obj.dragRotate3D; 
+                        % determine the rotation direction that I should use
+                        centrePos = MicroMToPixelPosition(obj.hAx.CameraTarget, obj.hAx);   % calculate position of rotation centre in pixels
+                        deltaY = centrePos(2) - obj.startYonFig;  % calculate the signed y distance of the rotation centre from the mouse position in pixels
+                        rotationSign = sign(deltaY*obj.hAx.View(2));  % sign depends on relative position and rotation of the axes
+                        % rotationSign supplied here, so that the rotation direction is preserved and jaggered movement is avoided
+                        src.WindowButtonMotionFcn = @(~, ~) obj.dragRotate3D(rotationSign); 
                                       
                     case 'extend'
     
@@ -288,15 +349,14 @@ classdef orbitClass < handle
         end
 
         function actionEnds(obj)
-            % obj.hFig.WindowButtonMotionFcn = [];
 
-            obj.hFig.WindowButtonMotionFcn = obj.origCallbacks.WindowButtonMotionFcn;
+            obj.resetButtonMotionCallback();
             obj.hFig.Pointer = 'arrow';
 
         end
 
     
-        function dragRotate3D(obj)
+        function dragRotate3D(obj, rotationSign)
 
             crd = get(obj.hFig, 'CurrentPoint');
             x = crd(1);
@@ -309,15 +369,30 @@ classdef orbitClass < handle
             obj.startXonFig = x;
             obj.startYonFig = y;
 
+            % TO OPTIMIZE - this requires determination of where is the drag point relative to the rotation centre
+
+            % disp(obj.hAx.CameraPosition)
+            % disp(obj.hAx.CameraTarget)
+            % disp(obj.hAx.CameraUpVector)
             % check whether the plot is upside down - if so, x rotates in the opposite direction
             % disp(obj.hAx.CameraPosition)
-            if obj.hAx.CameraUpVector(3) < 0
-                upSign = -1;
-            else
-                upSign = 1;
-            end
+            % if obj.hAx.CameraUpVector(3) < 0
+            %     upSign = -1
+            % else
+            %     upSign = 1
+            % end
+            % upSign = 1;
+            % disp(obj.hAx.View)
 
-            camorbit(obj.hAx,upSign*dx/obj.angleStep,dy/obj.angleStep)
+            % v = obj.hAx.CameraTarget - obj.hAx.CameraPosition
+            % disp('')
+
+            % pos = MicroMToPixelPosition(obj.hAx.CameraTarget, obj.hAx);
+            % delta = pos(2) - y
+
+            % upSign = sign(delta*obj.hAx.View(2))
+
+            camorbit(obj.hAx,rotationSign*dx/obj.angleStep,dy/obj.angleStep)
 
         end
 
