@@ -487,6 +487,19 @@ classdef orbitClass < handle
 
 
         function zoom3D(obj,evt)
+
+
+            % tightPos = obj.hAx.tightPosition; % tight position of the axes
+            % widthRatio = obj.hAx.Position(3)/tightPos(3)
+
+            % t = obj.hAx.CameraTarget;
+            % s = obj.hAx.CameraPosition - [(1-widthRatio)*obj.hAx.XLim(2)/2 (1-widthRatio)*obj.hAx.YLim(2)/2 t(3)];; % vector from camera target to camera position
+            % e = obj.hAx.CameraPosition - [(1-widthRatio)*obj.hAx.XLim(2)/2 (1-widthRatio)*obj.hAx.YLim(2)/2 t(3)];
+
+            % theta = acosd(dot(s,e)/(norm(s)*norm(e))) % angle between camera position and camera target
+            % viewAngle = obj.hAx.CameraViewAngle % current camera view angle
+
+            % a = widthRatio*viewAngle
     
             crd = get(obj.hAx, 'CurrentPoint');
         
