@@ -21,11 +21,12 @@ function [registeredZstack, driftVect] = registerPlanesDefault(zstack, ch)
     %
     %   Requires: Image Processing Toolbox  (imgaussfilt, imregtform, imwarp …)
 
+    ch = 1;
     % -------------------------------------------------------------------------
     %% 1) Basic settings
     sigma        = 2;              % Gaussian pre-filter σ
     regMethod    = 'Cross-correlation';
-    targetMethod = 'previous';     % 'first'  |  'previous'
+    targetMethod = 'first';     % 'first'  |  'previous'
     resizeFactor = 1;              % keep full resolution for clarity
     nT           = size(zstack, 4);
     nZ           = size(zstack, 3);
@@ -78,9 +79,9 @@ function [registeredZstack, driftVect] = registerPlanesDefault(zstack, ch)
     allDx = cellfun(@(tf) tf.Translation(1)*resizeFactor, tforms); % px in full res
     allDy = cellfun(@(tf) tf.Translation(2)*resizeFactor, tforms);
 
-    x0 = max( ceil( max(allDx) ), 1);         % left margin to keep inside FOV
+    x0 = max( ceil( max(allDx) + 1 ), 1);         % left margin to keep inside FOV
     xN = min( floor( min(allDx) ), 0);        % right “negative” margin
-    y0 = max( ceil( max(allDy) ), 1);
+    y0 = max( ceil( max(allDy) + 1 ), 1);
     yN = min( floor( min(allDy) ), 0);
 
     cropRect2D = [ x0 , y0 , xsz - x0 + xN , ysz - y0 + yN ];   % [xmin ymin w h]

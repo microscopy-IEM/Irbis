@@ -1,4 +1,4 @@
-function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
+function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch,runHeadless)
 
     %% GUI
     h = findall(0, 'type', 'figure','Name','Estimate drift in planes');
@@ -107,9 +107,16 @@ function [registeredZstack, driftVect] = preRegisterPlanesFcn(zstack,ch)
     fig.UserData.tforms = tforms;
 
     updatePlot(fig)
-    
-    %% Wait for the "Accept buttun pushed"
-    uiwait(fig)
+
+    if nargin > 2 && runHeadless
+        disp('Running in headless mode, no GUI will be shown')
+        % if runHeadless is true, then run the registration without GUI
+        runRegistration(fig);
+        acceptButtonPushed(fig);
+    else
+        %% Wait for the "Accept buttun pushed"
+        uiwait(fig)
+    end
     
     if ~isvalid(fig)
         registeredZstack = [];
@@ -260,7 +267,7 @@ function runRegistration(fig)
 
     %% Estimate drift
     
-    resizeFactor = 2;   
+    resizeFactor = 1;   
     
     sliderH = findobj(fig,'Tag','sensSlider');
     sigma = sliderH.Value;
@@ -296,7 +303,7 @@ function runRegistration(fig)
         tform.Translation(2) = tform.Translation(2)*resizeFactor;
 
         % FIX better round after reverting the resizing step
-        tform.A = round(tform.A); % allow only shifts by full pixel
+        tform.A = tform.A; % allow only shifts by full pixel
 
         tforms{currentTimePoint} = tform;
        
@@ -313,7 +320,7 @@ function runRegistration(fig)
 
     end
 
-    assignin('base', 'tforms',tforms)
+    % assignin('base', 'tforms',tforms)
 
     fig.UserData.driftVect = driftVect;
 
@@ -452,7 +459,7 @@ function runRegistration(fig)
 
     updatePlot(fig)  
 
-    disp('done')
+    % disp('done')
 
     close(wb)
 
