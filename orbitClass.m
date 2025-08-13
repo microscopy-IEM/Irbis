@@ -488,22 +488,25 @@ classdef orbitClass < handle
 
         function zoom3D(obj,evt)
 
+            % tightPos = obj.hAx.tightPosition;
+            % widthRatio = obj.hAx.InnerPosition(3)/tightPos(3);
+            % ax = obj.hAx;
+            % [azimuth, ~, ~] = SceneGeometry.calculateRotation(ax);
+            % widthUM = ax.XLim(2) * abs(cosd(azimuth)) + ax.YLim(2) * abs(sind(azimuth));
 
-            % tightPos = obj.hAx.tightPosition; % tight position of the axes
-            % widthRatio = obj.hAx.Position(3)/tightPos(3)
+            % realWidthUM = widthUM * widthRatio;
 
-            % t = obj.hAx.CameraTarget;
-            % s = obj.hAx.CameraPosition - [(1-widthRatio)*obj.hAx.XLim(2)/2 (1-widthRatio)*obj.hAx.YLim(2)/2 t(3)];; % vector from camera target to camera position
-            % e = obj.hAx.CameraPosition - [(1-widthRatio)*obj.hAx.XLim(2)/2 (1-widthRatio)*obj.hAx.YLim(2)/2 t(3)];
+            % v = (obj.hAx.CameraPosition - obj.hAx.CameraTarget)./ax.DataAspectRatio;
+            % sightVectorLen = norm(v);
+            % alpha = atand(realWidthUM/(2*sightVectorLen));
+            % zoomAngle = 2*atand(ax.InnerPosition(4)*sind(alpha)/(ax.InnerPosition(3)))
+            % realZoomAngle = obj.hAx.CameraViewAngle
 
-            % theta = acosd(dot(s,e)/(norm(s)*norm(e))) % angle between camera position and camera target
-            % viewAngle = obj.hAx.CameraViewAngle % current camera view angle
-
-            % a = widthRatio*viewAngle
-    
             crd = get(obj.hAx, 'CurrentPoint');
         
             cameraTarget_orig = obj.cameraTarget;
+            % disp(obj.hAx.CameraTarget)
+            % disp(obj.hAx.CameraPosition)
     
             xct = crd(2,1);
             yct = crd(2,2);
@@ -512,14 +515,6 @@ classdef orbitClass < handle
             obj.setCentreOfRotation([xct,yct,zct]) 
             
             obj.axZoom = obj.axZoom + evt.VerticalScrollCount*0.1*obj.axZoom;
-    
-            if obj.axZoom < 0.5
-                obj.axZoom = 0.5;
-            elseif obj.axZoom > 50
-                obj.axZoom = 50;
-    
-            end
-    
             obj.hAx.CameraViewAngle = obj.axZoom;   
             obj.setCentreOfRotation(cameraTarget_orig) 
 
@@ -575,16 +570,26 @@ classdef orbitClass < handle
 
 
         function resetView(obj)
-        
+
+            disp('Resetting view...')
+
             obj.resetCentreOfRotation()
-            % reset zoom
-            obj.axZoom = 12;
-            obj.hAx.CameraViewAngle = obj.axZoom;        
             obj.hAx.View = [0,90];
+
+            % widthRatio = 1;
+            % cameraViewAngle = SceneGeometry.calculateCameraViewAngleFor(obj.hAx, widthRatio)
+
+            % reset zoom
+            obj.axZoom = 10;
+            obj.hAx.CameraViewAngle = obj.axZoom;   
+            % obj.hAx.CameraViewAngle = cameraViewAngle;
+            
             % obj.hAx.View = [0,89.9];
             % 89
 
             % needed for not know reason to correcty zoom after reset view
+            % IS 250813: I have the same observation -_o_-
+                % I guess it is probably related to setting the View directly
             camorbit(obj.hAx,0.01,0.01)
             camorbit(obj.hAx,-0.01,-0.01)
                
@@ -593,19 +598,24 @@ classdef orbitClass < handle
             % hPan.Position
             
             % reset position
-            offset = 0;
-            % sceneRect = obj.hFig.Position;
-            sceneRect = hPan.Position;
-            obj.hAx.Position = [offset,offset,sceneRect(3)-offset*2,sceneRect(4)-offset*2];
-            
+
+            % preserving the ratio seems to be important for proper manual calculation of the CameraViewAngle
+
             % adjust camera position to the camera angle
-            sceneWidth = obj.hAx.XLim(2)-obj.hAx.XLim(1);
+            % sceneWidth = obj.hAx.XLim(2)-obj.hAx.XLim(1);
             sceneHeight = obj.hAx.YLim(2)-obj.hAx.YLim(1);        
-            longestSceneEdge = max([sceneWidth,sceneHeight]);
-            observationDist = longestSceneEdge/2/tand(obj.axZoom/2);
+            % longestSceneEdge = max([sceneWidth,sceneHeight]);
+            % observationDist = longestSceneEdge/2/tand(obj.axZoom/2);
+            observationDist = sceneHeight/2/tand(obj.axZoom/2);
             xct = obj.cameraTarget(1);
             yct = obj.cameraTarget(2);
             campos(obj.hAx,[xct,yct,observationDist])
+
+            adjustRatio = true; % ajust to have width and height the same
+            SceneGeometry.fitAxesToPanel(hPan, obj.hAx, adjustRatio);    % this will preserve the width/height ratio
+
+            % disp(obj.hAx.CameraPosition)
+            % disp(obj.hAx.CameraTarget)
         end
 
 
