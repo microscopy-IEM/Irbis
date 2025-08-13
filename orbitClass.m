@@ -21,6 +21,12 @@ classdef orbitClass < handle
         origCallbacks = [];
         keypressExtension = [];
         keyreleaseExtension = [];
+
+        timerActive = false;
+        timerFcn = [];
+        timerHandle = [];
+        timerDelay = 0.2;
+        releaseFcnTriggered = false;
     end
 
     methods
@@ -76,6 +82,37 @@ classdef orbitClass < handle
 
             % behavior can be assigned to any graphical object (axes or uipanel...)
             iptSetPointerBehavior(ax, behavior);
+        end
+
+
+        function utilizeTimer(obj, timerFcn, timerDelay)
+
+            % at the moment intended only for 3D plot
+            % TO OPTIMIZE: enable individual timer settings for each axes
+            obj.timerActive = true;
+            if nargin > 2
+                obj.timerDelay = timerDelay;
+            end
+            obj.timerFcn = timerFcn;
+
+            % singleShot means that it will be executed only once
+            obj.timerHandle = timer( ...
+                'ExecutionMode','singleShot', ...
+                'StartDelay',timerDelay, ...             % debounce window (tune 0.15–0.35 s)
+                'TimerFcn', obj.timerFcn);
+        end
+
+
+        function deactivateTimer(obj)
+            obj.timerActive = false;
+        end
+
+
+        function delete(obj)
+            if obj.timerActive && isvalid(obj.timerHandle)
+                stop(obj.timerHandle);
+                delete(obj.timerHandle);
+            end
         end
 
 
@@ -330,7 +367,7 @@ classdef orbitClass < handle
                         % obj.resetView()
                       
                     case 'alt'
-                                             
+                        obj.releaseFcnTriggered = true;     % added so that the redraw fcn (same as for timer) is activated upon release
                         src.Pointer = 'cross';
                         % determine the rotation direction that I should use
                         centrePos = MicroMToPixelPosition(obj.hAx.CameraTarget, obj.hAx);   % calculate position of rotation centre in pixels
@@ -340,7 +377,7 @@ classdef orbitClass < handle
                         src.WindowButtonMotionFcn = @(~, ~) obj.dragRotate3D(rotationSign); 
                                       
                     case 'extend'
-    
+                        obj.releaseFcnTriggered = true;
                         src.Pointer = 'hand';
                         src.WindowButtonMotionFcn = @(~, ~) obj.dragPan3D;              
                         
@@ -352,6 +389,12 @@ classdef orbitClass < handle
 
             obj.resetButtonMotionCallback();
             obj.hFig.Pointer = 'arrow';
+
+            if obj.releaseFcnTriggered
+                % TO OPTIMIZE: in some cases, we might want to have different function for timer and release
+                obj.releaseFcnTriggered = false;
+                obj.timerFcn();
+            end
 
         end
 
@@ -502,6 +545,8 @@ classdef orbitClass < handle
             % zoomAngle = 2*atand(ax.InnerPosition(4)*sind(alpha)/(ax.InnerPosition(3)))
             % realZoomAngle = obj.hAx.CameraViewAngle
 
+
+
             crd = get(obj.hAx, 'CurrentPoint');
         
             cameraTarget_orig = obj.cameraTarget;
@@ -517,6 +562,15 @@ classdef orbitClass < handle
             obj.axZoom = obj.axZoom + evt.VerticalScrollCount*0.1*obj.axZoom;
             obj.hAx.CameraViewAngle = obj.axZoom;   
             obj.setCentreOfRotation(cameraTarget_orig) 
+
+            if obj.timerActive && isvalid(obj.timerHandle)
+                % if a timer is utilized, stop it if it is running and start again
+                % this will renew the delay period before execution
+                if strcmp(obj.timerHandle.Running, 'on')
+                    stop(obj.timerHandle);
+                end
+                start(obj.timerHandle);
+            end
 
         end
 
