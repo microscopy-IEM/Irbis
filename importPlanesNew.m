@@ -48,14 +48,26 @@ function planes = importPlanesNew(figureH, varargin)
     planes.nChannels = nChannels;
     planes.nTimePoints = reader.sizeT;
 
+    missingInfo = [];
+
     % Information about individual pixel/voxel
-    planes.pixel_size = reader.pxSize(1);                               % pixel size in defined units (micrometeres)
+    try
+        planes.pixel_size = reader.pxSize(1);                               % pixel size in defined units (micrometeres)
+    catch
+        planes.pixel_size = 1; % default pixel size
+        % uialert(figureH, ...
+        %     'Pixel size not available in metadata. Please set it manually.', ...
+        %     'Warning', 'Icon', 'warning');
+        missingInfo = [missingInfo; "pixel size"];
+    end
+
     % if the zSpacing has not been loaded correctly and the data is a z-stack, display an uialert and set it to 1
     if (nPlanes > 1) && isequal(reader.zSpacing, 0)
         planes.z_spacing = 1; 
-        uialert(figureH, ...
-            'Z-spacing not available in metadata. Please set it manually.', ...
-            'Warning', 'Icon', 'warning');
+        % uialert(figureH, ...
+        %     'Z-spacing not available in metadata. Please set it manually.', ...
+        %     'Warning', 'Icon', 'warning');
+        missingInfo = [missingInfo; "z-spacing"];
     else
         planes.z_spacing = reader.zSpacing; 
     end
@@ -88,6 +100,13 @@ function planes = importPlanesNew(figureH, varargin)
         refDepth = 0;
     end
     planes.refImParam.depth = refDepth;
+
+    if ~isempty(missingInfo)
+        % Display alert if some information is missing
+        uialert(figureH, ...
+            sprintf('The following information is missing: %s. Please set it manually.', strjoin(missingInfo, ', ')), ...
+            'Missing metadata', 'Icon', 'warning');
+    end
 
     if nargin < 2
         wb.Value = 1;

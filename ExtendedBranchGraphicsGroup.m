@@ -413,7 +413,8 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
             obj.supportingGraphicsHandles = gobjects(nObjects,1);
             obj.objectIdArray = idArray;
             obj.groupIdArray = groupIdArray;
-            obj.selectedIds = []; % Initialize empty selection
+            % obj.selectedIds = []; % Initialize empty selection
+            % We do not want to initialize selectedIds here, because that way, we would delete the current selection from main objects
             obj.excluded = false(nObjects, 1); % Initialize exclusion status for all objects
 
             obj.buttonDownCallback = buttonDownCallback; % Set the button down callback for supporting graphics
@@ -443,6 +444,10 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 objectHandle = obj.plotSupportingObject(datapoints, id, objectColor, obj.visible, "off");
                 obj.supportingGraphicsHandles(i) = objectHandle;
             end
+
+            % Activate selection, which might be already set from the parent objects
+            selectedIds = intersect(obj.objectIdArray, obj.selectedIds(:));
+            obj.setSelected(selectedIds);
         end
 
 

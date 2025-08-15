@@ -27,6 +27,8 @@ classdef orbitClass < handle
         timerHandle = [];
         timerDelay = 0.2;
         releaseFcnTriggered = false;
+
+        resettableAxes = [];  % axes that can be reset to the original position using resetView
     end
 
     methods
@@ -70,6 +72,12 @@ classdef orbitClass < handle
             obj.saveOrigCallbacks;
             obj.setCallbacks;            
 
+        end
+
+
+        function setResettableAxes(obj, axes)
+            % axes should be either empty array or an array of axes handles accessible with ()
+            obj.resettableAxes = axes;
         end
 
 
@@ -627,49 +635,55 @@ classdef orbitClass < handle
 
             disp('Resetting view...')
 
-            obj.resetCentreOfRotation()
-            obj.hAx.View = [0,90];
+            for ax = obj.resettableAxes
+                % we need to make sure that we don't accidentally apply this to the 2D axes
+                
+                obj.setActiveAxes(ax, true);    % to make sure that the centre of rotation is reset for the correct axes
 
-            % widthRatio = 1;
-            % cameraViewAngle = SceneGeometry.calculateCameraViewAngleFor(obj.hAx, widthRatio)
+                obj.resetCentreOfRotation()
+                ax.View = [0,90];
 
-            % reset zoom
-            obj.axZoom = 10;
-            obj.hAx.CameraViewAngle = obj.axZoom;   
-            % obj.hAx.CameraViewAngle = cameraViewAngle;
-            
-            % obj.hAx.View = [0,89.9];
-            % 89
+                % widthRatio = 1;
+                % cameraViewAngle = SceneGeometry.calculateCameraViewAngleFor(ax, widthRatio)
 
-            % needed for not know reason to correcty zoom after reset view
-            % IS 250813: I have the same observation -_o_-
-                % I guess it is probably related to setting the View directly
-            camorbit(obj.hAx,0.01,0.01)
-            camorbit(obj.hAx,-0.01,-0.01)
-               
+                % reset zoom
+                obj.axZoom = 10;
+                ax.CameraViewAngle = obj.axZoom;   
+                % ax.CameraViewAngle = cameraViewAngle;
+                
+                % ax.View = [0,89.9];
+                % 89
 
-            hPan = ancestor(obj.hAx, 'uipanel');
-            % hPan.Position
-            
-            % reset position
+                % needed for not know reason to correcty zoom after reset view
+                % IS 250813: I have the same observation -_o_-
+                    % I guess it is probably related to setting the View directly
+                camorbit(ax,0.01,0.01)
+                camorbit(ax,-0.01,-0.01)
+                
 
-            % preserving the ratio seems to be important for proper manual calculation of the CameraViewAngle
+                hPan = ancestor(ax, 'uipanel');
+                % hPan.Position
+                
+                % reset position
 
-            % adjust camera position to the camera angle
-            % sceneWidth = obj.hAx.XLim(2)-obj.hAx.XLim(1);
-            sceneHeight = obj.hAx.YLim(2)-obj.hAx.YLim(1);        
-            % longestSceneEdge = max([sceneWidth,sceneHeight]);
-            % observationDist = longestSceneEdge/2/tand(obj.axZoom/2);
-            observationDist = sceneHeight/2/tand(obj.axZoom/2);
-            xct = obj.cameraTarget(1);
-            yct = obj.cameraTarget(2);
-            campos(obj.hAx,[xct,yct,observationDist])
+                % preserving the ratio seems to be important for proper manual calculation of the CameraViewAngle
 
-            adjustRatio = true; % ajust to have width and height the same
-            SceneGeometry.fitAxesToPanel(hPan, obj.hAx, adjustRatio);    % this will preserve the width/height ratio
+                % adjust camera position to the camera angle
+                % sceneWidth = ax.XLim(2)-ax.XLim(1);
+                sceneHeight = ax.YLim(2)-ax.YLim(1);        
+                % longestSceneEdge = max([sceneWidth,sceneHeight]);
+                % observationDist = longestSceneEdge/2/tand(obj.axZoom/2);
+                observationDist = sceneHeight/2/tand(obj.axZoom/2);
+                xct = obj.cameraTarget(1);
+                yct = obj.cameraTarget(2);
+                campos(ax,[xct,yct,observationDist])
 
-            % disp(obj.hAx.CameraPosition)
-            % disp(obj.hAx.CameraTarget)
+                adjustRatio = true; % ajust to have width and height the same
+                SceneGeometry.fitAxesToPanel(hPan, ax, adjustRatio);    % this will preserve the width/height ratio
+
+                % disp(ax.CameraPosition)
+                % disp(ax.CameraTarget)
+            end
         end
 
 

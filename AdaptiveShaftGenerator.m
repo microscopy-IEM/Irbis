@@ -26,6 +26,8 @@ classdef (Sealed) AdaptiveShaftGenerator
 
     methods
         function obj = AdaptiveShaftGenerator(ROIsize, ROIdepth, stepToROIsizeRatio, Iterations, ContractionBias, SmoothFactor, initialRadius, radiusFactor, goParallel)
+            % Constructor - stores all the user-defined parameters
+
             obj.ROIsize = ROIsize;
             obj.ROIdepth = ROIdepth;
             obj.stepToROIsizeRatio = stepToROIsizeRatio;
@@ -45,20 +47,21 @@ classdef (Sealed) AdaptiveShaftGenerator
         end
 
 
-        function [middlePointsArray, contoursArray, radii] = run(obj, ax, centreline, vertices)
+        function [middlePointsArray, contoursArray, radii] = run(obj, centreline, vertices)
             [A, B] = obj.calculatePointsOnCentreline(centreline);
 
             if obj.goParallel
-                contours = obj.runInParallel(ax, A, B, centreline, vertices);
+                contours = obj.runInParallel(A, B, vertices);
             else
-                contours = obj.runInSerial(ax, A, B, centreline, vertices);
+                contours = obj.runInSerial(A, B, vertices);
             end
 
             [middlePointsArray, contoursArray] = obj.processOutputArrays(A, contours);
             radii = obj.calculateRadii(middlePointsArray, contoursArray);
         end
 
-        function contours = runInParallel(obj, ax, A, B, vertices)
+
+        function contours = runInParallel(obj, A, B, vertices)
             % run in parallel
             nPos = size(A, 1);
             contours = cell(1, nPos);
@@ -70,14 +73,14 @@ classdef (Sealed) AdaptiveShaftGenerator
                 cuboidOrigin = obj.calculateCuboidOriginBeforeRotation(pointA, obj.ROIdepth, obj.ROIsize);
                 rotationDegrees = obj.calculateCuboidRotation(pointA, pointB);
 
-                verticesInCuboid = obj.getVerticesInCuboid(ax, obj.ROIdepth, obj.ROIsize, cuboidOrigin, rotationDegrees, vertices);
+                verticesInCuboid = obj.getVerticesInCuboid(obj.ROIdepth, obj.ROIsize, cuboidOrigin, rotationDegrees, vertices);
 
                 contours{i} = obj.calculateContour(verticesInCuboid, pointA, pointB);
             end
         end
 
 
-        function contours = runInSerial(obj, ax, A, B, vertices)
+        function contours = runInSerial(obj, A, B, vertices)
             % run in serial
             nPos = size(A, 1);
             contours = cell(1, nPos);
@@ -89,53 +92,18 @@ classdef (Sealed) AdaptiveShaftGenerator
                 cuboidOrigin = obj.calculateCuboidOriginBeforeRotation(pointA, obj.ROIdepth, obj.ROIsize);
                 rotationDegrees = obj.calculateCuboidRotation(pointA, pointB);
 
-                verticesInCuboid = obj.getVerticesInCuboid(ax, obj.ROIdepth, obj.ROIsize, cuboidOrigin, rotationDegrees, vertices);
+                verticesInCuboid = obj.getVerticesInCuboid(obj.ROIdepth, obj.ROIsize, cuboidOrigin, rotationDegrees, vertices);
 
                 contours{i} = obj.calculateContour(verticesInCuboid, pointA, pointB);
             end
         end
 
-        function vertices = getVerticesInCuboid(obj, ~, ROIdepth, ROIsize, cuboidOrigin, rotationDegrees, vertices)
-            % disp('here')
-            % disp(size(vertices))
-            % disp('try with graphical ROI')
-            % tic
-            % roi = images.roi.Cuboid(ax,'Tag','set3Droi','Visible','off');
-            % roi.Position = [cuboidOrigin(1),cuboidOrigin(2),cuboidOrigin(3),ROIdepth,ROIsize,ROIsize];
-            % roi.RotationAngle = rotationDegrees;
-            % inside = inROI(roi,vertices(:,1),vertices(:,2),vertices(:,3));
-            % vertices_graphical = vertices(inside, :);
-            % vertices = vertices_graphical; % use the graphical method result going forward
-            % size(vertices_graphical)
 
-            
-            % disp(['graphical roi took ', num2str(toc), ' seconds'])
-            % assignin('base', 'vertices_graphical', vertices_graphical)
+        function vertices = getVerticesInCuboid(obj, ROIdepth, ROIsize, cuboidOrigin, rotationDegrees, vertices)
 
-            % disp('try with mathematical ROI')
-            % tic
             inside = obj.isInRotatedCuboid(vertices, cuboidOrigin, [ROIdepth ROIsize, ROIsize], rotationDegrees);
-            vertices_math = vertices(inside, :);
-            % size(vertices_math)
-            % disp(['mathematical roi took ', num2str(toc), ' seconds'])
-            % assignin('base', 'vertices_math', vertices_math)
+            vertices = vertices(inside, :);
 
-            % % Check if outputs are identical
-            % if isequal(vertices_graphical, vertices_math)
-            %     disp('Both methods produce identical results')
-            % else
-            %     % Calculate differences
-            %     diff_count = abs(numel(vertices_graphical) - numel(vertices_math));
-            %     % overlap = sum(ismember(vertices_graphical, vertices_math, 'rows'));
-                
-            %     disp(['Methods differ: graphical ROI found ' num2str(size(vertices_graphical,1)) ' vertices'])
-            %     disp(['Mathematical ROI found ' num2str(size(vertices_math,1)) ' vertices'])
-            %     % disp(['Overlap: ' num2str(overlap) ' vertices'])
-            %     disp(['Difference: ' num2str(diff_count) ' elements'])
-            % end
-
-            % Use the mathematical method result going forward
-            vertices = vertices_math;
         end
 
 
@@ -149,39 +117,30 @@ classdef (Sealed) AdaptiveShaftGenerator
 
 
         function [A, B] = calculatePointsOnCentreline(obj, centreline)
+            % get subset of points on centreline to calculate contours from
 
-                % calculate mean distance between consecutive points in centre line
-                distVect = sqrt(sum(abs(diff(centreline)).^2,2));
-                meanDist = mean(distVect);
-                step = round(obj.ROIstep/meanDist);
+            % calculate mean distance between consecutive points in centre line
+            % this is done so that we can calculate the factor by which we need to subsample the centreline
+            distVect = sqrt(sum(abs(diff(centreline)).^2, 2));   % sum(_, 2) sums across columns (x^2 + y^2 + z^2)
+            meanDist = mean(distVect);
+            step = round(obj.ROIstep/meanDist);
 
-                pos =(obj.endsBuffer+1):step:(size(centreline,1)-obj.endsBuffer);
-                % preallocating A and B cells for speed
+            % endsBuffer excludes several points on the edges, that might be imprecise and turned away from the actual direction
+            pos =(obj.endsBuffer+1):step:(size(centreline,1)-obj.endsBuffer);
+            % preallocating A and B cells for speed
 
-                displacement = 5;
+            displacement = 5;   % points A and B are taken displaced relative to the calculated position vector
+            % I could also say that idxA = pos, but then there would be larger buffer needed for B on one side
 
-                if ~(obj.endsBuffer > displacement)
-                    error('endsBuffer must be greater than displacement');
-                end
-                idxA = pos - displacement;                    % all row indices for A
-                idxB = pos + displacement;                    % all row indices for B
+            if ~(obj.endsBuffer > displacement)
+                error('endsBuffer must be greater than displacement');
+                % otherwise, this would lead to out-of-bounds indexing
+            end
+            idxA = pos - displacement;                    % all row indices for A
+            idxB = pos + displacement;                    % all row indices for B
 
-                A = centreline(idxA , :);
-                B = centreline(idxB , :);
-
-                % A = cell(1, length(pos));
-                % B = cell(1, length(pos));
-
-                % for currentPos = 1:length(pos)
-
-                %     % i
-                %     % currentPos
-                %     pointA = traj(pos(currentPos)-5,:);
-                %     pointB = traj(pos(currentPos)+5,:);
-
-                %     A{currentPos} = pointA;
-                %     B{currentPos} = pointB;
-                % end
+            A = centreline(idxA , :);
+            B = centreline(idxB , :);
         end
 
 
@@ -207,36 +166,39 @@ classdef (Sealed) AdaptiveShaftGenerator
         end
 
 
-        function inside = isInRotatedCuboid(~, P, pos, dims, rotXYZdeg)
-            % P         N×3 [x y z] point cloud  (double | single)
-            % pos       [xmin ymin zmin]         (corner BEFORE rotation)
+        function inside = isInRotatedCuboid(~, origPointsPositions, pos, dims, rotXYZdeg)
+            % check whether each point lies within a cuboid specified by its origin position, size and rotation
+
+            % origPointsPositions         N×3 [x y z] point cloud  (double | single)
+            % pos       [xmin ymin zmin]         (origin corner BEFORE rotation)
             % dims      [dx dy dz]               (edge lengths ≥ 0)
-            % rotXYZdeg [θx θy θz]   degrees     (roll, pitch, yaw —  Euler XYZ†)
-            %
-            % inside    N×1 logical              (true ⇢ P row lies inside / on faces)
+            % rotXYZdeg [θx θy θz]   degrees     (roll, pitch, yaw —  Euler XYZ)
 
-            % ------------------------------------------------ 1. translate to centre
-            c   = pos + dims/2;          % world-space centre of the cuboid
-            Q   = P - c;                 % shift all vertices so cuboid is centred
+            % 1. translate points to the centre
+            centre = pos + dims/2;          % world-space centre of the cuboid
+            pointsPos = origPointsPositions - centre;                 % shift all vertices so cuboid is centred
 
-            % ------------------------------------------------ 2. build full inverse-R
-            ang = deg2rad(rotXYZdeg);    % convert once
-            cx = cos(ang(1)); sx = sin(ang(1));     % Rx(θx)
-            cy = cos(ang(2)); sy = sin(ang(2));     % Ry(θy)
-            cz = cos(ang(3)); sz = sin(ang(3));     % Rz(θz)
+            % 2. rotate points to get correct orientation relative to the cuboid
+            rotXYZrad = deg2rad(rotXYZdeg);
+            cx = cos(rotXYZrad(1)); 
+            sx = sin(rotXYZrad(1));     % Rx(θx)
+            cy = cos(rotXYZrad(2)); 
+            sy = sin(rotXYZrad(2));     % Ry(θy)
+            cz = cos(rotXYZrad(3)); 
+            sz = sin(rotXYZrad(3));     % Rz(θz)
 
             % Forward rotation  R = Rz * Ry * Rx   (XYZ Euler convention)
-            R = [  cy*cz,              -cy*sz,             sy ; ...
+            rotationMatrix = [  cy*cz,  -cy*sz,  sy ; ...
                 sx*sy*cz + cx*sz,  -sx*sy*sz + cx*cz, -sx*cy ; ...
                 -cx*sy*cz + sx*sz,   cx*sy*sz + sx*cz,  cx*cy ];
 
-            Q = Q * R.';               % inverse = transpose (R orthonormal)
+            pointsPos = pointsPos * rotationMatrix.';   % inverse = transpose (rotationMatrix orthonormal)
 
-            % ------------------------------------------------ 3. axis-aligned test
+            % 3. test which of the points are within the cuboid
             h = dims/2 + eps;          % half-sizes (+eps ⇢ include surface)
-            inside =  abs(Q(:,1)) <= h(1) ...
-                    & abs(Q(:,2)) <= h(2) ...
-                    & abs(Q(:,3)) <= h(3);
+            inside =  abs(pointsPos(:,1)) <= h(1) ...
+                    & abs(pointsPos(:,2)) <= h(2) ...
+                    & abs(pointsPos(:,3)) <= h(3);
         end
 
 
@@ -319,7 +281,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             % BA is the normal vector obtained from the central line direction
 
             ProjVector = [0,1,0];
-            % currently, the points are projected into the xz plane
+            % currently, the points are rotated and projected into the xz plane
             % subsequently, they are transformed into the binary image
 
             % parameters describing the rotation into the plane:
@@ -492,6 +454,9 @@ classdef (Sealed) AdaptiveShaftGenerator
 
     end
 
+
+
+
     methods (Static)
 
         function mesh = generateMesh(contourPoints, middlePoints, smoothingFactor)
@@ -523,6 +488,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             mesh = AdaptiveShaftGenerator.smoothMesh(mesh, smoothingFactor);
         end
 
+
         function mesh = generateScaledMesh(contourPoints, middlePoints, selectedRadius, meanRadius, smoothingFactor)
             contourPointNormals = AdaptiveShaftGenerator.calculateNormals(contourPoints, middlePoints);
             contourPoints = AdaptiveShaftGenerator.changeRadius(contourPoints, contourPointNormals, selectedRadius, meanRadius);
@@ -543,6 +509,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             mesh = AdaptiveShaftGenerator.smoothMesh(mesh, smoothingFactor); 
         end
 
+
         function contourPointNormals = calculateNormals(contourPoints, middlePoints)
 
             % Calculate direction vectors from center points to contour points
@@ -553,6 +520,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             contourPointNormals = directionVectors ./ magnitudes(:, ones(1, 3));
         end
 
+
         function contourPoints = changeRadius(contourPoints, contourPointNormals, selectedRadius, meanRadius)
 
             % calculate proportion to enlarge or shring the shaft
@@ -560,6 +528,7 @@ classdef (Sealed) AdaptiveShaftGenerator
         
             contourPoints = contourPoints + contourPointNormals.*k;
         end
+
 
         function [plugPoints, plugPointNormals] = addPlug(contourPoints, contourPointNormals, middlePoints, middlePointsIdx, idx)
             contourIdx = middlePointsIdx == idx;
@@ -609,6 +578,7 @@ classdef (Sealed) AdaptiveShaftGenerator
                 disp('there is something wrong - more than one shaft is produced')
             end
         end
+        
 
         function mesh = smoothMesh(mesh, smoothingFactor)
             if smoothingFactor > 0
