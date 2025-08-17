@@ -181,6 +181,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
             if ~isempty(obj.supportingGraphicsHandles) 
                 set(obj.supportingGraphicsHandles(idx), 'Selected', "on", ...
                     obj.colorIdentifier, obj.selectionColor);   % For Line objects, use 'Color' instead of 'FaceColor'
+                % set(obj.supportingGraphicsHandles(idx), 'ContextMenu', obj.contextMenu);
             end
         end
 
@@ -207,6 +208,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
 
                 set(obj.supportingGraphicsHandles(idx), 'Selected', "off", ...
                     obj.colorIdentifier, objectColor);   % For Line objects, use 'Color' instead of 'FaceColor'
+                % set(obj.supportingGraphicsHandles(idx), 'ContextMenu', []);
             end
         end
 
@@ -278,7 +280,9 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
 
             % Set the selected property for each graphics object
             set(obj.supportingGraphicsHandles(isSelected), 'Selected', "on");
+            % set(obj.supportingGraphicsHandles(isSelected), 'ContextMenu', obj.contextMenu);
             set(obj.supportingGraphicsHandles(~isSelected), 'Selected', "off");
+            % set(obj.supportingGraphicsHandles(~isSelected), 'ContextMenu', []);
 
             % Update the selection color for selected objects
             set(obj.supportingGraphicsHandles(isSelected), obj.colorIdentifier, obj.selectionColor);
@@ -373,15 +377,16 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 objectIds (1,:) {mustBeNumeric}
             end
 
-            % Call the parent method to delete main graphics objects
-            deleteObjects@BranchGraphicsGroup(obj, objectIds);
-
             % Find indices of the objects to delete in the supporting graphics handles
             isToDelete = ismember(obj.objectIdArray, objectIds);
             if any(isToDelete) && ~isempty(obj.supportingGraphicsHandles)
                 delete(obj.supportingGraphicsHandles(isToDelete)); % Delete supporting graphics handles
                 obj.supportingGraphicsHandles(isToDelete) = []; % Remove deleted handles from the array
             end
+
+            % Call the parent method to delete main graphics objects
+            % Moved after deleting supporting graphics, because otherwise the objectIdArray element is deleted too early
+            deleteObjects@BranchGraphicsGroup(obj, objectIds);
         end
 
 
@@ -526,6 +531,12 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
             objectHandle.Tag = obj.supportingGraphicsTag; % Tag for identification
             objectHandle.ButtonDownFcn = obj.buttonDownCallback; % Set the button down callback
             objectHandle.PickableParts = obj.pickableParts; % Set pickable parts
+
+            % if isequal(selectionStatus, "on") 
+            %     objectHandle.ContextMenu = obj.contextMenu; 
+            % else
+            %     objectHandle.ContextMenu = []; % Remove context menu if not selected
+            % end
 
             objectHandle.SelectionHighlight = 'off'; % blocked default highlight (we do it by changing color)
         end

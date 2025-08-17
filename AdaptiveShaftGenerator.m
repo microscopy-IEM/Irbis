@@ -402,6 +402,18 @@ classdef (Sealed) AdaptiveShaftGenerator
 
             % image centre = (rows/2 , cols/2)
             ctrImg = fliplr(size(Ibin))/2;                     % [x y] order for vecnorm
+            % disp('first')
+            % size(cat(1,stats.Centroid))
+            % disp('second')
+            % size(ctrImg)
+            
+            % Check if stats is empty after filtering
+            if isempty(stats)
+                disp('No valid blobs remained after filtering');
+                outlineCoordinates = [];
+                return;
+            end
+            
             d      = vecnorm(cat(1,stats.Centroid) - ctrImg, 2, 2);  % Euclidean distance
             [~,ix] = min(d);                                   % index of the closest blob
 

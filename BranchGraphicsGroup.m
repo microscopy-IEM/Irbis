@@ -582,7 +582,7 @@ classdef BranchGraphicsGroup < handle
             
             if any(isToDelete)
                 % Delete valid graphics handles
-                if ~isempty(objectIds)
+                if ~isempty(objectIds) && ~isempty(obj.GraphicsHandles)
                     validHandles = isvalid(obj.GraphicsHandles);
                     isValidForDeletion = isToDelete & validHandles; % Only delete handles that are for deletion and valid
                         % & performs element-wise logical AND operation, while && compares scalar logical values
