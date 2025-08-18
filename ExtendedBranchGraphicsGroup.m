@@ -356,7 +356,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
 
         function deleteSupportingGraphics(obj)
             % Delete all supporting graphics handles
-            if ~isempty(obj.supportingGraphicsHandles)
+            if ~isempty(obj.supportingGraphicsHandles) && all(isvalid(obj.supportingGraphicsHandles))
                 delete(obj.supportingGraphicsHandles);
             end
             obj.supportingGraphicsHandles = matlab.graphics.Graphics.empty();
@@ -446,7 +446,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 else
                     objectColor = obj.branchColor;
                 end
-                objectHandle = obj.plotSupportingObject(datapoints, id, objectColor, obj.visible, "off");
+                objectHandle = obj.plotSupportingObject(datapoints, id, objectColor, obj.supportingGraphicsVisible, "off");
                 obj.supportingGraphicsHandles(i) = objectHandle;
             end
 
@@ -492,7 +492,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 else
                     objectColor = obj.branchColor;
                 end
-                objectHandle = obj.plotSupportingObject(datapoints, id, objectColor, obj.visible, "off");
+                objectHandle = obj.plotSupportingObject(datapoints, id, objectColor, obj.supportingGraphicsVisible, "off");
                 obj.supportingGraphicsHandles(i) = objectHandle;
             end
         end
@@ -598,7 +598,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 end
                 
                 % Create new object
-                objectHandle = obj.plotSupportingObject(dataArray{originalIdx}, idArray(originalIdx), color{originalIdx}, obj.visible, isSelected);
+                objectHandle = obj.plotSupportingObject(dataArray{originalIdx}, idArray(originalIdx), color{originalIdx}, obj.supportingGraphicsVisible, isSelected);
                 obj.supportingGraphicsHandles(existingIdx) = objectHandle;
                 
                 % Maintain exclusion status
@@ -636,7 +636,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                     idx = currentSize + i;
                     originalIdx = newObjIndices(i);
                     
-                    objectHandle = obj.plotSupportingObject(dataArray{originalIdx}, idArray(originalIdx), color{originalIdx}, obj.visible, isSelected);
+                    objectHandle = obj.plotSupportingObject(dataArray{originalIdx}, idArray(originalIdx), color{originalIdx}, obj.supportingGraphicsVisible, isSelected);
                     obj.supportingGraphicsHandles(idx) = objectHandle;
                     obj.objectIdArray(idx) = idArray(originalIdx);
                     obj.groupIdArray(idx) = groupIdArray(originalIdx);

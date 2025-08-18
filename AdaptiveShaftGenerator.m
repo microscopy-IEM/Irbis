@@ -86,6 +86,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             contours = cell(1, nPos);
 
             for i = 1:nPos
+                % i
                 pointA = A(i,:);
                 pointB = B(i,:);
 
@@ -381,6 +382,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             keep   = false(numel(stats),1);            % pre-allocate logical mask
 
             for k = 1:numel(stats)
+                % disp(['k: ', num2str(k)])
                 bb   = stats(k).BoundingBox;          % [xmin ymin width height] (0-based)
                 xmin = bb(1);                      % convert to 1-based pixel coords
                 ymin = bb(2);
@@ -409,6 +411,8 @@ classdef (Sealed) AdaptiveShaftGenerator
             
             % Check if stats is empty after filtering
             if isempty(stats)
+                % figure
+                % imshow(Ibin,[])
                 disp('No valid blobs remained after filtering');
                 outlineCoordinates = [];
                 return;
