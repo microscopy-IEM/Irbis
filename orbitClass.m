@@ -364,33 +364,42 @@ classdef orbitClass < handle
         
             clickType = get(src, 'SelectionType');
                 
-                switch clickType
-                    % https://www.mathworks.com/help/matlab/ref/matlab.ui.figure.html - selectionType triggered in different ways
-                    case 'normal'
-               
-                        % resetCentreOfRotation(obj)                    
-                                       
-                    case 'open'
-    
-                        % obj.resetView()
-                      
-                    case 'alt'
-                        obj.releaseFcnTriggered = true;     % added so that the redraw fcn (same as for timer) is activated upon release
-                        src.Pointer = 'cross';
-                        % determine the rotation direction that I should use
-                        centrePos = MicroMToPixelPosition(obj.hAx.CameraTarget, obj.hAx);   % calculate position of rotation centre in pixels
-                        deltaY = centrePos(2) - obj.startYonFig;  % calculate the signed y distance of the rotation centre from the mouse position in pixels
-                        rotationSign = sign(deltaY*obj.hAx.View(2));  % sign depends on relative position and rotation of the axes
-                        % rotationSign supplied here, so that the rotation direction is preserved and jaggered movement is avoided
-                        src.WindowButtonMotionFcn = @(~, ~) obj.dragRotate3D(rotationSign); 
-                                      
-                    case 'extend'
-                        obj.releaseFcnTriggered = true;
-                        src.Pointer = 'hand';
-                        src.WindowButtonMotionFcn = @(~, ~) obj.dragPan3D;              
-                        
-                end
+            switch clickType
+                % https://www.mathworks.com/help/matlab/ref/matlab.ui.figure.html - selectionType triggered in different ways
+                case 'normal'
             
+                    % resetCentreOfRotation(obj)     
+                    return               
+                                    
+                case 'open'
+
+                    % obj.resetView()
+                    return
+                    
+                case 'alt'
+                    obj.releaseFcnTriggered = true;     % added so that the redraw fcn (same as for timer) is activated upon release
+                    src.Pointer = 'cross';
+                    % determine the rotation direction that I should use
+                    centrePos = MicroMToPixelPosition(obj.hAx.CameraTarget, obj.hAx);   % calculate position of rotation centre in pixels
+                    deltaY = centrePos(2) - obj.startYonFig;  % calculate the signed y distance of the rotation centre from the mouse position in pixels
+                    rotationSign = sign(deltaY*obj.hAx.View(2));  % sign depends on relative position and rotation of the axes
+                    % rotationSign supplied here, so that the rotation direction is preserved and jaggered movement is avoided
+                    src.WindowButtonMotionFcn = @(~, ~) obj.dragRotate3D(rotationSign); 
+                                    
+                case 'extend'
+                    obj.releaseFcnTriggered = true;
+                    src.Pointer = 'hand';
+                    src.WindowButtonMotionFcn = @(~, ~) obj.dragPan3D;              
+                    
+            end
+
+            if obj.timerActive && isvalid(obj.timerHandle)
+                % if a timer is utilized, stop it if it is running
+                % this will renew the delay period before execution
+                if strcmp(obj.timerHandle.Running, 'on')
+                    stop(obj.timerHandle);
+                end
+            end
         end
 
         function actionEnds(obj)
@@ -398,12 +407,20 @@ classdef orbitClass < handle
             obj.resetButtonMotionCallback();
             obj.hFig.Pointer = 'arrow';
 
-            if obj.releaseFcnTriggered
-                % TO OPTIMIZE: in some cases, we might want to have different function for timer and release
-                obj.releaseFcnTriggered = false;
-                obj.timerFcn();
-            end
+            % if obj.releaseFcnTriggered
+            %     % TO OPTIMIZE: in some cases, we might want to have different function for timer and release
+            %     obj.releaseFcnTriggered = false;
+            %     obj.timerFcn();
+            % end
 
+            if obj.timerActive && isvalid(obj.timerHandle)
+                % if a timer is utilized, stop it if it is running and start again
+                % this will renew the delay period before execution
+                if strcmp(obj.timerHandle.Running, 'on')
+                    stop(obj.timerHandle);
+                end
+                start(obj.timerHandle);
+            end
         end
 
     
