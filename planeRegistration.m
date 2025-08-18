@@ -24,8 +24,18 @@ properties
 end
 
     methods
-        function [registeredZstack, driftVector] = run(obj, zstack, ch)
+        function [registeredZstack, driftVector] = run(obj, zstack, ch, resizeFactor)
             % Main function, to be called when running the registration headless with default parameters
+
+            arguments
+                obj
+                zstack
+                ch
+                resizeFactor = 1
+            end
+
+            obj.resizeFactor = resizeFactor;
+
             obj.prepareParameters(zstack, ch);
             obj.runRegistration();
             obj.acceptButtonPushed();
@@ -36,8 +46,18 @@ end
         end
 
 
-        function [registeredZstack, driftVector] = runGUI(obj, zstack, ch)
+        function [registeredZstack, driftVector] = runGUI(obj, zstack, ch, resizeFactor)
             % Main function, to be called when running the registration with GUI
+
+            arguments
+                obj
+                zstack
+                ch
+                resizeFactor = 1
+            end
+
+            obj.resizeFactor = resizeFactor;
+
             obj.generateGUI();
             obj.prepareParameters(zstack, ch);
             obj.updatePlot();
@@ -54,6 +74,7 @@ end
 
             registeredZstack = obj.registeredZstack;
             driftVector = obj.driftVect;
+
         end
 
 

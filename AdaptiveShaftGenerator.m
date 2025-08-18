@@ -22,11 +22,26 @@ classdef (Sealed) AdaptiveShaftGenerator
         realCenterDim
 
         structuringElementRadius = 2 % radius of the structuring element used in morphological operations
+
+        verbose = false;
     end
 
     methods
-        function obj = AdaptiveShaftGenerator(ROIsize, ROIdepth, stepToROIsizeRatio, Iterations, ContractionBias, SmoothFactor, initialRadius, radiusFactor, goParallel)
+        function obj = AdaptiveShaftGenerator(ROIsize, ROIdepth, stepToROIsizeRatio, Iterations, ContractionBias, SmoothFactor, initialRadius, radiusFactor, goParallel, verbose)
             % Constructor - stores all the user-defined parameters
+
+            arguments
+                ROIsize
+                ROIdepth
+                stepToROIsizeRatio
+                Iterations
+                ContractionBias
+                SmoothFactor
+                initialRadius
+                radiusFactor
+                goParallel
+                verbose = false
+            end
 
             obj.ROIsize = ROIsize;
             obj.ROIdepth = ROIdepth;
@@ -44,6 +59,8 @@ classdef (Sealed) AdaptiveShaftGenerator
             obj.goParallel = goParallel;
 
             obj.realCenterDim = obj.ROIsize;
+
+            obj.verbose = verbose;
         end
 
 
@@ -58,6 +75,78 @@ classdef (Sealed) AdaptiveShaftGenerator
 
             [middlePointsArray, contoursArray] = obj.processOutputArrays(A, contours);
             radii = obj.calculateRadii(middlePointsArray, contoursArray);
+        end
+
+
+        function contour = runForOnePosition(obj, ax, pointA, pointB, vertices)
+
+            % ax.YDir = "normal"; % set Y direction to normal, so that the rotation is correct
+
+            cuboidOrigin = obj.calculateCuboidOriginBeforeRotation(pointA, obj.ROIdepth, obj.ROIsize);
+            rotationDegrees = obj.calculateCuboidRotation(pointA, pointB);
+
+            % Display the rotated cuboid for visualization
+            if obj.verbose
+                figure;
+                % ax = gca;
+                hold(ax, 'on');
+                
+                % Define cuboid dimensions
+                dims = [obj.ROIdepth obj.ROIsize obj.ROIsize];
+                
+                % Get cuboid vertices (corners) in local coordinates
+                [x, y, z] = meshgrid([0 1], [0 1], [0 1]);
+                vertices = [x(:) y(:) z(:)];
+                vertices = vertices .* dims - dims/2;  % Scale and center at origin
+
+                % Apply rotation
+                rotXYZrad = deg2rad(rotationDegrees);
+                cx = cos(rotXYZrad(1)); sx = sin(rotXYZrad(1));
+                cy = cos(rotXYZrad(2)); sy = sin(rotXYZrad(2));
+                cz = cos(rotXYZrad(3)); sz = sin(rotXYZrad(3));
+                
+                rotationMatrix = [  cy*cz,  -cy*sz,  sy ; ...
+                                  sx*sy*cz + cx*sz,  -sx*sy*sz + cx*cz, -sx*cy ; ...
+                                 -cx*sy*cz + sx*sz,   cx*sy*sz + sx*cz,  cx*cy ];
+
+                % H = diag([-1 1 -1]);  % change this if your LH differs by flipping X or Y instead
+                % rotationMatrix = H * rotationMatrix * H;
+                
+                rotatedVertices = vertices * rotationMatrix;
+                
+                % Translate to actual position
+                rotatedVertices = rotatedVertices + cuboidOrigin + dims/2;
+                
+                % Define faces for patch
+                faces = [1 2 4 3; 5 6 8 7; 1 2 6 5; 3 4 8 7; 1 3 7 5; 2 4 8 6];
+                
+                % Plot the cuboid
+                patch(ax, 'Vertices', rotatedVertices, 'Faces', faces, ...
+                      'FaceColor', 'c', 'FaceAlpha', 0.3, 'EdgeColor', 'b');
+                
+                % Plot the points A and B
+                plot3(ax, pointA(1), pointA(2), pointA(3), 'ro', 'MarkerSize', 8, 'MarkerFaceColor', 'r');
+                plot3(ax, pointB(1), pointB(2), pointB(3), 'go', 'MarkerSize', 8, 'MarkerFaceColor', 'g');
+                
+                % Draw a line from A to B
+                line(ax, [pointA(1) pointB(1)], [pointA(2) pointB(2)], [pointA(3) pointB(3)], 'Color', 'k', 'LineWidth', 2);
+                
+                axis(ax, 'equal');
+                grid(ax, 'on');
+                xlabel(ax, 'X');
+                ylabel(ax, 'Y');
+                zlabel(ax, 'Z');
+                title(ax, 'Rotated Cuboid with Points A and B');
+                view(ax, 3);
+                
+                hold("off")
+            end
+
+            verticesInCuboid = obj.getVerticesInCuboid(obj.ROIdepth, obj.ROIsize, cuboidOrigin, rotationDegrees, vertices);
+
+            size(verticesInCuboid)
+
+            contour = obj.calculateContour(verticesInCuboid, pointA, pointB);
         end
 
 
@@ -113,7 +202,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             ymin = pointA(2)-ROIsize/2;
             zmin = pointA(3)-ROIsize/2;
 
-            cuboidOrigin = [xmin, ymin, zmin];
+            cuboidOrigin = [xmin, ymin, zmin]
         end
 
 
@@ -163,7 +252,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             crossProductY = cross(vX,normVY);
             thetaY = sign(crossProductY(2))*acos(cosThetaY);  
 
-            rotationDegrees = [0,rad2deg(thetaY),rad2deg(thetaZ)];
+            rotationDegrees = [0,rad2deg(thetaY),rad2deg(thetaZ)]
         end
 
 
@@ -270,6 +359,11 @@ classdef (Sealed) AdaptiveShaftGenerator
 
         function result = calculateContourMorphologically(obj, pointsInROI, pointA, pointB)
 
+            if obj.verbose
+                figure
+                scatter3(pointsInROI(:,1), pointsInROI(:,2), pointsInROI(:,3), 10, 'filled');
+            end
+
             obj.sizeIm = obj.sizeIm;
             obj.realCenterDim = obj.realCenterDim;
             radiusScaling = obj.radiusFactor;
@@ -324,6 +418,12 @@ classdef (Sealed) AdaptiveShaftGenerator
                 end
             end
 
+            if obj.verbose
+                figure
+                imshow(binaryImage, []);
+                title('Binary Image after Projection');
+            end
+
             binaryImage = imgaussfilt(binaryImage,2);
             binaryImage(binaryImage>5) = 255;
 
@@ -367,6 +467,12 @@ classdef (Sealed) AdaptiveShaftGenerator
             Igray = binaryImage;
             Ibin   = imbinarize(Igray);              % white = background, black = object
             Ibin   = imcomplement(Ibin);             % make the black region == 1 (logical)
+
+            if obj.verbose
+                figure
+                imshow(Ibin, []);
+                title('Binary Image');
+            end
 
             %% --- 2½.  Keep only the most-central black blob -------------------------
             CC     = bwconncomp(Ibin);                         % find all foreground blobs

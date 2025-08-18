@@ -1,5 +1,14 @@
 function positionPix = MicroMToPixelPosition(positionUM, ax)
 
+    % arguments
+    %     positionUM (:, 3) double = []; % position in micrometers, if empty, uses the current point
+    %     ax (1, 1) matlab.graphics.axis.Axes = gca; % axes to use for the conversion
+    % end
+
+    if isequal(size(positionUM), [3, 1])
+        positionUM = permute(positionUM, [2, 1]);
+    end
+
     % clc
     % Assumptions: 
     %   - We manually change the position of the camera position and target, and CameraViewAngle
@@ -121,9 +130,9 @@ function [xPosUM, yPosUM, zPosUM] = getMicromPosition(ax, positionUM)
         positionUM = positionUM(1, 1:3);
     end
 
-    xPosUM = positionUM(1);
-    yPosUM = positionUM(2);
-    zPosUM = positionUM(3);
+    xPosUM = positionUM(:, 1);
+    yPosUM = positionUM(:, 2);
+    zPosUM = positionUM(:, 3);
 end
 
 
