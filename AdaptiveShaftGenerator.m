@@ -85,62 +85,62 @@ classdef (Sealed) AdaptiveShaftGenerator
             cuboidOrigin = obj.calculateCuboidOriginBeforeRotation(pointA, obj.ROIdepth, obj.ROIsize);
             rotationDegrees = obj.calculateCuboidRotation(pointA, pointB);
 
-            % Display the rotated cuboid for visualization
-            if obj.verbose
-                figure;
-                % ax = gca;
-                hold(ax, 'on');
+            % % Display the rotated cuboid for visualization
+            % if obj.verbose
+            %     figure;
+            %     % ax = gca;
+            %     hold(ax, 'on');
                 
-                % Define cuboid dimensions
-                dims = [obj.ROIdepth obj.ROIsize obj.ROIsize];
+            %     % Define cuboid dimensions
+            %     dims = [obj.ROIdepth obj.ROIsize obj.ROIsize];
                 
-                % Get cuboid vertices (corners) in local coordinates
-                [x, y, z] = meshgrid([0 1], [0 1], [0 1]);
-                vertices = [x(:) y(:) z(:)];
-                vertices = vertices .* dims - dims/2;  % Scale and center at origin
+            %     % Get cuboid vertices (corners) in local coordinates
+            %     [x, y, z] = meshgrid([0 1], [0 1], [0 1]);
+            %     vertices = [x(:) y(:) z(:)];
+            %     vertices = vertices .* dims - dims/2;  % Scale and center at origin
 
-                % Apply rotation
-                rotXYZrad = deg2rad(rotationDegrees);
-                cx = cos(rotXYZrad(1)); sx = sin(rotXYZrad(1));
-                cy = cos(rotXYZrad(2)); sy = sin(rotXYZrad(2));
-                cz = cos(rotXYZrad(3)); sz = sin(rotXYZrad(3));
+            %     % Apply rotation
+            %     rotXYZrad = -deg2rad(rotationDegrees);
+            %     cx = cos(rotXYZrad(1)); sx = sin(rotXYZrad(1));
+            %     cy = cos(rotXYZrad(2)); sy = sin(rotXYZrad(2));
+            %     cz = cos(rotXYZrad(3)); sz = sin(rotXYZrad(3));
                 
-                rotationMatrix = [  cy*cz,  -cy*sz,  sy ; ...
-                                  sx*sy*cz + cx*sz,  -sx*sy*sz + cx*cz, -sx*cy ; ...
-                                 -cx*sy*cz + sx*sz,   cx*sy*sz + sx*cz,  cx*cy ];
+            %     rotationMatrix = [  cy*cz,  -cy*sz,  sy ; ...
+            %                       sx*sy*cz + cx*sz,  -sx*sy*sz + cx*cz, -sx*cy ; ...
+            %                      -cx*sy*cz + sx*sz,   cx*sy*sz + sx*cz,  cx*cy ];
 
-                % H = diag([-1 1 -1]);  % change this if your LH differs by flipping X or Y instead
-                % rotationMatrix = H * rotationMatrix * H;
+            %     % H = diag([-1 1 -1]);  % change this if your LH differs by flipping X or Y instead
+            %     % rotationMatrix = H * rotationMatrix * H;
                 
-                rotatedVertices = vertices * rotationMatrix;
+            %     rotatedVertices = vertices * rotationMatrix;
                 
-                % Translate to actual position
-                rotatedVertices = rotatedVertices + cuboidOrigin + dims/2;
+            %     % Translate to actual position
+            %     rotatedVertices = rotatedVertices + cuboidOrigin + dims/2;
                 
-                % Define faces for patch
-                faces = [1 2 4 3; 5 6 8 7; 1 2 6 5; 3 4 8 7; 1 3 7 5; 2 4 8 6];
+            %     % Define faces for patch
+            %     faces = [1 2 4 3; 5 6 8 7; 1 2 6 5; 3 4 8 7; 1 3 7 5; 2 4 8 6];
                 
-                % Plot the cuboid
-                patch(ax, 'Vertices', rotatedVertices, 'Faces', faces, ...
-                      'FaceColor', 'c', 'FaceAlpha', 0.3, 'EdgeColor', 'b');
+            %     % Plot the cuboid
+            %     patch(ax, 'Vertices', rotatedVertices, 'Faces', faces, ...
+            %           'FaceColor', 'c', 'FaceAlpha', 0.3, 'EdgeColor', 'b');
                 
-                % Plot the points A and B
-                plot3(ax, pointA(1), pointA(2), pointA(3), 'ro', 'MarkerSize', 8, 'MarkerFaceColor', 'r');
-                plot3(ax, pointB(1), pointB(2), pointB(3), 'go', 'MarkerSize', 8, 'MarkerFaceColor', 'g');
+            %     % Plot the points A and B
+            %     plot3(ax, pointA(1), pointA(2), pointA(3), 'ro', 'MarkerSize', 8, 'MarkerFaceColor', 'r');
+            %     plot3(ax, pointB(1), pointB(2), pointB(3), 'go', 'MarkerSize', 8, 'MarkerFaceColor', 'g');
                 
-                % Draw a line from A to B
-                line(ax, [pointA(1) pointB(1)], [pointA(2) pointB(2)], [pointA(3) pointB(3)], 'Color', 'k', 'LineWidth', 2);
+            %     % Draw a line from A to B
+            %     line(ax, [pointA(1) pointB(1)], [pointA(2) pointB(2)], [pointA(3) pointB(3)], 'Color', 'k', 'LineWidth', 2);
                 
-                axis(ax, 'equal');
-                grid(ax, 'on');
-                xlabel(ax, 'X');
-                ylabel(ax, 'Y');
-                zlabel(ax, 'Z');
-                title(ax, 'Rotated Cuboid with Points A and B');
-                view(ax, 3);
+            %     axis(ax, 'equal');
+            %     grid(ax, 'on');
+            %     xlabel(ax, 'X');
+            %     ylabel(ax, 'Y');
+            %     zlabel(ax, 'Z');
+            %     title(ax, 'Rotated Cuboid with Points A and B');
+            %     view(ax, 3);
                 
-                hold("off")
-            end
+            %     hold("off")
+            % end
 
             verticesInCuboid = obj.getVerticesInCuboid(obj.ROIdepth, obj.ROIsize, cuboidOrigin, rotationDegrees, vertices);
 
@@ -202,7 +202,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             ymin = pointA(2)-ROIsize/2;
             zmin = pointA(3)-ROIsize/2;
 
-            cuboidOrigin = [xmin, ymin, zmin]
+            cuboidOrigin = [xmin, ymin, zmin];
         end
 
 
@@ -252,7 +252,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             crossProductY = cross(vX,normVY);
             thetaY = sign(crossProductY(2))*acos(cosThetaY);  
 
-            rotationDegrees = [0,rad2deg(thetaY),rad2deg(thetaZ)]
+            rotationDegrees = [0,rad2deg(thetaY),rad2deg(thetaZ)];
         end
 
 
@@ -269,7 +269,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             pointsPos = origPointsPositions - centre;                 % shift all vertices so cuboid is centred
 
             % 2. rotate points to get correct orientation relative to the cuboid
-            rotXYZrad = deg2rad(rotXYZdeg);
+            rotXYZrad = -deg2rad(rotXYZdeg);    % BUGFIX: added -
             cx = cos(rotXYZrad(1)); 
             sx = sin(rotXYZrad(1));     % Rx(θx)
             cy = cos(rotXYZrad(2)); 

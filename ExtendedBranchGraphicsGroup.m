@@ -269,11 +269,16 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 selectedIndices (1,:) {mustBeNumeric}
             end
 
+            try % TO FIX: this is temporary fix before deciding how to handle different number of objects in main and supporting graphics
             setSelected@BranchGraphicsGroup(obj, selectedIndices);
             
             if isempty(obj.supportingGraphicsHandles)
                 return % No supporting graphics to update
             end
+
+            % disp('Updating selection state for supporting graphics...');
+            % disp(obj.supportingGraphicsHandles)
+            % disp(obj.GraphicsHandles)
 
             % Update the supporting graphics handles
             isSelected = ismember(obj.objectIdArray, selectedIndices(:));
@@ -296,6 +301,8 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 end
             else
                 set(obj.supportingGraphicsHandles(~isSelected), obj.colorIdentifier, obj.branchColor);
+            end
+            catch
             end
         end
 

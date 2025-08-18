@@ -426,6 +426,8 @@ classdef BranchGraphicsGroup < handle
                 obj
                 selectedIndices (1,:) {mustBeNumeric}
             end
+
+            try % TO FIX: this is temporary fix before deciding how to handle different number of objects in main and supporting graphics
             obj.selectedIds = selectedIndices;
             
             % Create a logical mask for all objects
@@ -463,6 +465,9 @@ classdef BranchGraphicsGroup < handle
             set(obj.GraphicsHandles(~isSelected), 'ContextMenu', []); % Remove context menu from unselected objects
 
             obj.hideBoundingBox();
+
+            catch
+            end
         end
 
 
