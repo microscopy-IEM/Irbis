@@ -116,6 +116,11 @@ classdef orbitClass < handle
         end
 
 
+        function activateTimer(obj)
+            obj.timerActive = true;
+        end
+
+
         function delete(obj)
             if obj.timerActive && isvalid(obj.timerHandle)
                 stop(obj.timerHandle);
