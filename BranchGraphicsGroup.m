@@ -156,6 +156,18 @@ classdef BranchGraphicsGroup < handle
         end
 
 
+        function isVisible = getCombinedVisibility(obj)
+            % Whether the objects (or at least main/supporting objects in case of extended groups) are visible
+            % Gives information whether the objects should be considered for plotting for example when time point changes
+            % for non-extended, corresponds simply to status of obj.visible
+            if isequal(obj.visible, "on")
+                isVisible = true;
+            else
+                isVisible = false;
+            end
+        end
+
+
         % Method to update visibility
         function setVisibility(obj, state)
             arguments
@@ -427,7 +439,7 @@ classdef BranchGraphicsGroup < handle
                 selectedIndices (1,:) {mustBeNumeric}
             end
 
-            try % TO FIX: this is temporary fix before deciding how to handle different number of objects in main and supporting graphics
+            % try % TO FIX: this is temporary fix before deciding how to handle different number of objects in main and supporting graphics
             obj.selectedIds = selectedIndices;
             
             % Create a logical mask for all objects
@@ -466,8 +478,8 @@ classdef BranchGraphicsGroup < handle
 
             obj.hideBoundingBox();
 
-            catch
-            end
+            % catch
+            % end
         end
 
 
@@ -577,8 +589,11 @@ classdef BranchGraphicsGroup < handle
                 obj
                 objectIds (:,1) {mustBeNumeric}  % Column vector of object IDs to delete
             end
+
+            % disp('in deleteObjects in main')
             % Delete objects with specified IDs in a vectorized way
             if isempty(objectIds) || isempty(obj.objectIdArray)
+                % disp('empty - returning')
                 return;
             end
             
@@ -589,7 +604,7 @@ classdef BranchGraphicsGroup < handle
                 % Delete valid graphics handles
                 if ~isempty(objectIds) && ~isempty(obj.GraphicsHandles)
                     validHandles = isvalid(obj.GraphicsHandles);
-                    isValidForDeletion = isToDelete & validHandles; % Only delete handles that are for deletion and valid
+                    isValidForDeletion = isToDelete(:) & validHandles; % Only delete handles that are for deletion and valid
                         % & performs element-wise logical AND operation, while && compares scalar logical values
                     if any(isValidForDeletion)
                         delete(obj.GraphicsHandles(isValidForDeletion));

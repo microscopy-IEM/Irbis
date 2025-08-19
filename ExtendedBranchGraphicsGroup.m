@@ -18,6 +18,14 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
         end
 
 
+        function isVisible = getCombinedVisibility(obj)
+            % Whether the objects (or at least main/supporting objects in case of extended groups) are visible
+            % Gives information whether the objects should be considered for plotting for example when time point changes
+            % for extended, true if at least one of the main or supporting objects is visible
+            isVisible = isequal(obj.visible, "on") || isequal(obj.supportingGraphicsVisible, "on");
+        end
+
+
         function setSupportingGraphicsVisibility(obj, visibility)
             arguments
                 obj BranchGraphicsGroup
@@ -269,7 +277,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 selectedIndices (1,:) {mustBeNumeric}
             end
 
-            try % TO FIX: this is temporary fix before deciding how to handle different number of objects in main and supporting graphics
+            % try % TO FIX: this is temporary fix before deciding how to handle different number of objects in main and supporting graphics
             setSelected@BranchGraphicsGroup(obj, selectedIndices);
             
             if isempty(obj.supportingGraphicsHandles)
@@ -302,8 +310,8 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
             else
                 set(obj.supportingGraphicsHandles(~isSelected), obj.colorIdentifier, obj.branchColor);
             end
-            catch
-            end
+            % catch
+            % end
         end
 
 
@@ -457,9 +465,9 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 obj.supportingGraphicsHandles(i) = objectHandle;
             end
 
-            % Activate selection, which might be already set from the parent objects
-            selectedIds = intersect(obj.objectIdArray, obj.selectedIds(:));
-            obj.setSelected(selectedIds);
+            % % Activate selection, which might be already set from the parent objects
+            % selectedIds = intersect(obj.objectIdArray, obj.selectedIds(:));
+            % obj.setSelected(selectedIds);
         end
 
 
@@ -558,7 +566,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 groupIdArray (1,:) {mustBeNumeric}
                 colorArray (:,1) cell = {} % Optional cell array of colors for individual objects
                 isExcluded (1,:) logical = false(1, numel(idArray))
-                isSelected (1,:) logical = false(1, numel(idArray))
+                isSelected string {mustBeMember(isSelected, ["on", "off"])} = "off" % Selection state
             end
 
             if isempty(dataArray) || isempty(idArray)
