@@ -165,6 +165,7 @@ classdef SelectionSynchronizer < handle
 
                 % Convert selection to row names in the format "id_timePoint"
                 rowNames = obj.convertToRowNames(selectedIds, timePoint);
+                % TO FIX - the second part of rowNames is bound to index, not timePoint -> this does not work if they don't match
                 
                 % Update the table selection
                 obj.updateTableSelection(tableProcessor, rowNames);
