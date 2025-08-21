@@ -89,7 +89,13 @@ function planes = importPlanesNew(figureH, varargin)
     end
     planes.channelNames = channelNames;
 
-    channelRanges = repmat({[0 2^bitDepth]},1, nChannels);
+    if isequal(bitDepth, 8) || isequal(bitDepth, 16)
+        upperLimit = 2^bitDepth;
+    else
+        % TO OPTIMIZE: decide what to do with 32-bit data
+        upperLimit = 2^16;
+    end
+    channelRanges = repmat({[0 upperLimit]},1, nChannels);
     planes.channel_ranges = channelRanges;
 
 

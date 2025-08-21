@@ -16,6 +16,7 @@ classdef orbitClass < handle
         mode = [];  % '2D' or '3D' - mode of the active axes
         existingAxes = [];
         startXonAxes = [];
+        xMin2D = 0;
         xMax2D = Inf;
         orbitOn = 1;
         origCallbacks = [];
@@ -297,6 +298,12 @@ classdef orbitClass < handle
         end
 
 
+        function set2DAxesLimits(obj, limits)
+            obj.xMin2D = limits(1);
+            obj.xMax2D = limits(2);
+        end
+
+
         function selectObject(obj,src,evt)
 
             if evt.Button == 1
@@ -521,6 +528,8 @@ classdef orbitClass < handle
 
         function zoom(obj,evt)
 
+            obj.xMax2D = 65535;
+
             if ~obj.inActiveArea
                 return
             end
@@ -541,18 +550,29 @@ classdef orbitClass < handle
     
             % obj.xMax = 40;            
             crd = get(obj.hAx, 'CurrentPoint');
-            x = crd(1);               
+            focusPoint = crd(1);               
                        
-            xlim = obj.hAx.XLim;
+            xLim = obj.hAx.XLim;
 
-            dL = x - xlim(1);
-            dR = xlim(2) - x;            
+            dL = focusPoint - xLim(1);
+            dR = xLim(2) - focusPoint;            
             
-            k = 0.1;
+            % k = 0.1;
+            % newXLim = [xlim(1) - dir*dL*k, xlim(2) + dir*dR*k];
 
-            newXLim = [xlim(1) - dir*dL*k, xlim(2) + dir*dR*k];
+            if dir < 0  % scrolling up, away from me
+                mag = 1.1;
+            elseif dir > 0  % scrolling down, towards me
+                mag = 0.9;
+            else    % this should not happen, dir should be always either 1 or -1
+                mag = 1;
+            end
 
-            newXLim(newXLim < 0) = 0;
+            lowerLim = focusPoint - dL/mag;
+            upperLim = focusPoint + dR/mag;
+            newXLim = [lowerLim, upperLim];
+
+            newXLim(newXLim < obj.xMin2D) = obj.xMin2D;
             newXLim(newXLim > obj.xMax2D) = obj.xMax2D;
            
             obj.hAx.XLim = newXLim;
