@@ -27,12 +27,19 @@ classdef (Sealed) GUI
             
             % Initialize the output cell array
             channelColors = cell(1, nChannels);
+
+            if nChannels == 1
+                channelColors{1} = hex2rgb("#FFFFFF");
+                disp('single channel planes')
+            else
             
-            % Fill the output with colors, repeating the base set if necessary
-            baseColorCount = length(baseColors);
-            for i = 1:nChannels
-                colorIndex = mod(i-1, baseColorCount) + 1;
-                channelColors{i} = baseColors{colorIndex};
+                % Fill the output with colors, repeating the base set if necessary
+                baseColorCount = length(baseColors);
+                for i = 1:nChannels
+                    colorIndex = mod(i-1, baseColorCount) + 1;
+                    channelColors{i} = baseColors{colorIndex};
+                end
+
             end
         end
 
