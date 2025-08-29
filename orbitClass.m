@@ -18,6 +18,8 @@ classdef orbitClass < handle
         startXonAxes = [];
         xMin2D = 0;
         xMax2D = Inf;
+        marginFraction2D = 0.05; % when fitting the selection ROI in a 2D histogram axes, empty area on the sides is added
+            % the length of the area corresponds to limit range times the margin
         orbitOn = 1;
         origCallbacks = [];
         keypressExtension = [];
@@ -304,6 +306,13 @@ classdef orbitClass < handle
         end
 
 
+        function marginFraction2D = getMarginFractionFor2DAxes(obj)
+            % the number represents returned the fraction of the axes ranges that should be added to each end
+            % used for fitting the selection ROI in a 2D histogram axes
+            marginFraction2D = obj.marginFraction2D;
+        end
+
+
         function selectObject(obj,src,evt)
 
             if evt.Button == 1
@@ -528,7 +537,7 @@ classdef orbitClass < handle
 
         function zoom(obj,evt)
 
-            obj.xMax2D = 65535;
+            % obj.xMax2D = 65535;
 
             if ~obj.inActiveArea
                 return
@@ -574,7 +583,7 @@ classdef orbitClass < handle
 
             newXLim(newXLim < obj.xMin2D) = obj.xMin2D;
             newXLim(newXLim > obj.xMax2D) = obj.xMax2D;
-           
+            
             obj.hAx.XLim = newXLim;
         end
 
