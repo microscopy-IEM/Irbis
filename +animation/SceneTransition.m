@@ -5,6 +5,8 @@ classdef SceneTransition
         horizontalAngleIncrement
         verticalAngleIncrement
         viewAngleIncrement
+        dtheta
+        dphi
     end
 
     methods
@@ -17,7 +19,7 @@ classdef SceneTransition
                 duration (1,1) double {mustBePositive}
                 period (1,1) double {mustBePositive}
             end
-            nSteps = duration / period;
+            nSteps = duration / period
             % subtracting start and end position leads to 'zoom in' effect in the middle of transition
             % obj.camposIncrement = (endScene.sceneState.CameraPosition - startScene.sceneState.CameraPosition) / nSteps;
             disp('rotation start:')
@@ -27,9 +29,21 @@ classdef SceneTransition
             startVec = startScene.sceneState.CameraPosition - startScene.sceneState.CameraTarget;
             endVec = endScene.sceneState.CameraPosition - endScene.sceneState.CameraTarget;
             [dtheta, dphi] = animation.SceneTransition.camorbitAnglesFromVectors(ax, startVec, endVec)
-            obj.horizontalAngleIncrement = dtheta / nSteps;
-            obj.verticalAngleIncrement = dphi / nSteps;
+            obj.horizontalAngleIncrement = wrapTo180(180-dtheta) / nSteps;
+            obj.verticalAngleIncrement = wrapTo180(dphi) / nSteps;
+            obj.dtheta = dtheta;
+            obj.dphi = dphi;
+            % obj.horizontalAngleIncrement = wrapTo180(180-dtheta) / nSteps;
+            % obj.verticalAngleIncrement = wrapTo180(dphi) / nSteps;
             obj.viewAngleIncrement = (endScene.sceneState.CameraViewAngle - startScene.sceneState.CameraViewAngle) / nSteps;
+        end
+
+
+
+        function atOnce(obj, ax)
+            % ax.CameraPosition = ax.CameraPosition + obj.camposIncrement;
+            camorbit(ax, obj.dtheta, obj.dphi, 'data', [0 0 -1]);
+            % ax.CameraViewAngle = ax.CameraViewAngle + obj.viewAngleIncrement;
         end
 
 
@@ -37,7 +51,7 @@ classdef SceneTransition
         function incrementallyTransition(obj, ax)
             % ax.CameraPosition = ax.CameraPosition + obj.camposIncrement;
             camorbit(ax, obj.horizontalAngleIncrement, obj.verticalAngleIncrement, 'data', [0 0 1]);
-            ax.CameraViewAngle = ax.CameraViewAngle + obj.viewAngleIncrement;
+            % ax.CameraViewAngle = ax.CameraViewAngle + obj.viewAngleIncrement;
         end
     end
 
@@ -89,6 +103,54 @@ classdef SceneTransition
         %     % 4) Differences → camorbit deltas (wrapped to shortest path)
         %     dtheta = wrapTo180(az2v - az1v);   % horizontal
         %     dphi   = wrapTo180(el2v - el1v);   % vertical
+        % end
+
+        % function s = dirSign(dirStr)
+        %     s = 1; 
+        %     if strcmp(dirStr,'reverse')
+        %         s = -1; 
+        %     end
+        % end
+
+
+        % function [dtheta, dphi] = camorbitAnglesFromVectors(ax, v1, v2)
+        % % ax : target axes
+        % % v1 : (campos - camtarget) in DATA coords
+        % % v2 : (desiredPos - camtarget) in DATA coords
+        % % Returns dtheta (horizontal) and dphi (vertical) for camorbit in degrees.
+
+        %     % 0) Guard
+        %     if any(isnan(v1)) || any(isnan(v2)) || norm(v1)==0 || norm(v2)==0
+        %         error('Vectors must be finite and nonzero.');
+        %     end
+
+        %     % Projections into XY plane
+
+        %     v1_xy = [v1(1), -v1(2), 0]
+        %     v2_xy = [v2(1), -v2(2), 0]
+
+        %     if isequal(v1_xy, [0 0 0]) || isequal(v2_xy, [0 0 0])
+        %         dtheta = 0;
+        %     else
+                    
+        %         % Normalize
+        %         v1_xy = v1_xy / norm(v1_xy)
+        %         v2_xy = v2_xy / norm(v2_xy)
+
+        %         % Azimuth (angle in XY plane)
+        %         atan2d(v1_xy(2), v1_xy(1))
+        %         atan2d(v2_xy(2), v2_xy(1))
+        %         dtheta = atan2d(v1_xy(2), v1_xy(1)) - atan2d(v2_xy(2), v2_xy(1));
+        %         % dtheta = rad2deg(atan2(sin(azimuth), cos(azimuth))); % keep in [-180, 180]
+        %     end
+
+
+        %     % Elevation of each vector
+        %     elev1 = atan2(v1(3), norm(v1(1:2)));
+        %     elev2 = atan2(v2(3), norm(v2(1:2)));
+
+        %     % Difference in elevation
+        %     dphi = rad2deg(elev1 - elev2);
         % end
 
         % function s = dirSign(dirStr)

@@ -15,5 +15,10 @@ classdef AppRenderer
             % Render the given appearance in the app
             obj.app.setObjectAppearance(appearance);
         end
+
+
+        function updateAxesOrigin(obj, originPos)
+            obj.app.setAxesOriginPos(originPos);
+        end
     end
 end

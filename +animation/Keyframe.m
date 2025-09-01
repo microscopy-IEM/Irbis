@@ -21,14 +21,14 @@ classdef Keyframe
 
         function applyState(obj, ax, renderer)
             disp('Applying keyframe state');
-            obj.scene.applyState(ax);
+            obj.scene.applyState(ax, renderer);
             obj.appearance.applyState(renderer);
         end
 
 
 
         function applyStaticProperties(obj, ax, renderer)
-            obj.scene.applyStaticProperties(ax);
+            obj.scene.applyStaticProperties(ax, renderer);
             obj.appearance.applyState(renderer);
         end
 
