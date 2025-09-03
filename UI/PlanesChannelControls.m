@@ -1,7 +1,7 @@
 classdef (Sealed) PlanesChannelControls
     properties (Constant)
         % Define properties for the class here
-        yspacer = 28;
+        yspacer = 25;
         yoffset = 56;   % offset for panel title 
         pad = 8;
     end
@@ -11,12 +11,16 @@ classdef (Sealed) PlanesChannelControls
             % function interactively adds new set of control components for new channel
             % disp(['adding ctrls for ch' num2str(chNum)] )
 
+            % Get or create the internal grid layout for the panel
+            internalGrid = PlanesChannelControls.getOrCreateInternalGrid(panel);
+            
             % get number of already existing channel ctrl sets
-            chCtrlComponents = findobj(panel.Children,'Type','uicheckbox');
+            chCtrlComponents = findobj(internalGrid.Children,'Type','uicheckbox');
             numOfExistingChannelControls = size(chCtrlComponents,1);                     
             
             yspacer = PlanesChannelControls.yspacer;
             yoffset = PlanesChannelControls.yoffset;
+            pad = PlanesChannelControls.pad;
 
             % limit number of channel to 8
             if numOfExistingChannelControls >= 8  
@@ -24,70 +28,55 @@ classdef (Sealed) PlanesChannelControls
                 return
             end
 
-            % Create channel control components
-            % Channel state button
+            % Add a new row to the internal grid layout
+            currentRows = length(internalGrid.RowHeight);
+            internalGrid.RowHeight{end+1} = yspacer;
             
-            % panelHeight = panel.Position(4)
-            % rowh = gridLayout.RowHeight{2}
-            panelHeight = gridLayout.RowHeight{2};
+            % Update the panel size in the main grid layout
+            newPanelHeight = yoffset + (currentRows + 1) * yspacer + pad;
+            gridLayout.RowHeight{2} = newPanelHeight;
 
-            ypos = panelHeight - (chNum-1)*yspacer - yoffset;
-
-            % if the control would be outside of the panel, resize the panel
-            if ypos < 0            
-  
-                rowh = gridLayout.RowHeight{2} + yspacer;
-                gridLayout.RowHeight{2} = rowh;
-                % panel.Position(4) = rowh;
-                                
-                % Shift existing components up if the panel size changed
-                chCtrlComponents = findobj(panel.Children);
-                
-                for i = 1:size(chCtrlComponents,1)
-                    
-                    chCtrlComponents(i).Position(2) = chCtrlComponents(i).Position(2)+30;                 
-                    
-                end
-
-                ypos = rowh - (chNum-1)*yspacer - yoffset;
-
-            end
-
-            % Create GUI components for channel
+            % Create GUI components for channel and add them to the new row
             % State channel selection button
-            channelButton = uibutton(panel,'state');
+            channelButton = uibutton(internalGrid,'state');
             channelButton.Tag = ['ch' num2str(chNum)];
             channelButton.Text  =  chName;           
-            channelButton.Position = [58,ypos,83,23];
+            channelButton.Layout.Row = currentRows + 1;
+            channelButton.Layout.Column = 1;
             channelButton.UserData = chNum;
             channelButton.ContextMenu = contextMenu;
-            channelButton.ValueChangedFcn = @(~, ~) callbacks.active(chNum);
+            channelButton.ValueChangedFcn = @(~, ~) callbacks.active(channelButton.UserData);
+            % channeButton.UserData returns the current channel number
+            % used instead of just chNum because it is updated when channels are removed, while chNum is fixed
             channelButton.Value = 0;
             channelButton.BackgroundColor = [0.96 0.96 0.96];
 
             % Channel color selection button
-            colSelectionButton = uibutton(panel);
+            colSelectionButton = uibutton(internalGrid);
             colSelectionButton.Tag = ['ch' num2str(chNum)];
-            colSelectionButton.Position = [164,ypos,26,23];
+            colSelectionButton.Layout.Row = currentRows + 1;
+            colSelectionButton.Layout.Column = 2;
             colSelectionButton.Text  = '';
             colSelectionButton.BackgroundColor = chColor;
-            colSelectionButton.ButtonPushedFcn = @(~, ~) callbacks.color(chNum, colSelectionButton);
+            colSelectionButton.ButtonPushedFcn = @(~, ~) callbacks.color(channelButton.UserData, colSelectionButton);
 
             % Dropdown for map selection
-            mapSelection = uidropdown(panel);
+            mapSelection = uidropdown(internalGrid);
             mapSelection.Tag = ['ch' num2str(chNum)];
-            mapSelection.Position = [202,ypos,71,22];
+            mapSelection.Layout.Row = currentRows + 1;
+            mapSelection.Layout.Column = 3;
             mapSelection.Items = {'gray','turbo','parula','jet','cool','hot'};
             mapSelection.Value = chColormap;
-            mapSelection.ValueChangedFcn = @(~, ~) callbacks.colormap(chNum, mapSelection.Value);
+            mapSelection.ValueChangedFcn = @(~, ~) callbacks.colormap(channelButton.UserData, mapSelection.Value);
 
             % Check box for channel activation
-            chCheckBox = uicheckbox(panel);
+            chCheckBox = uicheckbox(internalGrid);
             chCheckBox.Tag = ['ch' num2str(chNum)];
-            chCheckBox.Position = [288,ypos,25,22];
+            chCheckBox.Layout.Row = currentRows + 1;
+            chCheckBox.Layout.Column = 4;
             chCheckBox.Text = '';
             chCheckBox.Value = 1;
-            chCheckBox.ValueChangedFcn = @(~, ~) callbacks.shown(chNum, chCheckBox.Value);
+            chCheckBox.ValueChangedFcn = @(~, ~) callbacks.shown(channelButton.UserData, chCheckBox.Value);
         end
 
 
@@ -100,48 +89,70 @@ classdef (Sealed) PlanesChannelControls
             yoffset = PlanesChannelControls.yoffset;
             pad = PlanesChannelControls.pad;
 
+            % Get the internal grid layout
+            internalGrid = PlanesChannelControls.getOrCreateInternalGrid(panel);
+
             % 1) delete selected channel group
             tagToRemove = ['ch' num2str(chNum)];
-            delete(findobj(panel.Children, 'Tag', tagToRemove));
+            delete(findobj(internalGrid.Children, 'Tag', tagToRemove));
 
             % 2) find remaining channel state buttons (authoritative source)
-
-            stateBtns = findobj(panel.Children, ...
-                                'Type','uistatebutton');
+            stateBtns = findobj(internalGrid.Children, 'Type','uistatebutton');
             if isempty(stateBtns)
-                return  % no channels left
+                % No channels left, remove all rows from internal grid
+                internalGrid.RowHeight = {};
+                % Update panel size
+                gridLayout.RowHeight{2} = yoffset + pad;
+                return
             end
 
-            % Collect old numbers and sort by ascending position (y descending)
-            % -> ensures consistent top-to-bottom ordering
-            [~, order] = sort(arrayfun(@(b)b.Position(2), stateBtns), 'descend');
+            % Collect old numbers and sort by grid row (ascending)
+            [~, order] = sort(arrayfun(@(b)b.Layout.Row, stateBtns), 'ascend');
             stateBtns = stateBtns(order);
 
             % 3) renumber and reposition channels
             nCh = numel(stateBtns);
-            panelHeight = yoffset + nCh*yspacer + pad;
-            gridLayout.RowHeight{2} = panelHeight;
+            
+            % Update internal grid layout to have correct number of rows
+            internalGrid.RowHeight = repmat({yspacer}, 1, nCh);
+            
+            % Update the panel size in the main grid layout
+            newPanelHeight = yoffset + nCh * yspacer + pad;
+            gridLayout.RowHeight{2} = newPanelHeight;
 
             for newIdx = 1:nCh
-                ypos = panelHeight - (newIdx-1)*yspacer - yoffset;
-
                 % get all controls with the old tag
                 oldTag = stateBtns(newIdx).Tag; % e.g. 'ch5'
-                oldGroup = findobj(panel.Children, 'Tag', oldTag);
+                oldGroup = findobj(internalGrid.Children, 'Tag', oldTag);
 
-                % assign new tag and position
+                % assign new tag and row position
                 newTag = ['ch' num2str(newIdx)];
                 for comp = reshape(oldGroup,1,[])
-                    get(comp)
-                    get(comp, 'Type')
                     comp.Tag = newTag;
-                    pos = comp.Position;
-                    pos(2) = ypos;
-                    comp.Position = pos;
+                    comp.Layout.Row = newIdx;
                     if isa(comp,'matlab.ui.control.StateButton')
                         comp.UserData = newIdx; % keep UserData consistent
                     end
                 end
+            end
+        end
+        
+        function internalGrid = getOrCreateInternalGrid(panel)
+            % Get or create the internal grid layout within the panel
+            
+            % Check if internal grid already exists
+            existingGrid = findobj(panel.Children, 'Type', 'uigridlayout');
+            
+            if ~isempty(existingGrid)
+                internalGrid = existingGrid(1);
+            else
+                % Create new internal grid layout
+                internalGrid = uigridlayout(panel);
+                internalGrid.ColumnWidth = {'1x', 26, '1x', 25}; % Adjust widths as needed
+                internalGrid.RowHeight = {}; % Start with no rows
+                internalGrid.Padding = [10, 10, 10, 10]; % Add some padding
+                internalGrid.RowSpacing = 8; % Space between rows
+                internalGrid.ColumnSpacing = 10; % Space between columns
             end
         end
     end
