@@ -7,6 +7,10 @@ classdef SceneTransition
         viewAngleIncrement
         dtheta
         dphi
+        azimuthIncrement
+        elevationIncrement
+        radiusIncrement
+        upVectorIncrement
     end
 
     methods
@@ -28,11 +32,15 @@ classdef SceneTransition
             disp(endScene.sceneState.CameraPosition)
             startVec = startScene.sceneState.CameraPosition - startScene.sceneState.CameraTarget;
             endVec = endScene.sceneState.CameraPosition - endScene.sceneState.CameraTarget;
-            [dtheta, dphi] = animation.SceneTransition.camorbitAnglesFromVectors(ax, startVec, endVec)
+            [dtheta, dphi, dradius] = animation.SceneTransition.camorbitAnglesFromVectors(ax, startVec, endVec)
             obj.horizontalAngleIncrement = wrapTo180(180-dtheta) / nSteps;
             obj.verticalAngleIncrement = wrapTo180(dphi) / nSteps;
             obj.dtheta = dtheta;
             obj.dphi = dphi;
+            obj.azimuthIncrement = dtheta / nSteps;
+            obj.elevationIncrement = dphi / nSteps;
+            obj.radiusIncrement = dradius / nSteps;
+            obj.upVectorIncrement = (endScene.sceneState.CameraUpVector - startScene.sceneState.CameraUpVector) / nSteps;
             % obj.horizontalAngleIncrement = wrapTo180(180-dtheta) / nSteps;
             % obj.verticalAngleIncrement = wrapTo180(dphi) / nSteps;
             obj.viewAngleIncrement = (endScene.sceneState.CameraViewAngle - startScene.sceneState.CameraViewAngle) / nSteps;
@@ -49,25 +57,38 @@ classdef SceneTransition
 
         
         function incrementallyTransition(obj, ax)
+            % tic
+            currentVector = (ax.CameraPosition - ax.CameraTarget);
+            [az, el, r] = cart2sph(currentVector(1), currentVector(2), currentVector(3));
+            az = az + obj.azimuthIncrement
+            el = el + obj.elevationIncrement
+            r = r + obj.radiusIncrement
+
+            [x, y, z] = sph2cart(az, el, r);
+            ax.CameraPosition = [x, y, z] + ax.CameraTarget;
+            ax.CameraUpVector = ax.CameraUpVector + obj.upVectorIncrement;
+            % toc
             % ax.CameraPosition = ax.CameraPosition + obj.camposIncrement;
-            camorbit(ax, obj.horizontalAngleIncrement, obj.verticalAngleIncrement, 'data', [0 0 1]);
+            % camorbit(ax, obj.horizontalAngleIncrement, obj.verticalAngleIncrement, 'data', [0 0 1]);
             % ax.CameraViewAngle = ax.CameraViewAngle + obj.viewAngleIncrement;
         end
     end
 
 
     methods (Static, Access = private)
-        function [dtheta, dphi] = camorbitAnglesFromVectors(ax, v1, v2)
+        function [dtheta, dphi, dradius] = camorbitAnglesFromVectors(ax, v1, v2)
         % v1, v2: 1x3 vectors (from the same origin). Units arbitrary.
         % Returns dtheta (horizontal) and dphi (vertical) in degrees for camorbit.
 
             % Spherical angles in MATLAB: az = angle in the XY plane, el = angle from XY plane.
-            [az1, el1, ~] = cart2sph(v1(1), v1(2), v1(3));
-            [az2, el2, ~] = cart2sph(v2(1), v2(2), v2(3));
+            [az1, el1, r1] = cart2sph(v1(1), v1(2), v1(3));
+            [az2, el2, r2] = cart2sph(v2(1), v2(2), v2(3));
 
             % Differences (wrap to [-180, 180] so the orbit takes the shorter path).
             dtheta = rad2deg((az2 - az1));   % horizontal
             dphi   = rad2deg((el2 - el1));   % vertical
+
+            dradius = r2 - r1;                % radial
         end
 
 

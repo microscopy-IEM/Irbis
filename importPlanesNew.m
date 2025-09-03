@@ -1,34 +1,32 @@
 % Function for import of images to Irbis
-% Script reads general info (num of channles, planes etc.) from the image metadata
+% Script reads general info (num of channels, planes etc.) from the image metadata
 
-function planes = importPlanesNew(figureH, varargin)
+function planes = importPlanesNew(fig, wb)
+
+    arguments
+        fig 
+        wb = uiprogressdlg(fig, 'Title', 'Importing file', 'Message', 'Importing file...', 'Cancelable', 'on');
+    end
 
     addpath(genpath('BioformatsToolbox')); % Ensure BioformatsToolbox is in the path
-
-    if nargin < 4
-        wb = uiprogressdlg(figureH,'Title','Importing file','Message','Importing file...','Cancelable','on');
-        wb.Value = 0;
-    else 
-        wb = varargin{1};
-    end
     
      % select files
-    [fileName,path] = uigetfile('*');
+    [fileName, path] = uigetfile('*');
 
-    if isequal(fileName,0)
+    if isequal(fileName, 0)
         disp('User selected Cancel');
         planes = [];
         return;
     end
     
-    fullPath = fullfile(path,fileName);
+    fullPath = fullfile(path, fileName);
 
     try
         reader = BioformatsImage(fullPath);
-        assignin('base', 'reader', reader); % Assign to base workspace for debugging
+        % assignin('base', 'reader', reader); % Assign to base workspace for debugging
     catch ME
         planes = [];
-        disp('Error reading file with BioformatsImage. Please convert it to tiff first in ImageJ.');
+        uialert(fig, 'Error reading file with BioformatsImage. Please convert it to tiff first in ImageJ.', 'Loading unsuccessful');
         return
     end
 
@@ -68,12 +66,12 @@ function planes = importPlanesNew(figureH, varargin)
         %     'Z-spacing not available in metadata. Please set it manually.', ...
         %     'Warning', 'Icon', 'warning');
         missingInfo = [missingInfo; "z-spacing"];
+    elseif isequal(nPlanes, 1)
+        planes.z_spacing = 0; % if the image is single plane, we want to have zSpacing = 0 (this would probably be the default anyway)
+        % this is to avoid problems with the plane not being visualized at z=0
     else
-        planes.z_spacing = reader.zSpacing; 
+        planes.z_spacing = reader.zSpacing;
     end
-                                         % default z-spacing for single plane images                         
-    bitDepth = reader.bitDepth;
-    planes.bitDepth = bitDepth;
 
     % Save channel information
     channelColors = config.GUI.getChannelColors(nChannels);   % Default channel colors from config file
@@ -89,13 +87,15 @@ function planes = importPlanesNew(figureH, varargin)
     end
     planes.channelNames = channelNames;
 
+    bitDepth = reader.bitDepth;
+    planes.bitDepth = bitDepth;
     if isequal(bitDepth, 8) || isequal(bitDepth, 16)
-        upperLimit = 2^bitDepth;
+        upperLimit = (2^bitDepth) - 1;
     else
         % TO OPTIMIZE: decide what to do with 32-bit data
-        upperLimit = 2^16;
+        upperLimit = (2^16) - 1;
     end
-    channelRanges = repmat({[0 upperLimit]},1, nChannels);
+    channelRanges = repelem({[0 upperLimit]}, nChannels);
     planes.channel_ranges = channelRanges;
 
 
@@ -106,10 +106,11 @@ function planes = importPlanesNew(figureH, varargin)
         refDepth = 0;
     end
     planes.refImParam.depth = refDepth;
+    planes.spacialRef = calculateSpacialReference(planes.imSize, planes.pixel_size);    % TO FIX: spatial instead of spacial
 
     if ~isempty(missingInfo)
         % Display alert if some information is missing
-        uialert(figureH, ...
+        uialert(fig, ...
             sprintf('The following information is missing: %s. Please set it manually.', strjoin(missingInfo, ', ')), ...
             'Missing metadata', 'Icon', 'warning');
     end
