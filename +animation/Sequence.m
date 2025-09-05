@@ -1,13 +1,21 @@
 classdef Sequence < animation.Views
     properties
         durations double
+        specialEffects cell % Cell array of SpecialEffect objects/empty cells
     end
 
 
     methods
-        function addKeyframe(obj, keyframe, duration)
+        function addKeyframe(obj, keyframe, duration, specialEffect)
+            arguments
+                obj
+                keyframe animation.Keyframe
+                duration double {mustBePositive}
+                specialEffect = []
+            end
             addKeyframe@animation.Views(obj, keyframe);
             obj.durations(end+1) = duration;
+            obj.specialEffects{end+1} = specialEffect;
             labelNum = obj.usedLabelNumbers(end);
             label = ['Keyframe ' num2str(labelNum)];
             obj.labels{end} = label;
@@ -22,9 +30,10 @@ classdef Sequence < animation.Views
 
 
 
-        function [keyframes, durations] = getSelectedKeyframes(obj, selectedFrames)
+        function [keyframes, durations, specialEffects] = getSelectedKeyframes(obj, selectedFrames)
             keyframes = getSelectedKeyframes@animation.Views(obj, selectedFrames);
             durations = obj.durations(selectedFrames);
+            specialEffects = obj.specialEffects(selectedFrames);
         end
 
 

@@ -33,8 +33,8 @@ classdef SceneTransition
             startVec = startScene.sceneState.CameraPosition - startScene.sceneState.CameraTarget;
             endVec = endScene.sceneState.CameraPosition - endScene.sceneState.CameraTarget;
             [dtheta, dphi, dradius] = animation.SceneTransition.camorbitAnglesFromVectors(ax, startVec, endVec)
-            obj.horizontalAngleIncrement = wrapTo180(180-dtheta) / nSteps;
-            obj.verticalAngleIncrement = wrapTo180(dphi) / nSteps;
+            % obj.horizontalAngleIncrement = wrapTo180(180-dtheta) / nSteps;
+            % obj.verticalAngleIncrement = wrapTo180(dphi) / nSteps;
             obj.dtheta = dtheta;
             obj.dphi = dphi;
             obj.azimuthIncrement = dtheta / nSteps;
@@ -85,8 +85,10 @@ classdef SceneTransition
             [az2, el2, r2] = cart2sph(v2(1), v2(2), v2(3));
 
             % Differences (wrap to [-180, 180] so the orbit takes the shorter path).
-            dtheta = rad2deg((az2 - az1));   % horizontal
-            dphi   = rad2deg((el2 - el1));   % vertical
+            % dtheta = rad2deg((az2 - az1));   % horizontal
+            % dphi   = rad2deg((el2 - el1));   % vertical
+            dtheta = ((az2 - az1));   % horizontal
+            dphi   = ((el2 - el1));   % vertical
 
             dradius = r2 - r1;                % radial
         end

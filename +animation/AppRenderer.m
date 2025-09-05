@@ -20,5 +20,30 @@ classdef AppRenderer
         function updateAxesOrigin(obj, originPos)
             obj.app.setAxesOriginPos(originPos);
         end
+
+
+        function renderScrollPlanes(obj, effectDuration)
+            obj.app.animatePlaneScroll(effectDuration);
+        end
+
+
+        function renderScrollTime(obj, timeScroll)
+            obj.app.animateTimeScroll(timeScroll);
+        end
+
+
+        function renderSpineExpansion(obj, effectDuration)
+            obj.app.animateSpineExpansion(effectDuration);
+        end
+
+
+        function resetSpineExpansion(obj)
+            obj.app.resetSpineExpansion();
+        end
+
+
+        function renderShaftReconstruction(obj, effectDuration)
+            obj.app.animateShaftReconstruction(effectDuration);
+        end
     end
 end
