@@ -6,18 +6,23 @@ classdef Sequence < animation.Views
 
 
     methods
-        function addKeyframe(obj, keyframe, duration, specialEffect)
+        function addKeyframe(obj, keyframe, duration, specialEffect, effectName)
             arguments
                 obj
                 keyframe animation.Keyframe
                 duration double {mustBePositive}
                 specialEffect = []
+                effectName = ''
             end
             addKeyframe@animation.Views(obj, keyframe);
             obj.durations(end+1) = duration;
             obj.specialEffects{end+1} = specialEffect;
             labelNum = obj.usedLabelNumbers(end);
-            label = ['Keyframe ' num2str(labelNum)];
+            if isempty(effectName)
+                label = ['Keyframe ' num2str(labelNum)];
+            else
+                label = ['Keyframe ' num2str(labelNum) ': ' effectName];
+            end
             obj.labels{end} = label;
         end
 

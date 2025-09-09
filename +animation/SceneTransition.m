@@ -70,7 +70,7 @@ classdef SceneTransition
             % toc
             % ax.CameraPosition = ax.CameraPosition + obj.camposIncrement;
             % camorbit(ax, obj.horizontalAngleIncrement, obj.verticalAngleIncrement, 'data', [0 0 1]);
-            % ax.CameraViewAngle = ax.CameraViewAngle + obj.viewAngleIncrement;
+            ax.CameraViewAngle = ax.CameraViewAngle + obj.viewAngleIncrement;
         end
     end
 
