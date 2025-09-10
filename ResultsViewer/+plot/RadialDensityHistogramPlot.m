@@ -94,6 +94,10 @@ classdef RadialDensityHistogramPlot < plot.PlotInterface
                     legendHandles(i) = plotHandle(1);
                     legendNames{i} = char(categoryList(i));
                 end
+
+                if ~isempty(legendNames)
+                    legend(legendHandles, legendNames, 'Location', 'best'); 
+                end
             end
 
             xline(axesHandle, 1, 'LineStyle', '--') % plot the object edge position
@@ -101,6 +105,8 @@ classdef RadialDensityHistogramPlot < plot.PlotInterface
 
             xlabel(axesHandle, data.xLabel);
             ylabel(axesHandle, 'Counts');
+
+            
         end
     end
 end

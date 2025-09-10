@@ -49,6 +49,8 @@ classdef TwoVariablesPlot < plot.PlotInterface
     methods (Access = private)
         function plotScatter(~, data, axesHandle)
 
+            jitterState = 'on';
+
             xData = data.xData;
             yData = data.yData;
             groupData = data.groupData;
@@ -57,7 +59,16 @@ classdef TwoVariablesPlot < plot.PlotInterface
             ylabel(axesHandle, data.yLabel);
 
             if isempty(groupData)
-                scatter(axesHandle, xData, yData);
+                scatter(axesHandle, xData, yData,'XJitter','rand');
+
+                % figure
+                % 
+                % values = hist3([xData(:) yData(:)],[51 51]);
+                % values = values./max(values(:));
+                % imagesc(values.')
+                % colorbar
+                % axis equal
+                % axis xy
             else
                 categoryList = unique(groupData);
 
@@ -72,7 +83,7 @@ classdef TwoVariablesPlot < plot.PlotInterface
                 for i = 1:numel(categoryList)
                     mask = groupData == categoryList(i);
                     plotHandle = scatter(axesHandle, xData(mask, :, :), yData(mask, :, :), ...
-                    'Color', categoryColormap(i, :));
+                    'Color', categoryColormap(i, :),'XJitter','rand');
 
                     legendHandles(i) = plotHandle(1); 
                     legendNames{i} = char(categoryList(i));
