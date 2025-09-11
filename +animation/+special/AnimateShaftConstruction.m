@@ -1,7 +1,7 @@
-classdef AnimateShaftReconstruction < animation.SpecialEffect
+classdef AnimateShaftConstruction < animation.SpecialEffect
     methods
-        function obj = AnimateShaftReconstruction(effectDuration)
-            % Constructor for AnimateShaftReconstruction effect
+        function obj = AnimateShaftConstruction(effectDuration)
+            % Constructor for AnimateShaftConstruction effect
             obj.effectDuration = effectDuration;
         end
 
