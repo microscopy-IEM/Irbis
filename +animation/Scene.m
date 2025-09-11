@@ -15,7 +15,8 @@ classdef Scene
             disp(obj.sceneState.CameraPosition)
             ax.CameraTarget = obj.sceneState.CameraTarget;
             ax.CameraUpVector = obj.sceneState.CameraUpVector;
-            renderer.updateAxesOrigin(obj.sceneState.relativeAxOrigin);
+            % renderer.updateAxesOrigin(obj.sceneState.relativeAxOrigin);
+            renderer.updateAxesPosition(obj.sceneState.relativeCentre, obj.sceneState.axToPanelRatio);
         end
 
         function applyState(obj, ax, renderer)
@@ -26,7 +27,8 @@ classdef Scene
             ax.CameraTarget = obj.sceneState.CameraTarget;
             ax.CameraViewAngle = obj.sceneState.CameraViewAngle;
             ax.CameraUpVector = obj.sceneState.CameraUpVector;
-            renderer.updateAxesOrigin(obj.sceneState.relativeAxOrigin);
+            % renderer.updateAxesOrigin(obj.sceneState.relativeAxOrigin);
+            renderer.updateAxesPosition(obj.sceneState.relativeCentre, obj.sceneState.axToPanelRatio);
         end
     end
 end

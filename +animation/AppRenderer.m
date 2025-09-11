@@ -22,6 +22,11 @@ classdef AppRenderer
         end
 
 
+        function updateAxesPosition(obj, centrePos, axToPanelRatio)
+            obj.app.setAxesPosition(centrePos, axToPanelRatio);
+        end
+
+
         function renderScrollPlanes(obj, effectDuration)
             obj.app.animatePlaneScroll(effectDuration);
         end

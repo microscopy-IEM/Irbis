@@ -11,6 +11,8 @@ classdef SceneTransition
         elevationIncrement
         radiusIncrement
         upVectorIncrement
+
+        originShiftIncrement
     end
 
     methods
@@ -32,7 +34,7 @@ classdef SceneTransition
             disp(endScene.sceneState.CameraPosition)
             startVec = startScene.sceneState.CameraPosition - startScene.sceneState.CameraTarget;
             endVec = endScene.sceneState.CameraPosition - endScene.sceneState.CameraTarget;
-            [dtheta, dphi, dradius] = animation.SceneTransition.camorbitAnglesFromVectors(ax, startVec, endVec)
+            [dtheta, dphi, dradius] = animation.SceneTransition.camorbitAnglesFromVectors(ax, startVec, endVec);
             % obj.horizontalAngleIncrement = wrapTo180(180-dtheta) / nSteps;
             % obj.verticalAngleIncrement = wrapTo180(dphi) / nSteps;
             obj.dtheta = dtheta;
@@ -44,6 +46,10 @@ classdef SceneTransition
             % obj.horizontalAngleIncrement = wrapTo180(180-dtheta) / nSteps;
             % obj.verticalAngleIncrement = wrapTo180(dphi) / nSteps;
             obj.viewAngleIncrement = (endScene.sceneState.CameraViewAngle - startScene.sceneState.CameraViewAngle) / nSteps;
+
+            originShiftRelative = - endScene.sceneState.relativeCentre + startScene.sceneState.relativeCentre;
+            originShiftAbsolute = originShiftRelative * ax.Position(3); % in normalized figure units
+            obj.originShiftIncrement = originShiftAbsolute / nSteps;
         end
 
 
@@ -60,9 +66,9 @@ classdef SceneTransition
             % tic
             currentVector = (ax.CameraPosition - ax.CameraTarget);
             [az, el, r] = cart2sph(currentVector(1), currentVector(2), currentVector(3));
-            az = az + obj.azimuthIncrement
-            el = el + obj.elevationIncrement
-            r = r + obj.radiusIncrement
+            az = az + obj.azimuthIncrement;
+            el = el + obj.elevationIncrement;
+            r = r + obj.radiusIncrement;
 
             [x, y, z] = sph2cart(az, el, r);
             ax.CameraPosition = [x, y, z] + ax.CameraTarget;
@@ -71,12 +77,15 @@ classdef SceneTransition
             % ax.CameraPosition = ax.CameraPosition + obj.camposIncrement;
             % camorbit(ax, obj.horizontalAngleIncrement, obj.verticalAngleIncrement, 'data', [0 0 1]);
             ax.CameraViewAngle = ax.CameraViewAngle + obj.viewAngleIncrement;
+
+            % increment also the axes position
+            ax.Position(1:2) = ax.Position(1:2) + obj.originShiftIncrement(1:2);
         end
     end
 
 
     methods (Static, Access = private)
-        function [dtheta, dphi, dradius] = camorbitAnglesFromVectors(ax, v1, v2)
+        function [dtheta, dphi, dradius] = camorbitAnglesFromVectors(~, v1, v2)
         % v1, v2: 1x3 vectors (from the same origin). Units arbitrary.
         % Returns dtheta (horizontal) and dphi (vertical) in degrees for camorbit.
 
