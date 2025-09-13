@@ -10,3 +10,6 @@ Irbis/
 python_for_irbis/
 check_git_status.m
 startup.m
+resources/ 
+IrbisStart Standalone Application/
+deploymentScript.m
