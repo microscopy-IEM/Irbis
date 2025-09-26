@@ -47,8 +47,8 @@ classdef AppRenderer
         end
 
 
-        function renderShaftReconstruction(obj, effectDuration)
-            obj.app.animateShaftReconstruction(effectDuration);
+        function renderShaftReconstruction(obj, ~)
+            obj.app.animateShaftReconstruction();
         end
     end
 end

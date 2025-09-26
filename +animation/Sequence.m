@@ -31,6 +31,7 @@ classdef Sequence < animation.Views
         function removeKeyframe(obj, frameIndex)
             removeKeyframe@animation.Views(obj, frameIndex);
             obj.durations(frameIndex) = [];
+            obj.specialEffects(frameIndex) = [];
         end
 
 
