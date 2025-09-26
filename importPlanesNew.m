@@ -25,6 +25,8 @@ function planes = importPlanesNew(fig, wb)
         reader = BioformatsImage(fullPath);
         % assignin('base', 'reader', reader); % Assign to base workspace for debugging
     catch ME
+        disp(ME.message);
+        disp(ME.stack)
         planes = [];
         uialert(fig, 'Error reading file with BioformatsImage. Please convert it to tiff first in ImageJ.', 'Loading unsuccessful');
         return

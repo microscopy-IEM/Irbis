@@ -23,6 +23,8 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         if ~isequal(fig.SelectionType,'normal')
             return;
         end
+
+        V = double(im);
       
         nDig = 2; % number of digits to round distance values
         txtZoffset = 0.2;
@@ -64,13 +66,14 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         histObj = line(ax,0,0,z,'Tag','HistLineP2','Color','m','Visible','Off');
 
         widthLineObj = line(ax,[x x],[y y],[z z],'Tag','widthLine','Color',[0.5 0.5 1],'LineWidth',2,'Visible','Off');
-        widthTxtObj = text(ax,0,0,z,'','Tag','widthLineTxt','FontSize',11,'Color',[0.9 0.9 0.9],'Visible','Off');
+        widthTxtObj = text(ax,0,0,z,'','Tag','widthLineTxt','FontSize',11,'Color',[0.9 0.9 0.9],'Visible','Off','HorizontalAlignment','center');
 
         % pre-define variable to handle peak export figure
         exportFigObj = [];
         exportAx = [];
         exportPlot = [];
         exportWidth = [];
+        exportWidthText = [];
            
         % define main variable t o keep distance between origin and end point of the distLine
         dist = 0;
@@ -82,6 +85,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         textObj.Position = [centrePos(1),centrePos(2),z + txtZoffset];
         textObj.String = '0 \mum';
         textObj.BackgroundColor = [0.1 0.1 0.4];
+        widthTxtObj.BackgroundColor = [0.1 0.1 0.2];
              
         % associate for start drawing and end of drawing
         fig.WindowButtonMotionFcn = @(src,evt)distLineInitDrawFcn(src,evt);
@@ -327,7 +331,8 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
         end
 
         function updateHistPlot()
-                        
+             
+            % tic
             if ~showHist
                 return
             end
@@ -365,7 +370,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
             % assemble rotation matrix
             R = [cos(angle) -sin(angle); sin(angle) cos(angle)];
 
-            V = double(im);
+            % V = double(im);
       
             Vq = interp2(V,xq./pixelSize,yq./pixelSize,'cubic');
             % Vq = interp2(V,xq./pixelSize,yq./pixelSize,'linear');
@@ -388,17 +393,27 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
 
                 xVect = x - x(1);
                
-                [pks,~,w,p,wxPk] = findpeaksSK(-Vq,xVect,'MinPeakProminence',0.1,'Annotate','extents','SortStr','descend');
-
+                [pks,~,w,p,wxPk] = findpeaksSK(-Vq,xVect,'MinPeakProminence',0.1,'Annotate','extents');
+                
                 if ~isempty(pks) 
+
+                    if size(pks,1) > 1
+
+                        [~,peakInd] = max(pks);
+                        pks = pks(peakInd);
+                        w = w(peakInd);
+                        p = p(peakInd);
+                        wxPk = wxPk(peakInd,:);
+
+                    end
         
-                    peakInd = 1;
-                    peakWidth = w(peakInd);
+                    % peakInd = 1;
+                    peakWidth = w;
     
-                    ypos = -(pks(peakInd) - p(peakInd)/2);
-        
-                    xpos1 = wxPk(1,1);
-                    xpos2 = wxPk(1,2);
+                    ypos = -(pks - p/2);
+      
+                    xpos1 = wxPk(1);
+                    xpos2 = wxPk(2);
                  
                     hwpmPoints = [xpos1,ypos; xpos2,ypos];
     
@@ -409,8 +424,14 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                     widthLineObj.YData = (hwpmPointsRot(:,2)+y0);
                     widthLineObj.ZData = [z z];    
                    
-                    widthTxtObj.String = [num2str(round(peakWidth,3)) ' \mum'];
-                    widthTxtObj.Position = [hwpmPointsRot(1,1)+x0,(hwpmPointsRot(1,2)+y0),z + txtZoffset];
+                    if peakWidth >= 1
+                        widthTxtObj.String = [num2str(round(peakWidth,3)) ' \mum'];
+                    else
+                        widthTxtObj.String = [num2str(round(peakWidth*1000,0)) ' nm'];
+                    end
+
+                    centrePoint = mean(hwpmPointsRot);                    
+                    widthTxtObj.Position = [centrePoint(1)+x0,centrePoint(2)+y0,z + txtZoffset];
 
                     widthLineObj.Visible = 'on';
                     widthTxtObj.Visible = 'on';
@@ -443,6 +464,15 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                 if ~isempty(pks) 
                     exportWidth.XData = (hwpmPoints(:,1)+0);
                     exportWidth.YData = -(hwpmPoints(:,2)+0);
+      
+                    exportWidthText.Position = [hwpmPoints(1,1)+w/2,-(hwpmPoints(1,2)+0.05),0];
+                    exportWidthText.String = [num2str(round(peakWidth,3)) ' \mum'];
+
+                    if peakWidth >= 1
+                        exportWidthText.String = [num2str(round(peakWidth,3)) ' \mum'];
+                    else
+                        exportWidthText.String = [num2str(round(peakWidth*1000,0)) ' nm'];
+                    end
                 else
                     exportWidth.XData = [];
                     exportWidth.YData = [];
@@ -452,6 +482,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
 
             drawnow
 
+            % toc
         end
 
         function showProfileFcn(src,~)
@@ -531,6 +562,7 @@ function measureDistToolFcn(fig,ax,z,im,pixelSize)
                 exportPlot = plot(exportAx,[0,0]);
                 exportAx.NextPlot = 'add';
                 exportWidth = line(exportAx,[0 0],[0 0],'Tag','widthLineB','Color',[0.5 0.5 1],'LineWidth',2,'Visible','On');
+                exportWidthText = text(exportAx,0,0,0,'','Tag','widthLineTxt','FontSize',11,'Color',[0.9 0.9 0.9],'Visible','On','HorizontalAlignment','center');
                 updateHistPlot
 
              end           
