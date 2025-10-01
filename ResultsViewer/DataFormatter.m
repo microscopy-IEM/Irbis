@@ -18,6 +18,7 @@ classdef DataFormatter < handle
         tableTypes
 
         listener
+        plotSpecificListener
 
         lastProcessedData = [] % stored processed data, to be used when redoing the plot
             % not enough - we might need to get more info
@@ -43,11 +44,14 @@ classdef DataFormatter < handle
 
             if iscell(obj.tableProcessorHandles)
                 obj.listener = cell(1, numel(obj.tableProcessorHandles));
+                obj.plotSpecificListener = cell(1, numel(obj.tableProcessorHandles));
                 for i = 1:numel(obj.tableProcessorHandles)
                     obj.listener{i} = addlistener(obj.tableProcessorHandles{i}, 'tableSelectionChanged', @(src, ~) obj.processData(src));
+                    obj.plotSpecificListener{i} = addlistener(obj.tableProcessorHandles{i}, 'plotUpdateRequired', @(src, ~) obj.processData(src));
                 end
             else
                 obj.listener = addlistener(obj.tableProcessorHandles, 'tableSelectionChanged', @(src, ~) obj.processData(src));
+                obj.plotSpecificListener = addlistener(obj.tableProcessorHandles, 'plotUpdateRequired', @(src, ~) obj.processData(src));
             end
         end
 
@@ -89,6 +93,18 @@ classdef DataFormatter < handle
                     delete(obj.listener);
                 end
             end
+
+            if iscell(obj.plotSpecificListener)
+                for i = 1:numel(obj.plotSpecificListener)
+                    if isvalid(obj.plotSpecificListener{i})
+                        delete(obj.plotSpecificListener{i})
+                    end
+                end
+            else
+                if isvalid(obj.plotSpecificListener)
+                    delete(obj.plotSpecificListener);
+                end
+            end
         end   
         
         function processData(obj, src)
@@ -124,7 +140,7 @@ classdef DataFormatter < handle
                     % If not valid with categorization, try without
                     valid = obj.validateWithoutGrouping(dataStruct);
                     if valid
-                        warning('Categorization disabled due to insufficient parameters.');
+                        % warning('Categorization disabled due to insufficient parameters.');
                         obj.processWithoutGrouping(dataStruct);
                     else
                         obj.handleInsufficientParameters();
@@ -401,7 +417,7 @@ classdef DataFormatter < handle
         end
 
         function handleInsufficientParameters(obj)
-            disp('handling insufficient parameters')
+            % disp('handling insufficient parameters')
             obj.lastProcessedData = [];
             obj.plotManagerHandle.cleanPlot();
             % Handle the case when there are not enough parameters for plotting

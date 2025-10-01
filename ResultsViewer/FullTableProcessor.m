@@ -10,6 +10,8 @@ classdef (Sealed) FullTableProcessor < handle
         tableStoreListener
         stateManagerListener
         selectedTableCellsList (:,2) = [] % Initialize as empty array
+
+        isColumnSelectionPreserved = true % when there are no cells selected for a given column (for example after filtering), the first row of that column is selected automatically if this is true
     end
 
     events
@@ -17,6 +19,7 @@ classdef (Sealed) FullTableProcessor < handle
         tableSelectionChanged
         tableSelectionSetProgrammatically
         tableSelectionSyncRequired  % not the prettiest, but added to do table syncing before plotting data starts listening
+        plotUpdateRequired          % notify that plotting needs to be updated (used instead of tableSelectionChanged to avoid freezing)
     end
 
         % Take in raw data and spit out a table of type full
@@ -87,18 +90,57 @@ classdef (Sealed) FullTableProcessor < handle
             notify(obj, 'tableSelectionChanged'); % TO OPTIMIZE - this again activates the component, which caused this in the first place
         end
 
+
         function setSelectedColumns(obj, columnNames)
             if isempty(columnNames)
                 % nothing is going to be shown
             end
+
+            previouslyActiveColumns = obj.activeColumns;
+            obj.selectedTableCellsList = obj.updateSelectionAfterColumnChange(previouslyActiveColumns, columnNames);
 
             obj.activeColumns = columnNames;
             notify(obj, 'tableForDisplayChanged');  
         end
 
 
-        function selectedList = getSelectedTableCellsList(obj)
-            selectedList = obj.selectedTableCellsList;
+        function selectedList = getSelectedTableCellsList(obj, n)
+            if nargin < 2
+                % If n is not provided, return all selected cells
+                selectedList = obj.selectedTableCellsList;
+                return;
+            end
+            
+            if isempty(obj.selectedTableCellsList)
+                selectedList = [];
+                return;
+            end
+            
+            % Get unique column indices
+            uniqueCols = unique(obj.selectedTableCellsList(:,2));
+            
+            % Preallocate selectedList based on maximum possible size
+            maxSize = length(uniqueCols) * n;
+            selectedList = zeros(maxSize, 2);
+            currentIdx = 1;
+            
+            for col = uniqueCols'
+                % Find all rows for this column
+                colMask = obj.selectedTableCellsList(:,2) == col;
+                rowsForCol = obj.selectedTableCellsList(colMask, 1);
+                
+                % Take only first n rows for this column
+                firstNRows = rowsForCol(1:min(n, length(rowsForCol)));
+                numRows = length(firstNRows);
+                
+                % Fill preallocated array
+                selectedList(currentIdx:currentIdx+numRows-1, 1) = firstNRows;
+                selectedList(currentIdx:currentIdx+numRows-1, 2) = col;
+                currentIdx = currentIdx + numRows;
+            end
+            
+            % Trim to actual size
+            selectedList = selectedList(1:currentIdx-1, :);
         end
 
 
@@ -161,7 +203,10 @@ classdef (Sealed) FullTableProcessor < handle
             notify(obj, 'tableForDisplayChanged');
 
             % disp('FullTableProcessor:setState:notify');
-            notify(obj, 'tableSelectionChanged');
+            % notify(obj, 'tableSelectionChanged');
+
+            % call just plotting function instead
+            notify(obj, 'plotUpdateRequired');
         end
 
 
@@ -216,8 +261,11 @@ classdef (Sealed) FullTableProcessor < handle
             obj.selectedTableCellsList = selectedCells;
             
             % Notify changes
-            notify(obj, 'tableForDisplayChanged');
-            notify(obj, 'tableSelectionChanged');   % TO OPTIMIZE - use tableSelectionChangedProgrammatically instead?
+            notify(obj, 'tableForDisplayChanged');  % handles also selection update
+            % notify(obj, 'tableSelectionChanged');   % TO OPTIMIZE - use tableSelectionChangedProgrammatically instead?
+
+            % update plotting
+            notify(obj, 'plotUpdateRequired');
         end
 
 
@@ -264,7 +312,11 @@ classdef (Sealed) FullTableProcessor < handle
             obj.selectedTableCellsList = obj.getSelectedCellsFromNames(rowNames, colNames);
 
             notify(obj, 'tableForDisplayChanged');
-            notify(obj, 'tableSelectionChanged');
+            % notify(obj, 'tableSelectionChanged');
+
+            % 251001 - updating just plotting instead of calling tableSelectionChanged
+            % that was probably causing freezing, as two listeners were trying to manipulate UITable at the same time
+            notify(obj, 'plotUpdateRequired');
 
             % getTableForDisplay handles selecting active columns
         end
@@ -413,9 +465,76 @@ classdef (Sealed) FullTableProcessor < handle
 
                 % Remove any rows with zeros (invalid matches)
                 selectedCells = selectedCells(all(selectedCells > 0, 2), :);
+                
+                % If isColumnSelectionPreserved is true, add first row for columns with no valid selection
+                % Added 251001 to solve the problem with selection disappearing after filtering (because the selected rows were filtered out)
+                if obj.isColumnSelectionPreserved && ~isempty(selectedCells)
+                    % Get unique column indices that have valid selections
+                    selectedColumns = unique(selectedCells(:, 2));
+                    
+                    % Get all column indices that were requested
+                    [~, requestedColumns] = ismember(colNames, displayedTable.Properties.VariableNames);
+                    requestedColumns = requestedColumns(requestedColumns > 0);
+                    
+                    % Find columns that were requested but have no valid selection
+                    missingColumns = setdiff(requestedColumns, selectedColumns);
+                    
+                    % Add first row for missing columns
+                    if ~isempty(missingColumns)
+                        firstRowSelections = [ones(length(missingColumns), 1), missingColumns(:)];
+                        selectedCells = [selectedCells; firstRowSelections];
+                    end
+                end
+
+                
             catch
                 selectedCells = [];
             end
+        end
+
+
+        function newSelectedCells = updateSelectionAfterColumnChange(obj, previouslyActiveColumns, columnNames)
+            % Update selectedTableCellsList based on column changes
+            % Added 251001 so that the selection can update accordingly if columns are removed or added
+
+            newSelectedCells = [];
+            
+            if isempty(obj.selectedTableCellsList) || isempty(previouslyActiveColumns)
+                return
+            end
+            % Get unique column indices from current selection
+            selectedColIndices = unique(obj.selectedTableCellsList(:,2));
+            
+            % Preallocate for worst case (all columns remain)
+            maxPossibleCells = size(obj.selectedTableCellsList, 1);
+            newSelectedCells = zeros(maxPossibleCells, 2);
+            cellCount = 0;
+            
+            for i = 1:length(selectedColIndices)
+                oldColIdx = selectedColIndices(i);
+                
+                % Get the column name from the old active columns
+                if oldColIdx <= length(previouslyActiveColumns)
+                columnName = previouslyActiveColumns{oldColIdx};
+                
+                % Find new index of this column in the new column list
+                newColIdx = find(strcmp(columnNames, columnName), 1);
+                
+                if ~isempty(newColIdx)
+                    % Find all rows that had this column selected
+                    rowsWithThisCol = obj.selectedTableCellsList(obj.selectedTableCellsList(:,2) == oldColIdx, 1);
+                    % Update to new column index
+                    numNewCells = length(rowsWithThisCol);
+                    newSelectedCells(cellCount+1:cellCount+numNewCells, 1) = rowsWithThisCol;
+                    newSelectedCells(cellCount+1:cellCount+numNewCells, 2) = newColIdx;
+                    cellCount = cellCount + numNewCells;
+                end
+                % If column not found in new list, it's discarded
+                end
+            end
+            
+            % Trim to actual size
+            newSelectedCells = newSelectedCells(1:cellCount, :);
         end
     end
 end
