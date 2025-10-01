@@ -406,6 +406,8 @@ classdef (Sealed) AdaptiveShaftGenerator
             pointsRescaled(:,2) = 0;
             pointsRescaled(:,3) = (pointsRotated(:,3))*obj.sizeIm/obj.realCenterDim + obj.sizeIm/2;
 
+            assignin("base", "pointsRescaled", pointsRescaled)
+
             % transforming the projected and rescaled points into a binary image:
             binaryImage = zeros(obj.sizeIm,obj.sizeIm);
 
