@@ -788,7 +788,8 @@ classdef orbitClass < handle
 
         function keyPressCallback3D(obj, evt)      
             
-            dx = 0.05;
+            % dx = 0.05;
+            translationStep = 10;
             zoomStep = 0.1;
             
             ctrlPressed = 0;
@@ -812,19 +813,25 @@ classdef orbitClass < handle
             
                 case 'leftarrow'
                     if ctrlPressed
-                        camdolly(obj.hAx,dx,0,0)
+                        % camdolly(obj.hAx,dx,0,0)  % this was causing unwanted side view rotation
+                        pos = obj.hAx.Position;
+                        obj.hAx.Position = [pos(1)-translationStep,pos(2),pos(3),pos(4)];
                     else
                         camorbit(obj.hAx,obj.angleStep,0)
                     end
                 case 'rightarrow'
                     if ctrlPressed
-                        camdolly(obj.hAx,-dx,0,0)
+                        % camdolly(obj.hAx,-dx,0,0)
+                        pos = obj.hAx.Position;
+                        obj.hAx.Position = [pos(1)+translationStep,pos(2),pos(3),pos(4)];
                     else
                         camorbit(obj.hAx,-obj.angleStep,0)
                     end
                 case 'uparrow'
                     if ctrlPressed
-                        camdolly(obj.hAx,0,-dx,0)
+                        % camdolly(obj.hAx,0,-dx,0)
+                        pos = obj.hAx.Position;
+                        obj.hAx.Position = [pos(1),pos(2)+translationStep,pos(3),pos(4)];
                     elseif shiftPressed
                         obj.axZoom = obj.axZoom - zoomStep*obj.axZoom;
                         obj.hAx.CameraViewAngle = obj.axZoom; 
@@ -833,7 +840,9 @@ classdef orbitClass < handle
                     end
                 case 'downarrow'
                     if ctrlPressed
-                        camdolly(obj.hAx,0,dx,0)
+                        % camdolly(obj.hAx,0,dx,0)
+                        pos = obj.hAx.Position;
+                        obj.hAx.Position = [pos(1),pos(2)-translationStep,pos(3),pos(4)];
                     elseif shiftPressed
                         obj.axZoom = obj.axZoom + zoomStep*obj.axZoom;
                         obj.hAx.CameraViewAngle = obj.axZoom;
