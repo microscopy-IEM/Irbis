@@ -351,7 +351,14 @@ clc
 
     
     s
+    % if two way anova was done, convert interaction columns from table to
+    % array 
+    if ~iscategorical(results.Group1)
     
+        results.Group1 = table2array(results.Group1);
+        results.Group2 = table2array(results.Group2);
+
+    end
 
     assignin("base","s",s)
     assignin("base","results",results)
