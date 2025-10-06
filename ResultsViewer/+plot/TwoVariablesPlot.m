@@ -165,6 +165,7 @@ classdef TwoVariablesPlot < plot.PlotInterface
                 numericalData = permute(numericalData, [1, 3, 2]);  % D3 potentially contains vector data - must be as columns
                 % if this is a matrix, it cannot be combined with yData!
                 categoricalData = permute(categoricalData, [1, 3, 2]); 
+                categoricalData = removecats(categoricalData);  % clean the list of categories to those present in the data
                 groupData = permute(groupData, [1, 3, 2]);
                 
 
