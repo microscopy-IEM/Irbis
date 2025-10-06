@@ -360,7 +360,7 @@ classdef BranchGraphicsGroup < handle
                 set(obj.GraphicsHandles(idx), 'Selected', "on", 'FaceColor', obj.selectionColor); % Update the graphics object
                 set(obj.GraphicsHandles(idx), 'ContextMenu', obj.contextMenu);
             end
-            disp(['Turning on selection for object with ID: ' num2str(id)]);
+            % disp(['Turning on selection for object with ID: ' num2str(id)]);
             obj.updateIdLabel(id); % Update the ID label position and text
 
             if ~isempty(obj.updateGraphicsInfotext)

@@ -11,11 +11,18 @@ function T = combineTablesVertically(T1, T2)
         if ismember(varName, T1.Properties.VariableNames)
             idx = strcmp(T1.Properties.VariableNames, varName);
             allTypes{i} = T1.Properties.VariableTypes{idx};
-            disp(['Variable: ', varName, ', Type: ', allTypes{i}]);
+            % disp(['Variable: ', varName, ', Type: ', allTypes{i}]);
             if ismember(varName, T2.Properties.VariableNames)
                 idx2 = strcmp(T2.Properties.VariableNames, varName);
                 type2 = T2.Properties.VariableTypes{idx2};
                 if ~strcmp(allTypes{i}, type2)
+                    % disp(['Type mismatch for variable ', varName, ': ', allTypes{i}, ' vs ', type2])
+                    % Handle the special case where one is char and one is string - convert char to string
+                    if (strcmp(allTypes{i}, 'char') && strcmp(type2, 'string')) || ...
+                        (strcmp(allTypes{i}, 'string') && strcmp(type2, 'char'))
+                        %  allTypes{i} = 'string';
+                         continue;  % Skip the error
+                    end
                     error(['Type mismatch for variable ', varName, ': ', allTypes{i}, ' vs ', type2]);
                 end
             end

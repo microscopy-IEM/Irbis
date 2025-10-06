@@ -684,7 +684,7 @@ classdef orbitClass < handle
 
         function resetView(obj)
 
-            disp('Resetting view...')
+            % disp('Resetting view...')
 
             for ax = obj.resettableAxes
                 % we need to make sure that we don't accidentally apply this to the 2D axes
