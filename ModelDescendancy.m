@@ -5,7 +5,7 @@ classdef (Sealed) ModelDescendancy
                 T table
                 rowName (1,1) {mustBeText}
                 descendantBranch (1,:) {mustBeText}
-                descendantRowIds cell
+                descendantRowIds
             end
 
             dictOfDescendants = T{rowName,'children'}{1};
@@ -43,7 +43,7 @@ classdef (Sealed) ModelDescendancy
                 T table
                 rowName (1,1) {mustBeText}
                 descendantBranch (1,:) {mustBeText}
-                descendantRowIds cell
+                descendantRowIds
             end
 
             dictOfDescendants = T{rowName,'children'}{1};
@@ -85,6 +85,30 @@ classdef (Sealed) ModelDescendancy
                 end
             else
                 descendantIds = [];
+            end
+        end
+
+
+
+        function ancestorIds = getAncestorIds(T, rowName, ancestorBranch)
+            arguments
+                T table
+                rowName (1,1) {mustBeText}
+                ancestorBranch (1,:) {mustBeText}
+            end
+
+            dictOfAncestors = T{rowName,'parent'}{1};
+            if isKey(dictOfAncestors, ancestorBranch)
+                ancestorIds = dictOfAncestors(ancestorBranch);
+                while iscell(ancestorIds)
+                    if ~isempty(ancestorIds) && iscell(ancestorIds{1})
+                        ancestorIds = ancestorIds{1};
+                    else
+                        ancestorIds = cell2mat(ancestorIds);
+                    end
+                end
+            else
+                ancestorIds = [];
             end
         end
     end
