@@ -125,6 +125,9 @@ classdef TwoVariablesPlot < plot.PlotInterface
                 numericalData = permute(numericalData, [1, 3, 2]);  % D3 potentially contains vector data - must be as columns
                 categoricalData = permute(categoricalData, [1, 3, 2]); 
 
+                % clean the list of categories to those present in the data
+                categoricalData = removecats(categoricalData);
+
                 % boxplot(axesHandle, numericalData, categoricalData)   % X is numeric and g is categorical
 
                 % boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.1,'JitterOutliers','on');
