@@ -13,7 +13,8 @@ classdef (Sealed) ModelDescendancy
                 dictOfDescendants = dictionary();
             end
 
-            if isKey(dictOfDescendants, descendantBranch)
+            if isConfigured(dictOfDescendants) && isKey(dictOfDescendants, descendantBranch)
+                % using isKey on a non-configured dictionary throws an error
                 existingIds = dictOfDescendants(descendantBranch);
                 if iscell(existingIds)
                     existingIds = existingIds{1};
@@ -47,6 +48,10 @@ classdef (Sealed) ModelDescendancy
             end
 
             dictOfDescendants = T{rowName,'children'}{1};
+            if isempty(dictOfDescendants) || ~isConfigured(dictOfDescendants)   % isConfigured checks if the dictionary has any entries
+                % the object does not have any descendants yet - just leave the table unchanged
+                return
+            end
             if isKey(dictOfDescendants, descendantBranch)
                 existingIds = dictOfDescendants(descendantBranch);
                 if iscell(existingIds)

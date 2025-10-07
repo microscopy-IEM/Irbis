@@ -34,6 +34,10 @@ classdef (Sealed) SpineSeparationHelper
 
             T{rowIndexes, 'Points'} = validPointsCell;
             T{rowIndexes, 'Mesh'} = validMeshes;
+            if ischar(T.name)   % Convert to string because otherwise the assignment on the next line fails
+                % (error we were getting: The value on the right-hand side of the assignment has the wrong width. The assignment requires avalue whose width is 2.)
+                T.name = string(T.name);
+            end
             T{rowIndexes, 'name'} = repmat(string(['S' char(singularParentRowName)]), numValidRegions, 1);
             T{rowIndexes, 'parent'} = repmat({ancestryDict}, numValidRegions, 1);
             T{rowIndexes, 'positionShift'} = repmat({[0 0 0]}, numValidRegions, 1);
@@ -63,10 +67,15 @@ classdef (Sealed) SpineSeparationHelper
             end
 
             % Generate row names for the specified range
-            newRowNames = arrayfun(@num2str, newIds, 'UniformOutput', false);
+            newRowNames = arrayfun(@num2str, newIds, 'UniformOutput', false)';  % this has to be a column cell array -> transpose with '
+            % size(existingRowNames{:})
+            assignin("base", "existingRowNames", existingRowNames)
+            % size(newRowNames{:})
+            assignin("base", "newRowNames", newRowNames)
             if isempty(existingRowNames)
                 T.Properties.RowNames = newRowNames;
             else
+                % T.Properties.RowNames returned in the previous line is a column cell array
                 T.Properties.RowNames = [existingRowNames; newRowNames];
             end
         end
