@@ -196,6 +196,7 @@ classdef TableCombiner
 
             % Go through each unique fileId in the table
             originalIds = categories(T.fileId);
+            idAssignments = configureDictionary("double", "double");
             for i = 1:numel(originalIds)
                 origStr = string(originalIds{i});
                 origNum = str2double(origStr);
@@ -204,16 +205,42 @@ classdef TableCombiner
                 needsReplace = isnan(origNum) || ismember(origNum, usedFileIds);
                 if needsReplace
                     newId = TableCombiner.getNextAvailableId(usedFileIds);
-
-                    % Replace all rows with this fileId
-                    matchIdx = T.fileId == origStr;
-                    T.fileId(matchIdx) = categorical(repmat(newId, sum(matchIdx), 1));
-
+                    idAssignments(origNum) = newId;
                     usedFileIds(end+1) = newId;
                 else
                     usedFileIds(end+1) = origNum;
                 end
             end
+
+            if isempty(keys(idAssignments))
+                return
+            end
+
+            sortedKeys = sort(keys(idAssignments), 'descend'); % descending to avoid replacing a newly assigned id in the same pass
+            % NOTE: we assume that the new ids will always be higher than the original ones
+            for i = 1:numel(sortedKeys)
+                originalFileId = sortedKeys(i);
+                % Replace all rows with this fileId
+                matchIdx = ismember(double(T.fileId), originalFileId);
+                newFileId = idAssignments(originalFileId);
+                T.fileId(matchIdx) = categorical(repmat(newFileId, sum(matchIdx), 1));
+            end
+
+            % FIXED: this script fails if the lowest fileId is replaced with another that is already in the table 
+            %   For example, if we replace 1 with 2 but that one is already in the table, we keep replacing more and more
+            % needsReplace = isnan(origNum) || ismember(origNum, usedFileIds);
+            % if needsReplace
+            %     newId = TableCombiner.getNextAvailableId(usedFileIds);
+
+            %     % Replace all rows with this fileId
+            %     matchIdx = T.fileId == origStr;
+            %     T.fileId(matchIdx) = categorical(repmat(newId, sum(matchIdx), 1));
+
+            %     usedFileIds(end+1) = newId;
+            % else
+            %     usedFileIds(end+1) = origNum;
+            % end
+
             % % TO OPTIMIZE - this does not work properly if there are more fileIds in the not first file
             % % fileId should be a categorical variable, with values corresponding to unique numbers from 1 onwards
             % if ~ismember('fileId', T.Properties.VariableNames)
