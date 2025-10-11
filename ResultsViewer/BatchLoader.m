@@ -70,13 +70,16 @@ classdef BatchLoader < handle
             obj.selectFiles();
             
             if isempty(obj.fileNamesAll)
-                disp('No files selected.');
-                return;
+                ME = MException('BatchLoader:runBatchLoad:noDataLoaded', ...
+                    'No data loaded');
+                throw(ME)
             end
             
             obj.selectModalities();
             if isempty(obj.modalities)
-                return;
+                ME = MException('BatchLoader:runBatchLoad:noModalitiesSelected', ...
+                    'No modalities selected during data load');
+                throw(ME)
             end
 
             wb.Message = "Starting parallel processing...";
@@ -145,8 +148,8 @@ classdef BatchLoader < handle
                         if isfield(existingDataStruct.model, branch)
                             obj.combinedTablesModel.(branch){end+1} = existingDataStruct.model.(branch).combinedList;
                             existingDataStruct.model.(branch).combinedList = TableCombiner.mergeCombinedTables(obj.combinedTablesModel.(branch));
-                            existingDataStruct.model.(branch).storedCategorizations = [{existingDataStruct.model.(branch).storedCategorizations}; obj.combinedColumnDefinitionsModel.(branch)];
-                            existingDataStruct.model.(branch).storedFilters = [{existingDataStruct.model.(branch).storedFilters}; obj.combinedFilteringsModel.(branch)];
+                            existingDataStruct.model.(branch).storedCategorizations = [{existingDataStruct.model.(branch).storedCategorizations}, {obj.combinedColumnDefinitionsModel.(branch){:}}];
+                            existingDataStruct.model.(branch).storedFilters = [{existingDataStruct.model.(branch).storedFilters}, {obj.combinedFilteringsModel.(branch){:}}];
                         else
                             existingDataStruct.model.(branch).combinedList = TableCombiner.mergeCombinedTables(obj.combinedTablesModel.(branch));
                             % existingDataStruct.model.branches{end+1} = branch;
@@ -169,8 +172,8 @@ classdef BatchLoader < handle
                 if isfield(existingDataStruct, 'tracks')
                     obj.combinedTablesTracks{end+1} = existingDataStruct.tracks.combinedList;
                     existingDataStruct.tracks.combinedList = TableCombiner.mergeCombinedTables(obj.combinedTablesTracks);
-                    existingDataStruct.tracks.storedCategorizations = [{existingDataStruct.tracks.storedCategorizations}; obj.combinedColumnDefinitionsTracks];
-                    existingDataStruct.tracks.storedFilters = [{existingDataStruct.tracks.storedFilters}; obj.combinedFilteringsTracks];
+                    existingDataStruct.tracks.storedCategorizations = [{existingDataStruct.tracks.storedCategorizations}, {obj.combinedColumnDefinitionsTracks{:}}];
+                    existingDataStruct.tracks.storedFilters = [{existingDataStruct.tracks.storedFilters}, {obj.combinedFilteringsTracks{:}}];
                 else
                     existingDataStruct.tracks.combinedList = TableCombiner.mergeCombinedTables(obj.combinedTablesTracks);
                     existingDataStruct.tracks.storedCategorizations = obj.combinedColumnDefinitionsTracks;

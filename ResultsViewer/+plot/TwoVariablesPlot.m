@@ -308,27 +308,33 @@ classdef TwoVariablesPlot < plot.PlotInterface
             % xlim(axesHandle, [0.5, length(yCategories) + 1]);
             % ylim(axesHandle, [0.5, length(xCategories) + 1]);
 
-            xCats = unique(xData);
-            yCats = unique(yData);
+            % xCats = unique(xData)
+            % yCats = unique(yData)
 
-            xIdx = double(xData);
-            yIdx = double(yData);
+            [xIdx, xCats] = grp2idx(xData);     % unique(xData) was returning lower number of categories than actually present
+            [yIdx, yCats] = grp2idx(yData);
 
             if isempty(groupData)
 
                 counts = accumarray([xIdx(:), yIdx(:)], 1, ...
                     [length(xCats), length(yCats)]);
                 sizes = counts(:);
+                
+                % sizes(sizes==0) = nan;    % alternative option to nonZero = sizes > 0;
 
                 [xGrid, yGrid] = meshgrid(1:length(yCats), 1:length(xCats));
                 xPlot = xGrid(:) + 0.5;
                 yPlot = yGrid(:) + 0.5;
 
-                scatter(axesHandle, xPlot, yPlot, sizes(:), 'LineWidth', 2);
+                nonZero = sizes > 0;    % the values going to scatter must be positive (or nan)
+
+                scatter(axesHandle, xPlot(nonZero), yPlot(nonZero), sizes(nonZero), 'LineWidth', 2);
             else
 
-                groupCats = unique(groupData);
-                gIdx = double(groupData);
+                % groupCats = unique(groupData);
+                % gIdx = double(groupData);
+
+                [gIdx, groupCats] = grp2idx(groupData);  % ensure that gIdx is sequential from 1 to number of groups
 
                 counts = accumarray([xIdx, yIdx, gIdx], 1, ...
                     [length(xCats), length(yCats), length(groupCats)]);
