@@ -30,7 +30,6 @@ classdef (Sealed) GUI
 
             if nChannels == 1
                 channelColors{1} = hex2rgb("#FFFFFF");
-                disp('single channel planes')
             else
             
                 % Fill the output with colors, repeating the base set if necessary
