@@ -1,5 +1,42 @@
 classdef (Sealed) ModelDescendancy 
     methods (Static)
+        function T = replaceRelatives(T, affectedIds, typeOfRelative, relativeBranch, idsToReplace, newIds)
+            arguments
+                T table
+                affectedIds
+                typeOfRelative {mustBeMember(typeOfRelative, {'parent', 'children'})}
+                relativeBranch (1,:) {mustBeText}
+                idsToReplace
+                newIds
+            end
+
+            for i = 1:numel(affectedIds)
+                rowName = num2str(affectedIds{1}(i));
+                dictOfRelatives = T{rowName,typeOfRelative}{1};
+                if isempty(dictOfRelatives) || ~isConfigured(dictOfRelatives) || ~isKey(dictOfRelatives, relativeBranch)
+                    return
+                end
+                if iscell(newIds)
+                    newIds = cell2mat(newIds);
+                end
+                existingIds = dictOfRelatives(relativeBranch);
+                if iscell(existingIds)
+                    existingIds = existingIds{1};
+                    if iscell(existingIds)
+                        existingIds = cell2mat(existingIds);
+                    end
+                end
+                if iscell(idsToReplace)
+                    idsToReplace = cell2mat(idsToReplace);
+                end
+                updatedIds = unique([setdiff(existingIds, idsToReplace), newIds]);
+                dictOfRelatives(relativeBranch) = {updatedIds};
+                T{rowName, typeOfRelative} = {dictOfRelatives};
+            end
+        end
+
+
+
         function T = addDescendants(T, rowName, descendantBranch, descendantRowIds)
             arguments
                 T table
@@ -114,6 +151,57 @@ classdef (Sealed) ModelDescendancy
                 end
             else
                 ancestorIds = [];
+            end
+        end
+
+
+
+        function relativesExist = doHaveRelatives(relativesColumn)
+            % Check if any of the items have any relatives (parents or children)
+                % Relatives type is defined in what is passed in
+            % Input is a T.parent or T.children column from a table
+
+            % Output is a logical true/false array
+            relativesExist = cellfun(@(x) ~isempty(x) && isConfigured(x), relativesColumn);
+        end
+
+
+        
+        function relativesDict = getUniqueRelatives(relativesColumn)
+            relativesDict = configureDictionary('char', 'cell');
+
+            relativesExist = ModelDescendancy.doHaveRelatives(relativesColumn);
+            relativesCells = relativesColumn(relativesExist);
+
+            for itemIdx = 1:length(relativesCells)
+                relativesEntry = relativesCells{itemIdx};
+                relativesKeys = keys(relativesEntry);
+                for branchIdx = 1:length(relativesKeys)
+                    key = relativesKeys{branchIdx};
+                    value = relativesEntry(key);
+                    if iscell(value)
+                        value = value{1};
+                        if iscell(value)
+                            value = cell2mat(value);
+                        end
+                    end
+                    if isKey(relativesDict, key)
+                        existingValues = relativesDict(key);
+                        if iscell(existingValues)
+                            existingValues = existingValues{1};
+                            if iscell(existingValues)
+                                existingValues = cell2mat(existingValues);
+                            end
+                        end
+                        updatedValues = unique([existingValues, value]);
+                        relativesDict(key) = {updatedValues};
+                    else
+                        if iscell(value)
+                            value = cell2mat(value);
+                        end
+                        relativesDict(key) = {value};
+                    end
+                end
             end
         end
     end
