@@ -10,11 +10,15 @@ classdef (Sealed) ModelDescendancy
                 newIds
             end
 
+            if iscell(affectedIds)
+                affectedIds = cell2mat(affectedIds);
+            end
+
             for i = 1:numel(affectedIds)
-                rowName = num2str(affectedIds{1}(i));
+                rowName = num2str(affectedIds(i));
                 dictOfRelatives = T{rowName,typeOfRelative}{1};
                 if isempty(dictOfRelatives) || ~isConfigured(dictOfRelatives) || ~isKey(dictOfRelatives, relativeBranch)
-                    return
+                    continue
                 end
                 if iscell(newIds)
                     newIds = cell2mat(newIds);

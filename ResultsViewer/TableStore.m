@@ -45,18 +45,35 @@ classdef (Sealed) TableStore < handle
             end
 
 
-            function addExistingUserColumnDefinitions(obj, userColumnDefinitions, columnsToRecalculate)
+            function addExistingUserColumnDefinitions(obj, userColumnDefinitions, columnsToRecalculate, columnsToFreeze)
                 % disp('Adding existing user column definitions to the table data...')
                 % add existing user-defined columns to the table data
+                % columnsToRecalculate - cell array of column names to recalculate (regenerate data)
+                % columnsToFreeze - cell array of column names to freeze (remove from user-defined, keep data only)
                 for i = 1:numel(userColumnDefinitions)
                     columnName = char(userColumnDefinitions{i}.getColumnName()); % <--- force char
             
-                    if ~ismember(columnName, obj.userDefinedColumns)
+                    if ~ismember(columnName, obj.userDefinedColumns) && ~ismember(columnName, columnsToFreeze)
                         obj.userDefinedColumns{end+1} = columnName;
                         obj.userColumnDefinitions{end+1} = userColumnDefinitions{i};
                         if isa(userColumnDefinitions{i}, 'ManualColumnDefinition')
                             obj.editableColumns{end+1} = columnName;
                         end
+                    elseif ismember(columnName, obj.userDefinedColumns) && ismember(columnName, columnsToFreeze)
+                        % Remove from user-defined columns as it's now frozen (only data are left, definition is thrown away)
+                        idx = find(strcmp(obj.userDefinedColumns, columnName), 1);
+                        obj.userDefinedColumns(idx) = [];
+                        obj.userColumnDefinitions(idx) = [];
+
+                        % If it's also editable, remove from editable columns
+                        if ismember(columnName, obj.editableColumns)
+                            editIdx = find(strcmp(obj.editableColumns, columnName), 1);
+                            obj.editableColumns(editIdx) = [];
+                        end
+                    else
+                        % If the column is to be frozen but is not yet in the list, that is ok, do nothing
+                        % If the column is not to be frozen and already exists, just leave it there
+                        continue;
                     end
             
                     % Reapply the column definition if the name is in columnsToRecalculate

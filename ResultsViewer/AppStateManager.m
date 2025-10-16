@@ -515,7 +515,16 @@ classdef (Sealed) AppStateManager < handle
         function addStoredColumnDefinitionsToTableStore(~, tableStore, definitionList, namesToRecalculate)
             % Add stored categorizations to the table store
             if ~isempty(definitionList)
-                tableStore.addExistingUserColumnDefinitions(definitionList, namesToRecalculate);
+                if ~isempty(namesToRecalculate)
+                    namesToRecalculate = unique(namesToRecalculate);
+                    % Let user decide whether one definition should be kept and reapplied to the whole column, 
+                    % or whether all definitions should be discarded and only data kept
+                    [namesToRecalculate, namesToFreeze] = selectNamesToRecalculate(namesToRecalculate);
+                else
+                    disp('No conflicting column definitions found.');
+                    namesToFreeze = {};
+                end
+                tableStore.addExistingUserColumnDefinitions(definitionList, namesToRecalculate, namesToFreeze);
             end
         end
         
