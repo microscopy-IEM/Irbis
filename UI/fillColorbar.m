@@ -3,7 +3,7 @@ function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColu
 
     % disp('Filling colorbar...');
     % Check if a colormap other than 'random' is selected
-    if isequal(colormapName, 'random') || isequal(colormapName, 'singlecolor')
+    if isequal(colormapName, 'random') || isequal(colormapName, 'flat')
         return;
     end
 

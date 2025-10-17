@@ -7,7 +7,7 @@ classdef (Sealed) PlanesChannelControls
     end
 
     methods (Static)
-        function add(panel, gridLayout, chNum, chName, chColor, chColormap, contextMenu, callbacks)
+        function add(panel, gridLayout, chNum, chName, chColor, chColormap, contextMenu, callbacks, styles)
             % function interactively adds new set of control components for new channel
             % disp(['adding ctrls for ch' num2str(chNum)] )
 
@@ -65,9 +65,19 @@ classdef (Sealed) PlanesChannelControls
             mapSelection.Tag = ['ch' num2str(chNum)];
             mapSelection.Layout.Row = currentRows + 1;
             mapSelection.Layout.Column = 3;
-            mapSelection.Items = {'gray','turbo','parula','jet','cool','hot'};
+            mapSelection.Items = {'gray','turbo','parula','jet','cool','hot','nebula','summer'};
             mapSelection.Value = chColormap;
             mapSelection.ValueChangedFcn = @(~, ~) callbacks.colormap(channelButton.UserData, mapSelection.Value);
+
+           
+            % Assign styles (colormap icons) to drobdown items
+            for i = 1:size(mapSelection.Items,2)
+
+                mapName = mapSelection.Items{i};
+                tempStyle = styles.(mapName);
+                addStyle(mapSelection,tempStyle,"item",i);
+
+            end
 
             % Check box for channel activation
             chCheckBox = uicheckbox(internalGrid);
