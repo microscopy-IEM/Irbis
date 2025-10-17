@@ -2,7 +2,7 @@ appDirectory = fileparts(mfilename("fullpath"));
 
 % subfoldersToAdd = {'Mesh_processing_toolbox', 'toolbox_fast_marching'};
 
-subfoldersToAdd = {'toolbox_fast_marching', 'UI'};
+subfoldersToAdd = {'toolbox_fast_marching', 'UI', 'DialogWindows'};
 
 for folderNum = 1:length(subfoldersToAdd)
     subfolder = subfoldersToAdd{folderNum};

@@ -4,7 +4,7 @@ classdef (Sealed) ModelDescendancy
             arguments
                 T table
                 affectedIds
-                typeOfRelative {mustBeMember(typeOfRelative, {'parent', 'children'})}
+                typeOfRelative {mustBeMember(typeOfRelative, {'parent', 'children'})}   % what is the relation of the relative to the subject
                 relativeBranch (1,:) {mustBeText}
                 idsToReplace
                 newIds
@@ -34,6 +34,143 @@ classdef (Sealed) ModelDescendancy
                     idsToReplace = cell2mat(idsToReplace);
                 end
                 updatedIds = unique([setdiff(existingIds, idsToReplace), newIds]);
+                dictOfRelatives(relativeBranch) = {updatedIds};
+                T{rowName, typeOfRelative} = {dictOfRelatives};
+            end
+        end
+
+
+
+        function T = updateRelatives(T, typeOfRelative, relativeBranch, subjectId, oldIdList, newIdList)
+            arguments
+                T
+                typeOfRelative {mustBeMember(typeOfRelative, {'parent', 'children'})}   % what is the relation of the relative to the subject
+                relativeBranch (1,:) {mustBeText}
+                subjectId
+                oldIdList cell
+                newIdList cell
+            end
+
+            % Method for updating information about subject in relatives' tables
+
+            oldIdList = oldIdList{1};
+            if iscell(oldIdList)
+                oldIdList = cell2mat(oldIdList);
+            end
+
+            newIdList = newIdList{1};
+            if iscell(newIdList)
+                newIdList = cell2mat(newIdList);
+            end
+
+            % For objects in newIdList that are not in oldIdList, add subjectId as their relative
+            idsToAdd = setdiff(newIdList, oldIdList);
+            for i = 1:numel(idsToAdd)
+                idsToAdd(i)
+                if isequal(typeOfRelative, 'parent')
+                    % Ensure only one parent per branch
+                    T = ModelDescendancy.replaceAncestor(T, num2str(idsToAdd(i)), relativeBranch, subjectId);
+                elseif isequal(typeOfRelative, 'children')
+                    T = ModelDescendancy.addRelatives(T, num2str(idsToAdd(i)), relativeBranch, subjectId, typeOfRelative);
+                end    
+            end
+
+            % For objects in oldIdList that are not in newIdList, remove subjectId as their relative
+            idsToRemove = setdiff(oldIdList, newIdList);
+            for i = 1:numel(idsToRemove)
+                idsToRemove(i)
+                T = ModelDescendancy.removeRelatives(T, num2str(idsToRemove(i)), relativeBranch, subjectId, typeOfRelative);
+            end
+        end
+
+
+
+        function T = replaceAncestor(T, rowName, ancestorBranch, ancestorId)
+            % We assume that there can only be one parent -> remove the existing one(s) and add the new one
+            arguments
+                T table
+                rowName (1,1) {mustBeText}
+                ancestorBranch (1,:) {mustBeText}
+                ancestorId
+            end
+
+            dictOfRelatives = T{rowName, 'parent'}{1};
+            if isempty(dictOfRelatives)
+                dictOfRelatives = dictionary();
+            end
+            dictOfRelatives(ancestorBranch) = {ancestorId};
+
+            T{rowName, 'parent'} = {dictOfRelatives};
+        end
+
+
+
+        function T = addRelatives(T, rowName, relativeBranch, relativeRowIds, typeOfRelative)
+            arguments
+                T table
+                rowName (1,1) {mustBeText}
+                relativeBranch (1,:) {mustBeText}
+                relativeRowIds
+                typeOfRelative {mustBeMember(typeOfRelative, {'parent', 'children'})}
+            end
+
+            dictOfRelatives = T{rowName, typeOfRelative}{1};
+            if isempty(dictOfRelatives)
+                dictOfRelatives = dictionary();
+            end
+
+            if isConfigured(dictOfRelatives) && isKey(dictOfRelatives, relativeBranch)
+                % using isKey on a non-configured dictionary throws an error
+                existingIds = dictOfRelatives(relativeBranch);
+                if iscell(existingIds)
+                    existingIds = existingIds{1};
+                    if iscell(existingIds)
+                        existingIds = cell2mat(existingIds);
+                    end
+                end
+                if iscell(relativeRowIds)
+                    relativeRowIds = cell2mat(relativeRowIds);
+                end
+                updatedIds = unique([existingIds, relativeRowIds]);
+                dictOfRelatives(relativeBranch) = {updatedIds};
+            else
+                if iscell(relativeRowIds)
+                    relativeRowIds = cell2mat(relativeRowIds);
+                end
+                dictOfRelatives(relativeBranch) = {relativeRowIds};
+            end
+
+            T{rowName, typeOfRelative} = {dictOfRelatives};
+        end
+
+
+
+        function T = removeRelatives(T, rowName, relativeBranch, relativeRowIds, typeOfRelative)
+            arguments
+                T table
+                rowName (1,1) {mustBeText}
+                relativeBranch (1,:) {mustBeText}
+                relativeRowIds
+                typeOfRelative {mustBeMember(typeOfRelative, {'parent', 'children'})}
+            end
+
+            dictOfRelatives = T{rowName, typeOfRelative}{1};
+            if isempty(dictOfRelatives) || ~isConfigured(dictOfRelatives)   % isConfigured checks if the dictionary has any entries
+                % the object does not have any relatives yet - just leave the table unchanged
+                return
+            end
+            if isKey(dictOfRelatives, relativeBranch)
+                existingIds = dictOfRelatives(relativeBranch);
+                if iscell(existingIds)
+                    existingIds = existingIds{1};
+                    if iscell(existingIds)
+                        existingIds = cell2mat(existingIds);
+                    end
+                end
+                if iscell(relativeRowIds)
+                    relativeRowIds = cell2mat(relativeRowIds);
+                end
+                updatedIds = setdiff(existingIds, relativeRowIds);
                 dictOfRelatives(relativeBranch) = {updatedIds};
                 T{rowName, typeOfRelative} = {dictOfRelatives};
             end
