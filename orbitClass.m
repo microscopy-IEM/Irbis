@@ -52,6 +52,8 @@ classdef orbitClass < handle
             obj.mode = modes{activeId};
             obj.axZoom = obj.hAx.CameraViewAngle;
             obj.hAx.CameraViewAngleMode = 'manual'; % manual only for 3D
+            
+            % obj.inActiveArea = false
 
             % Create and activate a pointer manager for the figure:
             iptPointerManager(obj.hFig, 'enable');
@@ -73,7 +75,10 @@ classdef orbitClass < handle
             obj.setCentreOfRotation(obj.cameraTarget); 
 
             obj.saveOrigCallbacks;
-            obj.setCallbacks;            
+            obj.setCallbacks;   
+
+            obj.setActiveAxes(obj.hAx, false);
+
 
         end
 
@@ -168,8 +173,8 @@ classdef orbitClass < handle
             obj.origCallbacks.WindowKeyPressFcn     = obj.hFig.WindowKeyPressFcn;
             obj.origCallbacks.WindowKeyReleaseFcn   = obj.hFig.WindowKeyReleaseFcn;
             obj.origCallbacks.WindowButtonMotionFcn = obj.hFig.WindowButtonMotionFcn;
-            obj.origCallbacks.KeyPressFcn         = obj.hFig.KeyPressFcn;
-            obj.origCallbacks.KeyReleaseFcn       = obj.hFig.KeyReleaseFcn;      
+            obj.origCallbacks.KeyPressFcn           = obj.hFig.KeyPressFcn;
+            obj.origCallbacks.KeyReleaseFcn         = obj.hFig.KeyReleaseFcn;      
 
         end
 
@@ -689,6 +694,9 @@ classdef orbitClass < handle
             for ax = obj.resettableAxes
                 % we need to make sure that we don't accidentally apply this to the 2D axes
                 
+                % save information if the axes were active before resetting and recover the status after the resetting
+                inActiveAreaStatus = obj.inActiveArea;
+
                 obj.setActiveAxes(ax, true);    % to make sure that the centre of rotation is reset for the correct axes
 
                 obj.resetCentreOfRotation()
@@ -731,6 +739,9 @@ classdef orbitClass < handle
 
                 adjustRatio = true; % ajust to have width and height the same
                 SceneGeometry.fitAxesToPanel(hPan, ax, adjustRatio);    % this will preserve the width/height ratio
+
+                % recover inActiveArea status
+                obj.inActiveArea = inActiveAreaStatus;
 
                 % disp(ax.CameraPosition)
                 % disp(ax.CameraTarget)

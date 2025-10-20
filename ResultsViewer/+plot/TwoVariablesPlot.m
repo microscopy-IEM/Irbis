@@ -90,7 +90,8 @@ classdef TwoVariablesPlot < plot.PlotInterface
                 end
                 hold(axesHandle, 'off');
                 if ~isempty(legendNames)
-                    legend(legendHandles, legendNames, 'Location', 'best'); 
+                    l = legend(legendHandles, legendNames, 'Location', 'best'); 
+                    l.Interpreter = 'none';
                 end
             end
 
@@ -358,7 +359,8 @@ classdef TwoVariablesPlot < plot.PlotInterface
                         'MarkerEdgeColor', categoryColormap(g, :), 'LineWidth', 2);
                 end
 
-                legend(axesHandle, groupCats, 'Location', 'best');
+                l = legend(axesHandle, groupCats, 'Location', 'best');
+                l.Interpreter = 'none';
 
             end
 
