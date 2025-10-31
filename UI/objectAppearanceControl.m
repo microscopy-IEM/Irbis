@@ -228,15 +228,23 @@ classdef objectAppearanceControl < handle
             imPos = oac.controlPanel.Position;
     
             oac.controlPanel.Position = [dockPos(1), dockPos(2) + dockPos(4)-imHeight - dockPos(4), imPos(3), imHeight];
+           
                
         end
 
         function reArrangeControls(oac)
                         
+            imHeight = oac.upperPanelHeight + (oac.nControls*oac.ySpacer);
+
+            dockPos = oac.dockPanel.Position;
+            imPos = oac.controlPanel.Position;
+    
+            oac.controlPanel.Position = [dockPos(1), dockPos(2) + dockPos(4)-imHeight - dockPos(4), imPos(3), imHeight];
+            
             branchNames = fieldnames(oac.controlsHandle);
 
-            dockPos = oac.dockPanel.Position;   
-            imPos =oac.controlPanel.Position;
+            dockPanelPos = oac.dockPanel.Position;   
+            % controlPanelPos =oac.controlPanel.Position;
       
             nBranches = size(branchNames,1);
                         
@@ -248,8 +256,9 @@ classdef objectAppearanceControl < handle
                 branch = branchNames{index};   
                                                               
                 % calculate common constants       
-                baseY = dockPos(2) - oac.upperPanelHeight - (index-1)*oac.ySpacer - elementsH-10;
-                baseX = imPos(1) + oac.x0;
+                baseY = dockPanelPos(2) - oac.upperPanelHeight - (index-1)*oac.ySpacer - elementsH-10;
+                % baseX = controlPanelPos(1) + oac.x0;
+                baseX = dockPanelPos(1) + oac.x0;
 
                 % calculate control's positions
                 posLabel = [baseX, baseY, 80, elementsH];
