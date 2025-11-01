@@ -18,6 +18,8 @@ classdef objectAppearanceControl < handle
        controlPanel
        plotPanel
        showButton
+       lightSlider
+       backgoundColPicker
     end
 
     methods
@@ -33,6 +35,38 @@ classdef objectAppearanceControl < handle
 
             oac.showButton.ValueChangedFcn = @(src, evt)oac.showColorControls(src, evt);
 
+
+            %% Default controls
+            lightIntensity = 0.5;
+            defBcgCol = [0 0 0];
+
+            % LightSlider = uislider
+            oac.lightSlider = uislider(oac.plotPanel);
+            oac.lightSlider.Tag = oac.commonTag;           
+            oac.lightSlider.Value = lightIntensity;
+            oac.lightSlider.MajorTickLabels = {};
+            oac.lightSlider.MajorTicks = [];
+            oac.lightSlider.MinorTicks = [];
+            oac.lightSlider.Limits = [0 1];     
+            % LightSlider.UserData.branch = branch;
+            oac.lightSlider.UserData.feature = 'light';
+            % LightSlider.ValueChangedFcn = @(~, ~) oac.callbacks.changeAppearance(branch,'transparency',LightSlider.Value);
+
+            dockPanelPos = oac.dockPanel.Position;
+            baseY = dockPanelPos(2)-22;
+            baseX = dockPanelPos(1) + oac.x0;
+
+            oac.lightSlider.Position = [baseX, baseY, 100, 3];
+
+            oac.backgoundColPicker = uicolorpicker(oac.plotPanel);
+            oac.backgoundColPicker.Value = defBcgCol;
+            oac.backgoundColPicker.Position = [baseX + 120, baseY, 25, 25];
+
+            lb = uilabel(oac.plotPanel);
+            lb.Text = 'Background color';
+
+            %% Styles
+
             for i = 1:size(oac.colorMapsNames,2)
 
                 mapName = oac.colorMapsNames{i};                              
@@ -40,6 +74,8 @@ classdef objectAppearanceControl < handle
                 oac.colorMapStyles.(mapName) = uistyle("Icon",icon,'HorizontalAlignment','center','IconAlignment','leftmargin');
 
             end
+
+         
 
         end
 
@@ -235,7 +271,6 @@ classdef objectAppearanceControl < handle
         function reArrangeControls(oac)
                         
             imHeight = oac.upperPanelHeight + (oac.nControls*oac.ySpacer);
-
             dockPos = oac.dockPanel.Position;
             imPos = oac.controlPanel.Position;
     
@@ -244,7 +279,13 @@ classdef objectAppearanceControl < handle
             branchNames = fieldnames(oac.controlsHandle);
 
             dockPanelPos = oac.dockPanel.Position;   
-            % controlPanelPos =oac.controlPanel.Position;
+
+            baseX = dockPanelPos(1) + oac.x0;
+            baseY = dockPanelPos(2) - 22;
+
+            oac.lightSlider.Position = [baseX, baseY, 100, 3];
+            oac.backgoundColPicker.Position = [baseX + 200, baseY-10, 40, 25];
+            
       
             nBranches = size(branchNames,1);
                         
@@ -256,9 +297,7 @@ classdef objectAppearanceControl < handle
                 branch = branchNames{index};   
                                                               
                 % calculate common constants       
-                baseY = dockPanelPos(2) - oac.upperPanelHeight - (index-1)*oac.ySpacer - elementsH-10;
-                % baseX = controlPanelPos(1) + oac.x0;
-                baseX = dockPanelPos(1) + oac.x0;
+                baseY = dockPanelPos(2) - oac.upperPanelHeight - (index-1)*oac.ySpacer - elementsH-10;                                
 
                 % calculate control's positions
                 posLabel = [baseX, baseY, 80, elementsH];
