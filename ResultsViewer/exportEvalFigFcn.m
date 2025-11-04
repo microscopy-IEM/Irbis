@@ -18,8 +18,8 @@ function exportEvalFigFcn(sourceAx)
     f.Theme = parentFigure.Theme;
     ax = copyobj(sourceAx,f);
 
-    get(sourceAx)
-    55
+    % get(sourceAx)
+    % 55
 
 
     % origLegend = findobj(parentFigure,'Type','Legend')
@@ -41,11 +41,11 @@ function exportEvalFigFcn(sourceAx)
     cb = uicheckbox(f,"ValueChangedFcn",@(src,evt)violinCheckBox(src,evt,ax),'Value',1,'Text','Violin','Position',[140 20 100 22]);
     
     % detect boxCharts in figure
-    boxCharts = findobj(ax,'Type','BoxChart')
+    boxCharts = findobj(ax,'Type','BoxChart');
     
     delete(findobj(ax,'Type','ViolinPlot'))
     
-    get(boxCharts(1))
+    % get(boxCharts(1))
     
     cWidth = boxCharts(1).ColorGroupWidth;
     
@@ -124,7 +124,7 @@ function exportEvalFigFcn(sourceAx)
                     vshift = currentBoxChartObj.BoxWidth/2 +  currentBoxChartObj.BoxWidth/2*0.2;
                 else
     
-                    vshift = currentBoxChartObj.BoxWidth*absGroupWidth*1.5;
+                    vshift = currentBoxChartObj.BoxWidth*absGroupWidth*1.1
                     densitiWidth = absGroupWidth*0.8;
     
                     % v.DensityWidth = densitiWidth;
