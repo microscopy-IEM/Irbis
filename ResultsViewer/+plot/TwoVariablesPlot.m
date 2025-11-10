@@ -55,8 +55,8 @@ classdef TwoVariablesPlot < plot.PlotInterface
             yData = data.yData;
             groupData = data.groupData;
 
-            xlabel(axesHandle, data.xLabel);
-            ylabel(axesHandle, data.yLabel);
+            xlabel(axesHandle, data.xLabel,'Interpreter','none');
+            ylabel(axesHandle, data.yLabel,'Interpreter','none');
 
             if isempty(groupData)
                 scatter(axesHandle, xData, yData,'XJitter','rand');
@@ -101,6 +101,7 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
             jitterState = 'on';
 
+            
             xData = data.xData;
             yData = data.yData;
             groupData = data.groupData;
@@ -147,8 +148,10 @@ classdef TwoVariablesPlot < plot.PlotInterface
                     % boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
 
                     boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers',jitterState);
-                    axesHandle.NextPlot = 'add';
+                    
+                    axesHandle.TickLabelInterpreter = 'none';                  
 
+                    axesHandle.NextPlot = 'add';
 
                     % axesHandle.UserData.groupLabel = data.xLabel;
                     % axesHandle.UserData.cGroupLabel = data.groupLabel;
@@ -156,6 +159,7 @@ classdef TwoVariablesPlot < plot.PlotInterface
                 else
 
                     boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.1,'JitterOutliers',jitterState);
+                    
 
                   
 
@@ -183,11 +187,13 @@ classdef TwoVariablesPlot < plot.PlotInterface
                     % boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.3,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
                     b = boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers',jitterState);
                     
+                    axesHandle.TickLabelInterpreter = 'none';     
                     legendGroups = unique(groupData);
                     l = legend(axesHandle, b, legendGroups, 'Location', 'northeast');
                     l.Interpreter = 'none';
                     
-                    axesHandle.NextPlot = 'add';                    
+                    axesHandle.NextPlot = 'add';   
+                    
                     
                     % v = violinplot(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData);                    
                                       
@@ -228,6 +234,9 @@ classdef TwoVariablesPlot < plot.PlotInterface
                         l.Interpreter = 'none';
 
                     end
+
+                    % axesHandle.YLabel.Interpreter = 'none';
+                    % axesHandle.XLabel.Interpreter = 'none';
                    
 
                 else
@@ -262,8 +271,8 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
             axesHandle.UserData = data;
 
-            xlabel(axesHandle, data.xLabel);
-            ylabel(axesHandle, data.yLabel);
+            xlabel(axesHandle, data.xLabel,'Interpreter','none');
+            ylabel(axesHandle, data.yLabel,'Interpreter','none');
 
             % xCategories = unique(xData);
             % yCategories = unique(yData);
