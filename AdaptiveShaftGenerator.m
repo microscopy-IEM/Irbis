@@ -73,6 +73,7 @@ classdef (Sealed) AdaptiveShaftGenerator
                 contours = obj.runInSerial(A, B, vertices);
             end
 
+            contours = obj.addMissingContours(A, B, contours);
             [middlePointsArray, contoursArray] = obj.processOutputArrays(A, contours);
             radii = obj.calculateRadii(middlePointsArray, contoursArray);
         end
@@ -331,9 +332,63 @@ classdef (Sealed) AdaptiveShaftGenerator
             end
         end
 
+
+        function contours = addMissingContours(~, A, B, contours)
+            % Substitute missing contours with translated and rotated closest contour
+            % TO OPTIMIZE: instead of just translating the contour from another place, also adjust its shape
+
+            % For each missing contour, find the closest non-missing contour
+            nonEmptyIndices = find(~cellfun('isempty', contours));  % find returns indices of all non-zero elements
+            emptyIndices = find(cellfun('isempty', contours));
+            disp('empty contours:')
+            disp(numel(emptyIndices))
+
+            % for each empty contour, find the index of the closest non-empty contour
+            % in case of two contours being equally close, the one with smaller index is chosen implicitly
+            closestIndices = zeros(size(emptyIndices));
+            for iEmpty = 1:numel(emptyIndices)
+                emptyIdx = emptyIndices(iEmpty);
+                [~, iValid] = min(abs(nonEmptyIndices - emptyIdx));
+                closestIndices(iEmpty) = nonEmptyIndices(iValid);
+            end
+
+            % For each of the missing contours, take the closest, rotate and translate it and save it into the cell array
+            for iEmpty = 1:numel(emptyIndices)
+                AEmpty = A(emptyIndices(iEmpty), :);
+                BEmpty = B(emptyIndices(iEmpty), :);
+                NormalVectorEmpty = (BEmpty - AEmpty)/norm(BEmpty - AEmpty);
+
+                AClosest = A(closestIndices(iEmpty), :);
+                BClosest = B(closestIndices(iEmpty), :);
+                NormalVectorClosest = (BClosest - AClosest)/norm(BClosest - AClosest);
+
+                % Calculate rotation matrix from closest to empty
+                cosTheta = dot(NormalVectorClosest, NormalVectorEmpty)/(norm(NormalVectorClosest)*norm(NormalVectorEmpty));
+                sinTheta = norm(cross(NormalVectorClosest, NormalVectorEmpty))/(norm(NormalVectorClosest)*norm(NormalVectorEmpty));
+
+                C = cross(NormalVectorClosest, NormalVectorEmpty);
+                u1 = C(1)/norm(C);
+                u2 = C(2)/norm(C);
+                u3 = C(3)/norm(C);
+
+                R = [cosTheta + u1^2 * (1 - cosTheta)      u1 * u2 * (1 - cosTheta) - u3 * sinTheta    u1 * u3 * (1 - cosTheta) + u2 * sinTheta;
+                    u2 * u1 * (1 - cosTheta) + u3 * sinTheta    cosTheta + u2^2 * (1 - cosTheta)    u2 * u3 * (1 - cosTheta) - u1 * sinTheta;
+                    u3 * u1 * (1 - cosTheta) - u2 * sinTheta    u3 * u2 * (1 - cosTheta) + u1 * sinTheta    cosTheta + u3^2 * (1 - cosTheta)];
+
+                % Apply rotation and translation to the closest contour
+                contourClosest = contours{closestIndices(iEmpty)};
+                contourTranslated = (contourClosest - AClosest) * R' + AEmpty;  % R is the rotation matrix
+                contours{emptyIndices(iEmpty)} = contourTranslated;
+            end
+        end
+
+
         function [middlePointsArray, contoursArray] = processOutputArrays(~, middlePoints, contours)
             % Throw away empty contours and corresponding middle points
             nonEmptyIndices = ~cellfun('isempty', contours);
+            emptyIndices = cellfun('isempty', contours);
+            disp('empty after:')
+            disp(numel(find(emptyIndices)))
             contours = contours(nonEmptyIndices);
             middlePoints = middlePoints(nonEmptyIndices, :);
             
