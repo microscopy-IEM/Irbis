@@ -47,7 +47,7 @@ classdef ColumnDefinitionCombiner
                     conds2 = secondDefinition.getConditions();
                     areEqual = ColumnDefinitionCombiner.conditionsAreEqual(conds1, conds2);
                 case {'formula', 'merged'}  % the formula is a text we compare
-                    areEqual = isequal(firstDefinition.getFormula(), secondDefinition.getFormula());
+                    areEqual = isequal(firstDefinition.getRules(), secondDefinition.getRules());
                     % TO OPTIMIZE - different texts can be the same formula, we do not take that into account - too difficult to check
                 case 'manual'
                     areEqual = true;
