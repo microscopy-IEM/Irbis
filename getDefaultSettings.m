@@ -11,4 +11,5 @@ function settings = getDefaultSettings(appData)
     settings.pymeshlabVersion = [];
     settings.askSaveBeforeClosing = 1;
     settings.askSaveBeforeNew = 1;
+    settings.theme = 'dark'; % added 20251214
 end
