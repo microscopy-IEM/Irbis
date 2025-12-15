@@ -52,8 +52,21 @@ classdef (Sealed) SpineSeparationHelper
                 vecNorms = sqrt(sum((vecA - vecB).^2, 2));
                 vec = (vecA - vecB) ./ vecNorms;
 
-                T{rowIndexes, 'cuttingPlaneCentre'} = basePoints(validIndices,1:3);
-                T{rowIndexes, 'cuttingPlaneNormal'} = vec;
+                % assignin("base", "basePoints", basePoints)
+                try
+                    T{rowIndexes, 'cuttingPlaneCentre'} = basePoints(validIndices,1:3);
+                    T{rowIndexes, 'cuttingPlaneNormal'} = vec;
+                catch
+                    % TO OPTIMIZE - this is an ugly code!!!
+                    % this can accidentally cause problems or delete previous datasets
+
+                    disp(['size of columns cuttingPlaneCentre and cuttingPlaneNormal was converted so that it contains three columns!!!'])
+                    T.cuttingPlaneCentre =  nan(height(T), 3);
+                    T.cuttingPlaneNormal = nan(height(T), 3);
+
+                    T{rowIndexes, 'cuttingPlaneCentre'} = basePoints(validIndices,1:3);
+                    T{rowIndexes, 'cuttingPlaneNormal'} = vec;
+                end
             end
 
             warning('on', 'MATLAB:table:RowsAddedExistingVars'); % turn it back on

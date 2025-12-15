@@ -37,7 +37,7 @@ classdef TemplateSettingsDialogWindow < handle
         
             uibutton(fig, 'Text', 'Add', ...
                 'Position', [270, yFirstRow, 120, elementHeight], ...
-                'ButtonPushedFcn', @(~, ~) addTemplateOfSelectedType(addTypeDropdown, selectedTemplateDropDown));
+                'ButtonPushedFcn', @(~, ~) obj.addTemplateOfSelectedType(addTypeDropdown, selectedTemplateDropDown));
         
             %% Third row: Centered Use, Edit, Duplicate, Delete buttons
             buttonWidth = 80;
