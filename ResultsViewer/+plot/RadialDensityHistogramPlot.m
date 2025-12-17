@@ -1,22 +1,26 @@
 classdef RadialDensityHistogramPlot < plot.PlotInterface
 
-    % Stepan's special histogram to calculate density of radial distribution
+    % Stepan's uPaint special histogram to calculate density of
+    % localization in and near object (synapse)
 
     properties (Constant)
         MIN_RADIAL_DISTANCE = 0;
         MAX_RADIAL_DISTANCE = 4;
         STEP = 0.05;
+        eqPoint = 3;
+        eqPointRange = 0.5;
     end
 
     methods
         function plot(obj, data, axesHandle)
-
+            
             cla(axesHandle,'reset')
 
             groupData = data.groupData;
             xData = data.xData;
-            binEdges = obj.MIN_RADIAL_DISTANCE : obj.STEP : obj.MAX_RADIAL_DISTANCE; % 0:0.05:4;    % TO OPTIMIZE - this contains hard-coded values
+            binEdges = obj.MIN_RADIAL_DISTANCE : obj.STEP : obj.MAX_RADIAL_DISTANCE; % 0:0.05:4;    % TO OPTIMIZE - this contains hard-coded value
 
+          
             hold(axesHandle, 'on');
             if isempty(groupData)
 
@@ -25,13 +29,21 @@ classdef RadialDensityHistogramPlot < plot.PlotInterface
                 binArea = pi.*diff(binEdges.^2);
 
                 densityPerBin = binCounts./binArea;
-                binCounts = densityPerBin;
+                % binCounts = densityPerBin;
 
                 binEdges = binEdges(2:end);
 
-                plot(axesHandle, binEdges, binCounts, '-', 'LineWidth', 2);
+                eqValues = densityPerBin(binEdges >= obj.eqPoint-obj.eqPointRange & binEdges <= obj.eqPoint+obj.eqPointRange);
+
+                normalizationValue = mean(eqValues);
+
+                densityPerBinNormalized = densityPerBin./normalizationValue;
+
+
+                plot(axesHandle, binEdges, densityPerBinNormalized, '-', 'LineWidth', 2);
                 ylabel(axesHandle, 'Counts');
             else
+               
                 categoryList = unique(groupData);
 
                 % start legend entries
@@ -40,26 +52,8 @@ classdef RadialDensityHistogramPlot < plot.PlotInterface
 
                 % generate colors for each line
                 categoryColormap = lines(numel(categoryList)); % generate distinct color for each category - array of size numel(categoryList) x 3
-
-                % hold(axesHandle, 'on');
-                % for i = 1:numel(categoryList)
-                %     mask = groupData == categoryList(i); % TO FIX - this does not work if there are numbers in categorical
-                %     plotHandle = histogram(axesHandle, xData(mask, :, :), ...
-                %     'FaceColor', categoryColormap(i, :));
-
-                %     legendHandles(i) = plotHandle(1);
-                %     legendNames{i} = char(categoryList(i)); 
-
-                % end
-                % hold(axesHandle, 'off');
-                % if ~isempty(legendNames)
-                %     legend(legendHandles, legendNames, 'Location', 'best'); 
-                % end
-
-                % Special plot SK
-
-                % colors = lines(5);
-
+                
+                
                                         
                 for i = 1:length(categoryList)
 
@@ -68,28 +62,19 @@ classdef RadialDensityHistogramPlot < plot.PlotInterface
                     % [binCounts, binEdges] = histcounts(xData(groupData == categoryList{i}),binEdges,'Normalization','pdf');
                     [binCounts, binEdges] = histcounts(xData(mask, :, :), binEdges, 'Normalization', 'count');
                     
-                    binArea = pi.*diff(binEdges.^2);
-
-                    % S = pi.*binEdges(1:end-1).^2
-
-                    densityPerBin = binCounts./binArea;
-                    binCounts = densityPerBin;
-                    % binCounts = binCounts./max(binCounts);
-
-                    % binCounts = binCounts-max(binCounts);
-
+                    binArea = pi.*diff(binEdges.^2); % circular approximation of area between two bins
+                    
+                    densityPerBin = binCounts./binArea;                   
+                    
                     binEdges = binEdges(2:end);
+                                        
+                    eqValues = densityPerBin(binEdges >= obj.eqPoint-obj.eqPointRange & binEdges <= obj.eqPoint+obj.eqPointRange);
 
-                    eqPoint = 3;
-                    k = find(binEdges >= eqPoint,1);
+                    normalizationValue = mean(eqValues);
 
-                    binCounts = binCounts./(binCounts(k));
+                    densityPerBinNormalized = densityPerBin./normalizationValue;
 
-                    % plot(axesHandle, binEdges, binCounts, '-', 'LineWidth', 2);
-                    % ylabel(axesHandle, 'Counts');
-
-                    % plot(axesHandle, binCenters, binCounts, '-', 'LineWidth', 2, 'Color',colors(i,:));
-                    plotHandle = plot(axesHandle, binEdges, binCounts, '-', 'LineWidth', 2, 'Color', categoryColormap(i, :));
+                    plotHandle = plot(axesHandle, binEdges, densityPerBinNormalized, '-', 'LineWidth', 2, 'Color', categoryColormap(i, :));
 
                     legendHandles(i) = plotHandle(1);
                     legendNames{i} = char(categoryList(i));
