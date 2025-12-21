@@ -1,4 +1,4 @@
-classdef orbitClass < handle
+classdef OrbitToolClass < handle
     %UNTITLED Summary of this class goes here
     %   Detailed explanation goes here
 
@@ -32,11 +32,12 @@ classdef orbitClass < handle
         releaseFcnTriggered = false;
 
         resettableAxes = [];  % axes that can be reset to the original position using resetView
+        
     end
 
     methods
 
-        function obj = orbitClass(varargin)
+        function obj = OrbitToolClass(varargin)
 
             axes = varargin{1};
             if nargin == 2
