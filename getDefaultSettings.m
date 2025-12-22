@@ -12,4 +12,5 @@ function settings = getDefaultSettings(appData)
     settings.askSaveBeforeClosing = 1;
     settings.askSaveBeforeNew = 1;
     settings.theme = 'dark'; % added 20251214
+    settings.lightening = 'dynamic'; % added 20251222 dynamic/static
 end
