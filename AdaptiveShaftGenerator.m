@@ -6,17 +6,11 @@ classdef (Sealed) AdaptiveShaftGenerator
         stepToROIsizeRatio = 0.4
         ROIstep % calculated as ROIdepth * stepToROIsizeRatio
 
-        Iterations = 300
-        ContractionBias = -0.5
-        SmoothFactor = 1
-
         initialRadius
 
         radiusFactor = 1.3 % factor by which the radius is multiplied at the end
     
         endsBuffer = 30
-
-        goParallel = true
 
         sizeIm = 100 % size of the image in which the contours are calculated
         realCenterDim
@@ -48,15 +42,9 @@ classdef (Sealed) AdaptiveShaftGenerator
             obj.stepToROIsizeRatio = stepToROIsizeRatio;
             obj.ROIstep = ROIdepth * stepToROIsizeRatio;
 
-            obj.Iterations = Iterations;
-            obj.ContractionBias = ContractionBias;
-            obj.SmoothFactor = SmoothFactor;
-
             obj.initialRadius = initialRadius;
 
             obj.radiusFactor = radiusFactor;
-
-            obj.goParallel = goParallel;
 
             obj.realCenterDim = obj.ROIsize;
 
@@ -64,14 +52,16 @@ classdef (Sealed) AdaptiveShaftGenerator
         end
 
 
-        function [middlePointsArray, contoursArray, radii] = run(obj, centreline, vertices)
-            [A, B] = obj.calculatePointsOnCentreline(centreline);
+        function [middlePointsArray, contoursArray, radii] = run(obj, centreline, mesh)
+            % [A, B] = obj.calculatePointsOnCentreline(centreline);
 
-            if obj.goParallel
-                contours = obj.runInParallel(A, B, vertices);
-            else
-                contours = obj.runInSerial(A, B, vertices);
-            end
+            % if obj.goParallel
+            %     contours = obj.runInParallel(A, B, vertices);
+            % else
+            %     contours = obj.runInSerial(A, B, vertices);
+            % end
+
+            [contours, A, B] = obj.runInPython(centreline, mesh);
 
             contours = obj.addMissingContours(A, B, contours);
             [middlePointsArray, contoursArray] = obj.processOutputArrays(A, contours);
@@ -190,6 +180,22 @@ classdef (Sealed) AdaptiveShaftGenerator
         end
 
 
+        function [contours, A, B] = runInPython(~, centreline, mesh)
+            centrelinePy = py.numpy.array(centreline);
+            verticesPy = py.numpy.array(mesh.Vertices);
+            facesPy = py.numpy.array(mesh.Faces - 1); % adjust for Python 0-based indexing
+
+            [contoursPy, pointsPy, normalsPy] = pyrunfile("generate_outlines_from_mesh_slices_py_script.py", ["contours_3d", "points", "normals"], vertices=verticesPy, faces=facesPy, centerline=centrelinePy);
+
+            contoursPy = cell(contoursPy);
+            contoursPy = cell(contoursPy);
+            contours = cellfun(@double, contoursPy, 'UniformOutput', false);
+
+            A = double(pointsPy);
+            B = double(normalsPy);
+        end
+
+
         function vertices = getVerticesInCuboid(obj, ROIdepth, ROIsize, cuboidOrigin, rotationDegrees, vertices)
 
             inside = obj.isInRotatedCuboid(vertices, cuboidOrigin, [ROIdepth ROIsize, ROIsize], rotationDegrees);
@@ -302,11 +308,6 @@ classdef (Sealed) AdaptiveShaftGenerator
 
             % new way of calculating contours
             contours = obj.calculateContourMorphologically(verticesInCuboid, pointA, pointB);
-
-            % old way - using active contours
-            % contours = IS_active_contour(pointA, pointB, verticesInCuboid,'RadiusScaling',obj.radiusFactor, ...
-            % 'Iterations',obj.Iterations,'ContractionBias',obj.ContractionBias, ...
-            % 'SmoothFactor',obj.SmoothFactor,'sizeIm',obj.sizeIm,'realCenterDim',obj.realCenterDim,'initialRadius',obj.initialRadius);
         end
 
 
