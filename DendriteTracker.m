@@ -18,8 +18,8 @@ classdef DendriteTracker < handle
     
     properties (Constant, Access = private)
         GAUSSIAN_SIGMA_UM = 0.15  % Gaussian filter sigma size in micrometers
-        ENDPOINT_REPLACEMENT_COUNT = 30  % Number of points to replace at trajectory ends
-        DEFAULT_DOWNSCALE_FACTOR = 0.5   % Default downscaling factor for processing
+        ENDPOINT_REPLACEMENT_COUNT = 0 % 30  % Number of points to replace at trajectory ends
+        DEFAULT_DOWNSCALE_FACTOR = 1 % 0.5   % Default downscaling factor for processing
     end
     
     methods
@@ -72,7 +72,7 @@ classdef DendriteTracker < handle
             [startPoint, endPoint] = obj.preprocessEndpoints(startPoint, endPoint, zstack);
             
             % calculate constraint bitmap if needed
-            constraintBitmap = calculateConstraintBitmap(restrictedAreas, zstack, xlim, ylim, drift);
+            constraintBitmap = obj.calculateConstraintBitmap(restrictedAreas, zstack, xlim, ylim, drift);
 
             % Find trajectory
             traj = obj.findTrajectory(zstack, startPoint, endPoint, constraintBitmap);
@@ -209,8 +209,9 @@ classdef DendriteTracker < handle
                 traj = traj';
                 
                 % Smooth trajectory ends
-                traj = obj.smoothTrajectoryEnds(traj);
+                traj = obj.smoothTrajectoryEnds(traj)
             catch ME
+                assignin('base', 'problem', traj);
                 warning(ME.identifier, 'Error in trajectory post-processing: %s', ME.message);
                 traj = [];
             end
@@ -221,8 +222,8 @@ classdef DendriteTracker < handle
             
             numP = obj.ENDPOINT_REPLACEMENT_COUNT;
             
-            if size(traj, 1) < 2*numP+1
-                return; % Not enough points to smooth
+            if (size(traj, 1) < 2*numP+1) || numP == 0
+                return; % Not enough points to smooth or smoothing disabled
             end
             
             % Calculate direction vectors
@@ -237,7 +238,7 @@ classdef DendriteTracker < handle
         end
 
 
-        function constraintBitmap = calculateConstraintBitmap(restrictedAreas, zstack, xlim, ylim, drift)
+        function constraintBitmap = calculateConstraintBitmap(~, restrictedAreas, zstack, xlim, ylim, drift)
             % constrain tracking
         
             if isempty(restrictedAreas)
