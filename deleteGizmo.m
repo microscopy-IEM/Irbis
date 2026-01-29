@@ -1,5 +1,8 @@
 function deleteGizmo(ax)
-    
+
+    iptPointerManager(ancestor(ax, 'figure'),'disable');   % attempt to avoid errors stemming from deleted components
+    % - on laptop, we are sometimes getting error related to exitFcn on Invalid or deleted object
+
     directionNames = ['x', 'y', 'z'];
     for directionN = 1:numel(directionNames)
         directionName = directionNames(directionN);

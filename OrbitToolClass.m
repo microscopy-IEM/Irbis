@@ -408,7 +408,8 @@ classdef OrbitToolClass < handle
                     src.Pointer = 'cross';
                     % determine the rotation direction that I should use
                     centrePos = MicroMToPixelPosition(obj.hAx.CameraTarget, obj.hAx);   % calculate position of rotation centre in pixels
-                    deltaY = centrePos(2) - obj.startYonFig;  % calculate the signed y distance of the rotation centre from the mouse position in pixels
+                    pointerLocation = get(0,'PointerLocation');
+                    deltaY = centrePos(2) - pointerLocation(2);  % calculate the signed y distance of the rotation centre from the mouse position in pixels
                     rotationSign = sign(deltaY*obj.hAx.View(2));  % sign depends on relative position and rotation of the axes
                     % rotationSign supplied here, so that the rotation direction is preserved and jaggered movement is avoided
                     src.WindowButtonMotionFcn = @(~, ~) obj.dragRotate3D(rotationSign); 
