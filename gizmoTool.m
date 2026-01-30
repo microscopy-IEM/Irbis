@@ -5,6 +5,8 @@ function [objectHandle, originalCallbacks, gizmoGroup] = gizmoTool(ax, fig, stic
     % delete old gizmo components
     deleteGizmo(ax);
 
+    normalPosition = [pointB.XData, pointB.YData, pointB.ZData];    % temporary fix, because for some reason, pointB is deleted in the process
+
 
     % check pointA and pointB tags and delete other objects with the same tags
     if ~isempty(objectStruct)        % because if objectStruct is empty, we use it for moving basePoints, and there are more of them that we want to keep
@@ -30,6 +32,8 @@ function [objectHandle, originalCallbacks, gizmoGroup] = gizmoTool(ax, fig, stic
     [componentHandles, doesRotate, doesScale, isActive, objectHandle, gizmoGroup] = defineGizmoComponents(ax, objectStruct, stickyPoints);
     % move gizmo to start position
     [componentHandles, doesRotate, doesScale, isActive] = moveGizmoToStart(componentHandles, doesRotate, doesScale, isActive, pointA, pointB);
+    rotateGizmoToStart(componentHandles, doesRotate, pointA, normalPosition);
+
     % set callbacks for gizmo components
     setCallbacksForActive(componentHandles, isActive, ax, fig, stickyPoints, doesRotate, doesScale, originalCallbacks)
     % set selectivity and highlighting
@@ -334,6 +338,7 @@ function [componentHandles, doesRotate, doesScale, isActive] = moveGizmoToStart(
     pointA.ZData = cBallPoint.ZData;
 
     if ~isempty(pointB)
+        disp('normalizing pointB to normBallPoint position')
         pointB.XData = normBallPoint.XData;
         pointB.YData = normBallPoint.YData;
         pointB.ZData = normBallPoint.ZData;
@@ -350,6 +355,66 @@ function [componentHandles, doesRotate, doesScale, isActive] = moveGizmoToStart(
         doesRotate(end + 1) = true;
         doesScale(end + 1) = false;
         isActive(end + 1) = false;
+    end
+end
+
+
+function rotateGizmoToStart(componentHandles, doesRotate, pointA, normal)
+    if isempty(pointA) || ~isgraphics(pointA) || isempty(normal)
+        return;
+    end
+
+    center = [pointA.XData, pointA.YData, pointA.ZData];
+
+    desiredVector = normal - center;
+    % desiredVector = normal
+    if ~all(isfinite(desiredVector)) || norm(desiredVector) < 1e-12
+        return;
+    end
+    desiredVector = desiredVector / norm(desiredVector);
+
+    normBall = findobj(componentHandles, 'Tag', 'normBallPoint');
+    if isempty(normBall)
+        return;
+    end
+    currentVector = [normBall.XData, normBall.YData, normBall.ZData] - center;
+    if norm(currentVector) < 1e-12
+        return;
+    end
+    currentVector = currentVector / norm(currentVector);
+
+    dotVal = max(min(dot(currentVector, desiredVector), 1), -1);
+    rotationAngle = acos(dotVal);
+    if rotationAngle < 1e-9
+        return;
+    end
+
+    rotationAxis = cross(currentVector, desiredVector);
+    axisNorm = norm(rotationAxis);
+    if axisNorm < 1e-9
+        rotationAxis = fallbackAxis(currentVector);
+        axisNorm = norm(rotationAxis);
+        if axisNorm < 1e-9
+            return;
+        end
+    end
+    rotationAxis = rotationAxis / axisNorm;
+
+    rotatingHandles = componentHandles(doesRotate);
+    if isempty(rotatingHandles)
+        return;
+    end
+
+    startPositionRot = getRotationStartPosition(rotatingHandles);
+    updateDirection(rotationAxis, rotationAngle, rotatingHandles, center, startPositionRot);
+
+    function axis = fallbackAxis(direction)
+        basis = eye(3);
+        [~, idx] = min(abs(direction));
+        axis = cross(direction, basis(idx, :));
+        if norm(axis) < 1e-12
+            axis = cross(direction, basis(mod(idx,3)+1, :));
+        end
     end
 end
 

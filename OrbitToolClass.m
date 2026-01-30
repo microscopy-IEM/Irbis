@@ -751,6 +751,12 @@ classdef OrbitToolClass < handle
         end
 
 
+        function setAreaActive(obj)
+            disp(['Area status before: ' num2str(obj.inActiveArea)])
+            obj.inActiveArea = true;
+        end
+
+
         function setActiveAxes(obj, ax, status)
                       
             if ~obj.orbitOn
