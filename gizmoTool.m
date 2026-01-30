@@ -1,4 +1,4 @@
-function [objectHandle, originalCallbacks] = gizmoTool(ax, fig, stickyPoints, pointA, pointB, objectStruct)
+function [objectHandle, originalCallbacks, gizmoGroup] = gizmoTool(ax, fig, stickyPoints, pointA, pointB, objectStruct)
 
     % (save original callbacks)
     originalCallbacks = storeOriginalCallbacks(fig);
@@ -26,8 +26,8 @@ function [objectHandle, originalCallbacks] = gizmoTool(ax, fig, stickyPoints, po
     end
     % disable selectivity for all currently plotted components
     disableExistingObjectSelectivity(ax);
-    % define gizmo components
-    [componentHandles, doesRotate, doesScale, isActive, objectHandle] = defineGizmoComponents(ax, objectStruct, stickyPoints);
+    % define gizmo components (now returns gizmoGroup)
+    [componentHandles, doesRotate, doesScale, isActive, objectHandle, gizmoGroup] = defineGizmoComponents(ax, objectStruct, stickyPoints);
     % move gizmo to start position
     [componentHandles, doesRotate, doesScale, isActive] = moveGizmoToStart(componentHandles, doesRotate, doesScale, isActive, pointA, pointB);
     % set callbacks for gizmo components
@@ -65,129 +65,219 @@ function deleteObjectsWithTag(ax, tag, varargin)
 end
 
 
-function [componentHandles, doesRotate, doesScale, isActive, objectHandle] = defineGizmoComponents(ax, objectStruct, stickyPoints)
-
-    componentHandles = gobjects(0);
-
-    % doesTranslate - everything
-    doesRotate = false(0);
-    doesScale = false(0);
-    isActive = false(0);
-
-    directionNames = ['x', 'y', 'z'];
-    directionColors = {[0.7350 0.0780 0.1840], [0.4660 0.7740 0.1880], [0.3010 0.6450 0.9930]};
-
-    % define default position
-    x0 = 0;
-    y0 = 0;
-    z0 = 0;
-    p0 = [x0 y0 z0];
-
-    % define gizmo size
-    spacing = 1.2;
-    ballSize = 12;
-    planeEdgeSize = 3;    
-
-    % set default colors and transparency
-    edgeCol = [0.3 0.3 0.3];
-    % linkCol = [0.3 0.3 0.3];
-    % planeCol = [0.3 0.3 0.4];
-    planeCol = [0.8 0.8 0.8];
-
-    normCol = [0.4 0.4 0.4];
-
-    lineWidth = 1;
-
-    center = p0;
-    radius = spacing*1.15;
+function [componentHandles, doesRotate, doesScale, isActive, objectHandle, gizmoGroup] = defineGizmoComponents(ax, objectStruct, stickyPoints)
+    % Creates all gizmo visual components and returns their properties
     
-    planeTansparency = 0.6;
-    planeCData = [1 0.6 0.3 0];
-    planeEdgeColor = [0.9 0.9 0.9];
+    % Get configuration with all visual parameters
+    config = getGizmoConfig();
+    
+    % Create hggroup to contain all gizmo components
+    gizmoGroup = hggroup('Parent', ax, 'Tag', 'gizmoGroup');
+    
+    % Initialize component collector struct
+    comp = initComponentCollector();
+    
+    % Create gizmo parts (all parented to the hggroup)
+    comp = addCenterBall(comp, gizmoGroup, config, stickyPoints);
+    comp = addNormalIndicator(comp, gizmoGroup, config);
+    comp = addDirectionalAxes(comp, gizmoGroup, config);
+    [comp, objectHandle] = add3DObject(comp, gizmoGroup, config, objectStruct);
+    
+    % Extract output arrays from collector
+    [componentHandles, doesRotate, doesScale, isActive] = extractComponentArrays(comp);
+end
 
-    cBallPoint = plot3(ax,x0,y0,z0,'k','Marker','o','MarkerFaceColor','k','MarkerSize',ballSize,'Tag','cBallPoint','MarkerEdgeColor',edgeCol,'LineWidth',lineWidth);
-    componentHandles(end+1) = cBallPoint;
-    doesRotate(end+1) = false;
-    doesScale(end+1) = false;
-    if isempty(stickyPoints)
-        isActive(end + 1) = false;
-    else
-        isActive(end + 1) = true;
-    end
 
-    normLine = line(ax,[0 1.2*spacing],[0 0],[0 0],'LineWidth',lineWidth,'Color','k','Tag','normLink');
-    componentHandles(end+1) = normLine;
-    doesRotate(end+1) = true;
-    doesScale(end+1) = false;
-    isActive(end + 1) = false;
-    normBallPoint = plot3(ax,x0+1.25*spacing,y0,z0,'Marker','o','MarkerFaceColor',normCol,'MarkerSize',ballSize,'Tag','normBallPoint','MarkerEdgeColor',edgeCol);
-    componentHandles(end+1) = normBallPoint;
-    doesRotate(end+1) = true;
-    doesScale(end+1) = false;
-    isActive(end + 1) = true;
+function config = getGizmoConfig()
+    % Centralized configuration for all gizmo visual parameters
+    
+    % Position
+    config.origin = [0 0 0];
+    
+    % Sizes
+    config.spacing = 1.2;
+    config.ballSize = 12;
+    config.lineWidth = 1;
+    config.rotLineWidth = 5;
+    config.radius = config.spacing * 1.15;  % spacing * 1.15
+    
+    % Colors
+    config.edgeColor = [0.3 0.3 0.3];
+    config.normalColor = [0.4 0.4 0.4];
+    config.planeEdgeColor = [0.9 0.9 0.9];
+    config.scalePointColor = 'b';
+    
+    % Transparency
+    config.planeTransparency = 0.6;
+    
+    % Direction-specific settings (x, y, z)
+    config.directionNames = {'x', 'y', 'z'};
+    config.directionColors = {[0.7350 0.0780 0.1840], [0.4660 0.7740 0.1880], [0.3010 0.6450 0.9930]};
+    config.directionVectors = {[1 0 0], [0 1 0], [0 0 1]};
+end
 
-    theta=-pi:0.1:pi;
 
-    for directionN = 1:numel(directionNames)
+function comp = initComponentCollector()
+    % Initialize empty collector struct for gizmo components
+    comp.handles = gobjects(0);
+    comp.doesRotate = false(0);
+    comp.doesScale = false(0);
+    comp.isActive = false(0);
+end
 
-        directionName = directionNames(directionN);
-        directionColor = directionColors{directionN};
 
-        v = zeros(1,3);
-        v(directionN) = 1;
+function comp = addComponent(comp, handle, rotates, scales, active)
+    % Add a single component to the collector
+    comp.handles(end+1) = handle;
+    comp.doesRotate(end+1) = rotates;
+    comp.doesScale(end+1) = scales;
+    comp.isActive(end+1) = active;
+end
 
-        ballPoint = plot3(ax,x0+v(1)*spacing,y0+v(2)*spacing,z0+v(3)*spacing,'Marker','o','MarkerFaceColor',directionColor,'MarkerSize',ballSize,'Tag',[directionName 'BallPoint'],'MarkerEdgeColor',edgeCol);
-        componentHandles(end+1) = ballPoint;
-        doesRotate(end+1) = false;
-        doesScale(end+1) = false;
-        isActive(end + 1) = true;
 
-        lineLink = line(ax,[x0,x0+v(1)*spacing],[y0,y0+v(2)*spacing],[z0,z0+v(3)*spacing],'Tag',[directionName 'lineLink'],'Color',directionColor,'LineWidth',lineWidth);
-        componentHandles(end+1) = lineLink;
-        doesRotate(end+1) = false;
-        doesScale(end+1) = false;
-        isActive(end + 1) = false;
+function comp = addCenterBall(comp, parent, config, stickyPoints)
+    % Create the center ball point (translation handle)
+    p0 = config.origin;
+    
+    cBallPoint = plot3(p0(1), p0(2), p0(3), 'k', ...
+        'Parent', parent, ...
+        'Marker', 'o', ...
+        'MarkerFaceColor', 'k', ...
+        'MarkerSize', config.ballSize, ...
+        'Tag', 'cBallPoint', ...
+        'MarkerEdgeColor', config.edgeColor, ...
+        'LineWidth', config.lineWidth);
+    
+    isActiveCenter = ~isempty(stickyPoints);
+    comp = addComponent(comp, cBallPoint, false, false, isActiveCenter);
+end
 
+
+function comp = addNormalIndicator(comp, parent, config)
+    % Create normal direction line and ball point
+    p0 = config.origin;
+    spacing = config.spacing;
+    
+    % Normal direction line
+    normLine = line('Parent', parent, ...
+        'XData', [0, 1.2*spacing], 'YData', [0, 0], 'ZData', [0, 0], ...
+        'LineWidth', config.lineWidth, ...
+        'Color', 'k', ...
+        'Tag', 'normLink');
+    comp = addComponent(comp, normLine, true, false, false);
+    
+    % Normal ball point (rotation handle)
+    normBallPoint = plot3(p0(1) + 1.25*spacing, p0(2), p0(3), ...
+        'Parent', parent, ...
+        'Marker', 'o', ...
+        'MarkerFaceColor', config.normalColor, ...
+        'MarkerSize', config.ballSize, ...
+        'Tag', 'normBallPoint', ...
+        'MarkerEdgeColor', config.edgeColor);
+    comp = addComponent(comp, normBallPoint, true, false, true);
+end
+
+
+function comp = addDirectionalAxes(comp, parent, config)
+    % Create x, y, z axis components (balls, lines, reference points, rotation rings)
+    p0 = config.origin;
+    spacing = config.spacing;
+    theta = -pi:0.1:pi;
+    
+    dirNames = config.directionNames;
+    dirColors = config.directionColors;
+    dirVectors = config.directionVectors;
+    
+    for dirN = 1:numel(dirNames)
+        dirName = dirNames{dirN};
+        dirColor = dirColors{dirN};
+        v = dirVectors{dirN};
         
-        referencePoint = plot3(ax,x0+v(1),y0+v(2),z0+v(3),'Tag',[directionName 'referencePoint'],'Visible','off');
-        componentHandles(end+1) = referencePoint;
-        doesRotate(end+1) = true;
-        doesScale(end+1) = false;
-        isActive(end + 1) = false;
-
-        v=null(v);
-        points=repmat(center',1,size(theta,2))+radius*(v(:,1)*cos(theta)+v(:,2)*sin(theta));
-        rot = plot3(ax,points(1,:),points(2,:),points(3,:),'Color',directionColor,'LineWidth',5,'Tag',[directionName 'RotLine']);
-        componentHandles(end+1) = rot;
-        doesRotate(end+1) = false;
-        doesScale(end+1) = false;
-        isActive(end + 1) = true;
+        % Translation ball point
+        ballPoint = plot3(p0(1) + v(1)*spacing, p0(2) + v(2)*spacing, p0(3) + v(3)*spacing, ...
+            'Parent', parent, ...
+            'Marker', 'o', ...
+            'MarkerFaceColor', dirColor, ...
+            'MarkerSize', config.ballSize, ...
+            'Tag', [dirName 'BallPoint'], ...
+            'MarkerEdgeColor', config.edgeColor);
+        comp = addComponent(comp, ballPoint, false, false, true);
+        
+        % Axis line link
+        lineLink = line('Parent', parent, ...
+            'XData', [p0(1), p0(1) + v(1)*spacing], ...
+            'YData', [p0(2), p0(2) + v(2)*spacing], ...
+            'ZData', [p0(3), p0(3) + v(3)*spacing], ...
+            'Tag', [dirName 'lineLink'], ...
+            'Color', dirColor, ...
+            'LineWidth', config.lineWidth);
+        comp = addComponent(comp, lineLink, false, false, false);
+        
+        % Hidden reference point for rotation tracking
+        referencePoint = plot3(p0(1) + v(1), p0(2) + v(2), p0(3) + v(3), ...
+            'Parent', parent, ...
+            'Tag', [dirName 'referencePoint'], ...
+            'Visible', 'off');
+        comp = addComponent(comp, referencePoint, true, false, false);
+        
+        % Rotation ring
+        vNull = null(v);
+        points = repmat(p0', 1, size(theta, 2)) + config.radius * (vNull(:,1)*cos(theta) + vNull(:,2)*sin(theta));
+        rotLine = plot3(points(1,:), points(2,:), points(3,:), ...
+            'Parent', parent, ...
+            'Color', dirColor, ...
+            'LineWidth', config.rotLineWidth, ...
+            'Tag', [dirName 'RotLine']);
+        comp = addComponent(comp, rotLine, false, false, true);
     end
-
-    % add the object
-    if isstruct(objectStruct)
-        objectHandle = patch(ax,'Vertices',objectStruct.vertices,'Faces',objectStruct.faces,'FaceColor','cyan','FaceAlpha',planeTansparency,'EdgeColor',planeEdgeColor,'Tag','3Dobject');
-        componentHandles(end + 1) = objectHandle;
-        doesRotate(end+1) = true;
-        doesScale(end+1) = true;
-        isActive(end + 1) = false;
+end
 
 
-        for scalePointNum = 1:numel(objectStruct.scalePointVectors)
-
-            scalePointVector = objectStruct.scalePointVectors{scalePointNum};
-            scalePointPosition = objectStruct.scalePointPositions{scalePointNum};
-            scalePointHandle = plot3(ax,x0 + scalePointPosition(1),y0 + scalePointPosition(2),z0 + scalePointPosition(3),'Marker','square','MarkerFaceColor','b','MarkerSize',ballSize,'Tag','scalePoint','MarkerEdgeColor','b');
-            scalePointHandle.UserData = scalePointVector;
-            componentHandles(end + 1) = scalePointHandle;
-            doesRotate(end+1) = true;
-            doesScale(end+1) = true;
-            isActive(end + 1) = true;
-        end
-    else 
+function [comp, objectHandle] = add3DObject(comp, parent, config, objectStruct)
+    % Add the 3D object patch and scale points if objectStruct is provided
+    p0 = config.origin;
+    
+    if ~isstruct(objectStruct)
         objectHandle = [];
+        return;
     end
+    
+    % Create 3D object patch
+    objectHandle = patch('Parent', parent, ...
+        'Vertices', objectStruct.vertices, ...
+        'Faces', objectStruct.faces, ...
+        'FaceColor', 'cyan', ...
+        'FaceAlpha', config.planeTransparency, ...
+        'EdgeColor', config.planeEdgeColor, ...
+        'Tag', '3Dobject');
+    comp = addComponent(comp, objectHandle, true, true, false);
+    
+    % Add scale points
+    for scalePointNum = 1:numel(objectStruct.scalePointVectors)
+        scalePointVector = objectStruct.scalePointVectors{scalePointNum};
+        scalePointPosition = objectStruct.scalePointPositions{scalePointNum};
+        
+        scalePointHandle = plot3(p0(1) + scalePointPosition(1), ...
+            p0(2) + scalePointPosition(2), ...
+            p0(3) + scalePointPosition(3), ...
+            'Parent', parent, ...
+            'Marker', 'square', ...
+            'MarkerFaceColor', config.scalePointColor, ...
+            'MarkerSize', config.ballSize, ...
+            'Tag', 'scalePoint', ...
+            'MarkerEdgeColor', config.scalePointColor);
+        scalePointHandle.UserData = scalePointVector;
+        comp = addComponent(comp, scalePointHandle, true, true, true);
+    end
+end
 
+
+function [componentHandles, doesRotate, doesScale, isActive] = extractComponentArrays(comp)
+    % Extract arrays from collector struct
+    componentHandles = comp.handles;
+    doesRotate = comp.doesRotate;
+    doesScale = comp.doesScale;
+    isActive = comp.isActive;
 end
 
 
