@@ -300,16 +300,29 @@ function setInteractivity(fig, componentHandles, isActive)
     activeHandles = componentHandles(isActive);
     for handle = activeHandles
         behavior = struct();
-        behavior.enterFcn = @(hfig, cpp)set(handle, 'LineWidth',4);
+        behavior.enterFcn = @(~, ~)makeOutlineThicker(handle);
         behavior.traverseFcn = [];
-        behavior.exitFcn = @(hfig, cpp)set(handle, 'LineWidth',2);
+        behavior.exitFcn = @(~, ~)makeOutlineNormal(handle);
 
         iptSetPointerBehavior(handle, behavior);
+    end
+
+    function makeOutlineThicker(handle)
+        % check for validity added because sometimes during deletion, the exitFcn was called on already deleted object
+        % this was causing errors
+        if isvalid(handle)
+            set(handle, 'LineWidth',4)
+        end
+    end
+
+    function makeOutlineNormal(handle)
+        if isvalid(handle)
+            set(handle, 'LineWidth',2)
+        end
     end
            
     % enable pointerManager within figure
     iptPointerManager(fig, 'enable');
-
 end
 
 function [componentHandles, doesRotate, doesScale, isActive] = moveGizmoToStart(componentHandles, doesRotate, doesScale, isActive, pointA, pointB)
