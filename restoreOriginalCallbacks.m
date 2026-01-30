@@ -4,5 +4,6 @@ function restoreOriginalCallbacks(fig, originalCallbacks)
     fig.WindowButtonUpFcn = originalCallbacks{2};
     fig.WindowScrollWheelFcn = originalCallbacks{3};
 
-    iptPointerManager(fig, 'disable');
+    % this was probably causing stuck rotation, because active area checking relies on pointer manager
+    % iptPointerManager(fig, 'disable');
 end
