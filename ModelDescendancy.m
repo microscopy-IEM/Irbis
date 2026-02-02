@@ -89,7 +89,7 @@ classdef (Sealed) ModelDescendancy
             % We assume that there can only be one parent -> remove the existing one(s) and add the new one
             arguments
                 T table
-                rowName (1,1) {mustBeText}
+                rowName (1,:) {mustBeText}
                 ancestorBranch (1,:) {mustBeText}
                 ancestorId
             end
@@ -108,7 +108,7 @@ classdef (Sealed) ModelDescendancy
         function T = addRelatives(T, rowName, relativeBranch, relativeRowIds, typeOfRelative)
             arguments
                 T table
-                rowName (1,1) {mustBeText}
+                rowName (1,:) {mustBeText}
                 relativeBranch (1,:) {mustBeText}
                 relativeRowIds
                 typeOfRelative {mustBeMember(typeOfRelative, {'parent', 'children'})}
@@ -148,7 +148,7 @@ classdef (Sealed) ModelDescendancy
         function T = removeRelatives(T, rowName, relativeBranch, relativeRowIds, typeOfRelative)
             arguments
                 T table
-                rowName (1,1) {mustBeText}
+                rowName (1,:) {mustBeText}
                 relativeBranch (1,:) {mustBeText}
                 relativeRowIds
                 typeOfRelative {mustBeMember(typeOfRelative, {'parent', 'children'})}
@@ -181,7 +181,7 @@ classdef (Sealed) ModelDescendancy
         function T = addDescendants(T, rowName, descendantBranch, descendantRowIds)
             arguments
                 T table
-                rowName (1,1) {mustBeText}
+                rowName (1,:) {mustBeText}
                 descendantBranch (1,:) {mustBeText}
                 descendantRowIds
             end
@@ -220,7 +220,7 @@ classdef (Sealed) ModelDescendancy
         function T = removeDescendants(T, rowName, descendantBranch, descendantRowIds)
             arguments
                 T table
-                rowName (1,1) {mustBeText}
+                rowName (1,:) {mustBeText}
                 descendantBranch (1,:) {mustBeText}
                 descendantRowIds
             end
@@ -252,7 +252,7 @@ classdef (Sealed) ModelDescendancy
         function descendantIds = getDescendantIds(T, rowName, descendantBranch)
             arguments
                 T table
-                rowName (1,1) {mustBeText}
+                rowName (1,:) {mustBeText}
                 descendantBranch (1,:) {mustBeText}
             end
 
@@ -276,7 +276,7 @@ classdef (Sealed) ModelDescendancy
         function ancestorIds = getAncestorIds(T, rowName, ancestorBranch)
             arguments
                 T table
-                rowName (1,1) {mustBeText}
+                rowName (1,:) {mustBeText}
                 ancestorBranch (1,:) {mustBeText}
             end
 
