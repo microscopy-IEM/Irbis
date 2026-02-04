@@ -189,7 +189,14 @@ classdef (Sealed) AdaptiveShaftGenerator
 
             contoursPy = cell(contoursPy);
             contoursPy = cell(contoursPy);
-            contours = cellfun(@double, contoursPy, 'UniformOutput', false);
+            contours = cell(size(contoursPy));
+            for i = 1:numel(contoursPy)
+                if py.isinstance(contoursPy{i}, py.type(py.None))
+                    contours{i} = [];
+                else
+                    contours{i} = double(contoursPy{i});
+                end
+            end
 
             A = double(pointsPy);
             B = double(normalsPy);
