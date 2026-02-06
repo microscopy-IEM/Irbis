@@ -205,7 +205,8 @@ function comp = addDirectionalAxes(comp, parent, config)
             'MarkerSize', config.ballSize, ...
             'Tag', [dirName 'BallPoint'], ...
             'MarkerEdgeColor', config.edgeColor);
-        comp = addComponent(comp, ballPoint, false, false, true);
+        % comp = addComponent(comp, ballPoint, false, false, true);
+        comp = addComponent(comp, ballPoint, true, false, true);
         
         % Axis line link
         lineLink = line('Parent', parent, ...
@@ -215,7 +216,8 @@ function comp = addDirectionalAxes(comp, parent, config)
             'Tag', [dirName 'lineLink'], ...
             'Color', dirColor, ...
             'LineWidth', config.lineWidth);
-        comp = addComponent(comp, lineLink, false, false, false);
+        % comp = addComponent(comp, lineLink, false, false, false);
+        comp = addComponent(comp, lineLink, true, false, false);
         
         % Hidden reference point for rotation tracking
         referencePoint = plot3(p0(1) + v(1), p0(2) + v(2), p0(3) + v(3), ...
@@ -232,7 +234,8 @@ function comp = addDirectionalAxes(comp, parent, config)
             'Color', dirColor, ...
             'LineWidth', config.rotLineWidth, ...
             'Tag', [dirName 'RotLine']);
-        comp = addComponent(comp, rotLine, false, false, true);
+        % comp = addComponent(comp, rotLine, false, false, true);
+        comp = addComponent(comp, rotLine, true, false, true);
     end
 end
 
@@ -471,68 +474,69 @@ function gizmoClick(src, evt, ax, fig, componentHandles, stickyPoints, doesRotat
         % precalculate parameters depending just on system rotation
         switch src.Tag
 
-            case 'xBallPoint'
+            % case 'xBallPoint'
 
-                % precalculate microM to pixel conversion for x
-                if isequal(elevation,0) && isequal(mod(azimuth+90,180),0)
-                    return
-                else
-                    p1 = MicroMToPixelPosition([ax.XLim(1),0,0],ax);
-                    p2 = MicroMToPixelPosition([ax.XLim(2),0,0],ax);
-                    pix = norm(p2-p1);                
-                    microM = ax.XLim(2) - ax.XLim(1);
-                    umPerPix = microM/pix;
-                end
+            %     % precalculate microM to pixel conversion for x
+            %     if isequal(elevation,0) && isequal(mod(azimuth+90,180),0)
+            %         return
+            %     else
+            %         p1 = MicroMToPixelPosition([ax.XLim(1),0,0],ax);
+            %         p2 = MicroMToPixelPosition([ax.XLim(2),0,0],ax);
+            %         pix = norm(p2-p1);                
+            %         microM = ax.XLim(2) - ax.XLim(1);
+            %         umPerPix = microM/pix;
+            %     end
 
-                % precalculate starting line
-                x0 = startScreenPosition(1);
-                y0 = startScreenPosition(2);
+            %     % precalculate starting line
+            %     x0 = startScreenPosition(1);
+            %     y0 = startScreenPosition(2);
 
-                aL = cosd(azimuth);
-                bL = -sind(azimuth)*sind(elevation);
-                cL = -aL*x0 -bL*y0; 
+            %     aL = cosd(azimuth);
+            %     bL = -sind(azimuth)*sind(elevation);
+            %     cL = -aL*x0 -bL*y0; 
 
-                parameters = {aL, bL, cL, umPerPix};
+            %     parameters = {aL, bL, cL, umPerPix};
 
-            case 'yBallPoint'
+            % case 'yBallPoint'
 
-                % precalculate microM to pixel conversion for y
-                if isequal(elevation,0) && isequal(mod(azimuth,180),0)
-                    return
-                else
-                    p1 = MicroMToPixelPosition([0,ax.YLim(1),0],ax);
-                    p2 = MicroMToPixelPosition([0,ax.YLim(2),0],ax);
-                    pix = norm(p2-p1);                
-                    microM = ax.YLim(2) - ax.YLim(1);
-                    umPerPix = microM/pix;
-                end
+            %     % precalculate microM to pixel conversion for y
+            %     if isequal(elevation,0) && isequal(mod(azimuth,180),0)
+            %         return
+            %     else
+            %         p1 = MicroMToPixelPosition([0,ax.YLim(1),0],ax);
+            %         p2 = MicroMToPixelPosition([0,ax.YLim(2),0],ax);
+            %         pix = norm(p2-p1);                
+            %         microM = ax.YLim(2) - ax.YLim(1);
+            %         umPerPix = microM/pix;
+            %     end
 
-                % precalculate starting line
-                x0 = startScreenPosition(1);
-                y0 = startScreenPosition(2);
+            %     % precalculate starting line
+            %     x0 = startScreenPosition(1);
+            %     y0 = startScreenPosition(2);
     
-                aL = sind(azimuth);
-                bL = cosd(azimuth)*sind(elevation);
-                cL = -aL*x0 -bL*y0;
+            %     aL = sind(azimuth);
+            %     bL = cosd(azimuth)*sind(elevation);
+            %     cL = -aL*x0 -bL*y0;
 
-                parameters = {aL, bL, cL, umPerPix};
+            %     parameters = {aL, bL, cL, umPerPix};
 
-            case 'zBallPoint'
+            % case 'zBallPoint'
 
-                % precalculate microM to pixel conversion for z
-                if isequal(elevation,90) || isequal(elevation,-90)
-                    return
-                else
-                    p1 = MicroMToPixelPosition([0,0,ax.ZLim(1)],ax);
-                    p2 = MicroMToPixelPosition([0,0,ax.ZLim(2)],ax);
-                    pix = norm(p2-p1);  
-                    microM = ax.ZLim(2) - ax.ZLim(1);
-                    umPerPix = microM/pix;   
-                end
+            %     % precalculate microM to pixel conversion for z
+            %     if isequal(elevation,90) || isequal(elevation,-90)
+            %         return
+            %     else
+            %         p1 = MicroMToPixelPosition([0,0,ax.ZLim(1)],ax);
+            %         p2 = MicroMToPixelPosition([0,0,ax.ZLim(2)],ax);
+            %         pix = norm(p2-p1);  
+            %         microM = ax.ZLim(2) - ax.ZLim(1);
+            %         umPerPix = microM/pix;   
+            %     end
 
-                parameters = {umPerPix};
+            %     parameters = {umPerPix};
 
-            case 'normBallPoint'
+            % case 'normBallPoint'
+            case {'normBallPoint', 'xBallPoint', 'yBallPoint', 'zBallPoint'}
                 
                 % precalculate microM to pixel conversion for normal direction
                 p1 = centerStartPositionPix;    % central point
@@ -645,57 +649,57 @@ function gizmoMove(src, componentHandles, parameters, azimuth, elevation, doesRo
 
         switch src.Tag
             
-        case 'xBallPoint'
+        % case 'xBallPoint'
 
-            aL = parameters{1};
-            bL = parameters{2};
-            cL = parameters{3};
-            umPerPix = parameters{4};
+        %     aL = parameters{1};
+        %     bL = parameters{2};
+        %     cL = parameters{3};
+        %     umPerPix = parameters{4};
 
-            % calculate distance of current point to line
-            x1 = currentScreenPosition(1);
-            y1 = currentScreenPosition(2);                
+        %     % calculate distance of current point to line
+        %     x1 = currentScreenPosition(1);
+        %     y1 = currentScreenPosition(2);                
 
-            D = (aL*x1 + bL*y1 + cL)/sqrt(aL^2 + bL^2);
+        %     D = (aL*x1 + bL*y1 + cL)/sqrt(aL^2 + bL^2);
 
-            dx = D*umPerPix;
+        %     dx = D*umPerPix;
 
-            newPosition = [centerStartPositionUM(1)+dx centerStartPositionUM(2) centerStartPositionUM(3)];
+        %     newPosition = [centerStartPositionUM(1)+dx centerStartPositionUM(2) centerStartPositionUM(3)];
 
-            updatePosition(newPosition, componentHandles)
+        %     updatePosition(newPosition, componentHandles)
 
             
-        case 'yBallPoint'
+        % case 'yBallPoint'
 
-            aL = parameters{1};
-            bL = parameters{2};
-            cL = parameters{3};
-            umPerPix = parameters{4};
+        %     aL = parameters{1};
+        %     bL = parameters{2};
+        %     cL = parameters{3};
+        %     umPerPix = parameters{4};
 
-            % calculate distance of current point to line
-            x1 = currentScreenPosition(1);
-            y1 = currentScreenPosition(2);                          
+        %     % calculate distance of current point to line
+        %     x1 = currentScreenPosition(1);
+        %     y1 = currentScreenPosition(2);                          
 
-            D = (aL*x1 + bL*y1 + cL)/sqrt(aL^2 + bL^2);
+        %     D = (aL*x1 + bL*y1 + cL)/sqrt(aL^2 + bL^2);
 
-            % reversed y - added minus sign to dy
-            dy = -D*umPerPix;  
+        %     % reversed y - added minus sign to dy
+        %     dy = -D*umPerPix;  
 
-            newPosition = [centerStartPositionUM(1) centerStartPositionUM(2)+dy  centerStartPositionUM(3)];
-            updatePosition(newPosition,componentHandles)                  
+        %     newPosition = [centerStartPositionUM(1) centerStartPositionUM(2)+dy  centerStartPositionUM(3)];
+        %     updatePosition(newPosition,componentHandles)                  
 
                                                     
-        case 'zBallPoint'
+        % case 'zBallPoint'
 
-            umPerPix = parameters{1};
+        %     umPerPix = parameters{1};
 
-            % get movement distance in pixels
-            z0 = startScreenPosition(2);
-            zc = currentScreenPosition(2);
-            dz = (z0-zc)*umPerPix;
+        %     % get movement distance in pixels
+        %     z0 = startScreenPosition(2);
+        %     zc = currentScreenPosition(2);
+        %     dz = (z0-zc)*umPerPix;
                 
-            newPosition = [centerStartPositionUM(1) centerStartPositionUM(2) centerStartPositionUM(3) - dz];
-            updatePosition(newPosition,componentHandles)
+        %     newPosition = [centerStartPositionUM(1) centerStartPositionUM(2) centerStartPositionUM(3) - dz];
+        %     updatePosition(newPosition,componentHandles)
 
 
         case 'cBallPoint'
@@ -748,7 +752,8 @@ function gizmoMove(src, componentHandles, parameters, azimuth, elevation, doesRo
             rotationPositionAfterTranslation = getRotationStartPosition(rotatingHandles);
             updateDirection(vRot,theta,rotatingHandles,centerStartPositionUM,rotationPositionAfterTranslation)
 
-            case 'normBallPoint'
+            % case 'normBallPoint'
+            case {'normBallPoint', 'xBallPoint', 'yBallPoint', 'zBallPoint'}
 
             vLine = parameters{1};
             cL = parameters{2};
@@ -767,46 +772,71 @@ function gizmoMove(src, componentHandles, parameters, azimuth, elevation, doesRo
             newPosition = [centerStartPositionUM(1)+dx centerStartPositionUM(2)+dy centerStartPositionUM(3)+dz];
             updatePosition(newPosition,componentHandles)    
 
-        case 'yRotLine'
+        % case 'yRotLine'
 
-            vRot = [0 1 0];
-            CPix = centerStartPositionPix;
+        %     vRot = [0 1 0];
+        %     CPix = centerStartPositionPix;
 
-            v1 = - CPix + startScreenPosition;
-            v2 = currentScreenPosition - CPix;
+        %     v1 = - CPix + startScreenPosition;
+        %     v2 = currentScreenPosition - CPix;
 
-            thetaVect = atan2(cross([v1, 0], [v2, 0]), dot(v1, v2));
-            theta = sign(-cosd(azimuth))*thetaVect(3);
+        %     thetaVect = atan2(cross([v1, 0], [v2, 0]), dot(v1, v2));
+        %     theta = sign(-cosd(azimuth))*thetaVect(3);
 
-            updateDirection(vRot,theta,rotatingHandles,centerStartPositionUM,startPositionRot)
+        %     updateDirection(vRot,theta,rotatingHandles,centerStartPositionUM,startPositionRot)
                 
-            case 'zRotLine'
+        %     case 'zRotLine'
 
-            vRot = [0 0 1];
+        %     vRot = [0 0 1];
+        %     CPix = centerStartPositionPix;
+
+        %     v1 = - CPix + startScreenPosition;
+        %     v2 = currentScreenPosition - CPix;
+
+        %     thetaVect = atan2(cross([v1, 0], [v2, 0]), dot(v1, v2));
+        %     % reversed y - added minus to sign(-sind(elevation))
+        %     theta = sign(-sind(elevation))*thetaVect(3);
+
+        %     updateDirection(vRot,theta,rotatingHandles,centerStartPositionUM,startPositionRot)
+
+        % case 'xRotLine'
+
+        %     vRot = [1 0 0];
+        %     CPix = centerStartPositionPix;
+
+        %     v1 = - CPix + startScreenPosition;
+        %     v2 = currentScreenPosition - CPix;
+
+        %     thetaVect = atan2(cross([v1, 0], [v2, 0]), dot(v1, v2));
+
+        %     theta = sign(-sind(azimuth))*thetaVect(3);
+
+        %     updateDirection(vRot,theta,rotatingHandles,centerStartPositionUM,startPositionRot)
+
+        case {'xRotLine', 'yRotLine', 'zRotLine'}
+            % Determine rotation axis from the corresponding reference point
+            % (tracks the actual rotated gizmo axis, not the fixed world axis)
+            axisLetter = src.Tag(1);  % 'x', 'y', or 'z'
+            refHandle = findobj(componentHandles, 'Tag', [axisLetter 'referencePoint']);
+            centerHandle = findobj(componentHandles, 'Tag', 'cBallPoint');
+            center = [centerHandle.XData, centerHandle.YData, centerHandle.ZData];
+            refPos = [refHandle.XData, refHandle.YData, refHandle.ZData];
+            vRot = (refPos - center);
+            vRot = vRot / norm(vRot);
+
             CPix = centerStartPositionPix;
 
             v1 = - CPix + startScreenPosition;
             v2 = currentScreenPosition - CPix;
 
             thetaVect = atan2(cross([v1, 0], [v2, 0]), dot(v1, v2));
-            % reversed y - added minus to sign(-sind(elevation))
-            theta = sign(-sind(elevation))*thetaVect(3);
 
-            updateDirection(vRot,theta,rotatingHandles,centerStartPositionUM,startPositionRot)
+            % General sign correction: project rotation axis onto camera
+            % direction to determine screen-to-3D rotation sense
+            camDir = [sind(azimuth)*cosd(elevation), cosd(azimuth)*cosd(elevation), sind(elevation)];
+            theta = -sign(dot(vRot, camDir)) * thetaVect(3);
 
-        case 'xRotLine'
-
-            vRot = [1 0 0];
-            CPix = centerStartPositionPix;
-
-            v1 = - CPix + startScreenPosition;
-            v2 = currentScreenPosition - CPix;
-
-            thetaVect = atan2(cross([v1, 0], [v2, 0]), dot(v1, v2));
-
-            theta = sign(-sind(azimuth))*thetaVect(3);
-
-            updateDirection(vRot,theta,rotatingHandles,centerStartPositionUM,startPositionRot)
+            updateDirection(vRot, theta, rotatingHandles, centerStartPositionUM, startPositionRot)
 
         case 'scalePoint'
 
