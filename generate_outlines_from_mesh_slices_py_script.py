@@ -744,6 +744,76 @@ def process_all_points(
     return contours_3d, points, normals
 
 # =============================================================================
+
+
+def process_example_point(
+    position: np.ndarray,
+    centerline: np.ndarray,
+    mesh: trimesh.Trimesh,
+    params: Optional[ProcessingParams] = None
+) -> Tuple[List[Optional[np.ndarray]], np.ndarray, np.ndarray]:
+    """
+    Process a single point on the centerline closest to a given position.
+    
+    Parameters
+    ----------
+    position : np.ndarray
+        3D position to find the closest centerline point to.
+    centerline : np.ndarray
+        Nx3 array of centerline points.
+    mesh : trimesh.Trimesh
+        The mesh object.
+    params : ProcessingParams, optional
+        Processing parameters. Uses defaults if not provided.
+        
+    Returns
+    -------
+    contours_3d : List[Optional[np.ndarray]]
+        List containing a single 3D contour (or None if extraction failed).
+    points : np.ndarray
+        Array with the single closest point.
+    normals : np.ndarray
+        Array with the single normal vector.
+    """
+    if params is None:
+        params = ProcessingParams()
+    
+    # Find closest point on centerline
+    distances = np.linalg.norm(centerline - position, axis=1)
+    closest_idx = np.argmin(distances)
+    
+    # Extract points and normals for all points (needed for context)
+    points, normals, selected_indices = extract_points_and_normals(
+        centerline,
+        buffer=params.buffer,
+        spacing=params.spacing,
+        ahead_index=params.ahead_index
+    )
+    
+    # Find which extracted point index corresponds to closest centerline point
+    if closest_idx not in selected_indices:
+        closest_idx = selected_indices[np.argmin(
+            np.abs(np.array(selected_indices) - closest_idx)
+        )]
+    
+    point_idx = selected_indices.index(closest_idx)
+    
+    # Compute mesh intersections for all points
+    outlines = compute_mesh_intersections(mesh, points, normals)
+    
+    # Project to 2D
+    projected_outlines, rotation_matrices = project_outlines_to_2d(
+        outlines, points, normals
+    )
+    
+    # Process only the closest point
+    contour = process_single_point(
+        point_idx, projected_outlines, points, rotation_matrices, params
+    )
+    
+    return [contour], points[point_idx:point_idx+1], normals[point_idx:point_idx+1]
+
+
 def visualize_contours_with_mesh(
     mesh: trimesh.Trimesh,
     contours_3d: List[Optional[np.ndarray]],
@@ -870,10 +940,19 @@ if __name__ == "__main__":
     # Load data
     mesh = create_mesh_from_vertices_and_faces(vertices, faces)
     
-    # Process all points
-    contours_3d, points, normals = process_all_points(
-        centerline, mesh, params
-    )
+
+    if 'test_point' in locals(): 
+        print("Processing example point...")
+        contours_3d, points, normals = process_example_point(
+            test_point, centerline, mesh, params
+        )
+        # visualize_contours_with_mesh(mesh, contours_3d, points)
+
+    else:
+        # Process all points
+        contours_3d, points, normals = process_all_points(
+            centerline, mesh, params
+        )
     # end_time = time.perf_counter()
     # pr.disable()
     # print(f"Processing time: {end_time - start_time:.2f} seconds")

@@ -42,8 +42,12 @@ classdef (Sealed) AdaptiveShaftGenerator
         end
 
 
-        function contour = runForOnePosition(obj, ax, pointA, pointB, vertices)
+        function contour = runForOnePosition(obj, centreline, mesh, position)
+            [contours, ~, ~] = obj.runSingleInPython(centreline, mesh, position);
 
+            disp(size(contours))
+
+            contour = contours{1}; % there should be only one contour as the position is specified
         end
 
 
@@ -80,6 +84,39 @@ classdef (Sealed) AdaptiveShaftGenerator
             B = double(normalsPy);
         end
 
+
+        function [contours, A, B] = runSingleInPython(obj, centreline, mesh, position)
+            centrelinePy = py.numpy.array(centreline);
+            verticesPy = py.numpy.array(mesh.Vertices);
+            facesPy = py.numpy.array(mesh.Faces - 1); % adjust for Python 0-based indexing
+
+            parameters = struct("buffer", obj.endsBuffer, ...
+                "spacing", obj.ringSpacingPix, ...
+                "ahead_index", 5, ...
+                "grid_size", 100, ...
+                "min_val", -1.0, ...
+                "max_val", 1.0, ...
+                "n_neighbors", obj.nRingNeighbors, ...
+                "do_morphological_processing", obj.doMorphologicalPostprocessing, ...
+                "disk_radius", obj.structuringElementRadius);
+            
+            [contoursPy, pointsPy, normalsPy] = pyrunfile("generate_outlines_from_mesh_slices_py_script.py", ["contours_3d", "points", "normals"], ...
+            vertices=verticesPy, faces=facesPy, centerline=centrelinePy, matlab_params=parameters, test_point=position);
+
+            contoursPy = cell(contoursPy);
+            contoursPy = cell(contoursPy);
+            contours = cell(size(contoursPy));
+            for i = 1:numel(contoursPy) 
+                if py.isinstance(contoursPy{i}, py.type(py.None))
+                    contours{i} = [];
+                else
+                    contours{i} = double(contoursPy{i});
+                end
+            end
+
+            A = double(pointsPy);
+            B = double(normalsPy);
+        end
 
         function radii = calculateRadii(~, middlePoints, contours)
             % calculate mean radius of the shaft (moved from adjust fnc)

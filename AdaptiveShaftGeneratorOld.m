@@ -6,20 +6,21 @@ classdef (Sealed) AdaptiveShaftGeneratorOld
         stepToROIsizeRatio = 0.4
         ROIstep % calculated as ROIdepth * stepToROIsizeRatio
 
+        % active contour parameters:
         Iterations = 300
         ContractionBias = -0.5
         SmoothFactor = 1
 
-        initialRadius
+        initialRadius = 10
 
         radiusFactor = 1.3 % factor by which the radius is multiplied at the end
     
         endsBuffer = 30
 
-        goParallel = true
+        goParallel = false
 
         sizeIm = 100 % size of the image in which the contours are calculated
-        realCenterDim
+        realCenterDim = 2
 
         structuringElementRadius = 2 % radius of the structuring element used in morphological operations
 
@@ -27,40 +28,9 @@ classdef (Sealed) AdaptiveShaftGeneratorOld
     end
 
     methods
-        function obj = AdaptiveShaftGeneratorOld(ROIsize, ROIdepth, stepToROIsizeRatio, Iterations, ContractionBias, SmoothFactor, initialRadius, radiusFactor, goParallel, verbose)
+        function obj = AdaptiveShaftGeneratorOld()
             % Constructor - stores all the user-defined parameters
-
-            arguments
-                ROIsize
-                ROIdepth
-                stepToROIsizeRatio
-                Iterations
-                ContractionBias
-                SmoothFactor
-                initialRadius
-                radiusFactor
-                goParallel
-                verbose = false
-            end
-
-            obj.ROIsize = ROIsize;
-            obj.ROIdepth = ROIdepth;
-            obj.stepToROIsizeRatio = stepToROIsizeRatio;
-            obj.ROIstep = ROIdepth * stepToROIsizeRatio;
-
-            obj.Iterations = Iterations;
-            obj.ContractionBias = ContractionBias;
-            obj.SmoothFactor = SmoothFactor;
-
-            obj.initialRadius = initialRadius;
-
-            obj.radiusFactor = radiusFactor;
-
-            obj.goParallel = goParallel;
-
-            obj.realCenterDim = obj.ROIsize;
-
-            obj.verbose = verbose;
+            obj.ROIstep = obj.ROIdepth * obj.stepToROIsizeRatio;
         end
 
 
