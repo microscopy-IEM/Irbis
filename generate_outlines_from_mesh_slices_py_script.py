@@ -38,7 +38,7 @@ class ProcessingParams:
     """Parameters for the mesh-plane processing pipeline."""
     # Centerline sampling parameters
     buffer: int = 10
-    spacing: int = 10
+    spacing: int = 20
     ahead_index: int = 5
     
     # Grid parameters
@@ -47,9 +47,10 @@ class ProcessingParams:
     max_val: float = 1.0
     
     # Outline consideration
-    n_neighbors: int = 1  # Number of neighboring outlines to consider on each side
+    n_neighbors: int = 2  # Number of neighboring outlines to consider on each side
     
     # Morphological processing
+    do_morphological_processing: bool = False
     disk_radius: int = 10
     
     # Contour resampling
@@ -443,6 +444,7 @@ def outlines_to_binary_image(
 
 def extract_center_component(
     binary_grid: np.ndarray,
+    do_morphological_processing: bool = False,
     disk_radius: int = 10
 ) -> np.ndarray:
     """
@@ -456,6 +458,8 @@ def extract_center_component(
     ----------
     binary_grid : np.ndarray
         Input binary image.
+    do_morphological_processing : bool, optional
+        Whether to apply morphological opening and closing.
     disk_radius : int, optional
         Radius of the disk structuring element for morphological operations.
         
@@ -489,8 +493,9 @@ def extract_center_component(
     result[labeled == center_label] = 1
     
     # Apply morphological operations
-    # result = ndi.binary_opening(result, structure=struct_elem)
-    # result = ndi.binary_closing(result, structure=struct_elem)
+    if do_morphological_processing:
+        result = ndi.binary_opening(result, structure=struct_elem)
+        result = ndi.binary_closing(result, structure=struct_elem)
     
     return result.astype(np.uint8)
 
@@ -657,7 +662,7 @@ def process_single_point(
     )
     
     # Extract center component
-    processed = extract_center_component(binary_grid, params.disk_radius)
+    processed = extract_center_component(binary_grid, params.do_morphological_processing, params.disk_radius)
     
     # Extract contour
     contour = extract_contour(processed, params.n_contour_points)
@@ -801,6 +806,46 @@ def visualize_contours_with_mesh(
     return scene
 
 
+    # =============================================================================
+    # MATLAB Struct Parsing
+    # =============================================================================
+
+def parse_matlab_parameters(matlab_struct: dict) -> ProcessingParams:
+    """
+    Parse a MATLAB struct (accepted as dictionary) and update ProcessingParams.
+    
+    Parameters
+    ----------
+    matlab_struct : dict
+        Dictionary containing struct fields and values from MATLAB.
+        
+    Returns
+    -------
+    ProcessingParams
+        Updated ProcessingParams instance with values from the struct.
+    """
+    # Extract relevant fields from the struct dictionary
+    parameters_object = ProcessingParams()  # Create an instance with default values
+    expected_types = parameters_object.__annotations__
+
+    for matlab_key, matlab_value in matlab_struct.items():
+        if hasattr(parameters_object, matlab_key):
+            # Make sure that the correct type is preserved when setting the attribute
+            expected_type = expected_types.get(matlab_key, None)
+            if expected_type is int: 
+                value = int(matlab_value)
+            elif expected_type is float:
+                value = float(matlab_value)
+            elif expected_type is bool:
+                value = bool(matlab_value)
+            else:
+                continue  # Skip if type is not recognized
+            print('Setting attribute:', matlab_key, 'to value:', value, ', type:', type(value))
+            setattr(parameters_object, matlab_key, value)
+
+    return parameters_object
+
+
 # =============================================================================
 # Example Usage
 # =============================================================================
@@ -815,17 +860,8 @@ if __name__ == "__main__":
     mesh_path = "D:/OneDrive - IEM/Microscopy Team/Irbis project/Models_stl/newMesh.stl"
     
     # Create parameters
-    params = ProcessingParams(
-        buffer=10,
-        spacing=20,
-        ahead_index=5,
-        grid_size=100,
-        min_val=-1.0,
-        max_val=1.0,
-        n_neighbors=2,
-        disk_radius=10,
-        n_contour_points=20
-    )
+    params = parse_matlab_parameters(matlab_params)
+
     # Process all points
     
     # pr = cProfile.Profile()
