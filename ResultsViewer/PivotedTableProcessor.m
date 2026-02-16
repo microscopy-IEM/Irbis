@@ -24,6 +24,7 @@ classdef (Sealed) PivotedTableProcessor < handle
         rowParameterSetProgrammatically
         tableSelectionSyncRequired  % not the prettiest, but added to do table syncing before plotting data starts listening
         rowParameterChanged
+        plotUpdateRequired
     end
 
     methods
@@ -83,6 +84,9 @@ classdef (Sealed) PivotedTableProcessor < handle
             % disp(obj.pivotedTable)
 
             notify(obj, 'tableForDisplayChanged');
+
+            % notify the plottling component that the plot needs to be updated
+            notify(obj, 'plotUpdateRequired');
         end
 
 
@@ -290,6 +294,9 @@ classdef (Sealed) PivotedTableProcessor < handle
 
             notify(obj, 'tableForDisplayChanged')
             notify(obj, 'tableSelectionSetProgrammatically')
+
+            % notify the plottling component that the plot needs to be updated 
+            notify(obj, 'plotUpdateRequired');
         end
 
 
