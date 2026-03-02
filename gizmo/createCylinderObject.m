@@ -1,7 +1,7 @@
 % super important finding - the order of vertexIds in faces determines the orientation of the face
 % based on the right-hand rule
 
-function objectStruct = createCylinderObject(nSides,nLayers,radius,height,numberingType)
+function [vertices, faces] = createCylinderObject(nSides,nLayers,radius,height,numberingType)
 
 % generating a cylinder with nSides and nLayers
 
@@ -97,8 +97,8 @@ vertices(:,3) = vertices(:,3) - height/2;
 vertices(:,[1 2 3]) = vertices(:,[1 3 2]);
 vertices(:,2) = -vertices(:,2);
 
-objectStruct = struct('vertices',vertices,'faces',faces);
-objectStruct.scalePointVectors = {[1 0 1], [0 1 0]};
-objectStruct.scalePointPositions = {[radius/1.41 0 radius/1.41], [0 height/2 0]};
+% objectStruct = struct('vertices',vertices,'faces',faces);
+% objectStruct.scalePointVectors = {[1 0 1], [0 1 0]};
+% objectStruct.scalePointPositions = {[radius/1.41 0 radius/1.41], [0 height/2 0]};
 
 end

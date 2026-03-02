@@ -1,4 +1,4 @@
-function objectStruct = createThinCuboidObject(scalingFactor,flattenedAxis,flatteningFactor,numberingType)
+function [vertices, faces] = createThinCuboidObject(scalingFactor,flattenedAxis,flatteningFactor,numberingType)
 
 % default size is 1x1x1 with the centre in 0
 
@@ -40,14 +40,14 @@ if isequal(numberingType,1)
     faces = faces + 1;
 end
 
-% create an object structure that will be passed to gizmo tool
-objectStruct = struct('vertices',vertices,'faces',faces);
-objectStruct.scalePointVectors = {[0 1 1]};
-objectStruct.scalePointPositions = cell(1, numel(objectStruct.scalePointVectors));
-for scalePointNum = 1:numel(objectStruct.scalePointVectors)
-    scalePointVector = objectStruct.scalePointVectors{scalePointNum};
-    objectStruct.scalePointPositions{scalePointNum} = scalePointVector .* scalingFactor/2;
-end
+% % create an object structure that will be passed to gizmo tool
+% objectStruct = struct('vertices',vertices,'faces',faces);
+% objectStruct.scalePointVectors = {[0 1 1]};
+% objectStruct.scalePointPositions = cell(1, numel(objectStruct.scalePointVectors));
+% for scalePointNum = 1:numel(objectStruct.scalePointVectors)
+%     scalePointVector = objectStruct.scalePointVectors{scalePointNum};
+%     objectStruct.scalePointPositions{scalePointNum} = scalePointVector .* scalingFactor/2;
+% end
 
 % % Create a new figure
 % figure;
