@@ -49,17 +49,22 @@ classdef TwoVariablesPlot < plot.PlotInterface
     methods (Access = private)
         function plotScatter(~, data, axesHandle)
 
-            jitterState = 'on';
-
             xData = data.xData;
             yData = data.yData;
             groupData = data.groupData;
-
-            xlabel(axesHandle, data.xLabel,'Interpreter','none');
-            ylabel(axesHandle, data.yLabel,'Interpreter','none');
+            useJitter = data.useJitter;     % added as a property of the data struct, which is set by the formatter based on the state of the plot manager - read from the checkbox in ResultsViewer GUI
 
             if isempty(groupData)
-                scatter(axesHandle, xData, yData,'XJitter','rand');
+                if useJitter
+                    % jitter implemented in undocumented way: 
+                    % https://undocumentedmatlab.com/articles/undocumented-scatter-plot-jitter
+                    scatter(axesHandle, xData, yData,'XJitter','rand');
+
+                    xlabel(axesHandle, data.xLabel,'Interpreter','none');
+                    ylabel(axesHandle, data.yLabel,'Interpreter','none');
+                else
+                    scatter(axesHandle, xData, yData);
+                end
 
                 % figure
                 % 
@@ -82,8 +87,13 @@ classdef TwoVariablesPlot < plot.PlotInterface
                 hold(axesHandle, 'on');
                 for i = 1:numel(categoryList)
                     mask = groupData == categoryList(i);
-                    plotHandle = scatter(axesHandle, xData(mask, :, :), yData(mask, :, :), ...
-                    'Color', categoryColormap(i, :),'XJitter','rand');
+                    if useJitter
+                        plotHandle = scatter(axesHandle, xData(mask, :, :), yData(mask, :, :), ...
+                        'Color', categoryColormap(i, :),'XJitter','rand');
+                    else
+                        plotHandle = scatter(axesHandle, xData(mask, :, :), yData(mask, :, :), ...
+                        'Color', categoryColormap(i, :));
+                    end
 
                     legendHandles(i) = plotHandle(1); 
                     legendNames{i} = char(categoryList(i));
@@ -95,13 +105,15 @@ classdef TwoVariablesPlot < plot.PlotInterface
                 end
             end
 
+            % the labels have to be defined after the plotting, otherwise they are reset by the plotting function
+            xlabel(axesHandle, data.xLabel,'Interpreter','none');
+            ylabel(axesHandle, data.yLabel,'Interpreter','none');
+
         end
 
         function plotBoxplot(~, data, axesHandle)
 
-            jitterState = 'on';
-
-            
+            useJitter = data.useJitter;
             xData = data.xData;
             yData = data.yData;
             groupData = data.groupData;
@@ -147,7 +159,8 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
                     % boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
 
-                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers',jitterState);
+
+                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers',useJitter);
                     
                     axesHandle.TickLabelInterpreter = 'none';                  
 
@@ -158,7 +171,7 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
                 else
 
-                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.1,'JitterOutliers',jitterState);
+                    boxchart(axesHandle, categoricalData, numericalData,'BoxWidth',0.1,'JitterOutliers',useJitter);
                     
 
                   
@@ -185,7 +198,7 @@ classdef TwoVariablesPlot < plot.PlotInterface
                     % numericalData = log10(numericalData);
                 
                     % boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.3,'BoxFaceColor','k','MarkerColor','k','MarkerStyle','.','JitterOutliers','on');
-                    b = boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers',jitterState);
+                    b = boxchart(axesHandle, categoricalData, numericalData, 'GroupByColor', groupData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers',useJitter);
                     
                     axesHandle.TickLabelInterpreter = 'none';     
                     legendGroups = unique(groupData);
@@ -227,7 +240,7 @@ classdef TwoVariablesPlot < plot.PlotInterface
                         
                         cGroupData = cat(1,G,cG);
                                      
-                        b = boxchart(axesHandle, categoricalDataMerged, xDataDuplicated, 'GroupByColor', cGroupData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers',jitterState);
+                        b = boxchart(axesHandle, categoricalDataMerged, xDataDuplicated, 'GroupByColor', cGroupData,'BoxWidth',0.3,'MarkerStyle','.','JitterOutliers',useJitter);
                                                  
                         legendGroups = unique(cGroupData);
                         l = legend(axesHandle, b, legendGroups, 'Location', 'northeast');

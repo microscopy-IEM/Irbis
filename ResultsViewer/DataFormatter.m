@@ -14,6 +14,7 @@ classdef DataFormatter < handle
         tableProcessorHandles
         useGrouping
         useIndividual
+        useJitter = false;
         requiredParametersNum
         tableTypes
 
@@ -33,12 +34,13 @@ classdef DataFormatter < handle
     end
 
     methods
-        function obj = DataFormatter(plotManagerHandle, tableProcessorHandles, useGrouping, useIndividual, requiredParametersNum, tableTypes)
+        function obj = DataFormatter(plotManagerHandle, tableProcessorHandles, useGrouping, useIndividual, useJitter, requiredParametersNum, tableTypes)
 
             obj.plotManagerHandle = plotManagerHandle;
             obj.tableProcessorHandles = tableProcessorHandles;
             obj.useGrouping = useGrouping;
             obj.useIndividual = useIndividual;
+            obj.useJitter = useJitter;
             obj.requiredParametersNum = requiredParametersNum;
             obj.tableTypes = tableTypes;
 
@@ -78,6 +80,21 @@ classdef DataFormatter < handle
         function setRequiredParametersNum(obj, num)
             obj.requiredParametersNum = num;
             obj.processData([]);
+        end
+
+        function turnJitterOn(obj)
+            % currently applied in TwoVariablesPlot, and nowhere else? 
+            if ~isempty(obj.lastProcessedData)
+                obj.lastProcessedData.useJitter = true;
+                obj.plotManagerHandle.plotData(obj.lastProcessedData);
+            end
+        end
+
+        function turnJitterOff(obj)
+            if ~isempty(obj.lastProcessedData)
+                obj.lastProcessedData.useJitter = false;
+                obj.plotManagerHandle.plotData(obj.lastProcessedData);
+            end
         end
 
         function delete(obj)
@@ -320,6 +337,7 @@ classdef DataFormatter < handle
             % enough for categorical + required rest
             % this can be increased by having cell columns with more than 1 column
 
+            % TODO: instead of requiring categorical, we could just use colorcoding 
             availableColumnNum = sum([dataStruct.columnNum{:}]);
             hasEnoughColumns = availableColumnNum >= (obj.requiredParametersNum + 1); % +1 for the group column
             % disp(dataStruct.isCategorical)
@@ -377,6 +395,7 @@ classdef DataFormatter < handle
                 data.yLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.Y_COLUMN_NUM);
             end
 
+            data.useJitter = obj.useJitter;
             obj.lastProcessedData = data; 
             obj.plotManagerHandle.plotData(data);
         end
@@ -412,6 +431,7 @@ classdef DataFormatter < handle
                 data.yLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.Y_COLUMN_NUM);
             end
 
+            data.useJitter = obj.useJitter;
             obj.lastProcessedData = data;
             obj.plotManagerHandle.plotData(data);
         end
