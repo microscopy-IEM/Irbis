@@ -1,6 +1,9 @@
 classdef (Sealed) ModelDescendancy 
     methods (Static)
         function T = replaceRelatives(T, affectedIds, typeOfRelative, relativeBranch, idsToReplace, newIds)
+            % Replace selected relative IDs for many subjects at once.
+            % For each affected subject row, remove idsToReplace and add newIds
+            % only within the specified branch of either 'parent' or 'children'.
             arguments
                 T table
                 affectedIds
@@ -42,6 +45,9 @@ classdef (Sealed) ModelDescendancy
 
 
         function T = updateRelatives(T, typeOfRelative, relativeBranch, subjectId, oldIdList, newIdList)
+            % Synchronize inverse links after a subject's relatives changed.
+            % Adds subjectId to newly referenced relatives and removes it from
+            % relatives that are no longer referenced.
             arguments
                 T
                 typeOfRelative {mustBeMember(typeOfRelative, {'parent', 'children'})}   % what is the relation of the relative to the subject
@@ -86,6 +92,8 @@ classdef (Sealed) ModelDescendancy
 
 
         function T = replaceAncestor(T, rowName, ancestorBranch, ancestorId)
+            % Set (replace) the parent for one object in one branch.
+            % This enforces a single parent per branch by overwriting prior value.
             % We assume that there can only be one parent -> remove the existing one(s) and add the new one
             arguments
                 T table
@@ -106,6 +114,8 @@ classdef (Sealed) ModelDescendancy
 
 
         function T = addRelatives(T, rowName, relativeBranch, relativeRowIds, typeOfRelative)
+            % Add relative IDs to one object under one branch.
+            % Works for either 'parent' or 'children' and keeps IDs unique.
             arguments
                 T table
                 rowName (1,:) {mustBeText}
@@ -146,6 +156,8 @@ classdef (Sealed) ModelDescendancy
 
 
         function T = removeRelatives(T, rowName, relativeBranch, relativeRowIds, typeOfRelative)
+            % Remove specific relative IDs from one object under one branch.
+            % Leaves the table unchanged if the relationship dictionary/branch does not exist.
             arguments
                 T table
                 rowName (1,:) {mustBeText}
@@ -179,6 +191,8 @@ classdef (Sealed) ModelDescendancy
 
 
         function T = addDescendants(T, rowName, descendantBranch, descendantRowIds)
+            % Convenience wrapper to add child IDs in a given branch.
+            % Updates the 'children' dictionary for the specified object row.
             arguments
                 T table
                 rowName (1,:) {mustBeText}
@@ -218,6 +232,8 @@ classdef (Sealed) ModelDescendancy
 
 
         function T = removeDescendants(T, rowName, descendantBranch, descendantRowIds)
+            % Convenience wrapper to remove child IDs in a given branch.
+            % Updates the 'children' dictionary only when the branch exists.
             arguments
                 T table
                 rowName (1,:) {mustBeText}
@@ -250,6 +266,8 @@ classdef (Sealed) ModelDescendancy
 
 
         function descendantIds = getDescendantIds(T, rowName, descendantBranch)
+            % Return child IDs for one object and branch.
+            % Normalizes nested cell wrappers and returns [] when branch is missing.
             arguments
                 T table
                 rowName (1,:) {mustBeText}
@@ -274,6 +292,8 @@ classdef (Sealed) ModelDescendancy
 
 
         function ancestorIds = getAncestorIds(T, rowName, ancestorBranch)
+            % Return parent ID(s) for one object and branch.
+            % Normalizes nested cell wrappers and returns [] when branch is missing.
             arguments
                 T table
                 rowName (1,:) {mustBeText}
@@ -298,6 +318,8 @@ classdef (Sealed) ModelDescendancy
 
 
         function relativesExist = doHaveRelatives(relativesColumn)
+            % Indicate which rows contain configured relationship dictionaries.
+            % Input is typically one table column: T.parent or T.children.
             % Check if any of the items have any relatives (parents or children)
                 % Relatives type is defined in what is passed in
             % Input is a T.parent or T.children column from a table
@@ -309,6 +331,8 @@ classdef (Sealed) ModelDescendancy
 
         
         function relativesDict = getUniqueRelatives(relativesColumn)
+            % Aggregate all relatives across rows into one branch->IDs dictionary.
+            % Merges duplicate branches and stores unique IDs per branch.
             relativesDict = configureDictionary('char', 'cell');
 
             relativesExist = ModelDescendancy.doHaveRelatives(relativesColumn);
