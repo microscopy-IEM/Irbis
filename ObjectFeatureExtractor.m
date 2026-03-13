@@ -5,7 +5,7 @@ classdef ObjectFeatureExtractor
     % Required input columns:
     %   Mesh
     % Optional input columns:
-    %   cuttingPlaneCentre (required for distance-based features)
+    %   basePoint (required for distance-based features)
     %
     % Assumptions:
     %   1) Mesh geometry is represented in consistent physical units
@@ -27,7 +27,7 @@ classdef ObjectFeatureExtractor
     %
     %   averageDistance
     %       Formula: mean(||v_i - p||)
-    %       Meaning: average distance from cuttingPlaneCentre p to vertices v_i
+    %       Meaning: average distance from basePoint p to vertices v_i
     %       Units: unit (for example um)
     %
     %   euclideanLength
@@ -124,8 +124,8 @@ classdef ObjectFeatureExtractor
                     outputTable.solidity(rowIndex) = volumeValue / convexHullVolumeValue;
                 end
 
-                % Step 5: compute distance-based features from cuttingPlaneCentre.
-                point = ObjectFeatureExtractor.extractCuttingPlaneCentre(outputTable, rowIndex);
+                % Step 5: compute distance-based features from basePoint.
+                point = ObjectFeatureExtractor.extractBasePoint(outputTable, rowIndex);
                 [averageDistance, euclideanLength, distanceCoefficientOfVariation, openAngle] = ...
                     ObjectFeatureExtractor.calculateDistanceFeatures(vertices, point);
 
@@ -142,9 +142,9 @@ classdef ObjectFeatureExtractor
             %CALCULATEDISTANCEFEATURES Compute distance distribution metrics.
             %
             % Returns NaN outputs when point is missing/invalid.
-            % averageDistance: mean distance from cuttingPlaneCentre to all mesh vertices.
+            % averageDistance: mean distance from basePoint to all mesh vertices.
             averageDistance = nan;
-            % euclideanLength: mean of the top 5% largest vertex distances from cuttingPlaneCentre.
+            % euclideanLength: mean of the top 5% largest vertex distances from basePoint.
             euclideanLength = nan;
             % distanceCoefficientOfVariation: std/mean of those vertex distances.
             distanceCoefficientOfVariation = nan;
@@ -473,16 +473,16 @@ classdef ObjectFeatureExtractor
 
 
 
-        function point = extractCuttingPlaneCentre(inputTable, rowIndex)
-            %EXTRACTCUTTINGPLANECENTRE Get [x y z] reference point for row.
+        function point = extractBasePoint(inputTable, rowIndex)
+            %EXTRACTBASEPOINT Get [x y z] reference point for row.
             % Returns NaNs when not available or invalid.
             point = [nan nan nan];
 
-            if ~ismember('cuttingPlaneCentre', inputTable.Properties.VariableNames)
+            if ~ismember('basePoint', inputTable.Properties.VariableNames)
                 return
             end
 
-            pointColumn = inputTable.cuttingPlaneCentre;
+            pointColumn = inputTable.basePoint;
             if iscell(pointColumn)
                 candidate = pointColumn{rowIndex};
             else

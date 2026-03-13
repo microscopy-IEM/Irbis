@@ -1,7 +1,7 @@
 classdef (Sealed) SpineSeparationHelper
 
     methods (Static)
-        function [T, newIds] = addMeshesToTable(T, meshes, singularParentRowName, ancestryDict, basePoints, trajectory, minPoints)
+        function [T, newIds] = addMeshesToTable(T, meshes, singularParentRowName, ancestryDict, basePoints, trajectory, patches, minPoints)
 
             arguments
                 T table
@@ -10,6 +10,7 @@ classdef (Sealed) SpineSeparationHelper
                 ancestryDict
                 basePoints double = [];
                 trajectory double = [];
+                patches cell = {};
                 minPoints double = 20; % Default value, adjust as needed
             end
 
@@ -54,19 +55,26 @@ classdef (Sealed) SpineSeparationHelper
 
                 % assignin("base", "basePoints", basePoints)
                 try
-                    T{rowIndexes, 'cuttingPlaneCentre'} = basePoints(validIndices,1:3);
-                    T{rowIndexes, 'cuttingPlaneNormal'} = vec;
+                    T{rowIndexes, 'basePoint'} = basePoints(validIndices,1:3);
+                    T{rowIndexes, 'basePointNormal'} = vec;
                 catch
                     % TO OPTIMIZE - this is an ugly code!!!
                     % this can accidentally cause problems or delete previous datasets
 
-                    disp(['size of columns cuttingPlaneCentre and cuttingPlaneNormal was converted so that it contains three columns!!!'])
-                    T.cuttingPlaneCentre =  nan(height(T), 3);
-                    T.cuttingPlaneNormal = nan(height(T), 3);
+                    disp(['size of columns basePoint and basePointNormal was converted so that it contains three columns!!!'])
+                    T.basePoint =  nan(height(T), 3);
+                    T.basePointNormal = nan(height(T), 3);
 
-                    T{rowIndexes, 'cuttingPlaneCentre'} = basePoints(validIndices,1:3);
-                    T{rowIndexes, 'cuttingPlaneNormal'} = vec;
+                    T{rowIndexes, 'basePoint'} = basePoints(validIndices,1:3);
+                    T{rowIndexes, 'basePointNormal'} = vec;
                 end
+            end
+
+            if ~isempty(patches)
+                % patches is a cell array of structure lists
+                % each structure list contains base patches for one mesh (places where the spine is cut from the dendritic shaft)
+                validPatches = patches(validIndices);
+                T{rowIndexes, 'base'} = validPatches;
             end
 
             warning('on', 'MATLAB:table:RowsAddedExistingVars'); % turn it back on

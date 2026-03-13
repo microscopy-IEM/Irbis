@@ -321,7 +321,15 @@ function List = createEmptyList(structType,varargin)
 
             % TO OPTIMIZE - add volume, surface, ... right away? 
 
-            varNames = ["groupId","Points","Mesh","name","prevTPid","nextTPid","parent","children","volume","surface","positionShift","color","excluded", "timePoint"];
+            % properties relevant to functionality within Irbis: color, excluded (filtering related), timePoint (propagates to ResultsViewer)
+            % object features: volume, surface
+            % time related: groupId
+            % relatives: parent, children
+
+            % deleting: prevTPid
+            % renaming: cuttingPlaneCentre -> basePoint, cuttingPlaneNormal -> basePointNormal
+
+            varNames = ["groupId", "Points", "Mesh", "name", "nextTPid", "parent", "children", "volume", "surface", "positionShift", "color", "excluded", "timePoint"];
             varTypes = ["double","cell","cell","string","double","double","cell","cell","double","double","cell","cell","logical", "categorical"];
         
             if ismember('derived',specialTypes)
@@ -333,8 +341,8 @@ function List = createEmptyList(structType,varargin)
             end
         
             if ismember('spines',specialTypes)
-                addedNames = ["cuttingPlaneCentre","cuttingPlaneNormal"];
-                addedTypes = ["double","double"];
+                addedNames = ["basePoint", "basePointNormal", "basePatch"];
+                addedTypes = ["double", "double", "cell"];
         
                 varNames = [varNames,addedNames];
                 varTypes = [varTypes,addedTypes];
