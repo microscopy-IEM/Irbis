@@ -144,9 +144,7 @@
             for tp = timePoints
                 app.setModelTable(fullList{tp}, tp, branch);
             end
-            % TO OPTIMIZE - check whether the indexes are handled correctly
 
-            % delete(findobj(app.UIAxes,'Tag','objectIDText'))
             app.InfoGraphicText.Text = '';  
 
             % update groupIds in the graphics objects group for current timePoint
