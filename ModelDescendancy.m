@@ -369,5 +369,54 @@ classdef (Sealed) ModelDescendancy
                 end
             end
         end
+
+
+
+        function siblingIds = getSiblingIdsViaAncestor(T, rowName, ancestorBranch, ancestorT, siblingBranch)
+            % Returns ids of the objects of siblingBranch that have the same parent in ancestorBranch as the object with id subjectId.
+            
+            arguments
+                T table
+                rowName (1,:) {mustBeText}
+                ancestorBranch (1,:) {mustBeText}
+                ancestorT table
+                siblingBranch (1,:) {mustBeText}
+            end
+
+            dictOfAncestors = T{rowName,'parent'}{1};
+            if isKey(dictOfAncestors, ancestorBranch)
+                ancestorIds = dictOfAncestors(ancestorBranch);
+                while iscell(ancestorIds)
+                    if ~isempty(ancestorIds) && iscell(ancestorIds{1})
+                        ancestorIds = ancestorIds{1};
+                    else
+                        ancestorIds = cell2mat(ancestorIds);
+                    end
+                end
+            else
+                siblingIds = [];
+                return
+            end
+
+            siblingIds = [];
+            for i = 1:numel(ancestorIds)
+                ancestorId = ancestorIds(i);
+                ancestorRowName = num2str(ancestorId);
+                if ismember(ancestorRowName, ancestorT.Properties.RowNames)
+                    dictOfChildren = ancestorT{ancestorRowName, 'children'}{1};
+                    if isKey(dictOfChildren, siblingBranch)
+                        candidateSiblingIds = dictOfChildren(siblingBranch);
+                        while iscell(candidateSiblingIds)
+                            if ~isempty(candidateSiblingIds) && iscell(candidateSiblingIds{1})
+                                candidateSiblingIds = candidateSiblingIds{1};
+                            else
+                                candidateSiblingIds = cell2mat(candidateSiblingIds);
+                            end
+                        end
+                        siblingIds = [siblingIds, candidateSiblingIds];
+                    end
+                end
+            end
+        end
     end
 end

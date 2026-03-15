@@ -1,14 +1,16 @@
-function attachedPoint = computeBasePoint(patchVertices, patchFaces)
-% Compute the patch centroid projected onto the closest point on the patch.
+
+function [attachedPoint, normalVector] = computeBasePoint(patchVertices, patchFaces)
+% Compute the patch centroid projected onto the closest point on the patch and the normal at that point.
 %
-% attachedPoint = computeBasePoint(patchVertices, patchFaces)
+% [attachedPoint, normalVector] = computeBasePoint(patchVertices, patchFaces)
 %
 % Inputs
 %   patchVertices : (N,3) patch vertices
 %   patchFaces    : (M,3) patch triangle indices (1-based)
 %
-% Output
+% Outputs
 %   attachedPoint : (1,3) closest point on the patch to its centroid
+%   normalVector  : (1,3) normal vector of the triangle containing the attached point
 
     validateattributes(patchVertices, {'numeric'}, {'2d', 'ncols', 3, 'nonempty'}, mfilename, 'patchVertices', 1);
     validateattributes(patchFaces, {'numeric'}, {'2d', 'ncols', 3, 'nonempty', 'integer', 'positive'}, mfilename, 'patchFaces', 2);
@@ -31,8 +33,16 @@ function attachedPoint = computeBasePoint(patchVertices, patchFaces)
         distancesSquared(faceIndex) = sum(offsetFromCentroid .* offsetFromCentroid);
     end
 
+
     [~, nearestTriangleIndex] = min(distancesSquared);
     attachedPoint = closestPoints(nearestTriangleIndex, :);
+
+    % Compute the normal vector of the triangle containing the attached point
+    triangleVertices = patchVertices(patchFaces(nearestTriangleIndex, :), :);
+    v1 = triangleVertices(2, :) - triangleVertices(1, :);
+    v2 = triangleVertices(3, :) - triangleVertices(1, :);
+    normalVector = cross(v2, v1);   % the normal should point inside the spine
+    normalVector = normalVector / norm(normalVector); % Normalize
 end
 
 

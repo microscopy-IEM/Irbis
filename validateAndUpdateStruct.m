@@ -412,6 +412,60 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
         end
     end
 
+    if loadedIrbisVersion < 1.16
+        % delete prevTPid column from model tables if it exists - it is not needed anymore
+        if isfield(loadedStruct,'model')
+            if ~isempty(loadedStruct.model)
+                branches = loadedStruct.model.branches;
+                for branchNum = 1:numel(branches)
+                    branch = branches{branchNum};
+        
+                    for idx = 1:numel(loadedStruct.model.(branch).List)
+                        List = loadedStruct.model.(branch).List{idx};
+                        if istable(List)
+                            variableNames = string(List.Properties.VariableNames);
+                            % Remove 'prevTPid' column if it does exist
+                            if ismember('prevTPid', variableNames)
+                                loadedStruct.model.(branch).List{idx} = removevars(loadedStruct.model.(branch).List{idx},'prevTPid');
+                            end
+
+                            % Remove 'nextTPid' column if it does exist
+                            if ismember('nextTPid', variableNames)
+                                loadedStruct.model.(branch).List{idx} = removevars(loadedStruct.model.(branch).List{idx},'nextTPid');
+                            end
+
+                            % Remove 'Points' column if it does exist - it was usually just storing vertices from Mesh
+                            if ismember('Points', variableNames)
+                                loadedStruct.model.(branch).List{idx} = removevars(loadedStruct.model.(branch).List{idx},'Points');
+                            end
+
+                            % Convert 'name' column to 'parentId' - remove S at the beginning and convert to number
+                            if ismember('name', variableNames) && ~ismember('parentId', variableNames)
+                                nameData = loadedStruct.model.(branch).List{idx}.name;
+                                parentIdData = str2double(erase(nameData,'S'));
+                                loadedStruct.model.(branch).List{idx}.parentId = parentIdData;
+                                loadedStruct.model.(branch).List{idx} = removevars(loadedStruct.model.(branch).List{idx},'name');
+                            end
+
+                            % Rename 'cuttingPlaneCentre' to 'basePoint' if 'cuttingPlaneCentre' exists and 'basePoint' does not exist
+                            % This variable should exist only in the 'spines' table
+                            if ismember('cuttingPlaneCentre', variableNames) && ~ismember('basePoint', variableNames)
+                                loadedStruct.model.(branch).List{idx}.basePoint = loadedStruct.model.(branch).List{idx}.cuttingPlaneCentre;
+                                loadedStruct.model.(branch).List{idx} = removevars(loadedStruct.model.(branch).List{idx},'cuttingPlaneCentre');
+                            end
+
+                            % Rename 'cuttingPlaneNormal' to 'basePointNormal' if 'cuttingPlaneNormal' exists and 'basePointNormal' does not exist
+                            if ismember('cuttingPlaneNormal', variableNames) && ~ismember('basePointNormal', variableNames)
+                                loadedStruct.model.(branch).List{idx}.basePointNormal = loadedStruct.model.(branch).List{idx}.cuttingPlaneNormal;
+                                loadedStruct.model.(branch).List{idx} = removevars(loadedStruct.model.(branch).List{idx},'cuttingPlaneNormal');
+                            end
+                        end
+                    end
+                end
+            end
+        end 
+    end
+
     % change the Irbis version - CHANGE FOR THE NEWEST
     % getBaseStruct('irbisVersion')
     disp(['new irbis version = ' num2str(getBaseStruct('irbisVersion'))])
