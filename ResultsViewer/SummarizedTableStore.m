@@ -75,7 +75,7 @@ classdef SummarizedTableStore < handle
                 columnType = parentColumnTypesToUse{i};
                 columnParameter = 'timePoint';
                 switch columnType
-                    case 'numeric'  % TO OPTMIZE - this includes also fields with more than just one number (cuttingPlaneCentre, ...)
+                    case 'numeric'  % TO OPTMIZE - this includes also fields with more than just one number (basePoint, ...)
                         % For numeric columns, use mean as the default aggregation function
                         innerAggregationFunction = 'mean';
                         outerAggregationFunctions = {'mean', 'std', 'cv', 'min', 'max', 'observationCount', 'slope', 'RSquared', 'stdResiduals', 'cvResiduals', 'pearsonR'};  % TO OPTIMIZE - this is just a quick fix, I need to decide which functions to offer for numeric columns

@@ -42,9 +42,9 @@ function [center, normal] = suggestCuttingPlane(V, F)
     %     scatter3(centeredV(clusterLabels==i,1),centeredV(clusterLabels==i,2),centeredV(clusterLabels==i,3))
     %     hold on 
     % end
-    % scatter3(cutPointsCentered(:,1), cutPointsCentered(:,2), cutPointsCentered(:,3), 10, 'k', 'filled');
-    % quiver3(center(1), center(2), center(3), normal(1), normal(2), normal(3), ...
-    %         1, 'LineWidth', 2);
+    % % scatter3(cutPointsCentered(:,1), cutPointsCentered(:,2), cutPointsCentered(:,3), 10, 'k', 'filled');
+    % % quiver3(center(1), center(2), center(3), normal(1), normal(2), normal(3), ...
+    % %         1, 'LineWidth', 2);
     % axis equal
 end
 

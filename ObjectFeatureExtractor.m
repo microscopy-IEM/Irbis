@@ -5,7 +5,7 @@ classdef ObjectFeatureExtractor
     % Required input columns:
     %   Mesh
     % Optional input columns:
-    %   cuttingPlaneCentre (required for distance-based features)
+    %   basePoint (required for distance-based features)
     %
     % Assumptions:
     %   1) Mesh geometry is represented in consistent physical units
@@ -27,7 +27,7 @@ classdef ObjectFeatureExtractor
     %
     %   averageDistance
     %       Formula: mean(||v_i - p||)
-    %       Meaning: average distance from cuttingPlaneCentre p to vertices v_i
+    %       Meaning: average distance from basePoint p to vertices v_i
     %       Units: unit (for example um)
     %
     %   euclideanLength
@@ -62,11 +62,23 @@ classdef ObjectFeatureExtractor
     %           openAngle = mean(theta_i)
     %       Meaning: average angular spread of vertex directions from base point
     %       Units: degrees
+    %
+    %   baseToTipAngle
+    %       Formula: angle between the normal vector at the base point and the vector from base point to the mean of the 5% furthest vertices (tip point)
+    %       Meaning: orientation of the base patch relative to the main axis of the object
+    %       Units: degrees
+    %
+    %   basePatchArea
+    %       Formula: sum of areas of faces in base patch
+    %       Meaning: surface area of the patch where the spine is cut from the shaft
+    %       Units: unit^2 (for example um^2)
+    % ---------------------------------------------------------------------
 
     properties (Constant)
         % Canonical list of feature columns produced by this extractor.
         featureNames = ["volume", "surface", ...
-            "averageDistance", "euclideanLength", "distanceCoefficientOfVariation", "sphericity", "openAngle", "convexHullVolume", "solidity"];
+            "averageDistance", "euclideanLength", "distanceCoefficientOfVariation", "sphericity", "openAngle", ...
+            "convexHullVolume", "solidity", "baseToTipAngle", "basePatchArea"];
     end
 
 
@@ -124,32 +136,67 @@ classdef ObjectFeatureExtractor
                     outputTable.solidity(rowIndex) = volumeValue / convexHullVolumeValue;
                 end
 
-                % Step 5: compute distance-based features from cuttingPlaneCentre.
-                point = ObjectFeatureExtractor.extractCuttingPlaneCentre(outputTable, rowIndex);
-                [averageDistance, euclideanLength, distanceCoefficientOfVariation, openAngle] = ...
+
+                % Step 5: compute distance-based features from basePoint.
+                point = ObjectFeatureExtractor.extractBasePoint(outputTable, rowIndex);
+                [averageDistance, euclideanLength, distanceCoefficientOfVariation, openAngle, tipPoint] = ...
                     ObjectFeatureExtractor.calculateDistanceFeatures(vertices, point);
 
                 outputTable.averageDistance(rowIndex) = averageDistance;
                 outputTable.euclideanLength(rowIndex) = euclideanLength;
                 outputTable.distanceCoefficientOfVariation(rowIndex) = distanceCoefficientOfVariation;
                 outputTable.openAngle(rowIndex) = openAngle;
+
+                % Step 5b: calculate angle between basePoint-to-tipPoint and basePointNormal if available
+                angleWithNormal = nan;
+                if ismember('basePointNormal', outputTable.Properties.VariableNames)
+                    basePointNormal = outputTable.basePointNormal(rowIndex, :);
+                    if all(isfinite(basePointNormal)) && norm(basePointNormal) > 0 && all(isfinite(point)) && all(isfinite(tipPoint))
+                        v = tipPoint - point;
+                        if norm(v) > 0
+                            v = v / norm(v);
+                            n = basePointNormal / norm(basePointNormal);
+                            dotProd = dot(v, n);
+                            dotProd = min(max(dotProd, -1), 1); % Clamp for safety
+                            angleWithNormal = acosd(dotProd);
+                        end
+                    end
+                end
+                if ~ismember('baseToTipAngle', outputTable.Properties.VariableNames)
+                    outputTable.baseToTipAngle = nan(height(outputTable), 1);
+                end
+                outputTable.baseToTipAngle(rowIndex) = angleWithNormal;
+
+                % Step 6: compute base patch area if 'basePatch' column exists and is valid.
+                if ismember('basePatch', outputTable.Properties.VariableNames)
+                    surfaceArea = 0;
+                    patches = outputTable.basePatch{rowIndex};
+                    for i = 1:numel(patches)
+                        patchSurfaceArea = ObjectFeatureExtractor.calculateSurface(patches(i).vertices, patches(i).faces);
+                        surfaceArea = surfaceArea + patchSurfaceArea;
+                    end
+                    outputTable.basePatchArea(rowIndex) = surfaceArea;
+                end
             end
         end
 
 
 
-        function [averageDistance, euclideanLength, distanceCoefficientOfVariation, openAngle] = calculateDistanceFeatures(vertices, point)
+        function [averageDistance, euclideanLength, distanceCoefficientOfVariation, openAngle, tipPoint] = calculateDistanceFeatures(vertices, point)
             %CALCULATEDISTANCEFEATURES Compute distance distribution metrics.
             %
             % Returns NaN outputs when point is missing/invalid.
-            % averageDistance: mean distance from cuttingPlaneCentre to all mesh vertices.
+
+            % averageDistance: mean distance from basePoint to all mesh vertices.
             averageDistance = nan;
-            % euclideanLength: mean of the top 5% largest vertex distances from cuttingPlaneCentre.
+            % euclideanLength: mean of the top 5% largest vertex distances from basePoint.
             euclideanLength = nan;
             % distanceCoefficientOfVariation: std/mean of those vertex distances.
             distanceCoefficientOfVariation = nan;
             % openAngle: mean angular spread between the mean direction vector and vertex vectors.
             openAngle = nan;
+            % tipPoint: furthest vertex from basePoint (used for angle calculation)
+            tipPoint = [nan nan nan];
 
             if any(isnan(point))
                 return
@@ -157,6 +204,7 @@ classdef ObjectFeatureExtractor
 
             % Convert each vertex to a vector relative to the reference point.
             relativeVectors = vertices - point;
+
             distances = sqrt(sum(relativeVectors.^2, 2));
             if isempty(distances)
                 return
@@ -165,9 +213,12 @@ classdef ObjectFeatureExtractor
             % Central tendency and tail-extent of radial distances.
             averageDistance = mean(distances, 'omitnan');
 
-            [sortedDistances, ~] = sort(distances, 'descend');
+            [sortedDistances, sortedIdx] = sort(distances, 'descend');
             nFurthest = max(1, ceil(numel(distances) * 0.05));
             euclideanLength = mean(sortedDistances(1:nFurthest), 'omitnan');
+            % tipPoint: mean of the 5% furthest vertices from basePoint
+            tipIdxs = sortedIdx(1:nFurthest);
+            tipPoint = mean(vertices(tipIdxs, :), 1);
 
             if isfinite(averageDistance) && averageDistance > 0
                 distanceCoefficientOfVariation = std(distances, 'omitnan') / averageDistance;
@@ -379,6 +430,7 @@ classdef ObjectFeatureExtractor
             outputTable = inputTable;
 
             featureNames = ObjectFeatureExtractor.featureNames;
+
             for i = 1:numel(featureNames)
                 currentName = featureNames(i);
                 currentNameChar = char(currentName);
@@ -390,6 +442,60 @@ classdef ObjectFeatureExtractor
                     end
                 end
             end
+
+            % Descriptions for each feature
+            featureDescriptions = struct(...
+                'volume', 'Enclosed 3D volume of the object mesh', ...
+                'surface', 'Total surface area of the object mesh', ...
+                'averageDistance', 'Mean distance from basePoint to all mesh vertices', ...
+                'euclideanLength', 'Mean of the top 5% largest vertex distances from basePoint', ...
+                'distanceCoefficientOfVariation', 'Std/mean of vertex distances from basePoint', ...
+                'sphericity', 'Surface compactness relative to a sphere of the same volume (1 = perfect sphere)', ...
+                'openAngle', 'Average angular spread of vertex directions from basePoint', ...
+                'convexHullVolume', 'Volume of the convex hull enclosing all vertices', ...
+                'solidity', 'Fraction of convex hull occupied by object volume', ...
+                'basePatchArea', 'Surface area of the patch where the spine is cut from the shaft', ...
+                'baseToTipAngle', 'Angle between base point normal and base-to-tip direction (degrees)');
+            % Units for each feature
+            featureUnits = struct(...
+                'volume', 'um^3', ...
+                'surface', 'um^2', ...
+                'averageDistance', 'um', ...
+                'euclideanLength', 'um', ...
+                'distanceCoefficientOfVariation', '', ...
+                'sphericity', '', ...
+                'openAngle', 'degrees', ...
+                'convexHullVolume', 'um^3', ...
+                'solidity', '', ...
+                'basePatchArea', 'um^2', ...
+                'baseToTipAngle', 'degrees' ...
+            );
+
+            % Assign VariableDescriptions and VariableUnits as cell arrays in the correct order
+            varNames = outputTable.Properties.VariableNames;
+            nVars = numel(varNames);
+            % Use existing VariableDescriptions/Units if present, else create new
+            if isfield(outputTable.Properties, 'VariableDescriptions') && numel(outputTable.Properties.VariableDescriptions) == nVars
+                varDescriptions = outputTable.Properties.VariableDescriptions;
+            else
+                varDescriptions = repmat({''}, 1, nVars);
+            end
+            if isfield(outputTable.Properties, 'VariableUnits') && numel(outputTable.Properties.VariableUnits) == nVars
+                varUnits = outputTable.Properties.VariableUnits;
+            else
+                varUnits = repmat({''}, 1, nVars);
+            end
+            for i = 1:nVars
+                name = varNames{i};
+                if isfield(featureDescriptions, name)
+                    varDescriptions{i} = featureDescriptions.(name);
+                end
+                if isfield(featureUnits, name)
+                    varUnits{i} = featureUnits.(name);
+                end
+            end
+            outputTable.Properties.VariableDescriptions = varDescriptions;
+            outputTable.Properties.VariableUnits = varUnits;
         end
 
 
@@ -473,16 +579,16 @@ classdef ObjectFeatureExtractor
 
 
 
-        function point = extractCuttingPlaneCentre(inputTable, rowIndex)
-            %EXTRACTCUTTINGPLANECENTRE Get [x y z] reference point for row.
+        function point = extractBasePoint(inputTable, rowIndex)
+            %EXTRACTBASEPOINT Get [x y z] reference point for row.
             % Returns NaNs when not available or invalid.
             point = [nan nan nan];
 
-            if ~ismember('cuttingPlaneCentre', inputTable.Properties.VariableNames)
+            if ~ismember('basePoint', inputTable.Properties.VariableNames)
                 return
             end
 
-            pointColumn = inputTable.cuttingPlaneCentre;
+            pointColumn = inputTable.basePoint;
             if iscell(pointColumn)
                 candidate = pointColumn{rowIndex};
             else

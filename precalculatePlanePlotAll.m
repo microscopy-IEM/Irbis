@@ -54,13 +54,11 @@ function rgbMatrix = precalculatePlanePlotAll(zstack,activeChannels,planesLimits
                 end
         
             end           
-        
-            if ~mappingToolboxYes
-                rgbPlane = uint8(round(rgbPlane*256));
-            end
         end
     end
-    % rgbMatrix = squeeze(sum(rgbPlane,4,"native"));
+    if ~mappingToolboxYes
+        rgbPlane = uint8(round(rgbPlane*256));
+    end
 
     temp = (sum(rgbPlane,4,"native"));
 
