@@ -427,8 +427,7 @@ classdef BranchGraphicsGroup < handle
 
 
         function deselectAll(obj)
-            obj.selectedIds = []; % Clear the selection array
-            obj.setSelected(obj.selectedIds); % Update the selection state of all objects
+            obj.setSelected([]); % Update the selection state of all objects
             obj.idLabel.String = '';
         end
 
