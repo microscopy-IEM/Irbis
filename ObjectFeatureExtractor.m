@@ -84,6 +84,13 @@ classdef ObjectFeatureExtractor
 
 
     methods (Static)
+        function featureNames = getFeatureNames()
+            %GETFEATURENAMES Return the list of feature names produced by this extractor.
+            featureNames = ObjectFeatureExtractor.featureNames;
+        end
+
+
+        
         function outputTable = calculateAllFeatures(inputTable)
             %CALCULATEALLFEATURES Compute all configured features for each table row.
             %
