@@ -13,7 +13,7 @@ function [patches] = detectSharedPatch(verticesMesh1, facesMesh1, verticesMesh2,
 %   DistanceTolerance       : Max distance for a mesh 1 vertex to be
 %                             considered shared with mesh 2 (default 1e-6)
 %   PlotSharedVertices      : If true, plot shared vertices over dim mesh
-%                             (default true)
+%                             (default false)
 %   KeepLargestComponent    : If true, keep only the largest connected
 %                             shared patch (default false)
 %
@@ -25,7 +25,7 @@ function [patches] = detectSharedPatch(verticesMesh1, facesMesh1, verticesMesh2,
 
     p = inputParser;
     addParameter(p, 'DistanceTolerance', 1e-6, @(x) isnumeric(x) && isscalar(x) && x > 0);
-    addParameter(p, 'PlotSharedVertices', true, @(x) islogical(x) && isscalar(x));
+    addParameter(p, 'PlotSharedVertices', false, @(x) islogical(x) && isscalar(x));
     addParameter(p, 'KeepLargestComponent', false, @(x) islogical(x) && isscalar(x));
     parse(p, varargin{:});
 
