@@ -34,12 +34,25 @@ def mesh_subtract_and_separate(mesh_data):
         faces = to_numpy_array(mesh['faces'], dtype=np.int32)
         trimesh_mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=True)
 
-        # if not trimesh_mesh.is_watertight:
-        #     print('mesh is not watertight')
-        #     print(id)
-        #     # not watertight means it has holes or non-manifold edges
-        #     # first try to use fill_holes()
-        #     trimesh.repair.fill_holes(trimesh_mesh)
+        if trimesh_mesh.volume < 0:
+            trimesh_mesh.invert()  # Invert the mesh to correct negative volume
+
+        if not trimesh_mesh.is_watertight:
+            print('mesh is not watertight')
+            print(id)
+            # not watertight means it has holes or non-manifold edges
+            # first try to use fill_holes()
+            trimesh.repair.fill_holes(trimesh_mesh)
+            try:
+                new_faces = trimesh.repair.stitch(trimesh_mesh)
+                if new_faces is not None and len(new_faces) > 0:
+                    print(f'Stitched {len(new_faces)} faces')
+                    all_faces = np.vstack((trimesh_mesh.faces, new_faces))
+                    trimesh_mesh.faces = all_faces
+                    trimesh_mesh.remove_unreferenced_vertices()
+            except Exception as e:
+                print(f"Error during stitching: {e}")
+                traceback.print_exc()
 
         # # use this intstead of fix_normals() - which does almost the same if I understand it correctly
         # if not trimesh_mesh.is_winding_consistent:
@@ -69,11 +82,11 @@ def mesh_subtract_and_separate(mesh_data):
         # #     new_vertices, new_faces = pymeshfix.clean_from_arrays(vertices, faces)
         # #     trimesh_mesh = trimesh.Trimesh(vertices=new_vertices, faces=new_faces, process=True)
 
-        # if not trimesh_mesh.is_winding_consistent:
-        #     # non-consistent winding means that two adjacent faces have normals in opposite directions
-        #     # print('winding is not consistent')
-        #     # print(id)
-        #     trimesh.repair.fix_winding(trimesh_mesh)
+        if not trimesh_mesh.is_winding_consistent:
+            # non-consistent winding means that two adjacent faces have normals in opposite directions
+            # print('winding is not consistent')
+            # print(id)
+            trimesh.repair.fix_winding(trimesh_mesh)
         # if not trimesh_mesh.is_volume:
         #     # not volume means (at least in some situation) that the volume is negative - normals point inward
         #     # print('mesh is not volume')
@@ -85,13 +98,20 @@ def mesh_subtract_and_separate(mesh_data):
         #     print('mesh is still not volume after repairs')
         #     print(id)
 
+        print(trimesh_mesh.volume)
+        print(trimesh_mesh.is_watertight)
+        print(trimesh_mesh.is_winding_consistent)
+
         meshes.append(trimesh_mesh)
 
     # Perform boolean subtraction (first - second)
-    difference_mesh = trimesh.boolean.difference([meshes[0], meshes[1]])
+    difference_mesh = trimesh.boolean.difference([meshes[0], meshes[1]], check_volume=False)
+    print(f'nFaces: {len(difference_mesh.faces)}')
+    print(f'Difference mesh volume: {difference_mesh.volume}')
 
     # Separate connected components
     components = difference_mesh.split(only_watertight=False)
+    print(f'Number of components: {len(components)}')
 
     component_data = {}
 

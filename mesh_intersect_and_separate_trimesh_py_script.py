@@ -3,6 +3,7 @@ try:
     import numpy as np
     import sys
     import pymeshfix 
+    import traceback
 except ImportError as e:
     print(e)
     print('Please install the required packages using `pip install numpy trimesh pymeshfix`')
@@ -34,27 +35,46 @@ def mesh_intersect_and_separate(mesh_data):
         vertices = to_numpy_array(mesh['vertices'], dtype=np.float64)
         faces = to_numpy_array(mesh['faces'], dtype=np.int32)
         trimesh_mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=True)
+        # if not trimesh_mesh.is_watertight:
+        #     # print('mesh is not watertight')
+        #     # not watertight means it has holes or non-manifold edges
+        #     new_vertices, new_faces = pymeshfix.clean_from_arrays(vertices, faces)
+        #     trimesh_mesh = trimesh.Trimesh(vertices=new_vertices, faces=new_faces, process=True)
+
         if not trimesh_mesh.is_watertight:
-            # print('mesh is not watertight')
+            print('mesh is not watertight')
             # not watertight means it has holes or non-manifold edges
-            new_vertices, new_faces = pymeshfix.clean_from_arrays(vertices, faces)
-            trimesh_mesh = trimesh.Trimesh(vertices=new_vertices, faces=new_faces, process=True)
+            # first try to use fill_holes()
+            trimesh.repair.fill_holes(trimesh_mesh)
+            try:
+                new_faces = trimesh.repair.stitch(trimesh_mesh)
+                if new_faces is not None and len(new_faces) > 0:
+                    print(f'Stitched {len(new_faces)} faces')
+                    all_faces = np.vstack((trimesh_mesh.faces, new_faces))
+                    trimesh_mesh.faces = all_faces
+                    trimesh_mesh.remove_unreferenced_vertices()
+            except Exception as e:
+                print(f"Error during stitching: {e}")
+                traceback.print_exc()
 
         # use this intstead of fix_normals() - which does almost the same if I understand it correctly
         if not trimesh_mesh.is_winding_consistent:
             # non-consistent winding means that two adjacent faces have normals in opposite directions
             # print('winding is not consistent')
             trimesh.repair.fix_winding(trimesh_mesh)
-        if not trimesh_mesh.is_volume:
-            # not volume means (at least in some situation) that the volume is negative - normals point inward
-            # print('mesh is not volume')
-            trimesh.repair.fix_inversion(trimesh_mesh, multibody=False)
+        if trimesh_mesh.volume < 0:
+            trimesh_mesh.invert()  # Invert the mesh to correct negative volume
+        # if not trimesh_mesh.is_volume:
+        #     # not volume means (at least in some situation) that the volume is negative - normals point inward
+        #     # print('mesh is not volume')
+        #     trimesh.repair.fix_inversion(trimesh_mesh, multibody=False)
 
         # we are hoping that everything is fixed by now
+        print(trimesh_mesh.volume)
         meshes.append(trimesh_mesh)
 
     # Perform boolean intersection between the two meshes
-    intersection_mesh = trimesh.boolean.intersection(meshes)
+    intersection_mesh = trimesh.boolean.intersection(meshes, check_volume=False)
 
     # Separate connected components
     components = intersection_mesh.split(only_watertight=False)
@@ -86,5 +106,6 @@ def mesh_intersect_and_separate(mesh_data):
 try:
     output = mesh_intersect_and_separate(mesh_data)
 except Exception as e:
-    print(f"Error performing mesh subtraction: {e}")
+    print(f"Error performing mesh intersection: {e}")
+    traceback.print_exc()
     sys.exit(1)
