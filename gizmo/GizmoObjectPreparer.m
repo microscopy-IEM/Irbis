@@ -467,12 +467,13 @@ classdef GizmoObjectPreparer
             switch objectType
                 case "cylinder"
                     nSides = 30;
-                    nLayers = 3;
+                    nLayers = 10;   % updated from 3
                     radius = 0.5;
                     height = 2;
                     numberingType = 1;
+                    nBaseLayers = 1;  % new parameter for additional rings in the bases
 
-                    [vertices, faces] = createCylinderObject(nSides, nLayers, radius, height, numberingType);
+                    [vertices, faces] = createCylinderObject(nSides, nLayers, radius, height, numberingType, nBaseLayers);
                     objectStruct = struct('vertices', vertices, 'faces', faces);
                     scaleAxes = {'xz', 'y'};
 
