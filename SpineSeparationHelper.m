@@ -108,34 +108,12 @@ classdef (Sealed) SpineSeparationHelper
 
             currentFullMeshCell = biggerObjectTable{biggerObjectRowName,'Mesh'};
             currentFullMesh = currentFullMeshCell{1};
-            meshData{1} = struct('vertices', currentFullMesh.Vertices, ...
-                                    'faces', currentFullMesh.Faces - 1); % Zero-index for Python
-            
-            % Conditionally add vertexNormals if not empty
-            if ~isempty(currentFullMesh.VertexNormals)
-                meshData{1}.vertexNormals = currentFullMesh.VertexNormals;
-            end
-            
-            % Conditionally add faceNormals if not empty
-            if ~isempty(currentFullMesh.FaceNormals)
-                meshData{1}.faceNormals = currentFullMesh.FaceNormals;
-            end
+            meshData{1} = PythonMeshHelper.meshToPyStruct(currentFullMesh);
 
             currentDendriticShaftMeshCell = smallerObjectTable{smallerObjectRowName,'Mesh'};
             currentDendriticShaftMesh = currentDendriticShaftMeshCell{1};
 
-            meshData{2} = struct('vertices', currentDendriticShaftMesh.Vertices, ...
-                                    'faces', currentDendriticShaftMesh.Faces - 1); % Zero-index for Python
-            
-            % Conditionally add vertexNormals if not empty
-            if ~isempty(currentDendriticShaftMesh.VertexNormals)
-                meshData{2}.vertexNormals = currentDendriticShaftMesh.VertexNormals;
-            end
-            
-            % Conditionally add faceNormals if not empty
-            if ~isempty(currentDendriticShaftMesh.FaceNormals)
-                meshData{2}.faceNormals = currentDendriticShaftMesh.FaceNormals;
-            end
+            meshData{2} = PythonMeshHelper.meshToPyStruct(currentDendriticShaftMesh);
         end
     end
 end

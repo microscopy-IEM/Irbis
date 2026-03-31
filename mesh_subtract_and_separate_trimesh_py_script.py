@@ -35,6 +35,8 @@ def mesh_subtract_and_separate(mesh_data):
         trimesh_mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=True)
 
         if trimesh_mesh.volume < 0:
+            print(id)
+            print('mesh has negative volume')
             trimesh_mesh.invert()  # Invert the mesh to correct negative volume
 
         if not trimesh_mesh.is_watertight:
