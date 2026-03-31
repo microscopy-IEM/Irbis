@@ -39,7 +39,9 @@ def load_mesh(mesh_input):
     """
     vertices = to_numpy_array(mesh_input['vertices'], dtype=np.float64)
     faces = to_numpy_array(mesh_input['faces'], dtype=np.int32)
-    mesh = trimesh.Trimesh(vertices=vertices, faces=faces, process=True)
+    vertex_normals = to_numpy_array(mesh_input.get('vertex_normals', []), dtype=np.float64)
+    face_normals = to_numpy_array(mesh_input.get('face_normals', []), dtype=np.float64)
+    mesh = trimesh.Trimesh(vertices=vertices, faces=faces, vertex_normals=vertex_normals, face_normals=face_normals, process=True)
     return mesh
 
 
