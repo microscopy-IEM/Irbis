@@ -415,6 +415,7 @@ classdef BranchGraphicsGroup < handle
 
         function toggleIndividualSelectionAndDeselectOthers(obj, id)
             % Deselect all objects and toggle selection for a specific object by ID
+            % TO OPTIMIZE: this calls postSet on selectedIds twice, which is not ideal
             isSelected = ismember(id, obj.selectedIds);
             obj.deselectAll();
             % Toggle selection for a specific object by ID
@@ -479,6 +480,19 @@ classdef BranchGraphicsGroup < handle
 
             % catch
             % end
+        end
+
+
+        function setSelectedGroupIds(obj, groupIds)
+            arguments
+                obj
+                groupIds (1,:) {mustBeNumeric}
+            end
+
+            % Get object IDs corresponding to the provided group IDs
+            isInGroup = ismember(obj.groupIdArray, groupIds(:));
+            selectedObjectIds = obj.objectIdArray(isInGroup);
+            obj.setSelected(selectedObjectIds); % Update selection based on object IDs
         end
 
 

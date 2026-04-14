@@ -12,6 +12,8 @@ classdef SelectionSynchronizer < handle
         graphicsSelectionListener            % Event listener for selection changes in BranchGraphicsManager
         tableSelectionListener            % Event listener for table selection changes in ResultsViewer
         isSyncing = false  % Add this flag
+        tableUpdateFunctionHandle = {} % Store the function handle for updating selection, to be set based on table processor type
+        graphicsUpdateFunctionHandle = @obj.updateGraphicsSelection; % Function handle for updating graphics selection, can be switched to group ID selection if needed
     end
     
     methods
@@ -19,10 +21,11 @@ classdef SelectionSynchronizer < handle
         end
 
         
+
         function setBranchGraphicsManagerHandle(obj, handle)
             % Set the BranchGraphicsManager handle
             if isempty(handle)
-            error('SelectionSynchronizer:InvalidInput', 'BranchGraphicsManager handle cannot be empty');
+                error('SelectionSynchronizer:InvalidInput', 'BranchGraphicsManager handle cannot be empty');
             end
             obj.branchGraphicsManagerHandle = handle;
 
@@ -33,10 +36,11 @@ classdef SelectionSynchronizer < handle
         end
 
         
+
         function setAppStateManagerHandle(obj, handle)
             % Set the AppStateManager handle
             if isempty(handle)
-            error('SelectionSynchronizer:InvalidInput', 'AppStateManager handle cannot be empty');
+                error('SelectionSynchronizer:InvalidInput', 'AppStateManager handle cannot be empty');
             end
             obj.appStateManagerHandle = handle;
             
@@ -57,10 +61,11 @@ classdef SelectionSynchronizer < handle
         end
 
         
+
         function enableSync(obj, enable)
             % Enable or disable the synchronization
             if nargin < 2
-            enable = true; % Default to enabling
+                enable = true; % Default to enabling
             end
             
             if enable
@@ -103,10 +108,12 @@ classdef SelectionSynchronizer < handle
         end
 
 
+
         function isEnabled = isSyncEnabled(obj)
             % Check if synchronization is currently enabled
             isEnabled = ~isempty(obj.graphicsSelectionListener) && isvalid(obj.graphicsSelectionListener);
         end
+
 
 
         function toggleSync(obj)
@@ -115,6 +122,7 @@ classdef SelectionSynchronizer < handle
         end
 
         
+
         function delete(obj)
             % Destructor - clean up listeners
             if ~isempty(obj.graphicsSelectionListener) && isvalid(obj.graphicsSelectionListener)
@@ -129,10 +137,17 @@ classdef SelectionSynchronizer < handle
         end
     end
     
+
+
+
     methods (Access = ?matlab.unittest.TestCase)
         function onGraphicsSelectionChanged(obj, ~, eventData)
+            % OBSERVATION: it seems that when holding ctrl and selecting in table, and then moving to select in graphics: 
+                % the ctrl is not registered for the graphics - the previous selection is cleard
             % disp('SelectionSynchronizer:onGraphicsSelectionChanged');
             % Handle selection changes from BranchGraphicsManager
+            % Happens when objects were selected in Irbis, we want to update the table in ResultsViewer accordingly
+
             if obj.isSyncing
                 % disp('Skipping selection change event due to ongoing sync');
                 obj.isSyncing = false; % Clear flag
@@ -144,6 +159,7 @@ classdef SelectionSynchronizer < handle
                 % Extract information from the selection event
                 branch = eventData.branch;
                 selectedIds = eventData.selectedIds;
+                selectedGroupIds = eventData.selectedGroupIds;
                 timePoint = eventData.currentTimePoint;
 
                 % Check if the appropriate modality and branch are selected
@@ -153,22 +169,15 @@ classdef SelectionSynchronizer < handle
                 end
                 
                 % Get the table processor through the state managers
-                tableProcessor = obj.getTableProcessor();
-                if isempty(tableProcessor)
-                    return;
-                end
+                % tableProcessor = obj.getTableProcessor();
+                % this should not be necessary (it checks things and assigns function handles)
+                % instead, we should just be able to access it in obj.currentTableProcessorHandle
+                tableProcessor = obj.currentTableProcessorHandle;
 
-                if isempty(selectedIds)
-                    obj.updateTableSelection(tableProcessor, {});
-                    return;
+                % The function handle is set based on which table type is active
+                if ~isempty(obj.tableUpdateFunctionHandle)
+                    obj.tableUpdateFunctionHandle(tableProcessor, selectedIds, selectedGroupIds, timePoint);
                 end
-
-                % Convert selection to row names in the format "id_timePoint"
-                rowNames = obj.convertToRowNames(selectedIds, timePoint);
-                % TO FIX - the second part of rowNames is bound to index, not timePoint -> this does not work if they don't match
-                
-                % Update the table selection
-                obj.updateTableSelection(tableProcessor, rowNames);
             catch ME
                 warning('SelectionSynchronizer:SyncError', 'Error in selection sync: %s', ME.message);
             end
@@ -176,10 +185,12 @@ classdef SelectionSynchronizer < handle
         end
 
 
+
         function onTableProcessorChanged(obj, ~, ~)
             % Called when table type changes - need to update listener
             obj.setupTableProcessorListener();
         end
+
         
         
         function setupTableProcessorListener(obj)
@@ -202,6 +213,7 @@ classdef SelectionSynchronizer < handle
                 'tableSelectionChanged', @(~, ~) obj.onTableSelectionChanged);
         end
         
+
         
         function onTableSelectionChanged(obj)
             % Handle selection changes from FullTableProcessor
@@ -255,21 +267,19 @@ classdef SelectionSynchronizer < handle
                     return
                 end
                 
-                % Parse row names to extract IDs and time points
-                selectedIdsByTimePoint = obj.parseRowNames(rowNames);
+                % This handle is set based on which table type is active
+                obj.graphicsUpdateFunctionHandle(rowNames);
 
-
-                
                 % Update BranchGraphicsManager selection
-                obj.updateGraphicsSelection(selectedIdsByTimePoint);
+                % obj.updateGraphicsSelection(selectedIdsByTimePoint);
             catch ME
                 warning('SelectionSynchronizer:SyncError', 'Error in table selection sync: %s', ME.message);
             end
             obj.isSyncing = false; % Clear flag
         end
-    end
-    
-    methods (Access = ?matlab.unittest.TestCase)
+
+
+
         function selectedIdsByTimePoint = parseRowNames(~, rowNames)
             % Parse row names in format "id_timePoint" to extract IDs and time points
             % Returns a dictionary where keys are time points and values are arrays of IDs
@@ -310,6 +320,7 @@ classdef SelectionSynchronizer < handle
         end
 
 
+
         function [isModelMode, currentBranch] = checkModelModeAndGetBranch(obj)
             % Check if the current modality is 'model' and get the current branch if so
             % Returns:
@@ -341,9 +352,11 @@ classdef SelectionSynchronizer < handle
         end
         
         
-        function updateGraphicsSelection(obj, selectedIdsByTimePoint)
+
+        function updateGraphicsSelection(obj, rowNames)
             % Update selection in BranchGraphicsManager
             % This method would depend on BranchGraphicsManager's API
+
             try
                 [isModelMode, currentBranch] = checkModelModeAndGetBranch(obj);
 
@@ -353,11 +366,13 @@ classdef SelectionSynchronizer < handle
                 end
 
                 branch = currentBranch; % Use the current branch from the app state manager
-                if isempty(selectedIdsByTimePoint)
+                if isempty(rowNames)
                     % Clear selection
                     obj.branchGraphicsManagerHandle.clearSelection(branch);
                 else
-                    % Set selection - you'll need to implement this based on your API
+                    % Set selection
+                    % This moved here to make the onTableSelectionChanged method more generic and to allow for different ways of updating graphics selection based on table type:
+                    selectedIdsByTimePoint = obj.parseRowNames(rowNames);
                     obj.branchGraphicsManagerHandle.setSelection(selectedIdsByTimePoint, branch);
                 end
             catch ME
@@ -365,6 +380,35 @@ classdef SelectionSynchronizer < handle
                     'Failed to update branch selection: %s', ME.message);
             end
         end
+
+
+
+        function updateGraphicsGroupIdSelection(obj, rowNames)
+            % Update selection in BranchGraphicsManager based on group IDs
+            selectedGroupIds = cellfun(@(x) str2double(x), rowNames); 
+
+            try
+                [isModelMode, currentBranch] = checkModelModeAndGetBranch(obj);
+
+                if ~isModelMode || isempty(currentBranch)
+                    warning('SelectionSynchronizer:WrongMode', 'Selection sync requires modality "model" and a valid branch');
+                    return;
+                end
+
+                branch = currentBranch; % Use the current branch from the app state manager
+                if isempty(selectedGroupIds)
+                    % Clear selection
+                    obj.branchGraphicsManagerHandle.clearSelection(branch);
+                else
+                    % Set selection
+                    obj.branchGraphicsManagerHandle.setGroupIdSelection(selectedGroupIds, branch);
+                end
+            catch ME
+                warning('SelectionSynchronizer:BranchSelectionError', ...
+                    'Failed to update branch selection: %s', ME.message);
+            end
+        end
+
         
         
         function rowNames = convertToRowNames(~, selectedIds, timePoint)
@@ -374,6 +418,7 @@ classdef SelectionSynchronizer < handle
                 rowNames{i} = sprintf('%d_%d', selectedIds(i), timePoint);
             end
         end
+
         
         
         function tableProcessor = getTableProcessor(obj)
@@ -392,8 +437,16 @@ classdef SelectionSynchronizer < handle
             for i = 1:length(processorHandles)
                 if strcmp(tableTypes{i}, 'Full') && isa(processorHandles{i}, 'FullTableProcessor')
                     tableProcessor = processorHandles{i};
-                    return;  % Valid FullTableProcessor found
+                    obj.tableUpdateFunctionHandle = @obj.updateFullTableSelection; % Set the update function for full table processor
+                    obj.graphicsUpdateFunctionHandle = @obj.updateGraphicsSelection; % Set the graphics update function for full table processor
+                    return  % Valid FullTableProcessor found
+                elseif strcmp(tableTypes{i}, 'Pivoted') && isa(processorHandles{i}, 'PivotedTableProcessor')
+                    tableProcessor = processorHandles{i};
+                    obj.tableUpdateFunctionHandle = @obj.updatePivotedTableSelection; % Set the update function for pivoted table processor
+                    obj.graphicsUpdateFunctionHandle = @obj.updateGraphicsGroupIdSelection; % Set the graphics update function for pivoted table processor to update group ID selection
+                    return  % Valid PivotedTableProcessor found
                 end
+                % TO OPTIMIZE - implement also handling when Summarized is used or when two tables are active at the same time
             end
             
             % If no FullTableProcessor found, return empty
@@ -401,18 +454,79 @@ classdef SelectionSynchronizer < handle
         end
         
         
-        function updateTableSelection(~, tableProcessor, rowNames)
+
+        % TO BE DEPRECATED - now specific for table type
+        % function updateTableSelection(~, tableProcessor, rowNames)
+        %     % Update the table selection in FullTableProcessor
+        %     if isempty(tableProcessor)
+        %         return;
+        %     end
+            
+        %     % Use the setRowSelection method instead of manually handling selection
+        %     try
+        %         tableProcessor.setRowSelection(rowNames);
+        %     catch ME
+        %         warning('SelectionSynchronizer:SelectionError', 'Failed to set row selection: %s', ME.message);
+        %     end
+        % end
+
+
+
+        function updateFullTableSelection(obj, tableProcessor, selectedIds, ~, timePoint)
             % Update the table selection in FullTableProcessor
             if isempty(tableProcessor)
                 return;
             end
-            
+
+            if isempty(selectedIds)
+                rowNames = {}; % Clear selection if no IDs
+            else
+                % Convert selection to row names in the format "id_timePoint"
+                rowNames = obj.convertToRowNames(selectedIds, timePoint);
+                % TO FIX - the second part of rowNames is bound to index, not timePoint -> this does not work if they don't match
+            end
+
             % Use the setRowSelection method instead of manually handling selection
             try
                 tableProcessor.setRowSelection(rowNames);
             catch ME
                 warning('SelectionSynchronizer:SelectionError', 'Failed to set row selection: %s', ME.message);
             end
+        end
+
+
+
+        function updatePivotedTableSelection(~, tableProcessor, ~, selectedGroupIds, ~)
+            % Update the table selection in PivotedTableProcessor
+            % disp("updateTableSelectionPivoted")
+            if isempty(tableProcessor)
+                return;
+            end
+
+            % disp("selectedGroupIds:")
+            % disp(selectedGroupIds)
+            % class(tableProcessor)
+            % class(selectedGroupIds)
+
+            if isempty(selectedGroupIds)
+                rowNames = {}; % Clear selection if no IDs
+            else
+                % Convert selection to row names which are string
+                rowNames = cell(length(selectedGroupIds), 1);
+                for i = 1:length(selectedGroupIds)
+                    rowNames{i} = sprintf('%d', selectedGroupIds(i));
+                end
+            end
+
+            % disp("pivoted")
+            % disp(rowNames)
+
+            % Use the setRowSelection method instead of manually handling selection
+            % try
+            tableProcessor.setRowSelection(rowNames);
+            % catch ME
+            %     warning('SelectionSynchronizer:SelectionError', 'Failed to set row selection: %s', ME.message);
+            % end
         end
     end
 end

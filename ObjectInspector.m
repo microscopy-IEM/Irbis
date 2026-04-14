@@ -23,6 +23,13 @@ classdef ObjectInspector < handle
         selectedPlotVar           % char: Stores the currently selected variable for plotting
         meshLightHandle           % graphics handle: Handle to the camlight object for mesh lighting
         meshAxesCameraListener    % event.listener: Handle to the CameraPosition listener for updating lighting
+        rotateButton              % uibutton: Toggle button for rotation
+        rotationSpeedSlider       % uislider: Slider for rotation speed
+        rotationTimer             % timer: Timer for automatic rotation
+        rotationSpeed             % double: Current rotation speed (degrees per tick)
+        rotationAxis              % double[1x3]: Precomputed rotation axis
+        rotationOrigin            % double[1x3]: Origin for rotation (basePoint)
+
     end
 
     methods
@@ -70,6 +77,8 @@ classdef ObjectInspector < handle
             obj.meshAxes = uiaxes(gl);
             obj.meshAxes.Layout.Row = 1;
             obj.meshAxes.Layout.Column = 1;
+            
+            obj.meshAxes.CameraViewAngleMode = 'manual';
 
             % Vectorized global bounding box calculation
             allVerts = [];
@@ -127,7 +136,7 @@ classdef ObjectInspector < handle
             obj.sliderPanel = uigridlayout(bottomGL);
             obj.sliderPanel.Layout.Row = 1;
             obj.sliderPanel.Layout.Column = 1;
-            obj.sliderPanel.ColumnWidth = {40, 40, 80, '1x', 40};
+            obj.sliderPanel.ColumnWidth = {40, 40, 80, '1x', 40, 70, 120};
             obj.sliderPanel.RowHeight = {35};
             obj.sliderPanel.Padding = [0 0 0 0];
 
@@ -161,18 +170,163 @@ classdef ObjectInspector < handle
             obj.slider.Layout.Row = 1;
             obj.slider.Layout.Column = 4;
 
+
             % Next button
             obj.nextButton = uibutton(obj.sliderPanel, 'Text', '→', 'ButtonPushedFcn', @(src,evt)obj.onNextPressed());
             obj.nextButton.Layout.Row = 1;
             obj.nextButton.Layout.Column = 5;
 
+            % Rotate toggle button
+            obj.rotateButton = uibutton(obj.sliderPanel, 'Text', 'Rotate', 'ButtonPushedFcn', @(src,evt)obj.onRotatePressed());
+            obj.rotateButton.Layout.Row = 1;
+            obj.rotateButton.Layout.Column = 6;
+
+            % Rotation speed slider
+            obj.rotationSpeedSlider = uislider(obj.sliderPanel, ...
+                'Limits', [1 100], ...
+                'Value', 20, ...
+                'MajorTicks', [1 20 40 60 80 100], ...
+                'MinorTicks', [], ...
+                'ValueChangedFcn', @(src,evt)obj.onRotationSpeedChanged());
+            obj.rotationSpeedSlider.Layout.Row = 1;
+            obj.rotationSpeedSlider.Layout.Column = 7;
+            obj.rotationSpeed = 20; % default speed
+
             % Plot axes (row 2)
             obj.plotAxes = uiaxes(bottomGL);
             obj.plotAxes.Layout.Row = 2;
             obj.plotAxes.Layout.Column = 1;
-
         end
 
+
+        function onRotatePressed(obj)
+            % Toggle rotation on/off
+            obj.computeRotationAxis();
+            if isempty(obj.rotationTimer) || ~isvalid(obj.rotationTimer)
+                obj.rotationTimer = timer('ExecutionMode','fixedRate','Period',0.05,'TimerFcn',@(~,~)obj.rotateView());
+            end
+            if strcmp(obj.rotateButton.Text, 'Rotate')
+                obj.rotateButton.Text = 'Stop';
+                start(obj.rotationTimer);
+            else
+                obj.rotateButton.Text = 'Rotate';
+                stop(obj.rotationTimer);
+            end
+        end
+
+
+
+        function onRotationSpeedChanged(obj)
+            % Update rotation speed from slider
+            obj.rotationSpeed = obj.rotationSpeedSlider.Value;
+        end
+
+
+
+        function rotateView(obj)
+            % Rotate the meshAxes view around a precomputed axis
+            ax = obj.meshAxes;
+            if isempty(obj.rotationAxis) || isempty(obj.rotationOrigin)
+                obj.computeRotationAxis();
+            end
+            % Get current camera position and target
+            campos = ax.CameraPosition;
+            camtarget = ax.CameraTarget;
+            % Build rotation matrix
+            theta = obj.rotationSpeed * 0.05 * pi/180; % convert to radians
+            u = obj.rotationAxis(:)';
+            o = obj.rotationOrigin(:)';
+            R = axang2rotm([u theta]);
+            % Rotate camera position and target around the axis
+            campos_rel = campos - o;
+            camtarget_rel = camtarget - o;
+            campos_new = (R * campos_rel(:))' + o;
+            camtarget_new = (R * camtarget_rel(:))' + o;
+            ax.CameraPosition = campos_new;
+            ax.CameraTarget = camtarget_new;
+        end
+
+
+        % function rotateView(obj)
+        %     % Rotate the meshAxes view around Z axis
+        %     ax = obj.meshAxes;
+        %     [az, el] = view(ax);
+        %     az = az + obj.rotationSpeed * 0.05; % scale by timer period
+        %     view(ax, [az, el]);
+        % end
+
+
+        function computeRotationAxis(obj)
+            % Compute the rotation axis from basePoint to furthest 5% of vertices
+            idx = 1;
+            if ~isempty(obj.slider) && isvalid(obj.slider)
+                idx = round(obj.slider.Value);
+            end
+            if isempty(obj.rowArray) || isempty(obj.rowArray{idx})
+                obj.rotationAxis = [0 0 1];
+                obj.rotationOrigin = [0 0 0];
+                return;
+            end
+            T = obj.rowArray{idx};
+            if ~ismember('Mesh', T.Properties.VariableNames) || isempty(T.Mesh{1})
+                obj.rotationAxis = [0 0 1];
+                obj.rotationOrigin = [0 0 0];
+                return;
+            end
+            mesh = T.Mesh{1};
+            if ~isprop(mesh, 'Vertices') || isempty(mesh.Vertices)
+                obj.rotationAxis = [0 0 1];
+                obj.rotationOrigin = [0 0 0];
+                return;
+            end
+            verts = mesh.Vertices;
+            % Get basePoint
+            basePoint = [];
+            if ismember('basePoint', T.Properties.VariableNames) && ~isempty(T.basePoint)
+                basePoint = T.basePoint;
+                if iscell(basePoint)
+                    basePoint = basePoint{1};
+                end
+                if isnumeric(basePoint) && numel(basePoint) >= 3 && all(isfinite(basePoint(1:3)))
+                    basePoint = basePoint(1:3);
+                else
+                    basePoint = [];
+                end
+            end
+            if isempty(basePoint)
+                obj.rotationAxis = [0 0 1];
+                obj.rotationOrigin = [0 0 0];
+                return;
+            end
+            % Compute distances from basePoint to all vertices
+            dists = sqrt(sum((verts - basePoint).^2, 2));
+            nFurthest = max(1, round(0.05 * numel(dists)));
+            [~, idxs] = maxk(dists, nFurthest);
+            furthestVerts = verts(idxs, :);
+            % Compute mean of furthest points
+            meanFurthest = mean(furthestVerts, 1);
+            axisVec = meanFurthest - basePoint;
+            if norm(axisVec) < 1e-8
+                axisVec = [0 0 1];
+            else
+                axisVec = axisVec / norm(axisVec);
+            end
+            obj.rotationAxis = axisVec;
+            obj.rotationOrigin = basePoint;
+        end
+        
+
+        function delete(obj)
+            % Destructor: Clean up timers
+            if ~isempty(obj.rotationTimer) && isvalid(obj.rotationTimer)
+                stop(obj.rotationTimer);
+                delete(obj.rotationTimer);
+            end
+            if ~isempty(obj.playTimer) && isvalid(obj.playTimer)
+                stop(obj.playTimer);
+                delete(obj.playTimer);
+            end
+        end
         
         
         function refresh(obj)
@@ -298,7 +452,7 @@ classdef ObjectInspector < handle
         function updateMeshLight(obj)
             % Update camlight position after camera movement
             % Move the existing camlight to follow the camera
-            disp('Updating camlight position to follow camera');
+            % disp('Updating camlight position to follow camera');
             if ~isempty(obj.meshLightHandle) && isvalid(obj.meshLightHandle)
                 camlight(obj.meshLightHandle, 'headlight');
             end
@@ -608,6 +762,7 @@ classdef ObjectInspector < handle
             if ~isempty(obj.slider) && isvalid(obj.slider)
                 obj.slider.Value = timeIdx;
             end
+            obj.computeRotationAxis;
         end
     end
 end

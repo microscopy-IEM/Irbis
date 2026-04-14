@@ -139,6 +139,14 @@ classdef DataFormatter < handle
             otherIdx = obj.getOtherHandleIndex(srcIdx);
         
             dataStruct = obj.extractData(srcIdx);
+
+            % check if there are no data in cellArray or cellArray contains no rows
+            % 260414: this is happening when selecting objects and triggering row selection in RV - the first step is deselection which makes the data to be plotted empty
+            % it might not be sufficient to look just at the last cell, but this is what we use at first
+            if isempty(dataStruct.cellArray) || isequal(size(dataStruct.cellArray{end}, 1), 0)
+                obj.handleInsufficientParameters();
+                return
+            end
             
             % If another source exists, integrate or validate additional data
             if ~isempty(otherIdx)
