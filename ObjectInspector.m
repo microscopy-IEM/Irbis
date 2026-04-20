@@ -1,5 +1,5 @@
 classdef ObjectInspector < handle
-        % ObjectInspector: A MATLAB App for visualizing and interacting with time-varying mesh data.
+        % ObjectInspector: A MATLAB window for visualizing and interacting with time-varying mesh data.
         % Provides UI controls for time navigation, mesh visualization, parameter table, and temporal plots.
     % --- UI and Data Properties ---
     properties
@@ -14,6 +14,7 @@ classdef ObjectInspector < handle
         rowArray                  % cell: Cell array of tables, one per time point
         parametersToShow          % cellstr: List of parameter names to display in the parameter table
         meshAxes                  % uiaxes: Axes for mesh visualization
+        scaleBarAxes              % uiaxes: Axes for the dynamic scale bar under meshAxes
         paramTable                % uitable: Table UI component for parameter display
         plotAxes                  % uiaxes: Axes for temporal plot of selected variable
         dropdown                  % uidropdown: (Unused) Dropdown for variable selection
@@ -23,6 +24,9 @@ classdef ObjectInspector < handle
         selectedPlotVar           % char: Stores the currently selected variable for plotting
         meshLightHandle           % graphics handle: Handle to the camlight object for mesh lighting
         meshAxesCameraListener    % event.listener: Handle to the CameraPosition listener for updating lighting
+        meshAxesScaleListeners    % event.listener[]: Handles to limit listeners for dynamic scale bar updates
+        figSizeListener           % event.listener: Handle to figure SizeChanged updates
+        theme = 'dark';                      % char: Theme name ('dark' or 'light')
         rotateButton              % uibutton: Toggle button for rotation
         rotationSpeedSlider       % uislider: Slider for rotation speed
         rotationTimer             % timer: Timer for automatic rotation
@@ -33,7 +37,7 @@ classdef ObjectInspector < handle
     end
 
     methods
-        function obj = ObjectInspector(tableList, parametersToShow)
+        function obj = ObjectInspector(tableList, parametersToShow, theme)
             % Constructor: Initializes the ObjectInspector app
             if nargin < 1 || isempty(tableList)
                 tableList = {[]};
@@ -41,10 +45,15 @@ classdef ObjectInspector < handle
             if nargin < 2
                 parametersToShow = {};
             end
+            if nargin < 3 || isempty(theme)
+                theme = 'dark';
+            end
             obj.rowArray = tableList;
             obj.parametersToShow = parametersToShow;
+            obj.theme = obj.normalizeTheme(theme);
             obj.createUI();
             obj.refresh();
+            obj.updateScaleBar();
         end
 
         
@@ -68,17 +77,52 @@ classdef ObjectInspector < handle
         function createUI(obj)
             % Create all UI components and layout
 
-            obj.fig = uifigure('Name', 'Object Inspector', 'Position', [100 100 1200 700]);
+            obj.fig = uifigure('Name', 'Object Inspector', 'Position', [100 100 1200 700], 'Theme', obj.theme);
+            % obj.fig.Color = obj.getThemeColor();
             gl = uigridlayout(obj.fig, [2 2]);
             gl.RowHeight = {'1x', 200};
-            gl.ColumnWidth = {'2x', '1x'};
+            gl.ColumnWidth = {'2x', 'fit'};
 
-            % Mesh axes
-            obj.meshAxes = uiaxes(gl);
+            % Mesh container with mesh axes (top) + scale bar (bottom)
+            meshContainerLayout = uigridlayout(gl, [2 1]);
+            meshContainerLayout.Layout.Row = 1;
+            meshContainerLayout.Layout.Column = 1;
+            meshContainerLayout.RowHeight = {'1x', 36};
+            meshContainerLayout.ColumnWidth = {'1x'};
+            meshContainerLayout.Padding = [0 0 0 0];
+            meshContainerLayout.RowSpacing = 0;
+
+            % Mesh axes (upper row)
+            obj.meshAxes = uiaxes(meshContainerLayout);
             obj.meshAxes.Layout.Row = 1;
             obj.meshAxes.Layout.Column = 1;
-            
             obj.meshAxes.CameraViewAngleMode = 'manual';
+            obj.meshAxes.CameraViewAngle = 10; % default view angle
+
+            % get(obj.meshAxes)
+            % obj.meshAxes.Color = 'none';      % for some reason, this was opening a new figure window
+            obj.meshAxes.Color = obj.fig.Color;
+            obj.meshAxes.XColor = 'none';
+            obj.meshAxes.YColor = 'none';
+            obj.meshAxes.ZColor = 'none';
+
+            % Scale bar axes (bottom row)
+            obj.scaleBarAxes = uiaxes(meshContainerLayout);
+            obj.scaleBarAxes.Layout.Row = 2;
+            obj.scaleBarAxes.Layout.Column = 1;
+            obj.scaleBarAxes.XTick = [];
+            obj.scaleBarAxes.YTick = [];
+            obj.scaleBarAxes.XColor = 'none';
+            obj.scaleBarAxes.YColor = 'none';
+            obj.scaleBarAxes.Box = 'off';
+            obj.scaleBarAxes.Toolbar.Visible = 'off';
+            obj.scaleBarAxes.Interactions = [];
+            try
+                obj.scaleBarAxes.Color = 'none';
+            catch
+                disp('Warning: Unable to set scale bar axes color to transparent. Setting to figure background color instead.');
+                obj.scaleBarAxes.Color = obj.fig.Color;
+            end
 
             % Vectorized global bounding box calculation
             allVerts = [];
@@ -115,7 +159,14 @@ classdef ObjectInspector < handle
             obj.meshLightHandle = camlight(obj.meshAxes, 'headlight');
             obj.meshAxes.Clipping = 'off';
             % Add listener to update camlight after rotation
-            obj.meshAxesCameraListener = addlistener(obj.meshAxes, 'CameraPosition', 'PostSet', @(~,~) obj.updateMeshLight());
+            obj.meshAxesCameraListener = addlistener(obj.meshAxes, 'View', 'PostSet', @(~,~) obj.updateMeshLight());
+            obj.meshAxesScaleListeners = [ ...
+                addlistener(obj.meshAxes, 'XLim', 'PostSet', @(~,~) obj.updateScaleBar()), ...
+                addlistener(obj.meshAxes, 'YLim', 'PostSet', @(~,~) obj.updateScaleBar()), ...
+                addlistener(obj.meshAxes, 'ZLim', 'PostSet', @(~,~) obj.updateScaleBar()), ...
+            ];
+            obj.figSizeListener = addlistener(obj.fig, 'SizeChanged', @(~,~) obj.updateScaleBar());
+            obj.updateScaleBar();
 
             % Parameter table
             obj.paramTable = uitable(gl);
@@ -123,6 +174,7 @@ classdef ObjectInspector < handle
             obj.paramTable.Layout.Column = 2;
             obj.paramTable.ColumnName = {'Parameter', 'Value', 'Unit'};
             obj.paramTable.CellSelectionCallback = @(src, evt) obj.onTableRowSelected(evt);
+            obj.paramTable.FontSize = 12;   % 12 is the default; CHANGE HERE FOR VISUALIZATION!!!
 
             % Bottom panel (plot + controls)
             obj.bottomPanel = uipanel(gl);
@@ -223,37 +275,37 @@ classdef ObjectInspector < handle
 
 
 
-        function rotateView(obj)
-            % Rotate the meshAxes view around a precomputed axis
-            ax = obj.meshAxes;
-            if isempty(obj.rotationAxis) || isempty(obj.rotationOrigin)
-                obj.computeRotationAxis();
-            end
-            % Get current camera position and target
-            campos = ax.CameraPosition;
-            camtarget = ax.CameraTarget;
-            % Build rotation matrix
-            theta = obj.rotationSpeed * 0.05 * pi/180; % convert to radians
-            u = obj.rotationAxis(:)';
-            o = obj.rotationOrigin(:)';
-            R = axang2rotm([u theta]);
-            % Rotate camera position and target around the axis
-            campos_rel = campos - o;
-            camtarget_rel = camtarget - o;
-            campos_new = (R * campos_rel(:))' + o;
-            camtarget_new = (R * camtarget_rel(:))' + o;
-            ax.CameraPosition = campos_new;
-            ax.CameraTarget = camtarget_new;
-        end
-
-
         % function rotateView(obj)
-        %     % Rotate the meshAxes view around Z axis
+        %     % Rotate the meshAxes view around a precomputed axis
         %     ax = obj.meshAxes;
-        %     [az, el] = view(ax);
-        %     az = az + obj.rotationSpeed * 0.05; % scale by timer period
-        %     view(ax, [az, el]);
+        %     if isempty(obj.rotationAxis) || isempty(obj.rotationOrigin)
+        %         obj.computeRotationAxis();
+        %     end
+        %     % Get current camera position and target
+        %     campos = ax.CameraPosition;
+        %     camtarget = ax.CameraTarget;
+        %     % Build rotation matrix
+        %     theta = obj.rotationSpeed * 0.05 * pi/180; % convert to radians
+        %     u = obj.rotationAxis(:)';
+        %     o = obj.rotationOrigin(:)';
+        %     R = axang2rotm([u theta]);
+        %     % Rotate camera position and target around the axis
+        %     campos_rel = campos - o;
+        %     camtarget_rel = camtarget - o;
+        %     campos_new = (R * campos_rel(:))' + o;
+        %     camtarget_new = (R * camtarget_rel(:))' + o;
+        %     ax.CameraPosition = campos_new;
+        %     ax.CameraTarget = camtarget_new;
         % end
+
+
+        function rotateView(obj)
+            % Rotate the meshAxes view around Z axis
+            ax = obj.meshAxes;
+            [az, el] = view(ax);
+            az = az + obj.rotationSpeed * 0.05; % scale by timer period
+            view(ax, [az, el]);
+        end
 
 
         function computeRotationAxis(obj)
@@ -374,7 +426,6 @@ classdef ObjectInspector < handle
                     obj.nextButton.Enable = 'off';
                 end
                 cla(obj.meshAxes);
-                obj.meshAxesCameraListener = addlistener(obj.meshAxes, 'CameraPosition', 'PostSet', @(~,~) obj.updateMeshLight());
                 cla(obj.plotAxes);
                 obj.paramTable.Data = {};
                 return;
@@ -456,6 +507,7 @@ classdef ObjectInspector < handle
             if ~isempty(obj.meshLightHandle) && isvalid(obj.meshLightHandle)
                 camlight(obj.meshLightHandle, 'headlight');
             end
+            obj.updateScaleBar();
         end
 
 
@@ -557,16 +609,18 @@ classdef ObjectInspector < handle
             % camProj = get(ax, 'Projection');
 
             cla(ax);
-            obj.meshAxesCameraListener = addlistener(obj.meshAxes, 'CameraPosition', 'PostSet', @(~,~) obj.updateMeshLight());
             if isempty(obj.rowArray) || isempty(obj.rowArray{timeIdx})
+                obj.updateScaleBar();
                 return;
             end
             T = obj.rowArray{timeIdx};
             if isempty(T) || ~ismember('Mesh', T.Properties.VariableNames)
+                obj.updateScaleBar();
                 return;
             end
             mesh = T.Mesh{1};
             if isempty(mesh)
+                obj.updateScaleBar();
                 return;
             end
 
@@ -628,6 +682,193 @@ classdef ObjectInspector < handle
                 camlight(obj.meshLightHandle, 'headlight');
             end
             lighting(ax, 'gouraud');
+            obj.updateScaleBar();
+        end
+
+
+        function updateScaleBar(obj)
+            % Draw a dynamic scale bar from visible world width in meshAxes.
+            if isempty(obj.scaleBarAxes) || ~isvalid(obj.scaleBarAxes) || isempty(obj.meshAxes) || ~isvalid(obj.meshAxes)
+                return;
+            end
+
+            scaleAx = obj.scaleBarAxes;
+            meshAx = obj.meshAxes;
+
+            meshAxesPixelPosition = getpixelposition(meshAx, true);
+            meshAxesWidthPx = meshAxesPixelPosition(3);
+            meshAxesHeightPx = meshAxesPixelPosition(4);
+            if meshAxesWidthPx <= 1 || meshAxesHeightPx <= 1
+                % During startup the layout may not be fully resolved yet.
+                % drawnow;  % We do not like drawnow
+                meshAxesPixelPosition = getpixelposition(meshAx, true);
+                meshAxesWidthPx = meshAxesPixelPosition(3);
+                meshAxesHeightPx = meshAxesPixelPosition(4);
+                if meshAxesWidthPx <= 1 || meshAxesHeightPx <= 1
+                    cla(scaleAx);
+                    return;
+                end
+            end
+
+            cameraDistance = norm(meshAx.CameraTarget - meshAx.CameraPosition);
+            if ~isfinite(cameraDistance) || cameraDistance <= 0
+                cla(scaleAx);
+                return;
+            end
+
+            visibleHeight = 2 * cameraDistance * tand(meshAx.CameraViewAngle / 2);
+            visibleWidth = visibleHeight * (meshAxesWidthPx / meshAxesHeightPx);
+            worldPerPixel = visibleWidth / meshAxesWidthPx;
+            if ~isfinite(worldPerPixel) || worldPerPixel <= 0
+                cla(scaleAx);
+                return;
+            end
+
+            targetPixelLength = 0.22 * meshAxesWidthPx;
+            targetWorldLength = targetPixelLength * worldPerPixel;
+            scaleLength = obj.roundToNiceScale(targetWorldLength);
+
+            scaleAxesPixelPosition = getpixelposition(scaleAx, true);
+            scaleAxesWidthPx = scaleAxesPixelPosition(3);
+            if scaleAxesWidthPx <= 1
+                scaleAxesWidthPx = meshAxesWidthPx;
+            end
+            rightMarginNormalized = 0.04;
+            leftMarginNormalized = 0.02;
+            minBarWidthNormalized = 0.12;
+            maxBarWidthNormalized = 1 - rightMarginNormalized - leftMarginNormalized;
+
+            barPixelLength = scaleLength / worldPerPixel;
+            barWidthNormalized = barPixelLength / scaleAxesWidthPx;
+
+            for stepIndex = 1:10
+                if barWidthNormalized > maxBarWidthNormalized
+                    scaleLength = obj.roundToNiceScale(scaleLength * 0.5);
+                elseif barWidthNormalized < minBarWidthNormalized
+                    scaleLength = obj.roundToNiceScale(scaleLength * 2);
+                else
+                    break;
+                end
+                barPixelLength = scaleLength / worldPerPixel;
+                barWidthNormalized = barPixelLength / scaleAxesWidthPx;
+            end
+            barWidthNormalized = min(maxBarWidthNormalized, max(minBarWidthNormalized, barWidthNormalized));
+
+            barEnd = 1 - rightMarginNormalized;
+            barStart = max(leftMarginNormalized, barEnd - barWidthNormalized);
+            tickHalfHeight = 0.12;
+            barColor = obj.getScaleBarForegroundColor();
+
+            cla(scaleAx);
+            hold(scaleAx, 'on');
+            plot(scaleAx, [barStart, barEnd], [0.5, 0.5], '-', 'LineWidth', 2, 'Color', barColor);
+            plot(scaleAx, [barStart, barStart], [0.5 - tickHalfHeight, 0.5 + tickHalfHeight], '-', 'LineWidth', 2, 'Color', barColor);
+            plot(scaleAx, [barEnd, barEnd], [0.5 - tickHalfHeight, 0.5 + tickHalfHeight], '-', 'LineWidth', 2, 'Color', barColor);
+            [displayLength, unitLabel] = obj.formatScaleLengthWithUnits(scaleLength);
+            scaleBarLabel = sprintf('%g %s', displayLength, unitLabel);
+            text(scaleAx, (barStart + barEnd) / 2, 0.82, scaleBarLabel, ...
+                'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', 'FontSize', 11, 'Color', barColor);
+            hold(scaleAx, 'off');
+
+            scaleAx.XLim = [0, 1];
+            scaleAx.YLim = [0, 1];
+            scaleAx.XTick = [];
+            scaleAx.YTick = [];
+            scaleAx.XColor = 'none';
+            scaleAx.YColor = 'none';
+            scaleAx.Box = 'off';
+            try
+                scaleAx.Color = 'none';
+            catch
+                scaleAx.Color = obj.fig.Color;
+            end
+        end
+
+
+        function niceValue = roundToNiceScale(~, rawValue)
+            % Round a raw scale bar target length to a readable value.
+            if ~isfinite(rawValue) || rawValue <= 0
+                niceValue = 1;
+                return;
+            end
+
+            magnitude = 10^floor(log10(rawValue));
+            normalized = rawValue / magnitude;
+
+            if normalized < 1.5
+                base = 1;
+            elseif normalized < 3
+                base = 2;
+            elseif normalized < 7
+                base = 5;
+            else
+                base = 10;
+            end
+
+            niceValue = base * magnitude;
+        end
+
+
+        function [displayLength, unitLabel] = formatScaleLengthWithUnits(~, scaleLengthUm)
+            % Convert um to a readable metric unit level for the scale bar label.
+            if ~isfinite(scaleLengthUm) || scaleLengthUm <= 0
+                displayLength = 1;
+                unitLabel = 'um';
+                return;
+            end
+
+            if scaleLengthUm >= 1e6
+                displayLength = scaleLengthUm / 1e6;
+                unitLabel = 'm';
+            elseif scaleLengthUm >= 1e3
+                displayLength = scaleLengthUm / 1e3;
+                unitLabel = 'mm';
+            elseif scaleLengthUm >= 1
+                displayLength = scaleLengthUm;
+                unitLabel = 'um';
+            else
+                displayLength = scaleLengthUm * 1e3;
+                unitLabel = 'nm';
+            end
+        end
+
+
+        function barColor = getScaleBarForegroundColor(obj)
+            % Choose white for dark backgrounds and black for light backgrounds.
+            if strcmp(obj.theme, 'dark')
+                barColor = [1 1 1];
+            else
+                barColor = [0 0 0];
+            end
+        end
+
+
+        function theme = normalizeTheme(~, theme)
+            % Normalize theme input to either 'dark' or 'light'.
+            if isstring(theme)
+                theme = char(theme);
+            end
+            if isempty(theme) || ~ischar(theme)
+                theme = 'dark';
+                return;
+            end
+
+            theme = lower(strtrim(theme));
+            if startsWith(theme, 'l')
+                theme = 'light';
+            else
+                theme = 'dark';
+            end
+        end
+
+
+        function color = getThemeColor(obj)
+            % Return the figure background color for the selected theme.
+            if strcmp(obj.theme, 'light')
+                color = [0.94 0.94 0.94];
+            else
+                color = [0.12 0.12 0.12];
+            end
         end
 
         
