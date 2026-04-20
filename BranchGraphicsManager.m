@@ -7,6 +7,8 @@ classdef BranchGraphicsManager < handle
         lightingMethod
         selectionColor
 
+        boundingBoxShown % true or false
+
         lastSelectedBranch
 
         selectionListenerStruct % Structure to hold selection listeners for each branch
@@ -150,6 +152,20 @@ classdef BranchGraphicsManager < handle
             end
         end
 
+
+        function changeBoundingBoxShownStatus(obj, isShown)
+
+            % Change the lighting method for all groups
+            obj.boundingBoxShown = isShown;
+            fields = fieldnames(obj.dataStruct);
+            for i = 1:numel(fields)
+                groupHandle = obj.dataStruct.(fields{i});
+                if ~isempty(groupHandle)
+                    groupHandle.setBoundingBoxVisibility(isShown); % Update the show bounding box status method in the group handle
+                end
+            end
+        end
+  
 
         function setSelectableBranches(obj, branches)
             % Set the selectable branches for all groups
