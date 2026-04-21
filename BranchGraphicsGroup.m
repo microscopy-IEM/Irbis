@@ -433,11 +433,16 @@ classdef BranchGraphicsGroup < handle
         end
 
 
-        function setSelected(obj, selectedIndices)
+        function setSelected(obj, selectedIndices, lastSelectedId)
             arguments
                 obj
                 selectedIndices (1,:) {mustBeNumeric}
+                lastSelectedId = []
             end
+
+            % added additional logic to add the last selected id together with the list of selected indices
+            % this will enable us to select arbitrary objects while also indicating, which was the last one
+            % it should not break the previous logic - if it is not supplied, the alternative branches will just be skipped
 
             % try % TO FIX: this is temporary fix before deciding how to handle different number of objects in main and supporting graphics
             obj.selectedIds = selectedIndices;
@@ -448,7 +453,11 @@ classdef BranchGraphicsGroup < handle
             % infotext is updated before checking GraphicsHandles, because there might be just supporting graphics
             if ~isempty(obj.updateGraphicsInfotext)
                 % Call the infotext update function if it is set
-                obj.updateGraphicsInfotext(obj.branch, [], obj.selectedIds);
+                if ~isempty(lastSelectedId) && ismember(lastSelectedId, obj.selectedIds)
+                    obj.updateGraphicsInfotext(obj.branch, lastSelectedId, obj.selectedIds);
+                else
+                    obj.updateGraphicsInfotext(obj.branch, [], obj.selectedIds);
+                end
             end
             
             % Set the selected property for each graphics object
@@ -476,7 +485,11 @@ classdef BranchGraphicsGroup < handle
             set(obj.GraphicsHandles(isSelected), 'ContextMenu', obj.contextMenu); 
             set(obj.GraphicsHandles(~isSelected), 'ContextMenu', []); % Remove context menu from unselected objects
 
-            obj.hideBoundingBox();
+            if ~isempty(lastSelectedId) && ismember(lastSelectedId, obj.selectedIds)
+                obj.updateIdLabel(lastSelectedId); % Update the ID label position and text
+            else
+                obj.hideBoundingBox();
+            end
 
             % catch
             % end

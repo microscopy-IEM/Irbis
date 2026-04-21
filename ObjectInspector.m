@@ -39,14 +39,10 @@ classdef ObjectInspector < handle
     methods
         function obj = ObjectInspector(tableList, parametersToShow, theme)
             % Constructor: Initializes the ObjectInspector app
-            if nargin < 1 || isempty(tableList)
-                tableList = {[]};
-            end
-            if nargin < 2
-                parametersToShow = {};
-            end
-            if nargin < 3 || isempty(theme)
-                theme = 'dark';
+            arguments
+                tableList = {[]}
+                parametersToShow = {}
+                theme = 'dark'
             end
             obj.rowArray = tableList;
             obj.parametersToShow = parametersToShow;
@@ -153,20 +149,26 @@ classdef ObjectInspector < handle
             camlight(obj.meshAxes);
             lighting(obj.meshAxes, 'gouraud');
             obj.meshAxes.Clipping = 'off';
+            obj.meshAxes.Interactions = [zoomInteraction rotateInteraction];
             enableDefaultInteractivity(obj.meshAxes);
+            % disp(obj.meshAxes.Interactions);
 
             % Add camlight and store handle
             obj.meshLightHandle = camlight(obj.meshAxes, 'headlight');
             obj.meshAxes.Clipping = 'off';
             % Add listener to update camlight after rotation
             obj.meshAxesCameraListener = addlistener(obj.meshAxes, 'View', 'PostSet', @(~,~) obj.updateMeshLight());
+            % obj.meshAxesScaleListeners = [ ...
+            %     addlistener(obj.meshAxes, 'XLim', 'PostSet', @(~,~) obj.updateScaleBar()), ...
+            %     addlistener(obj.meshAxes, 'YLim', 'PostSet', @(~,~) obj.updateScaleBar()), ...
+            %     addlistener(obj.meshAxes, 'ZLim', 'PostSet', @(~,~) obj.updateScaleBar()), ...
+            % ];
+            % I assume that it's enough to just observe one of the axes, as all of them are changing synchronously
             obj.meshAxesScaleListeners = [ ...
                 addlistener(obj.meshAxes, 'XLim', 'PostSet', @(~,~) obj.updateScaleBar()), ...
-                addlistener(obj.meshAxes, 'YLim', 'PostSet', @(~,~) obj.updateScaleBar()), ...
-                addlistener(obj.meshAxes, 'ZLim', 'PostSet', @(~,~) obj.updateScaleBar()), ...
             ];
             obj.figSizeListener = addlistener(obj.fig, 'SizeChanged', @(~,~) obj.updateScaleBar());
-            obj.updateScaleBar();
+            % obj.updateScaleBar(); % will be called later
 
             % Parameter table
             obj.paramTable = uitable(gl);
@@ -687,8 +689,11 @@ classdef ObjectInspector < handle
 
 
         function updateScaleBar(obj)
+            % disp('Updating scale bar');
+            % pause(1); % This does not seem to help
             % Draw a dynamic scale bar from visible world width in meshAxes.
             if isempty(obj.scaleBarAxes) || ~isvalid(obj.scaleBarAxes) || isempty(obj.meshAxes) || ~isvalid(obj.meshAxes)
+                disp('Scale bar or mesh axes not available');
                 return;
             end
 
@@ -782,6 +787,7 @@ classdef ObjectInspector < handle
             catch
                 scaleAx.Color = obj.fig.Color;
             end
+            % disp('reached the end')
         end
 
 
