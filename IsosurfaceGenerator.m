@@ -42,17 +42,17 @@ classdef (Sealed) IsosurfaceGenerator < handle
             end
             
             obj.currentChannel = UIComponent.channel;
-            obj.gaussFilterSigma = double(UIComponent.gaussFilterSigma);
+            % obj.gaussFilterSigma = double(UIComponent.gaussFilterSigma);
             obj.timePoints = UIComponent.timePoints;
             obj.thresholds = UIComponent.threshold;
             obj.minVertexNum = double(UIComponent.minVertexNum);
             obj.scaleFactor = double(UIComponent.scaleFactor);
             obj.zScaleFactor = double(UIComponent.zScaleFactor);
-            if isequal(obj.gaussFilterSigma,0)
-                obj.gaussFilteringOn = 0;
-            else
-                obj.gaussFilteringOn = 1;
-            end
+            % if isequal(obj.gaussFilterSigma,0)
+            %     obj.gaussFilteringOn = 0;
+            % else
+            %     obj.gaussFilteringOn = 1;
+            % end
             obj.bleachCompensation = UIComponent.bleachCompensation;
         end
 
@@ -145,7 +145,7 @@ classdef (Sealed) IsosurfaceGenerator < handle
                 wb.Message = 'Separating disconnected objects...';
                 wb.Value = 4/nSteps;
                 verts = obj.rescaleMeshVertices(verts, newXstep, newYstep, newZstep);
-                [faceClusterIdx, nObj] = obj.clusterMeshFaces(verts, faces);
+                [faceClusterIdx, nObj] = obj.clusterMeshFaces(verts, faces);    % 260423: Having 'isolateMesh' in process object does not make sense, I already expect this to be done in clusterMeshFaces
 
                 wb.Message = 'Processing and storing objects...';
                 wb.Value = 5/nSteps;
@@ -173,6 +173,53 @@ classdef (Sealed) IsosurfaceGenerator < handle
 
                 validTimePoints = [validTimePoints, tp];
             end
+        end
+
+
+
+        function Mesh = generatePreview(obj, zstack, wb)
+            % Drive the full reconstruction workflow and return a list of time points for which objects were successfully generated.
+            
+            arguments
+                obj
+                zstack
+                wb
+            end
+            nSteps = 6;
+            wb.Value = 1/nSteps;
+
+            tp = 1;
+
+            wb.Title = 'Calculating rescaling factors...';
+            [oldXsize, oldYsize, oldZsize] = obj.getOldImageSize(zstack);
+            [newXsize, newYsize, newZsize] = obj.calculateTargetImageSize(oldXsize, oldYsize, oldZsize);
+            [newXstep, newYstep, newZstep] = obj.calculateNewStepSize(oldXsize, oldYsize, oldZsize, newXsize, newYsize, newZsize);
+
+            % TO OPTIMIZE - using tp directly assumes that timePoints are ordered (does not have to be true for the model for example)
+            wb.Title = ['Generating objects for time point ' num2str(tp)];
+            im = zstack(:, :, :, tp, obj.currentChannel);
+
+            % Preprocess image: resize, filter, pad
+            wb.Message = 'Preprocessing image...';
+            wb.Value = 2/nSteps;
+            preprocessedIm = obj.preprocessImage(im, newXsize, newYsize, newZsize);
+
+            wb.Message = 'Generating isosurface...';
+            wb.Value = 3/nSteps;
+            [verts, faces] = obj.generateMesh(tp, preprocessedIm);
+
+            if isempty(verts) || isempty(faces)
+                % no reconstruction was done - do not do anything and just go to the next timepoint
+                disp(['no object reconstructed for timepoint ' num2str(tp)])
+                Mesh = {};
+                return
+            end
+
+            wb.Message = 'Separating disconnected objects...';
+            wb.Value = 4/nSteps;
+            verts = obj.rescaleMeshVertices(verts, newXstep, newYstep, newZstep);
+
+            Mesh = surfaceMesh(verts, faces);
         end
 
 
