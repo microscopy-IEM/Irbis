@@ -13,6 +13,19 @@ classdef (Sealed) IsosurfaceGenerator < handle
         zScaleFactor
         bleachCompensation
 
+        % simplify: https://www.mathworks.com/help/lidar/ref/surfacemesh.simplify.html
+        simplificationOn = false
+        simplificationMethod = 'quadric-decimation';    % method that can yield irregular vertex distribution but preserves overall shape 
+        simplificationTargetReduction = 0.5;           % target reduction factor for simplification (e.g. 0.2 means reducing to 20% of original vertices)
+        
+
+        % smoothSurfaceMesh: https://www.mathworks.com/help/lidar/ref/smoothsurfacemesh.html
+        smoothingOn = false
+        smoothingIterations = 1
+        smoothingMethod = 'Taubin'              % method that should not cause shrinkage
+        smoothingScaleFactorPositive = 0.5      % default value for the first Taubing filter scale factor
+        smoothingScaleFactorNegative = -0.53    % default value for the second Taubing filter scale factor
+
         padSize = 1 % number of pixels to pad on each side
 
         XYstep 
