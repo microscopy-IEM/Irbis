@@ -17,7 +17,8 @@ classdef (Sealed) IsosurfaceGenerator < handle
         simplificationOn = false
         simplificationMethod = 'quadric-decimation';    % method that can yield irregular vertex distribution but preserves overall shape 
         simplificationTargetReduction = 0.5;           % target reduction factor for simplification (e.g. 0.2 means reducing to 20% of original vertices)
-        
+        simplificationMaxError = inf;                  % maximum allowed error for simplification (set to inf to ignore error constraint)
+        simplificationBoundaryWeight = 1;              % weight for preserving boundary edges during simplification
 
         % smoothSurfaceMesh: https://www.mathworks.com/help/lidar/ref/smoothsurfacemesh.html
         smoothingOn = false
@@ -58,7 +59,7 @@ classdef (Sealed) IsosurfaceGenerator < handle
             % obj.gaussFilterSigma = double(UIComponent.gaussFilterSigma);
             obj.timePoints = UIComponent.timePoints;
             obj.thresholds = UIComponent.threshold;
-            obj.minVertexNum = double(UIComponent.minVertexNum);
+            % obj.minVertexNum = double(UIComponent.minVertexNum);
             obj.scaleFactor = double(UIComponent.scaleFactor);
             obj.zScaleFactor = double(UIComponent.zScaleFactor);
             % if isequal(obj.gaussFilterSigma,0)
@@ -140,7 +141,7 @@ classdef (Sealed) IsosurfaceGenerator < handle
                 wb.Title = ['Generating objects for time point ' num2str(tp)];
                 im = zstack(:, :, :, tp, obj.currentChannel);
 
-                % Preprocess image: resize, filter, pad
+                % Preprocess image: resize, pad - 260424: gaussian filtering removed, we can do it 
                 wb.Message = 'Preprocessing image...';
                 wb.Value = 2/nSteps;
                 preprocessedIm = obj.preprocessImage(im, newXsize, newYsize, newZsize);
@@ -158,6 +159,24 @@ classdef (Sealed) IsosurfaceGenerator < handle
                 wb.Message = 'Separating disconnected objects...';
                 wb.Value = 4/nSteps;
                 verts = obj.rescaleMeshVertices(verts, newXstep, newYstep, newZstep);
+
+                fullMesh = surfaceMesh(verts, faces);
+
+                % simplification and smoothing added after rescaling, because the error should be in physical units
+                if obj.simplificationOn
+                    % 260424: simplification moved before clustering, we assume it is not a problem
+                    targetNumFaces = round(size(fullMesh.Faces, 1) * obj.simplificationTargetReduction);
+                    % simplify alters the mehs in-place
+                    simplify(fullMesh, obj.simplificationMethod, 'TargetNumFaces', targetNumFaces, 'MaxError', obj.simplificationMaxError, 'BoundaryWeight', obj.simplificationBoundaryWeight);
+                end
+
+                if obj.smoothingOn
+                    fullMesh = smoothSurfaceMesh(fullMesh, obj.smoothingIterations, 'Method', obj.smoothingMethod, 'ScaleFactor', [obj.smoothingScaleFactorPositive, obj.smoothingScaleFactorNegative]);
+                end
+
+                verts = fullMesh.Vertices;
+                faces = fullMesh.Faces;
+
                 [faceClusterIdx, nObj] = obj.clusterMeshFaces(verts, faces);    % 260423: Having 'isolateMesh' in process object does not make sense, I already expect this to be done in clusterMeshFaces
 
                 wb.Message = 'Processing and storing objects...';
@@ -356,13 +375,13 @@ classdef (Sealed) IsosurfaceGenerator < handle
 
 
         function [T, validObjectIdx, invalidRowsMask] = processObject(obj, allVerts, allFaces, faceClusterIdx, objIdx, T, validObjectIdx, invalidRowsMask)
-            % Simplify a mesh chunk, validate it, and store it into the results table.
+            % Isolate a mesh chunk, validate it, and store it into the results table.
             
             singleObjMesh = obj.isolateMesh(allVerts, allFaces, faceClusterIdx, objIdx);
-            simplify(singleObjMesh);
+            % simplify(singleObjMesh);
 
             nVerts = size(singleObjMesh.Vertices, 1);
-            if nVerts >= max(obj.minVertexNum, 4)
+            if nVerts >= max(obj.minVertexNum, 4)   % 260424: we deprecated minVertexNum from the component
                 validObjectIdx = validObjectIdx + 1; 
                 
                 T.Properties.RowNames{objIdx} = num2str(validObjectIdx);  
