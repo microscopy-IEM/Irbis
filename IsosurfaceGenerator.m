@@ -13,6 +13,20 @@ classdef (Sealed) IsosurfaceGenerator < handle
         zScaleFactor
         bleachCompensation
 
+        % simplify: https://www.mathworks.com/help/lidar/ref/surfacemesh.simplify.html
+        simplificationOn = false
+        simplificationMethod = 'quadric-decimation';    % method that can yield irregular vertex distribution but preserves overall shape 
+        simplificationTargetReduction = 0.5;           % target reduction factor for simplification (e.g. 0.2 means reducing to 20% of original vertices)
+        simplificationMaxError = inf;                  % maximum allowed error for simplification (set to inf to ignore error constraint)
+        simplificationBoundaryWeight = 1;              % weight for preserving boundary edges during simplification
+
+        % smoothSurfaceMesh: https://www.mathworks.com/help/lidar/ref/smoothsurfacemesh.html
+        smoothingOn = false
+        smoothingIterations = 1
+        smoothingMethod = 'Taubin'              % method that should not cause shrinkage
+        smoothingScaleFactorPositive = 0.5      % default value for the first Taubing filter scale factor
+        smoothingScaleFactorNegative = -0.53    % default value for the second Taubing filter scale factor
+
         padSize = 1 % number of pixels to pad on each side
 
         XYstep 
@@ -42,17 +56,17 @@ classdef (Sealed) IsosurfaceGenerator < handle
             end
             
             obj.currentChannel = UIComponent.channel;
-            obj.gaussFilterSigma = double(UIComponent.gaussFilterSigma);
+            % obj.gaussFilterSigma = double(UIComponent.gaussFilterSigma);
             obj.timePoints = UIComponent.timePoints;
             obj.thresholds = UIComponent.threshold;
-            obj.minVertexNum = double(UIComponent.minVertexNum);
+            % obj.minVertexNum = double(UIComponent.minVertexNum);
             obj.scaleFactor = double(UIComponent.scaleFactor);
             obj.zScaleFactor = double(UIComponent.zScaleFactor);
-            if isequal(obj.gaussFilterSigma,0)
-                obj.gaussFilteringOn = 0;
-            else
-                obj.gaussFilteringOn = 1;
-            end
+            % if isequal(obj.gaussFilterSigma,0)
+            %     obj.gaussFilteringOn = 0;
+            % else
+            %     obj.gaussFilteringOn = 1;
+            % end
             obj.bleachCompensation = UIComponent.bleachCompensation;
         end
 
@@ -127,7 +141,7 @@ classdef (Sealed) IsosurfaceGenerator < handle
                 wb.Title = ['Generating objects for time point ' num2str(tp)];
                 im = zstack(:, :, :, tp, obj.currentChannel);
 
-                % Preprocess image: resize, filter, pad
+                % Preprocess image: resize, pad - 260424: gaussian filtering removed, we can do it 
                 wb.Message = 'Preprocessing image...';
                 wb.Value = 2/nSteps;
                 preprocessedIm = obj.preprocessImage(im, newXsize, newYsize, newZsize);
@@ -145,7 +159,25 @@ classdef (Sealed) IsosurfaceGenerator < handle
                 wb.Message = 'Separating disconnected objects...';
                 wb.Value = 4/nSteps;
                 verts = obj.rescaleMeshVertices(verts, newXstep, newYstep, newZstep);
-                [faceClusterIdx, nObj] = obj.clusterMeshFaces(verts, faces);
+
+                fullMesh = surfaceMesh(verts, faces);
+
+                % simplification and smoothing added after rescaling, because the error should be in physical units
+                if obj.simplificationOn
+                    % 260424: simplification moved before clustering, we assume it is not a problem
+                    targetNumFaces = round(size(fullMesh.Faces, 1) * obj.simplificationTargetReduction);
+                    % simplify alters the mehs in-place
+                    simplify(fullMesh, obj.simplificationMethod, 'TargetNumFaces', targetNumFaces, 'MaxError', obj.simplificationMaxError, 'BoundaryWeight', obj.simplificationBoundaryWeight);
+                end
+
+                if obj.smoothingOn
+                    fullMesh = smoothSurfaceMesh(fullMesh, obj.smoothingIterations, 'Method', obj.smoothingMethod, 'ScaleFactor', [obj.smoothingScaleFactorPositive, obj.smoothingScaleFactorNegative]);
+                end
+
+                verts = fullMesh.Vertices;
+                faces = fullMesh.Faces;
+
+                [faceClusterIdx, nObj] = obj.clusterMeshFaces(verts, faces);    % 260423: Having 'isolateMesh' in process object does not make sense, I already expect this to be done in clusterMeshFaces
 
                 wb.Message = 'Processing and storing objects...';
                 wb.Value = 5/nSteps;
@@ -173,6 +205,53 @@ classdef (Sealed) IsosurfaceGenerator < handle
 
                 validTimePoints = [validTimePoints, tp];
             end
+        end
+
+
+
+        function Mesh = generatePreview(obj, zstack, wb)
+            % Drive the full reconstruction workflow and return a list of time points for which objects were successfully generated.
+            
+            arguments
+                obj
+                zstack
+                wb
+            end
+            nSteps = 6;
+            wb.Value = 1/nSteps;
+
+            tp = 1;
+
+            wb.Title = 'Calculating rescaling factors...';
+            [oldXsize, oldYsize, oldZsize] = obj.getOldImageSize(zstack);
+            [newXsize, newYsize, newZsize] = obj.calculateTargetImageSize(oldXsize, oldYsize, oldZsize);
+            [newXstep, newYstep, newZstep] = obj.calculateNewStepSize(oldXsize, oldYsize, oldZsize, newXsize, newYsize, newZsize);
+
+            % TO OPTIMIZE - using tp directly assumes that timePoints are ordered (does not have to be true for the model for example)
+            wb.Title = ['Generating objects for time point ' num2str(tp)];
+            im = zstack(:, :, :, tp, obj.currentChannel);
+
+            % Preprocess image: resize, filter, pad
+            wb.Message = 'Preprocessing image...';
+            wb.Value = 2/nSteps;
+            preprocessedIm = obj.preprocessImage(im, newXsize, newYsize, newZsize);
+
+            wb.Message = 'Generating isosurface...';
+            wb.Value = 3/nSteps;
+            [verts, faces] = obj.generateMesh(tp, preprocessedIm);
+
+            if isempty(verts) || isempty(faces)
+                % no reconstruction was done - do not do anything and just go to the next timepoint
+                disp(['no object reconstructed for timepoint ' num2str(tp)])
+                Mesh = {};
+                return
+            end
+
+            wb.Message = 'Separating disconnected objects...';
+            wb.Value = 4/nSteps;
+            verts = obj.rescaleMeshVertices(verts, newXstep, newYstep, newZstep);
+
+            Mesh = surfaceMesh(verts, faces);
         end
 
 
@@ -296,13 +375,13 @@ classdef (Sealed) IsosurfaceGenerator < handle
 
 
         function [T, validObjectIdx, invalidRowsMask] = processObject(obj, allVerts, allFaces, faceClusterIdx, objIdx, T, validObjectIdx, invalidRowsMask)
-            % Simplify a mesh chunk, validate it, and store it into the results table.
+            % Isolate a mesh chunk, validate it, and store it into the results table.
             
             singleObjMesh = obj.isolateMesh(allVerts, allFaces, faceClusterIdx, objIdx);
-            simplify(singleObjMesh);
+            % simplify(singleObjMesh);
 
             nVerts = size(singleObjMesh.Vertices, 1);
-            if nVerts >= max(obj.minVertexNum, 4)
+            if nVerts >= max(obj.minVertexNum, 4)   % 260424: we deprecated minVertexNum from the component
                 validObjectIdx = validObjectIdx + 1; 
                 
                 T.Properties.RowNames{objIdx} = num2str(validObjectIdx);  
