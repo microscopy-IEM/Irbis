@@ -466,6 +466,51 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
         end 
     end
 
+    if loadedIrbisVersion < 1.17
+        % reorganization of the reconstruction parameters 
+        if isfield(loadedStruct,'model')
+            if ~isempty(loadedStruct.model)
+                branches = loadedStruct.model.branches;
+                primaryBranches = {'fullVolume','synapses'};
+                fieldsToTransfer = {'bleachCompensation', 'channel', 'minVertexNum', 'scaleFactor','zScaleFactor'};
+
+                uPAINTdata = false;
+                % check if there is a reconstruction of fullVolume - if not, those are most likely data for the uPAINT, where synapses were generated differently
+                if ismember('fullVolume', branches) && all(cellfun(@(x) isempty(x), loadedStruct.model.fullVolume.List))
+                    disp('there is no fullVolume reconstruction, likely uPAINT data - skipping reorganization of the reconstruction parameters')
+                    uPAINTdata = true;
+                end
+                for branchNum = 1:numel(branches)
+                    branch = branches{branchNum};
+                    if ismember(branch, primaryBranches)
+                        if uPAINTdata && isequal(branch, 'synapses')
+                                loadedStruct.model.(branch).reconstructionMethod = 'localMaxima';
+                        else
+                            loadedStruct.model.(branch).reconstructionMethod = 'isosurface';
+                            nTimePoints = loadedStruct.timeline.nTimePoints;
+                            for timePoint = 1:nTimePoints
+                                modelId = loadedStruct.timeline.currentIndex.model.(branch)(timePoint);
+                                if ~isequal(modelId, 0)
+                                    loadedStruct.model.(branch).reconstructionParameters{modelId} = IsosurfaceGenerator.getDefaultParameters();
+                                    for i = 1:numel(fieldsToTransfer)
+                                        field = fieldsToTransfer{i};
+                                        if isfield(loadedStruct.model.(branch), field)
+                                            loadedStruct.model.(branch).reconstructionParameters{modelId}.(field) = loadedStruct.model.(branch).(field);
+                                        end
+                                        if isfield(loadedStruct.model.(branch), 'threshold')
+                                            loadedStruct.model.(branch).reconstructionParameters{modelId}.thresholds = loadedStruct.model.(branch).threshold;
+                                            loadedStruct.model.(branch).reconstructionParameters{modelId}.threshold = loadedStruct.model.(branch).threshold(timePoint);
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
     % change the Irbis version - CHANGE FOR THE NEWEST
     % getBaseStruct('irbisVersion')
     disp(['new irbis version = ' num2str(getBaseStruct('irbisVersion'))])
