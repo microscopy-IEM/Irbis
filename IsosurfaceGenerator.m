@@ -1,17 +1,17 @@
 classdef (Sealed) IsosurfaceGenerator < handle
 
     properties
-        currentChannel = 1
-        thresholds
+        channel = 1
+        thresholds = 6000
         minVertexNum = 4
         scaleFactor = 1
         zScaleFactor = 1
         bleachCompensation = 0
 
         % simplify: https://www.mathworks.com/help/lidar/ref/surfacemesh.simplify.html
-        simplificationOn = false
+        simplificationOn = true
         simplificationMethod = 'quadric-decimation';    % method that can yield irregular vertex distribution but preserves overall shape 
-        simplificationTargetReduction = 0.5;           % target reduction factor for simplification (e.g. 0.2 means reducing to 20% of original vertices)
+        simplificationTargetReduction = 0.2;           % target reduction factor for simplification (e.g. 0.2 means reducing to 20% of original vertices)
         simplificationMaxError = inf;                  % maximum allowed error for simplification (set to inf to ignore error constraint)
         simplificationBoundaryWeight = 1;              % weight for preserving boundary edges during simplification
 
@@ -72,7 +72,7 @@ classdef (Sealed) IsosurfaceGenerator < handle
                 UIComponent
             end
             
-            obj.currentChannel = UIComponent.channel;
+            obj.channel = UIComponent.channel;
             % TO OPTIMIZE - timePoints is not really a parameter - could be somewhere else
             obj.timePoints = UIComponent.timePoints;
             obj.thresholds = UIComponent.threshold;
@@ -98,7 +98,7 @@ classdef (Sealed) IsosurfaceGenerator < handle
             % Evaluate selected threshold to prevent CPU/memory overload
             problematicTimePoints = [];
             for tp = obj.timePoints
-                im = zstack(:,:,:, tp, obj.currentChannel);
+                im = zstack(:,:,:, tp, obj.channel);
                 isoThres = obj.thresholds(tp);
                 BW = im > isoThres;
 
@@ -157,7 +157,7 @@ classdef (Sealed) IsosurfaceGenerator < handle
             for tp = obj.timePoints
                 % TO OPTIMIZE - using tp directly assumes that timePoints are ordered (does not have to be true for the model for example)
                 wb.Title = ['Generating objects for time point ' num2str(tp)];
-                im = zstack(:, :, :, tp, obj.currentChannel);
+                im = zstack(:, :, :, tp, obj.channel);
 
                 % Preprocess image: resize, pad - 260424: gaussian filtering removed, we can do it 
                 wb.Message = 'Preprocessing image...';
@@ -185,7 +185,7 @@ classdef (Sealed) IsosurfaceGenerator < handle
                     % 260424: simplification moved before clustering, we assume it is not a problem
                     targetNumFaces = round(size(fullMesh.Faces, 1) * obj.simplificationTargetReduction);
                     % simplify alters the mehs in-place
-                    simplify(fullMesh, obj.simplificationMethod, 'TargetNumFaces', targetNumFaces, 'MaxError', obj.simplificationMaxError, 'BoundaryWeight', obj.simplificationBoundaryWeight);
+                    simplify(fullMesh, 'SimplificationMethod', obj.simplificationMethod, 'TargetNumFaces', targetNumFaces, 'MaxError', obj.simplificationMaxError, 'BoundaryWeight', obj.simplificationBoundaryWeight);
                 end
 
                 if obj.smoothingOn
@@ -227,33 +227,37 @@ classdef (Sealed) IsosurfaceGenerator < handle
 
 
 
-        function Mesh = generatePreview(obj, zstack, timePoint, wb)
+        function Mesh = generatePreview(obj, zstack, XYstep, Zstep, timePoint, wb)
             % Drive the full reconstruction workflow and return a list of time points for which objects were successfully generated.
             
             arguments
                 obj
                 zstack
+                XYstep
+                Zstep
                 timePoint
                 wb
             end
             nSteps = 6;
             wb.Value = 1/nSteps;
 
-            wb.Title = 'Calculating rescaling factors...';
+            obj.loadMetadata(XYstep, Zstep);
+
+            wb.Message = 'Calculating rescaling factors...';
             [oldXsize, oldYsize, oldZsize] = obj.getOldImageSize(zstack);
             [newXsize, newYsize, newZsize] = obj.calculateTargetImageSize(oldXsize, oldYsize, oldZsize);
             [newXstep, newYstep, newZstep] = obj.calculateNewStepSize(oldXsize, oldYsize, oldZsize, newXsize, newYsize, newZsize);
 
             % TO OPTIMIZE - we might want to provide zstack in different dimension order
-            wb.Title = ['Generating objects for time point ' num2str(timePoint)];
-            im = zstack(:, :, :, timePoint, obj.currentChannel);
+            wb.Title = 'Preview: THE OBJECTS WILL NOT BE STORED!';
+            im = zstack(:, :, :, timePoint, obj.channel);
 
             % Preprocess image: resize, filter, pad
             wb.Message = 'Preprocessing image...';
             wb.Value = 2/nSteps;
             preprocessedIm = obj.preprocessImage(im, newXsize, newYsize, newZsize);
 
-            wb.Message = 'Generating isosurface...';
+            wb.Message = 'Generating preview objects...';
             wb.Value = 3/nSteps;
             [verts, faces] = obj.generateMesh(timePoint, preprocessedIm);
 
@@ -264,7 +268,6 @@ classdef (Sealed) IsosurfaceGenerator < handle
                 return
             end
 
-            wb.Message = 'Separating disconnected objects...';
             wb.Value = 4/nSteps;
             verts = obj.rescaleMeshVertices(verts, newXstep, newYstep, newZstep);
 

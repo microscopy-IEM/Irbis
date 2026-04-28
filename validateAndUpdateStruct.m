@@ -502,6 +502,14 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
                                             loadedStruct.model.(branch).reconstructionParameters{modelId}.threshold = loadedStruct.model.(branch).threshold(timePoint);
                                         end
                                     end
+                                    % used parameters that were not stored in the old version of parameters
+                                    loadedStruct.model.(branch).reconstructionParameters{modelId}.simplificationOn = true;
+                                    loadedStruct.model.(branch).reconstructionParameters{modelId}.simplificationMethod = 'quadric-decimation'; 
+                                    loadedStruct.model.(branch).reconstructionParameters{modelId}.simplificationTargetReduction = 0.2;
+                                    loadedStruct.model.(branch).reconstructionParameters{modelId}.simplificationMaxError = inf;  
+                                    loadedStruct.model.(branch).reconstructionParameters{modelId}.simplificationBoundaryWeight = 1;
+
+                                    loadedStruct.model.(branch).reconstructionParameters{modelId}.smoothingOn = false;
                                 end
                             end
                         end
