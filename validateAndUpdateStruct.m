@@ -514,6 +514,20 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
                             end
                         end
                     end
+
+                    % some datasets don't have basePatch, which then causes problems when cutting the objects -> added here
+                    for idx = 1:numel(loadedStruct.model.(branch).List)
+                        List = loadedStruct.model.(branch).List{idx};
+                        if istable(List)
+                            variableNames = string(List.Properties.VariableNames);
+
+                            % Convert 'name' column to 'parentId' - remove S at the beginning and convert to number
+                            if isequal(branch, 'spines') && ~ismember('basePatch', variableNames)
+                                loadedStruct.model.(branch).List{idx}.basePatch = cell(height(List), 1);
+                                disp(['added basePatch column to ', num2str(idx)])
+                            end
+                        end
+                    end
                 end
             end
         end
