@@ -1,36 +1,48 @@
 classdef (Sealed) ManualColumnDefinitionDialog
 
     methods (Static)
-        function [columnName, groupNames] = show()
+        function [columnName, groupNames, defaultGroupName] = show()
 
-            [columnName, groupNames] = ManualColumnDefinitionDialog.createGroupDialog();
+            [columnName, groupNames, defaultGroupName] = ManualColumnDefinitionDialog.createGroupDialog();
             % Check if the user pressed cancel
             if isempty(columnName) || isempty(groupNames)
                 columnName = '';
                 groupNames = [];
+                defaultGroupName = '';
                 return;
             end
 
             % Remove empty cells from groupNames
             groupNames = groupNames(~cellfun('isempty', groupNames));
+            if ~any(strcmp(groupNames, defaultGroupName))
+                defaultGroupName = '';
+            end
         end
 
-        function [columnName, groupNames] = showExisting(existingCategorizationName, existingGroupNames)
+        function [columnName, groupNames, defaultGroupName] = showExisting(existingCategorizationName, existingGroupNames, existingDefaultGroupName)
             % Show the dialog with existing categorization name and group names
-            [columnName, groupNames] = ManualColumnDefinitionDialog.createGroupDialog(existingCategorizationName, existingGroupNames);
+            if nargin < 3
+                existingDefaultGroupName = '';
+            end
+
+            [columnName, groupNames, defaultGroupName] = ManualColumnDefinitionDialog.createGroupDialog(existingCategorizationName, existingGroupNames, existingDefaultGroupName);
             % Check if the user pressed cancel
             if isempty(columnName) || isempty(groupNames)
                 columnName = '';
                 groupNames = [];
+                defaultGroupName = '';
                 return;
             end
 
             % Do not remove empty cells, because we need to know if user wanted to delete some
+            if ~any(strcmp(groupNames, defaultGroupName))
+                defaultGroupName = '';
+            end
         end
     end
 
     methods (Static, Access = private)
-        function [categorizationName, groupNames] = createGroupDialog(existingCategorizationName, existingGroupNames)
+        function [categorizationName, groupNames, defaultGroupName] = createGroupDialog(existingCategorizationName, existingGroupNames, existingDefaultGroupName)
             % Create the main figure window (dialog)
             fig = uifigure('Name', 'Define new manual categorization', 'Position', [500 500 400 350]);
         
@@ -51,8 +63,16 @@ classdef (Sealed) ManualColumnDefinitionDialog
         
             % A placeholder for storing the group names (cell array)
             groupNamesFields = {}; % This will be modified in the nested functions
+            defaultCheckboxes = {};
+            selectedDefaultIndex = [];
             groupNames = {};
             categorizationName = '';
+            defaultGroupName = '';
+
+            if nargin < 3
+                existingDefaultGroupName = '';
+            end
+            existingDefaultGroupName = char(string(existingDefaultGroupName));
         
             % A panel to dynamically hold text fields with scroll enabled
             groupPanel = uipanel(mainLayout, 'Title', 'Define groups:', 'Scrollable', 'on');
@@ -60,9 +80,9 @@ classdef (Sealed) ManualColumnDefinitionDialog
             groupPanel.Layout.Column = [1 2]; % Spanning both columns
         
             % Grid layout for the group panel (1 row, 2 columns initially)
-            groupLayout = uigridlayout(groupPanel, [1, 2]);
+            groupLayout = uigridlayout(groupPanel, [1, 3]);
             groupLayout.RowHeight = {'fit'};
-            groupLayout.ColumnWidth = {'1x', '2x'};
+            groupLayout.ColumnWidth = {'1x', '2x', 80};
         
             % Fill in existing categorization name
             if nargin > 0 && ~isempty(existingCategorizationName)
@@ -121,15 +141,44 @@ classdef (Sealed) ManualColumnDefinitionDialog
                 groupNameField = uitextarea(groupLayout);
                 groupNameField.Layout.Row = numRows;
                 groupNameField.Layout.Column = 2;
+
+                defaultCheckbox = uicheckbox(groupLayout, 'Text', 'Default');
+                defaultCheckbox.Layout.Row = numRows;
+                defaultCheckbox.Layout.Column = 3;
+                defaultCheckbox.ValueChangedFcn = @(src, event) setDefaultSelection(src);
         
                 % Pre-populate with existing group name if provided
                 if ~isempty(existingName)
                     groupLabel.Text = ['Group ' num2str(numRows-1) ': ' existingName];
                     groupNameField.Value = {existingName}; % Set the existing group name
                 end
+
+                if strcmp(existingName, existingDefaultGroupName) && isempty(selectedDefaultIndex)
+                    defaultCheckbox.Value = true;
+                    selectedDefaultIndex = numel(groupNamesFields) + 1;
+                end
         
                 % Store reference to the text field in the groupNames array
                 groupNamesFields{end+1} = groupNameField;
+                defaultCheckboxes{end+1} = defaultCheckbox;
+            end
+
+            function setDefaultSelection(sourceCheckbox)
+                changedIndex = find(cellfun(@(cb) isequal(cb, sourceCheckbox), defaultCheckboxes), 1);
+                if isempty(changedIndex)
+                    return;
+                end
+
+                if sourceCheckbox.Value
+                    selectedDefaultIndex = changedIndex;
+                    for j = 1:numel(defaultCheckboxes)
+                        if j ~= changedIndex
+                            defaultCheckboxes{j}.Value = false;
+                        end
+                    end
+                elseif isequal(selectedDefaultIndex, changedIndex)
+                    selectedDefaultIndex = [];
+                end
             end
         
             % Nested function to finish adding groups and close the dialog
@@ -138,6 +187,14 @@ classdef (Sealed) ManualColumnDefinitionDialog
                 for i = 1:numel(groupNamesFields)
                     groupNames{i} = groupNamesFields{i}.Value{1}; % Extract the actual values
                 end
+
+                if ~isempty(selectedDefaultIndex) && selectedDefaultIndex <= numel(groupNames)
+                    candidateDefault = strtrim(groupNames{selectedDefaultIndex});
+                    if ~isempty(candidateDefault)
+                        defaultGroupName = candidateDefault;
+                    end
+                end
+
                 categorizationName = nameField.Value{1};
                 % Resume after closing the dialog
                 uiresume(fig); % Continue the paused execution
