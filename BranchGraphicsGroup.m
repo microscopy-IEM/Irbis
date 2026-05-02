@@ -499,7 +499,11 @@ classdef BranchGraphicsGroup < handle
         function setSelectedGroupIds(obj, groupIds)
             arguments
                 obj
-                groupIds (1,:) {mustBeNumeric}
+                groupIds (1,:)
+            end
+
+            if iscategorical(groupIds)
+                groupIds = str2double(string(groupIds)); % Convert categorical to double
             end
 
             % Get object IDs corresponding to the provided group IDs
@@ -660,10 +664,14 @@ classdef BranchGraphicsGroup < handle
                 verticesArray (:,1) cell % Cell array of vertex matrices
                 facesArray (:,1) cell    % Cell array of face matrices
                 idArray (:,1) double     % Column vector of object IDs
-                groupIdArray (:,1) double % Column vector of group IDs
+                groupIdArray (:,1)       % Column vector of group IDs
                 colorArray (:,1) cell = {} % Optional cell array of colors for individual objects
                 isExcluded (:,1) logical = false % Logical array indicating which objects are excluded
                 buttonDownCallback function_handle = [] % Optional callback for button press
+            end
+
+            if iscategorical(groupIdArray)
+                groupIdArray = str2double(string(groupIdArray)); % Convert categorical to double
             end
 
             % disp('before deleting graphics')
@@ -725,7 +733,7 @@ classdef BranchGraphicsGroup < handle
                 verticesArray (:,1) cell    % Cell array of vertex matrices
                 facesArray (:,1) cell       % Cell array of face matrices
                 idArray (:,1) double        % Column vector of object IDs
-                groupIdArray (:,1) double   % Column vector of group IDs
+                groupIdArray (:,1)          % Column vector of group IDs
                 colorArray (:,1) cell       % Cell array of colors for individual objects
                 isExcluded (:,1) logical = [] % Optional exclusion flags (keep for later implementation)
                 isSelected string {mustBeMember(isSelected, ["on", "off"])} = "off" % Selection state
@@ -734,6 +742,10 @@ classdef BranchGraphicsGroup < handle
             % Check for empty inputs
             if isempty(verticesArray) || isempty(facesArray) || isempty(idArray)
                 return;
+            end
+
+            if iscategorical(groupIdArray)
+                groupIdArray = str2double(string(groupIdArray)); % Convert categorical to double
             end
 
             % If group is empty, initialize it instead
@@ -830,8 +842,13 @@ classdef BranchGraphicsGroup < handle
         function updateGroupIdArray(obj, newGroupIdArray)
             arguments
                 obj
-                newGroupIdArray (:,1) double  % Column vector of new group IDs
+                newGroupIdArray (:,1)  % Column vector of new group IDs
             end
+            
+            if iscategorical(newGroupIdArray)
+                newGroupIdArray = str2double(string(newGroupIdArray)); % Convert categorical to double
+            end
+
             % Update the groupIdArray with a new array
             if length(newGroupIdArray) ~= length(obj.groupIdArray)
                 error('New group ID array must have the same length as the existing one.');

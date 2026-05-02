@@ -264,7 +264,7 @@ classdef SummarizedTableComponentHelper < handle
                     newColumnDefinition = FormulaColumnDefinition(newName, rules);
                     newColumnDefinition.setDefinitionType('merged');
                 case 'manual'
-                    newColumnDefinition = ManualColumnDefinition(newName, rules);
+                    newColumnDefinition = ManualColumnDefinition(newName, rules, userColumnDefinition.getDefaultGroupName());
             end
 
             existingColumnNames = obj.summarizedTableStoreHandle.getColumnNames();
