@@ -120,14 +120,13 @@ function tableArray = assignGroupIdsGreedily(tableArray, distanceThreshold)
             nextRowName = num2str(winnerNextRowIds(objectRowNum));
 
             currentGroupId = currentTPList{currentRowName, 'groupId'};
-            if ~GroupIdHandler.isTracked(currentGroupId)
+            if currentGroupId == 0
                 currentGroupId = uniqueGroupId;
-                currentTPList{currentRowName, 'groupId'} = GroupIdHandler.correctType(currentGroupId);
+                currentTPList{currentRowName, 'groupId'} = currentGroupId;
                 uniqueGroupId = uniqueGroupId + 1;
             end
 
-            % correct type is added here in case we decide to change the class of groupId 
-            nextTPList{nextRowName, 'groupId'} = GroupIdHandler.correctType(currentGroupId);
+            nextTPList{nextRowName, 'groupId'} = currentGroupId;
         end
 
         tableArray{i} = currentTPList;

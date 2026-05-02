@@ -287,8 +287,7 @@ classdef FullTableComponentHelper < handle
 
                     existingColumnName = userColumnDefinition.getColumnName();
                     existingGroupNames = userColumnDefinition.getGroupNames();
-                    existingDefaultGroupName = userColumnDefinition.getDefaultGroupName();
-                    [name, groupNames, defaultGroupName] = ManualColumnDefinitionDialog.showExisting(existingColumnName, existingGroupNames, existingDefaultGroupName); 
+                    [name, groupNames] = ManualColumnDefinitionDialog.showExisting(existingColumnName, existingGroupNames); 
 
                     if ~isempty(name) && ~isempty(groupNames)
                         data = obj.tableStoreHandle.getTableData();
@@ -311,12 +310,12 @@ classdef FullTableComponentHelper < handle
                             newGroupNames = groupNames(renamedGroupsIdx);
                             columnArray = renamecats(columnArray, oldGroupNames, newGroupNames);
 
-                            userColumnDefinition.replaceRules(groupNames, defaultGroupName);
+                            userColumnDefinition.replaceRules(groupNames);
                             obj.tableStoreHandle.updateUserDefinedColumn(columnName, columnArray, userColumnDefinition);
                         else
                             % create the column definition object
                             groupNames = groupNames(~cellfun('isempty', groupNames));
-                            columnDefinitionObject = ManualColumnDefinition(name, groupNames, defaultGroupName);
+                            columnDefinitionObject = ManualColumnDefinition(name, groupNames);
                             newColumnData = columnDefinitionObject.generateColumn(data);
                             obj.tableStoreHandle.addUserDefinedColumn(name, newColumnData, columnDefinitionObject);
                             obj.tableStoreHandle.makeColumnEditable(name);
@@ -345,7 +344,7 @@ classdef FullTableComponentHelper < handle
                     newColumnDefinition = FormulaColumnDefinition(newName, rules);
                     newColumnDefinition.setDefinitionType('merged');
                 case 'manual'
-                    newColumnDefinition = ManualColumnDefinition(newName, rules, userColumnDefinition.getDefaultGroupName());
+                    newColumnDefinition = ManualColumnDefinition(newName, rules);
             end
 
             newColumnData = userColumnDefinition.generateColumn(obj.tableStoreHandle.getTableData());
@@ -374,7 +373,7 @@ classdef FullTableComponentHelper < handle
                     newColumnDefinition = FormulaColumnDefinition(newName, rules);
                     newColumnDefinition.setDefinitionType('merged');
                 case 'manual'
-                    newColumnDefinition = ManualColumnDefinition(newName, rules, userColumnDefinition.getDefaultGroupName());
+                    newColumnDefinition = ManualColumnDefinition(newName, rules);
             end
 
             obj.templateNames{end + 1} = newName;   % this should be subsequently displayed in the GUI 
@@ -436,11 +435,11 @@ classdef FullTableComponentHelper < handle
 
             case 'Add manual'
 
-                [name, groupNames, defaultGroupName] = ManualColumnDefinitionDialog.show(); 
+                [name, groupNames] = ManualColumnDefinitionDialog.show(); 
 
                 if ~isempty(name) && ~isempty(groupNames)
                     % create the column definition object
-                    columnDefinitionObject = ManualColumnDefinition(name, groupNames, defaultGroupName);
+                    columnDefinitionObject = ManualColumnDefinition(name, groupNames);
                     % apply the formula to the table
                     data = obj.tableStoreHandle.getTableData();
                     newColumnData = columnDefinitionObject.generateColumn(data);
@@ -495,7 +494,7 @@ classdef FullTableComponentHelper < handle
                     newColumnDefinition = FormulaColumnDefinition(newName, rules);
                     newColumnDefinition.setDefinitionType('merged');
                 case 'manual'
-                    newColumnDefinition = ManualColumnDefinition(newName, rules, userColumnDefinition.getDefaultGroupName());
+                    newColumnDefinition = ManualColumnDefinition(newName, rules);
             end
 
             newColumnData = userColumnDefinition.generateColumn(obj.tableStoreHandle.getTableData());
@@ -578,17 +577,16 @@ classdef FullTableComponentHelper < handle
 
                     existingColumnName = userColumnDefinition.getColumnName();
                     existingGroupNames = userColumnDefinition.getGroupNames();
-                    existingDefaultGroupName = userColumnDefinition.getDefaultGroupName();
-                    [name, groupNames, defaultGroupName] = ManualColumnDefinitionDialog.showExisting(existingColumnName, existingGroupNames, existingDefaultGroupName); 
+                    [name, groupNames] = ManualColumnDefinitionDialog.showExisting(existingColumnName, existingGroupNames); 
 
                     if ~isempty(name) && ~isempty(groupNames)
                         if isequal(existingColumnName, name)
-                            userColumnDefinition.replaceRules(groupNames, defaultGroupName);
+                            userColumnDefinition.replaceRules(groupNames);
                             obj.templates{idx} = userColumnDefinition; % This is not necessary, because for now, the userColumnDefinition is handle - it is changed automatically
                         else
                             % create the column definition object
                             groupNames = groupNames(~cellfun('isempty', groupNames));
-                            columnDefinitionObject = ManualColumnDefinition(name, groupNames, defaultGroupName);
+                            columnDefinitionObject = ManualColumnDefinition(name, groupNames);
                             obj.templates{idx} = columnDefinitionObject;
                             obj.templateNames{idx} = char(name);
                         end
@@ -625,7 +623,7 @@ classdef FullTableComponentHelper < handle
                     newColumnDefinition = FormulaColumnDefinition(newName, rules);
                     newColumnDefinition.setDefinitionType('merged');
                 case 'manual'
-                    newColumnDefinition = ManualColumnDefinition(newName, rules, userColumnDefinition.getDefaultGroupName());
+                    newColumnDefinition = ManualColumnDefinition(newName, rules);
             end
 
             obj.templateNames{end + 1} = newName;
@@ -843,11 +841,11 @@ classdef FullTableComponentHelper < handle
 
             case 'Add manual'
 
-                [name, groupNames, defaultGroupName] = ManualColumnDefinitionDialog.show(); 
+                [name, groupNames] = ManualColumnDefinitionDialog.show(); 
 
                 if ~isempty(name) && ~isempty(groupNames)
                     % create the column definition object
-                    columnDefinitionObject = ManualColumnDefinition(name, groupNames, defaultGroupName);
+                    columnDefinitionObject = ManualColumnDefinition(name, groupNames);
                     % apply the formula to the table
                     data = obj.tableStoreHandle.getTableData();
                     newColumnData = columnDefinitionObject.generateColumn(data);

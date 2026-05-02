@@ -270,16 +270,15 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
         end
 
 
-        function setSelected(obj, selectedIndices, lastSelectedId)
+        function setSelected(obj, selectedIndices)
             % Set the selection state for all objects in the group, including supporting graphics
             arguments
                 obj BranchGraphicsGroup
                 selectedIndices (1,:) {mustBeNumeric}
-                lastSelectedId = []
             end
 
             % try % TO FIX: this is temporary fix before deciding how to handle different number of objects in main and supporting graphics
-            setSelected@BranchGraphicsGroup(obj, selectedIndices, lastSelectedId);
+            setSelected@BranchGraphicsGroup(obj, selectedIndices);
             
             if isempty(obj.supportingGraphicsHandles)
                 return % No supporting graphics to update
@@ -413,13 +412,9 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 dataArray (:, 1) cell
                 plotType string {mustBeMember(plotType, ["line", "scatter"])}
                 idArray (1,:) {mustBeNumeric}
-                groupIdArray (1,:)
+                groupIdArray (1,:) {mustBeNumeric}
                 buttonDownCallback function_handle
                 tag (1, :) char = 'SupportingGraphics'
-            end
-
-            if iscategorical(groupIdArray)
-                groupIdArray = str2double(string(groupIdArray)); % Convert categorical to double
             end
 
             % disp('Initializing supporting graphics objects...');
@@ -483,14 +478,10 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 facesArray (:, 1) cell
                 dataArray (:, 1) cell
                 idArray (1,:) {mustBeNumeric}
-                groupIdArray (1,:)
+                groupIdArray (1,:) {mustBeNumeric}
                 colorArray (:,1) cell = {}
                 isExcluded (1,:) logical = false(1, numel(idArray))
                 buttonDownCallback function_handle = []
-            end
-
-            if iscategorical(groupIdArray)
-                groupIdArray = str2double(string(groupIdArray)); % Convert categorical to double
             end
 
             obj.initializeGroup(verticesArray, facesArray, idArray, groupIdArray, colorArray, isExcluded, buttonDownCallback);
@@ -572,7 +563,7 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
                 obj BranchGraphicsGroup
                 dataArray (:, 1) cell
                 idArray (1,:) {mustBeNumeric}
-                groupIdArray (1,:)
+                groupIdArray (1,:) {mustBeNumeric}
                 colorArray (:,1) cell = {} % Optional cell array of colors for individual objects
                 isExcluded (1,:) logical = false(1, numel(idArray))
                 isSelected string {mustBeMember(isSelected, ["on", "off"])} = "off" % Selection state
@@ -580,10 +571,6 @@ classdef ExtendedBranchGraphicsGroup < BranchGraphicsGroup
 
             if isempty(dataArray) || isempty(idArray)
                 return; % No data to add
-            end
-
-            if iscategorical(groupIdArray)
-                groupIdArray = str2double(string(groupIdArray)); % Convert categorical to double
             end
 
             % Initialize the supporting graphics objects

@@ -6,8 +6,7 @@ function baseStructs = getBaseStruct(varargin)
     %     2: timeDependencyType
     %     3: nTimePoints
 
-    irbisVersion = 1.17;    % Updated from 1.16 to 1.17 on 27.4.2026 - only relevant for model, changes how reconstruction parameters are kept
-    % Updated from 1.15 to 1.16 on 15.3.2026 - only relevant for model
+    irbisVersion = 1.16;    % Updated from 1.15 to 1.16 on 15.3.2026 - only relevant for model
     % Updated from 1.14 to 1.15 on 21.6.2025
 
     structTypes = {'info','timeline','tools','views','results','planes','tracks','points','model'};
@@ -220,7 +219,7 @@ function baseStructs = getBaseStruct(varargin)
                 model.branches = branches;
                 model.selectableBranches = {'fullVolume'};
     
-                % primaryObjectBranches = {'fullVolume','synapses'};
+                primaryObjectBranches = {'fullVolume','synapses'};
                 derivedObjectBranches = {'shaft'};
     
                 % generating shared properties for all branches:
@@ -230,36 +229,24 @@ function baseStructs = getBaseStruct(varargin)
                         model.(branch).Color = availableColors{branchNum};
                         model.(branch).Transparency = 0.8;
                         model.(branch).Show = 0;
-                        % 260427: PointCloud removed as we do not use it at all
+                        model.(branch).PointCloud = cell(nTimePoints,1); 
 
-                    % actual parameters will be obtained from IsourfaceGenerator or other relevant reconstruction method
-                    % goal - make sure we keep all the changes in for example threshold, when a person changes it only for some time points
                     % adding properties specific for primary objects
-                    % if ismember(branch,primaryObjectBranches)
-                    %     model.(branch).reconstructionMethod = 'isosurface';   % default method for reconstruction - marching cubes
-                        % decide whether reconstructionParameters should be a struct array or cell array
-                        % struct array is sensitive on adding structures with different fields, but enables a person to see all values in one 'table' visually
-                    %     model.(branch).reconstructionParameters = {};   % cellArray to store parameters relevant for the reconstruction method
-                    % end
+                    if ismember(branch,primaryObjectBranches)
+                        model.(branch).threshold(1:nTimePoints) = 6000;
+                        model.(branch).bleachCompensation = 0;
+                        model.(branch).channel = 1;
+                        % model.(branch).poissonDepthValue = 9; % deprecated - we don't use Poisson surface reconstruction anymore
+                        model.(branch).gaussFilterSigma = 0.5;
+                        % model.(branch).fractionToKeep = 0.8; % deprecated - it followed the Poisson reconstruction which is not used anymore
+                        model.(branch).minVertexNum = 1;
+                        model.(branch).scaleFactor = 0.75;
+                        model.(branch).zScaleFactor = 0.5;
+                    end
 
-                    % all of this is specific to the reconstruction method - does not need to be in the default structure? 
-                    % if ismember(branch,primaryObjectBranches)
-                    %     model.(branch).threshold(1:nTimePoints) = 6000;
-                    %     model.(branch).bleachCompensation = 0;
-                    %     model.(branch).channel = 1;
-                    %     % model.(branch).poissonDepthValue = 9;
-                    %     % model.(branch).gaussFilterSigma = 0.5;
-                    %     % model.(branch).fractionToKeep = 0.8;
-                    %     % model.(branch).minVertexNum = 1;
-                    %     model.(branch).scaleFactor = 0.75;
-                    %     model.(branch).zScaleFactor = 0.5;
-                    % end
-
-                    % 260427: we are using currentIndex match order in the cell to timepoints, and therefore it does not make sense to generate the full cell here
-                    model.(branch).List = {};
-                    % for tp = 1:nTimePoints
-                    %     model.(branch).List{tp} = createEmptyList(structType);
-                    % end
+                    for tp = 1:nTimePoints
+                        model.(branch).List{tp} = createEmptyList(structType);
+                    end
     
                     % generating unique properties for derived object - shaft:
                     if ismember(branch,derivedObjectBranches)
@@ -386,7 +373,7 @@ function List = createEmptyList(structType,varargin)
 
             % Define variable metadata: {name, type, unit, description}
             varMeta = [
-                "groupId",        "categorical", "",      "Identifier for the same object across time points";
+                "groupId",        "double",      "",      "Identifier for the same object across time points";
                 "Mesh",           "cell",        "",      "Mesh data stored as a surfaceMesh object";
                 "parentId",       "double",      "",      "Value used to identify objects coming from the same parent object (e.g. spines coming from the same fullVolume)";
                 "parent",         "cell",        "",      "Information about parent objects, stored in dictionary";

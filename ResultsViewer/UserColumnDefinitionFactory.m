@@ -43,11 +43,11 @@ classdef (Sealed) UserColumnDefinitionFactory
 
             case 'manual'
 
-                [name, groupNames, defaultGroupName] = ManualColumnDefinitionDialog.show(); 
+                [name, groupNames] = ManualColumnDefinitionDialog.show(); 
 
                 if ~isempty(name) && ~isempty(groupNames)
                     % create the column definition object
-                    columnDefinitionObject = ManualColumnDefinition(name, groupNames, defaultGroupName);
+                    columnDefinitionObject = ManualColumnDefinition(name, groupNames);
                 end
             end
         end
@@ -123,9 +123,8 @@ classdef (Sealed) UserColumnDefinitionFactory
                     end
 
                 case 'manual'
-                    existingGroupNames = existingColumnDefinitionObject.getGroupNames();
-                    existingDefaultGroupName = existingColumnDefinitionObject.getDefaultGroupName();
-                    [newName, newRules, newDefaultGroupName] = ManualColumnDefinitionDialog.showExisting(oldName, existingGroupNames, existingDefaultGroupName); 
+                    existingGroupNames = existingColumnDefinitionObject.getGroupNames(); 
+                    [newName, newRules] = ManualColumnDefinitionDialog.showExisting(oldName, existingGroupNames); 
                     
                     if isempty(newName) || isempty(newRules)
                         columnDefinitionObject = [];
@@ -134,12 +133,12 @@ classdef (Sealed) UserColumnDefinitionFactory
                     
                     if isequal(newName, existingColumnDefinitionObject.getColumnName())
                         % columnDefinitionObject = existingColumnDefinitionObject.replaceRules(newRules);
-                        existingColumnDefinitionObject.replaceRules(newRules, newDefaultGroupName);
+                        existingColumnDefinitionObject.replaceRules(newRules);
                         columnDefinitionObject = existingColumnDefinitionObject;
                         % rules exchanged within the shared handle class
                     else
                         newRules = newRules(~cellfun('isempty', newRules)); % Filter out empty group names
-                        columnDefinitionObject = ManualColumnDefinition(newName, newRules, newDefaultGroupName);
+                        columnDefinitionObject = ManualColumnDefinition(newName, newRules);
                     end    
             end
         end
