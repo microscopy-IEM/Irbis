@@ -9,6 +9,7 @@ classdef PlotManager < handle
 
         useGrouping = false
         useIndividual = false
+        useJitter = false
 
         requiredParametersNum = 1; % number of parameters required for the plot
     end
@@ -30,6 +31,7 @@ classdef PlotManager < handle
             obj.plotType = plotState.plotType;
             obj.useGrouping = plotState.useGrouping;
             obj.useIndividual = plotState.useIndividual;
+            obj.useJitter = plotState.useJitter;
             obj.findRequiredParametersNum();
             obj.replaceFormatter();
         end
@@ -52,6 +54,17 @@ classdef PlotManager < handle
         function turnIndividualUseOff(obj)
             obj.useIndividual = false;
             obj.formatter.turnIndividualUseOff();
+        end
+
+        function turnJitterOn(obj)
+            % currently applied in TwoVariablesPlot, and nowhere else? 
+            obj.useJitter = true;
+            obj.formatter.turnJitterOn();
+        end
+
+        function turnJitterOff(obj)
+            obj.useJitter = false;
+            obj.formatter.turnJitterOff();
         end
 
         function changePlotType(obj, plotType)
@@ -85,7 +98,7 @@ classdef PlotManager < handle
 
             if ~isempty(obj.tableProcessorHandles)
                 % assignin("base", 'processor', obj.tableProcessorHandles)
-                obj.formatter = DataFormatter(obj, obj.tableProcessorHandles, obj.useGrouping, obj.useIndividual, obj.requiredParametersNum, obj.tableTypes);
+                obj.formatter = DataFormatter(obj, obj.tableProcessorHandles, obj.useGrouping, obj.useIndividual, obj.useJitter, obj.requiredParametersNum, obj.tableTypes);
                 obj.formatter.processData([]);
             else
                 % disp('empty')

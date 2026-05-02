@@ -1,7 +1,7 @@
 classdef (Sealed) SpineSeparationHelper
 
     methods (Static)
-        function [T, newIds] = addMeshesToTable(T, meshes, singularParentRowName, ancestryDict, basePoints, trajectory, minPoints)
+        function [T, newIds] = addMeshesToTable(T, meshes, singularParentRowName, ancestryDict, basePoints, basePointNormals, trajectory, patches, minPoints)
 
             arguments
                 T table
@@ -9,7 +9,9 @@ classdef (Sealed) SpineSeparationHelper
                 singularParentRowName (1,1) {mustBeText}
                 ancestryDict
                 basePoints double = [];
+                basePointNormals double = [];
                 trajectory double = [];
+                patches cell = {};
                 minPoints double = 20; % Default value, adjust as needed
             end
 
@@ -21,7 +23,6 @@ classdef (Sealed) SpineSeparationHelper
 
             % Apply the validIndices filter to all relevant variables
             validMeshes = meshes(validIndices)';
-            validPointsCell = pointsCell(validIndices)';
             % Prepare the table entries
             numValidRegions = sum(validIndices);
 
@@ -32,41 +33,47 @@ classdef (Sealed) SpineSeparationHelper
 
             warning('off', 'MATLAB:table:RowsAddedExistingVars'); % Supress warning for adding only some rows and extending the rest automatically
 
-            T{rowIndexes, 'Points'} = validPointsCell;
             T{rowIndexes, 'Mesh'} = validMeshes;
-            if ischar(T.name)   % Convert to string because otherwise the assignment on the next line fails
-                % (error we were getting: The value on the right-hand side of the assignment has the wrong width. The assignment requires avalue whose width is 2.)
-                T.name = string(T.name);
-            end
-            T{rowIndexes, 'name'} = repmat(string(['S' char(singularParentRowName)]), numValidRegions, 1);
+            T{rowIndexes, 'parentId'} = repmat(str2double(singularParentRowName), numValidRegions, 1);
             T{rowIndexes, 'parent'} = repmat({ancestryDict}, numValidRegions, 1);
             T{rowIndexes, 'positionShift'} = repmat({[0 0 0]}, numValidRegions, 1);
             T{rowIndexes, 'color'} = mat2cell(rand(numValidRegions,3), ones(numValidRegions, 1), 3);
 
             % Only relevant for spines, not for dendritic centre
             if ~isempty(basePoints) && ~isempty(trajectory)
-                validBasePoints = basePoints(validIndices, :);
-                vecB = validBasePoints(:,1:3);
-                [pointIdx, ~] = knnsearch(trajectory, vecB);
-                vecA = trajectory(pointIdx, :);
-                vecNorms = sqrt(sum((vecA - vecB).^2, 2));
-                vec = (vecA - vecB) ./ vecNorms;
+                % TO OPTIMIZE - decide whether the calculation of normal from trajectory should be reomved altogether, or should be kept in another column
+
+                % validBasePoints = basePoints(validIndices, :);
+                % vecB = validBasePoints(:,1:3);
+                % [pointIdx, ~] = knnsearch(trajectory, vecB);
+                % vecA = trajectory(pointIdx, :);
+                % vecNorms = sqrt(sum((vecA - vecB).^2, 2));
+                % vec = (vecA - vecB) ./ vecNorms;
 
                 % assignin("base", "basePoints", basePoints)
                 try
-                    T{rowIndexes, 'cuttingPlaneCentre'} = basePoints(validIndices,1:3);
-                    T{rowIndexes, 'cuttingPlaneNormal'} = vec;
+                    T{rowIndexes, 'basePoint'} = basePoints(validIndices,1:3);
+                    % T{rowIndexes, 'basePointNormal'} = vec;
+                    T{rowIndexes, 'basePointNormal'} = basePointNormals(validIndices,1:3);
                 catch
                     % TO OPTIMIZE - this is an ugly code!!!
                     % this can accidentally cause problems or delete previous datasets
 
-                    disp(['size of columns cuttingPlaneCentre and cuttingPlaneNormal was converted so that it contains three columns!!!'])
-                    T.cuttingPlaneCentre =  nan(height(T), 3);
-                    T.cuttingPlaneNormal = nan(height(T), 3);
+                    disp(['size of columns basePoint and basePointNormal was converted so that it contains three columns!!!'])
+                    T.basePoint =  nan(height(T), 3);
+                    T.basePointNormal = nan(height(T), 3);
 
-                    T{rowIndexes, 'cuttingPlaneCentre'} = basePoints(validIndices,1:3);
-                    T{rowIndexes, 'cuttingPlaneNormal'} = vec;
+                    T{rowIndexes, 'basePoint'} = basePoints(validIndices,1:3);
+                    % T{rowIndexes, 'basePointNormal'} = vec;
+                    T{rowIndexes, 'basePointNormal'} = basePointNormals(validIndices,1:3);
                 end
+            end
+
+            if ~isempty(patches)
+                % patches is a cell array of structure lists
+                % each structure list contains base patches for one mesh (places where the spine is cut from the dendritic shaft)
+                validPatches = patches(validIndices);
+                T{rowIndexes, 'basePatch'} = validPatches;
             end
 
             warning('on', 'MATLAB:table:RowsAddedExistingVars'); % turn it back on
@@ -82,9 +89,9 @@ classdef (Sealed) SpineSeparationHelper
             % Generate row names for the specified range
             newRowNames = arrayfun(@num2str, newIds, 'UniformOutput', false)';  % this has to be a column cell array -> transpose with '
             % size(existingRowNames{:})
-            assignin("base", "existingRowNames", existingRowNames)
+            % assignin("base", "existingRowNames", existingRowNames)
             % size(newRowNames{:})
-            assignin("base", "newRowNames", newRowNames)
+            % assignin("base", "newRowNames", newRowNames)
             if isempty(existingRowNames)
                 T.Properties.RowNames = newRowNames;
             else
@@ -101,34 +108,12 @@ classdef (Sealed) SpineSeparationHelper
 
             currentFullMeshCell = biggerObjectTable{biggerObjectRowName,'Mesh'};
             currentFullMesh = currentFullMeshCell{1};
-            meshData{1} = struct('vertices', currentFullMesh.Vertices, ...
-                                    'faces', currentFullMesh.Faces - 1); % Zero-index for Python
-            
-            % Conditionally add vertexNormals if not empty
-            if ~isempty(currentFullMesh.VertexNormals)
-                meshData{1}.vertexNormals = currentFullMesh.VertexNormals;
-            end
-            
-            % Conditionally add faceNormals if not empty
-            if ~isempty(currentFullMesh.FaceNormals)
-                meshData{1}.faceNormals = currentFullMesh.FaceNormals;
-            end
+            meshData{1} = PythonMeshHelper.meshToPyStruct(currentFullMesh);
 
             currentDendriticShaftMeshCell = smallerObjectTable{smallerObjectRowName,'Mesh'};
             currentDendriticShaftMesh = currentDendriticShaftMeshCell{1};
 
-            meshData{2} = struct('vertices', currentDendriticShaftMesh.Vertices, ...
-                                    'faces', currentDendriticShaftMesh.Faces - 1); % Zero-index for Python
-            
-            % Conditionally add vertexNormals if not empty
-            if ~isempty(currentDendriticShaftMesh.VertexNormals)
-                meshData{2}.vertexNormals = currentDendriticShaftMesh.VertexNormals;
-            end
-            
-            % Conditionally add faceNormals if not empty
-            if ~isempty(currentDendriticShaftMesh.FaceNormals)
-                meshData{2}.faceNormals = currentDendriticShaftMesh.FaceNormals;
-            end
+            meshData{2} = PythonMeshHelper.meshToPyStruct(currentDendriticShaftMesh);
         end
     end
 end

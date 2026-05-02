@@ -8,9 +8,9 @@ MMP_settings.mat
 *.sh
 Irbis/
 python_for_irbis/
+resources/
 check_git_status.m
 startup.m
-resources/ 
 IrbisStart Standalone Application/
 Irbis packaged/
 deploymentScript.m

@@ -7,6 +7,8 @@ classdef BranchGraphicsManager < handle
         lightingMethod
         selectionColor
 
+        boundingBoxShown % true or false
+
         lastSelectedBranch
 
         selectionListenerStruct % Structure to hold selection listeners for each branch
@@ -151,6 +153,20 @@ classdef BranchGraphicsManager < handle
         end
 
 
+        function changeBoundingBoxShownStatus(obj, isShown)
+
+            % Change the lighting method for all groups
+            obj.boundingBoxShown = isShown;
+            fields = fieldnames(obj.dataStruct);
+            for i = 1:numel(fields)
+                groupHandle = obj.dataStruct.(fields{i});
+                if ~isempty(groupHandle)
+                    groupHandle.setBoundingBoxVisibility(isShown); % Update the show bounding box status method in the group handle
+                end
+            end
+        end
+  
+
         function setSelectableBranches(obj, branches)
             % Set the selectable branches for all groups
             fields = fieldnames(obj.dataStruct);
@@ -176,6 +192,7 @@ classdef BranchGraphicsManager < handle
             if isfield(obj.dataStruct, branch) && ~isempty(obj.dataStruct.(branch))
                 groupHandle = obj.dataStruct.(branch);
                 selectedIds = groupHandle.getSelectedIds();
+                selectedGroupIds = groupHandle.getSelectedGroupIds();
                 currentTimePoint = obj.getCurrentTimePoint(); % Get the current time point using the function handle
                 % disp(['Selection changed for branch "' branch '": ' num2str(selectedIds) ' in time point ' num2str(obj.getCurrentTimePoint()) '.']);
                 % Additional logic can be added here to handle selection changes
@@ -185,7 +202,7 @@ classdef BranchGraphicsManager < handle
 
             obj.lastSelectedBranch = branch; % Update the last selected branch
 
-            notify(obj, 'selectionChanged', SelectionSyncData(branch, selectedIds, currentTimePoint));
+            notify(obj, 'selectionChanged', SelectionSyncData(branch, selectedIds, selectedGroupIds, currentTimePoint));
 
             % disp(src)
             % disp(event)
@@ -217,6 +234,20 @@ classdef BranchGraphicsManager < handle
         end
 
 
+
+        function setGroupIdSelection(obj, selectedGroupIds, branch)
+            % Set the group ID selection for the specified branch
+            % As groupId is not time point specific, we can set it directly without checking the time point
+            obj.validateBranchExistence(branch);
+            if ~isempty(obj.dataStruct.(branch))
+                obj.dataStruct.(branch).setSelectedGroupIds(selectedGroupIds);
+            else
+                obj.dataStruct.(branch).setSelected([]);
+            end
+        end
+
+
+        
         function lastSelectedBranch = getLastSelectedBranch(obj)
             % Get the last selected branch
             lastSelectedBranch = obj.lastSelectedBranch;

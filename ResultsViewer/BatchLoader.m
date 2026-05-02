@@ -239,17 +239,24 @@ classdef BatchLoader < handle
         end
 
         function [tempStructModel, tempStructTracks] = processSingleFile(obj, matf, fileName, fileIdx)
-            tempStructModel = struct('tables', configureDictionary("string", "cell"), 'filterings', configureDictionary("string", "cell"), 'columnDefinitions', configureDictionary("string", "cell"));
-            tempStructTracks = struct('tables', {}, 'filterings', {}, 'columnDefinitions', {});
-            % tempCombinedTablesModel = configureDictionary("string", "cell");
-            % tempCombinedTablesTracks = {};
+            isModelRequired = ismember('model', obj.modalities);
+            isModelPresent = (isprop(matf, 'model') || isfield(matf, 'model'));   % isprop works for batch mode and isfield for single mode
+            isModelInitialized = isstruct(matf.model);  % if model was not initialized in Irbis, it will be [] and the subsequent steps will fail
             
-            if ismember('model', obj.modalities) && (isprop(matf, 'model') || isfield(matf, 'model'))   % isprop works for batch mode and isfield for single mode
+            if isModelRequired && isModelPresent && isModelInitialized
                 tempStructModel = obj.processModelData(matf, fileName, fileIdx);
+            else
+                tempStructModel = struct('tables', configureDictionary("string", "cell"), 'filterings', configureDictionary("string", "cell"), 'columnDefinitions', configureDictionary("string", "cell"));
             end
-            
-            if ismember('tracks', obj.modalities) && (isprop(matf, 'tracks')|| isfield(matf, 'tracks'))
+
+            isTrackRequired = ismember('tracks', obj.modalities);
+            isTrackPresent = (isprop(matf, 'tracks')|| isfield(matf, 'tracks'));
+            isTrackInitialized = isstruct(matf.tracks);
+
+            if isTrackRequired && isTrackPresent && isTrackInitialized
                 tempStructTracks = obj.processTrackData(matf, fileName, fileIdx);
+            else
+                tempStructTracks = struct('tables', {}, 'filterings', {}, 'columnDefinitions', {});
             end
         end
 
