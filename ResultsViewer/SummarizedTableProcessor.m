@@ -31,7 +31,6 @@ classdef (Sealed) SummarizedTableProcessor < handle
         tableSelectionSyncRequired  % not the prettiest, but added to do table syncing before plotting data starts listening
         rowParameterChanged
         newFiltersApplied
-        plotUpdateRequired          % notify that plotting needs to be updated (used instead of tableSelectionChanged to avoid freezing)
     end
 
     methods
@@ -78,9 +77,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
             end
 
             notify(obj, 'tableForDisplayChanged');
-            % notify(obj, 'tableSelectionChanged');
-            % call just plotting function instead
-            notify(obj, 'plotUpdateRequired');
+            notify(obj, 'tableSelectionChanged');
         end 
 
         function columnEditability = getColumnEditability(obj)

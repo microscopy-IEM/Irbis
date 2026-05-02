@@ -1,15 +1,5 @@
-function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColumn, backgroundColor, modality, pickedColor)
+function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColumn, backgroundColor, modality,pickedColor)
     % Fills the colorbar with colors and labels, with a wider default segment for NaN/uncategorized values.
-
-    arguments
-        colorbarAxesHandle
-        columnData
-        colormapName
-        selectedColumn
-        backgroundColor (1,3) double {mustBeInRange(backgroundColor, 0, 1)}
-        modality
-        pickedColor (1,3) double {mustBeInRange(pickedColor, 0, 1)} = [1, 1, 1] % Default to white if not provided
-    end
 
     % disp('Filling colorbar...');
     % Check if a colormap other than 'random' is selected

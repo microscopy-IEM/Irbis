@@ -54,11 +54,13 @@ function rgbMatrix = precalculatePlanePlotAll(zstack,activeChannels,planesLimits
                 end
         
             end           
+        
+            if ~mappingToolboxYes
+                rgbPlane = uint8(round(rgbPlane*256));
+            end
         end
     end
-    if ~mappingToolboxYes
-        rgbPlane = uint8(rgbPlane*255);     % uint8 maps the value to 0-255 range and rounds it, if decimal
-    end
+    % rgbMatrix = squeeze(sum(rgbPlane,4,"native"));
 
     temp = (sum(rgbPlane,4,"native"));
 

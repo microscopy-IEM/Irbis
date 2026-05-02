@@ -415,7 +415,6 @@ classdef BranchGraphicsGroup < handle
 
         function toggleIndividualSelectionAndDeselectOthers(obj, id)
             % Deselect all objects and toggle selection for a specific object by ID
-            % TO OPTIMIZE: this calls postSet on selectedIds twice, which is not ideal
             isSelected = ismember(id, obj.selectedIds);
             obj.deselectAll();
             % Toggle selection for a specific object by ID
@@ -428,21 +427,17 @@ classdef BranchGraphicsGroup < handle
 
 
         function deselectAll(obj)
-            obj.setSelected([]); % Update the selection state of all objects
+            obj.selectedIds = []; % Clear the selection array
+            obj.setSelected(obj.selectedIds); % Update the selection state of all objects
             obj.idLabel.String = '';
         end
 
 
-        function setSelected(obj, selectedIndices, lastSelectedId)
+        function setSelected(obj, selectedIndices)
             arguments
                 obj
                 selectedIndices (1,:) {mustBeNumeric}
-                lastSelectedId = []
             end
-
-            % added additional logic to add the last selected id together with the list of selected indices
-            % this will enable us to select arbitrary objects while also indicating, which was the last one
-            % it should not break the previous logic - if it is not supplied, the alternative branches will just be skipped
 
             % try % TO FIX: this is temporary fix before deciding how to handle different number of objects in main and supporting graphics
             obj.selectedIds = selectedIndices;
@@ -453,11 +448,7 @@ classdef BranchGraphicsGroup < handle
             % infotext is updated before checking GraphicsHandles, because there might be just supporting graphics
             if ~isempty(obj.updateGraphicsInfotext)
                 % Call the infotext update function if it is set
-                if ~isempty(lastSelectedId) && ismember(lastSelectedId, obj.selectedIds)
-                    obj.updateGraphicsInfotext(obj.branch, lastSelectedId, obj.selectedIds);
-                else
-                    obj.updateGraphicsInfotext(obj.branch, [], obj.selectedIds);
-                end
+                obj.updateGraphicsInfotext(obj.branch, [], obj.selectedIds);
             end
             
             % Set the selected property for each graphics object
@@ -485,27 +476,10 @@ classdef BranchGraphicsGroup < handle
             set(obj.GraphicsHandles(isSelected), 'ContextMenu', obj.contextMenu); 
             set(obj.GraphicsHandles(~isSelected), 'ContextMenu', []); % Remove context menu from unselected objects
 
-            if ~isempty(lastSelectedId) && ismember(lastSelectedId, obj.selectedIds)
-                obj.updateIdLabel(lastSelectedId); % Update the ID label position and text
-            else
-                obj.hideBoundingBox();
-            end
+            obj.hideBoundingBox();
 
             % catch
             % end
-        end
-
-
-        function setSelectedGroupIds(obj, groupIds)
-            arguments
-                obj
-                groupIds (1,:) {mustBeNumeric}
-            end
-
-            % Get object IDs corresponding to the provided group IDs
-            isInGroup = ismember(obj.groupIdArray, groupIds(:));
-            selectedObjectIds = obj.objectIdArray(isInGroup);
-            obj.setSelected(selectedObjectIds); % Update selection based on object IDs
         end
 
 

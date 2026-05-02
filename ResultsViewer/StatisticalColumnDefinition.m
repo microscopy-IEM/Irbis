@@ -21,8 +21,8 @@ classdef StatisticalColumnDefinition < ColumnDefinitionInterface
             prompts = {'Column Name:', ...
                   'Data Parameter:', ...
                   'Column Parameter:', ...
-                'First Aggregation Function (mean/median/std/var/min/max/sum/cv):', ...
-                'Second Aggregation Function (mean/median/std/var/min/max/sum/cv/slope/RSquared/stdResiduals/cvResiduals/pearsonR):'};
+                  'First Aggregation Function (mean/median/std/var/min/max/sum):', ...
+                  'Second Aggregation Function (mean/median/std/var/min/max/sum):'};
             
             defaults = {'', '', '', 'mean', 'mean'};
             dlgtitle = 'Statistical Column Parameters';
@@ -127,9 +127,9 @@ classdef StatisticalColumnDefinition < ColumnDefinitionInterface
             dataArray = table2array(inputData);
         
             % Basic statistics (vectorized)
-            if ismember(char(aggregationFunction), {'slope', 'RSquared', 'stdResiduals', 'cvResiduals', 'semResiduals', 'pearsonR'})
-                summaryTable = array2table(zeros(size(inputData, 1), 5), ...
-                    'VariableNames', {'Slope', 'RSquared', 'stdResiduals', 'cvResiduals', 'pearsonR'}, ...
+            if isequal(aggregationFunction, 'slope') || isequal(aggregationFunction, 'RSquared')
+                summaryTable = array2table(zeros(size(inputData, 1), 2), ...
+                    'VariableNames', {'Slope', 'RSquared'}, ...
                     'RowNames', inputData.Properties.RowNames);
 
                 % Slope and R^2 calculations (row-wise)
@@ -143,8 +143,7 @@ classdef StatisticalColumnDefinition < ColumnDefinitionInterface
                     end
             
                     validIdx = ~isnan(rowData);
-                    nValid = sum(validIdx);
-                    if nValid > 1
+                    if sum(validIdx) > 1
                         % Fit linear model
                         p = polyfit(x(validIdx), rowData(validIdx), 1);
                         summaryTable.Slope(i) = p(1);
@@ -153,60 +152,20 @@ classdef StatisticalColumnDefinition < ColumnDefinitionInterface
                         yFit = polyval(p, x(validIdx));
                         SSres = sum((rowData(validIdx) - yFit).^2);
                         SStot = sum((rowData(validIdx) - mean(rowData(validIdx))).^2);
-                        if SStot > 0
-                            summaryTable.RSquared(i) = 1 - (SSres / SStot);
-                        else
-                            summaryTable.RSquared(i) = NaN;
-                        end
-
-                        % Pearson correlation between the sequence index and row values.
-                        r = corr(x(validIdx).', rowData(validIdx).');
-                        summaryTable.pearsonR(i) = r;
-
-                        % We also want to estimate the standard deviation after correcting for the effect of growing/shrinking:
-                        % To get the std of residuals, we need to divide the sum of squared residuals by the degrees of freedom (number of valid observations - number of parameters estimated). 
-                        % In simple linear regression, we estimate 2 parameters (slope and intercept), so the degrees of freedom is (number of valid observations - 2).
-                        % https://www.investopedia.com/terms/r/residual-standard-deviation.asp
-                        if nValid > 2
-                            summaryTable.stdResiduals(i) = sqrt(SSres / (nValid - 2)); % Standard deviation of residuals
-                            rowMean = mean(rowData(validIdx));
-                            if rowMean ~= 0
-                                summaryTable.cvResiduals(i) = summaryTable.stdResiduals(i) / rowMean; % CV of residuals relative to row mean
-                            else
-                                summaryTable.cvResiduals(i) = NaN;
-                            end
-                        else
-                            summaryTable.stdResiduals(i) = NaN; % Not enough data points to estimate std of residuals
-                            summaryTable.cvResiduals(i) = NaN;
-                        end
+                        summaryTable.RSquared(i) = 1 - (SSres / SStot);
                     else
                         summaryTable.Slope(i) = NaN;
                         summaryTable.RSquared(i) = NaN;
-                        summaryTable.stdResiduals(i) = NaN;
-                        summaryTable.cvResiduals(i) = NaN;
-                        summaryTable.pearsonR(i) = NaN;
                     end
 
                     if isequal(aggregationFunction, 'slope')
                         data = summaryTable.Slope;
                     elseif isequal(aggregationFunction, 'RSquared')
                         data = summaryTable.RSquared;
-                    elseif isequal(aggregationFunction, 'stdResiduals')
-                        data = summaryTable.stdResiduals;
-                    elseif isequal(aggregationFunction, 'cvResiduals') || isequal(aggregationFunction, 'semResiduals')
-                        data = summaryTable.cvResiduals;
-                    elseif isequal(aggregationFunction, 'pearsonR')
-                        data = summaryTable.pearsonR;
                     end
                 end
             elseif isequal(aggregationFunction, 'observationCount')
                 data = sum(~isnan(dataArray), 2);
-            elseif isequal(aggregationFunction, 'cv')
-                nValid = sum(~isnan(dataArray), 2);
-                rowMean = mean(dataArray, 2, 'omitnan');
-                data = std(dataArray, 0, 2, 'omitnan') ./ rowMean;
-                data(nValid <= 1) = NaN;
-                data(rowMean == 0) = NaN;
             elseif ismember(char(aggregationFunction), {'var', 'std'})
                 aggregationFunction = str2func(aggregationFunction);
                 data = aggregationFunction(dataArray, 0, 2, 'omitnan');

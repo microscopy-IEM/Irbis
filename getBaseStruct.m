@@ -6,8 +6,7 @@ function baseStructs = getBaseStruct(varargin)
     %     2: timeDependencyType
     %     3: nTimePoints
 
-    irbisVersion = 1.16;    % Updated from 1.15 to 1.16 on 15.3.2026 - only relevant for model
-    % Updated from 1.14 to 1.15 on 21.6.2025
+    irbisVersion = 1.15; % Updated from 1.14 to 1.15 on 21.6.2025
 
     structTypes = {'info','timeline','tools','views','results','planes','tracks','points','model'};
     timeDependencyType = {'timeDependent','timeIndependent'};
@@ -297,143 +296,52 @@ function List = createEmptyList(structType,varargin)
 
     switch structType
         case 'tools'
+
             if ismember('areas',specialTypes)
-                varMeta = [
-                    "areaId", "double", "", "";
-                    "x",      "cell",   "", "";
-                    "y",      "cell",   "", "";
-                    "z",      "cell",   "", "";
-                    "type",   "categorical", "", "";
-                    "source", "categorical", "", ""
-                ];
-            else
-                List = table();
-                return
+                varNames = ["areaId","x","y",'z',"type",'source'];
+                varTypes = ["double","cell","cell","cell","categorical","categorical"];
             end
 
         case 'views'
-            varMeta = [
-                "id",             "double", "", "";
-                "rotation",       "cell",   "", "";
-                "position",       "cell",   "", "";
-                "checkBoxValues", "cell",   "", "";
-                "selection",      "cell",   "", "";
-                "name",           "string", "", ""
-            ];
+
+            varNames = ["id","rotation","position","checkBoxValues",'selection','name'];  
+            varTypes = ["double","cell","cell","cell","cell","string"];
 
         case 'tracks'
-            varMeta = [
-                "id",        "double", "", "";
-                "xyz",       "cell",   "", "";
-                "frame_i",   "cell",   "", "";
-                "color",     "cell",   "", "";
-                "length",    "double", "", "";
-                "nOfNaN",    "double", "", "";
-                "maxGap",    "double", "", "";
-                "meanDisp",  "double", "", "";
-                "ovArea",    "double", "", "";
-                "ovDist",    "double", "", "";
-                "meanX",     "double", "", "";
-                "meanY",     "double", "", "";
-                "MSD5",      "double", "", "";
-                "MSDr2",     "double", "", "";
-                "zone",      "double", "", "";
-                "type",      "string", "", "";
-                "timePoint", "categorical", "", "";
-                "excluded",  "logical", "", ""
-            ];
+
+            varNames = {'id';'xyz';'frame_i';'color';'length';'nOfNaN';'maxGap';'meanDisp';'ovArea';'ovDist';'meanX';'meanY';'MSD5';'MSDr2';'zone';'type'; 'timePoint'; 'excluded'};
+            varTypes = {'double','cell','cell','cell','double','double','double','double','double','double','double','double','double','double','double','string', 'categorical', 'logical'};
 
         case 'points'
-            varMeta = [
-                "id",             "double",     "",     "";
-                "frame",          "double",     "",     "";
-                "x",              "double",     "um",   "";
-                "y",              "double",     "um",   "";
-                "z",              "double",     "um",   "";
-                "uncertainty_xy", "double",     "um",   "";
-                "uncertainty_z",  "double",     "um",   "";
-                "height",         "double",     "um",   "";
-                "maxIntensity",   "double",     "",     "";
-                "inArea",         "logical",    "",     "";
-                "timePoint",      "categorical", "",    "";
-                "excluded",       "logical",    "",     ""
-            ];
+
+            varNames = ["id","frame","x","y","z","uncertainty_xy","uncertainty_z","height","maxIntensity",'inArea', 'timePoint', 'excluded'];
+            varTypes = ["double","double","double","double","double","double","double","double","double",'logical', 'categorical', 'logical'];
 
         case 'model'
 
             % TO OPTIMIZE - add volume, surface, ... right away? 
 
-            % properties relevant to functionality within Irbis: color, excluded (filtering related), timePoint (propagates to ResultsViewer)
-            % object features: volume, surface
-            % time related: groupId
-            % relatives: parent, children
-
-            % deleting: prevTPid, nextTPid, Points, name (replacing with parentId - numerical instead of string)
-            % renaming: cuttingPlaneCentre -> basePoint, cuttingPlaneNormal -> basePointNormal
-
-            % Define variable metadata: {name, type, unit, description}
-            varMeta = [
-                "groupId",        "double",      "",      "Identifier for the same object across time points";
-                "Mesh",           "cell",        "",      "Mesh data stored as a surfaceMesh object";
-                "parentId",       "double",      "",      "Value used to identify objects coming from the same parent object (e.g. spines coming from the same fullVolume)";
-                "parent",         "cell",        "",      "Information about parent objects, stored in dictionary";
-                "children",       "cell",        "",      "Information about children objects, stored in dictionary";
-                "volume",         "double",      "um^3",  "Enclosed 3D volume of the object mesh";
-                "surface",        "double",      "um^2",  "Total surface area of the object mesh";
-                "positionShift",  "cell",        "um",    "Individual shift in object position";
-                "color",          "cell",        "",      "Individual object color, stored as RGB triplet";
-                "excluded",       "logical",     "",      "Boolean value indicating whether the object is excluded by filters";
-                "timePoint",      "categorical", "",      "";
-            ];
-
-            % Add derived features if needed
-            if ismember('derived', specialTypes)
-                varMeta = [varMeta;
-                    "CentreLine",   "cell",   "um", "";
-                    "RadiusVect",   "cell",   "um", "Radius vector";
-                    "ZScale",       "cell",   "", "Deformation factor in Z direction applied when using constant shaft";
-                    "Contours",     "cell",   "um", "";
-                    "MiddlePoints", "cell",   "um", "List of middle points corresponding to each contour point";
-                    "RadiusScale",  "double", "", ""
-                ];
+            varNames = ["groupId","Points","Mesh","name","prevTPid","nextTPid","parent","children","volume","surface","positionShift","color","excluded", "timePoint"];
+            varTypes = ["double","cell","cell","string","double","double","cell","cell","double","double","cell","cell","logical", "categorical"];
+        
+            if ismember('derived',specialTypes)
+                addedNames = ["CentreLine","RadiusVect","ZScale","Contours","MiddlePoints","RadiusScale"];
+                addedTypes = ["cell","cell","cell","cell","cell","double"];
+        
+                varNames = [varNames,addedNames];
+                varTypes = [varTypes,addedTypes];
+            end
+        
+            if ismember('spines',specialTypes)
+                addedNames = ["cuttingPlaneCentre","cuttingPlaneNormal"];
+                addedTypes = ["double","double"];
+        
+                varNames = [varNames,addedNames];
+                varTypes = [varTypes,addedTypes];
             end
 
-            if ismember('spines', specialTypes)
-                varMeta = [varMeta;
-                    "basePoint",       "double", "um", "Base point position calculated as centroid of the base patch vertices, attached to its surface";
-                    "basePointNormal", "double", "", "Normal vector of the base patch in the base point";
-                    "basePatch",       "cell",   "", "List of stuctures, each containing the vertices and faces of the patch where the spine is cut from the shaft";
-                ];
-            end
-
-            % varNames = ["groupId", "Mesh", "name", "nextTPid", "parent", "children", "volume", "surface", "positionShift", "color", "excluded", "timePoint"];
-            % varTypes = ["double", "cell", "string", "double", "cell", "cell", "double", "double", "cell", "cell", "logical", "categorical"];
-        
-            % if ismember('derived',specialTypes)
-            %     addedNames = ["CentreLine","RadiusVect","ZScale","Contours","MiddlePoints","RadiusScale"];
-            %     addedTypes = ["cell","cell","cell","cell","cell","double"];
-        
-            %     varNames = [varNames,addedNames];
-            %     varTypes = [varTypes,addedTypes];
-            % end
-        
-            % if ismember('spines',specialTypes)
-            %     addedNames = ["basePoint", "basePointNormal", "basePatch"];
-            %     addedTypes = ["double", "double", "cell"];
-        
-            %     varNames = [varNames,addedNames];
-            %     varTypes = [varTypes,addedTypes];
-            % end
     end
 
-    varNames = varMeta(:,1)';
-    varTypes = varMeta(:,2)';
     sz = [nRows numel(varNames)];
     List = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
-    % Assign metadata
-    List.Properties.VariableUnits = varMeta(:,3)';
-    List.Properties.VariableDescriptions = varMeta(:,4)';
-
-    % sz = [nRows numel(varNames)];
-    % List = table('Size',sz,'VariableTypes',varTypes,'VariableNames',varNames);
 end

@@ -14,7 +14,6 @@ classdef DataFormatter < handle
         tableProcessorHandles
         useGrouping
         useIndividual
-        useJitter = false;
         requiredParametersNum
         tableTypes
 
@@ -34,13 +33,12 @@ classdef DataFormatter < handle
     end
 
     methods
-        function obj = DataFormatter(plotManagerHandle, tableProcessorHandles, useGrouping, useIndividual, useJitter, requiredParametersNum, tableTypes)
+        function obj = DataFormatter(plotManagerHandle, tableProcessorHandles, useGrouping, useIndividual, requiredParametersNum, tableTypes)
 
             obj.plotManagerHandle = plotManagerHandle;
             obj.tableProcessorHandles = tableProcessorHandles;
             obj.useGrouping = useGrouping;
             obj.useIndividual = useIndividual;
-            obj.useJitter = useJitter;
             obj.requiredParametersNum = requiredParametersNum;
             obj.tableTypes = tableTypes;
 
@@ -80,21 +78,6 @@ classdef DataFormatter < handle
         function setRequiredParametersNum(obj, num)
             obj.requiredParametersNum = num;
             obj.processData([]);
-        end
-
-        function turnJitterOn(obj)
-            % currently applied in TwoVariablesPlot, and nowhere else? 
-            if ~isempty(obj.lastProcessedData)
-                obj.lastProcessedData.useJitter = true;
-                obj.plotManagerHandle.plotData(obj.lastProcessedData);
-            end
-        end
-
-        function turnJitterOff(obj)
-            if ~isempty(obj.lastProcessedData)
-                obj.lastProcessedData.useJitter = false;
-                obj.plotManagerHandle.plotData(obj.lastProcessedData);
-            end
         end
 
         function delete(obj)
@@ -139,14 +122,6 @@ classdef DataFormatter < handle
             otherIdx = obj.getOtherHandleIndex(srcIdx);
         
             dataStruct = obj.extractData(srcIdx);
-
-            % check if there are no data in cellArray or cellArray contains no rows
-            % 260414: this is happening when selecting objects and triggering row selection in RV - the first step is deselection which makes the data to be plotted empty
-            % it might not be sufficient to look just at the last cell, but this is what we use at first
-            if isempty(dataStruct.cellArray) || isequal(size(dataStruct.cellArray{end}, 1), 0)
-                obj.handleInsufficientParameters();
-                return
-            end
             
             % If another source exists, integrate or validate additional data
             if ~isempty(otherIdx)
@@ -345,7 +320,6 @@ classdef DataFormatter < handle
             % enough for categorical + required rest
             % this can be increased by having cell columns with more than 1 column
 
-            % TODO: instead of requiring categorical, we could just use colorcoding 
             availableColumnNum = sum([dataStruct.columnNum{:}]);
             hasEnoughColumns = availableColumnNum >= (obj.requiredParametersNum + 1); % +1 for the group column
             % disp(dataStruct.isCategorical)
@@ -403,7 +377,6 @@ classdef DataFormatter < handle
                 data.yLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.Y_COLUMN_NUM);
             end
 
-            data.useJitter = obj.useJitter;
             obj.lastProcessedData = data; 
             obj.plotManagerHandle.plotData(data);
         end
@@ -439,7 +412,6 @@ classdef DataFormatter < handle
                 data.yLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.Y_COLUMN_NUM);
             end
 
-            data.useJitter = obj.useJitter;
             obj.lastProcessedData = data;
             obj.plotManagerHandle.plotData(data);
         end

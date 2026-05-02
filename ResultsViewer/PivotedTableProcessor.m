@@ -24,7 +24,6 @@ classdef (Sealed) PivotedTableProcessor < handle
         rowParameterSetProgrammatically
         tableSelectionSyncRequired  % not the prettiest, but added to do table syncing before plotting data starts listening
         rowParameterChanged
-        plotUpdateRequired
     end
 
     methods
@@ -84,9 +83,6 @@ classdef (Sealed) PivotedTableProcessor < handle
             % disp(obj.pivotedTable)
 
             notify(obj, 'tableForDisplayChanged');
-
-            % notify the plottling component that the plot needs to be updated
-            notify(obj, 'plotUpdateRequired');
         end
 
 
@@ -230,65 +226,6 @@ classdef (Sealed) PivotedTableProcessor < handle
         end
 
 
-        function setRowSelection(obj, rowNames)
-            % Set row selection based on row names
-            % rowNames - cell array of row names to select
-            % disp("setting row selection in pivoted table processor")
-            % Validate input
-            if ~iscell(rowNames)
-                error('FullTableProcessor:InvalidInput', 'rowNames must be a cell array');
-            end
-            
-            % Get the current displayed table
-            displayedTable = obj.getTableForDisplay();
-            
-            if isempty(displayedTable) || isempty(rowNames)
-                disp("No table to select from or empty row names provided. Clearing selection.")
-                obj.selectedTableCellsList = [];
-                notify(obj, 'tableSelectionChanged');
-                return;
-            end
-            
-            % Match row names to indices
-            allRowNames = displayedTable.Properties.RowNames;
-            [~, rowIndices] = ismember(rowNames, allRowNames);
-            
-            % Filter out any row names that weren't found
-            validRows = rowIndices > 0;
-            rowIndices = rowIndices(validRows);
-            
-            if isempty(rowIndices)
-                obj.selectedTableCellsList = [];
-                notify(obj, 'tableSelectionChanged');
-                return;
-            end
-            
-            % Create selection cells list - for each row, select all columns
-            numColumns = width(displayedTable);
-
-            % Preallocate the array with the exact size needed
-            selectedCells = zeros(numel(rowIndices) * numColumns, 2);
-
-            % Fill the array using linear indexing instead of concatenation
-            idx = 1;
-            for i = 1:numel(rowIndices)
-                rowIdx = rowIndices(i);
-                selectedCells(idx:idx+numColumns-1, 1) = rowIdx;
-                selectedCells(idx:idx+numColumns-1, 2) = 1:numColumns;
-                idx = idx + numColumns;
-            end
-            
-            % Store the selection
-            obj.selectedTableCellsList = selectedCells;
-            % disp(obj.selectedTableCellsList)
-            
-            % Notify changes
-            notify(obj, 'tableSelectionChanged');
-            % update plotting
-            % notify(obj, 'plotUpdateRequired');
-        end
-
-
         function selectedList = getSelectedTableCellsList(obj)
             selectedList = obj.selectedTableCellsList;
         end
@@ -353,9 +290,6 @@ classdef (Sealed) PivotedTableProcessor < handle
 
             notify(obj, 'tableForDisplayChanged')
             notify(obj, 'tableSelectionSetProgrammatically')
-
-            % notify the plottling component that the plot needs to be updated 
-            notify(obj, 'plotUpdateRequired');
         end
 
 

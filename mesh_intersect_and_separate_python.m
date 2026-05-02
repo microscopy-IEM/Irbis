@@ -1,4 +1,4 @@
-function meshCell = mesh_intersect_and_separate_python(mesh_data, varargin)
+function [nObjects, meshCell] = mesh_intersect_and_separate_python(mesh_data, varargin)
 
     if nargin > 1
         library_selection = varargin{1};    % 1 for pymeshlab, 2 for trimesh

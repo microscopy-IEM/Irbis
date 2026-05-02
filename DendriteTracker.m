@@ -72,7 +72,7 @@ classdef DendriteTracker < handle
             [startPoint, endPoint] = obj.preprocessEndpoints(startPoint, endPoint, zstack);
             
             % calculate constraint bitmap if needed
-            constraintBitmap = obj.calculateConstraintBitmap(restrictedAreas, zstack, xlim, ylim, drift);
+            constraintBitmap = calculateConstraintBitmap(restrictedAreas, zstack, xlim, ylim, drift);
 
             % Find trajectory
             traj = obj.findTrajectory(zstack, startPoint, endPoint, constraintBitmap);
@@ -221,8 +221,8 @@ classdef DendriteTracker < handle
             
             numP = obj.ENDPOINT_REPLACEMENT_COUNT;
             
-            if (size(traj, 1) < 2*numP+1) || numP == 0
-                return; % Not enough points to smooth or smoothing disabled
+            if size(traj, 1) < 2*numP+1
+                return; % Not enough points to smooth
             end
             
             % Calculate direction vectors
@@ -237,7 +237,7 @@ classdef DendriteTracker < handle
         end
 
 
-        function constraintBitmap = calculateConstraintBitmap(~, restrictedAreas, zstack, xlim, ylim, drift)
+        function constraintBitmap = calculateConstraintBitmap(restrictedAreas, zstack, xlim, ylim, drift)
             % constrain tracking
         
             if isempty(restrictedAreas)
