@@ -386,7 +386,7 @@ function List = createEmptyList(structType,varargin)
 
             % Define variable metadata: {name, type, unit, description}
             varMeta = [
-                "groupId",        "double",      "",      "Identifier for the same object across time points";
+                "groupId",        "categorical", "",      "Identifier for the same object across time points";
                 "Mesh",           "cell",        "",      "Mesh data stored as a surfaceMesh object";
                 "parentId",       "double",      "",      "Value used to identify objects coming from the same parent object (e.g. spines coming from the same fullVolume)";
                 "parent",         "cell",        "",      "Information about parent objects, stored in dictionary";

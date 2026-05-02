@@ -390,6 +390,8 @@ classdef (Sealed) IsosurfaceGenerator < handle
                 
                 T.Properties.RowNames{objIdx} = num2str(validObjectIdx);  
 
+                T{objIdx, 'groupId'} = GroupIdHandler.getUntracked();   % this returns equivalent of 0 that is matching with the groupId type
+                % the reason why I am not just assigning 0 is because we might want to change the default value in the future - this requires less rewriting
                 T{objIdx, 'Mesh'} = {singleObjMesh};
                 T{objIdx, 'positionShift'} = {[0,0,0]};
                 T{objIdx, 'color'} = {rand(1,3)};

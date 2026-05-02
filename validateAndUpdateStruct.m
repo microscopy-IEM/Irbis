@@ -526,6 +526,13 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
                                 loadedStruct.model.(branch).List{idx}.basePatch = cell(height(List), 1);
                                 disp(['added basePatch column to ', num2str(idx)])
                             end
+
+                            % convert groupId to categorical
+                            if ismember('groupId', variableNames)
+                                if ~isa(loadedStruct.model.(branch).List{idx}.groupId, 'categorical')
+                                    loadedStruct.model.(branch).List{idx}.groupId = categorical(string(loadedStruct.model.(branch).List{idx}.groupId));
+                                end
+                            end
                         end
                     end
                 end
