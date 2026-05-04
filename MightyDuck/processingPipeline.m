@@ -28,6 +28,10 @@ classdef processingPipeline < handle
                 callerFigure = [];
             end
 
+            % sz = size(im)
+            % nTimePoints = sz(4)
+            % nChannels = size(im)
+
             % create progress bar
             progressBar = obj.createProgressBar(callerFigure);
 
@@ -41,7 +45,7 @@ classdef processingPipeline < handle
                 if obj.steps(stepInd).do    
                     
                     try
-                        im = obj.steps(stepInd).fcn(im,obj.steps(stepInd).params); % this calls processing function of the current step with 'params' and 'im' as input stored in the class object
+                        im = obj.steps(stepInd).fcn(im,obj.steps(stepInd).params); % this calls the processing function of the current step with 'params' and 'im' as input stored in the class object
                     catch ME
                         disp('Error Message:')
                         disp(ME.message)
@@ -259,13 +263,19 @@ classdef processingPipeline < handle
             degreeOfSmoothing = params.degreeOfSmoothing;
             sigma = params.sigma;
 
+            % nSteps = size(im,3);
+
             for plane = 1:size(im,3)
 
                 patchVar = std2(im(:,:,plane))^2;
                 DoS = 2*patchVar;
                 DoS = DoS*degreeOfSmoothing*0.2;
 
-                im(:,:,plane) = imbilatfilt(im(:,:,plane),DoS,sigma);                
+                im(:,:,plane) = imbilatfilt(im(:,:,plane),DoS,sigma);  
+
+                % obj.updateProgressBar(round(plane/nSteps,2)*100,'Finished',callerFigure,progressBar)   
+
+
             end
             
             disp('Bilateral filtering done')
@@ -452,9 +462,19 @@ classdef processingPipeline < handle
         %% Progress bar functions
         function progressBar = createProgressBar(callerFigure)
 
+            iconName = 'MightyDuckLogo.png';
+            haveIcon = exist(iconName,"file");
+
+            if haveIcon == 2
+               icon = iconName;
+            else
+               icon = ''; 
+            end
+
             if isempty(callerFigure)
 
                 progressBar = waitbar(0,'0','Name','Processing image','CreateCancelBtn','setappdata(gcbf,''canceling'',1)');
+                progressBar.Icon = icon;
                 setappdata(progressBar,'canceling',0);
 
             else
@@ -477,7 +497,7 @@ classdef processingPipeline < handle
 
             end
 
-            % pause(0.01)
+            pause(0.1)
 
         end
 
@@ -499,7 +519,7 @@ classdef processingPipeline < handle
             if ~isempty(progressgBar)
                 close(progressgBar)
                 delete(progressgBar)
-                % delete(findall(0, 'type', 'figure', 'tag', 'TMWWaitbar'));
+                delete(findall(0, 'type', 'figure', 'tag', 'TMWWaitbar'));
             end
 
         end
