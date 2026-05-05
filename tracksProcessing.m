@@ -80,9 +80,9 @@ function [tracks] = tracksProcessing(tracks,currentTimePoint)
         % calculate cumulative distance to origin
         % dist2origin = cumsum(disp);
 
-        D = pdist(coor);
-        Z = squareform(D);
-        temp = Z(:,1);
+        % D = pdist(coor);
+        % Z = squareform(D);
+        % temp = Z(:,1);
         
         % dist2origin(:,1) = 1:length(temp);
         % dist2origin(:,2) = temp
