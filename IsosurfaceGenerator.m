@@ -155,6 +155,10 @@ classdef (Sealed) IsosurfaceGenerator < handle
             validTimePoints = [];
 
             for tp = obj.timePoints
+                disp(newline)
+                disp('-------------------------------------------------------------')
+                disp('-------------------------------------------------------------')
+                disp(['Processing time point ' num2str(tp) '...']);
                 % TO OPTIMIZE - using tp directly assumes that timePoints are ordered (does not have to be true for the model for example)
                 wb.Title = ['Generating objects for time point ' num2str(tp)];
                 im = zstack(:, :, :, tp, obj.channel);
@@ -272,6 +276,12 @@ classdef (Sealed) IsosurfaceGenerator < handle
             verts = obj.rescaleMeshVertices(verts, newXstep, newYstep, newZstep);
 
             Mesh = surfaceMesh(verts, faces);
+
+            % disp(newline)
+            % disp('-------------------------------------------------------------')
+            % PythonMeshHelper.testMeshValidity(Mesh);
+            % disp('-------------------------------------------------------------')
+            % disp(newline)
         end
 
 
@@ -395,6 +405,15 @@ classdef (Sealed) IsosurfaceGenerator < handle
                 T{objIdx, 'Mesh'} = {singleObjMesh};
                 T{objIdx, 'positionShift'} = {[0,0,0]};
                 T{objIdx, 'color'} = {rand(1,3)};
+
+                if nVerts > 1000
+                    disp(newline)
+                    disp('-------------------------------------------------------------')
+                    disp(['Object ' num2str(validObjectIdx) ' with ' num2str(nVerts) ' vertices processed.']);
+                    PythonMeshHelper.testMeshValidity(singleObjMesh);
+                    disp('-------------------------------------------------------------')
+                    disp(newline)
+                end
             else
                 invalidRowsMask(objIdx) = true;    
             end

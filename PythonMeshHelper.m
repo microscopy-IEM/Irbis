@@ -81,6 +81,27 @@ classdef PythonMeshHelper
         end
 
 
+
+        function testMeshValidity(Mesh)
+            % testMeshValidity - Tests the validity of a mesh using a Python script.
+            %
+            % Inputs:
+            %   mesh_data - Cell array or struct containing mesh data (vertices, faces) for the main and helper meshes.
+            %
+            % This function calls 'test_mesh_validity_py_script.py' to perform the operations using trimesh in Python.
+            mesh_data = PythonMeshHelper.meshToPyStruct(Mesh);
+            
+            try
+                pyrunfile('test_mesh_validity_py_script.py', ...
+                    mesh_data=mesh_data);
+            catch ME
+                disp(ME.message);
+                error("Error in running the python script.");
+            end
+        end
+
+
+
         function [dendriteMesh, subtractionMeshes] = redefineWithCylinder(mesh_data)
             % redefineWithCylinder - Subtracts a cylinder from a mesh and adjusts a dendrite mesh using a Python script.
             %
