@@ -102,6 +102,29 @@ classdef PythonMeshHelper
 
 
 
+        function repairedMesh = repairMesh(Mesh)
+            % repairMesh - Repairs a mesh using a Python script.
+            %
+            % Inputs:
+            %   Mesh - MATLAB surfaceMesh object containing vertices, faces, and optionally vertex and face normals.
+            %
+            % This function calls 'repair_mesh_py_script.py' to perform the operations using trimesh in Python.
+
+            mesh_data = PythonMeshHelper.meshToPyStruct(Mesh);
+            
+            try
+                outputDict = pyrunfile('repair_mesh_py_script.py', "output", ...
+                    mesh_data=mesh_data);
+            catch ME
+                disp(ME.message);
+                error("Error in running the python script.");
+            end
+
+            repairedMesh = PythonMeshHelper.pyDictToMesh(outputDict);
+        end
+
+
+
         function [dendriteMesh, subtractionMeshes] = redefineWithCylinder(mesh_data)
             % redefineWithCylinder - Subtracts a cylinder from a mesh and adjusts a dendrite mesh using a Python script.
             %
