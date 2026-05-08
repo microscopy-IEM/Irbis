@@ -11,11 +11,6 @@ classdef Filtering < GroupingBaseClass
             obj.Active = active;
         end
 
-        % 241015 IS I don't know what this function was supposed to be for: 
-        function preservedConditions = getGroupConditions(obj)
-            preservedConditions = getGroupConditions@GroupingBaseClass(obj,true);
-        end
-
         function obj = updateGroupConditions(obj, groupName, newConditions)
             groups = fieldnames(obj.Conditions);
             for i = 1:numel(groups)

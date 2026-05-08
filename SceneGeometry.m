@@ -230,16 +230,19 @@ classdef (Sealed) SceneGeometry
             sightVector = ax.CameraPosition - ax.CameraTarget;
 
             z = [0 0 1*zSign];
-            elevation = acosd(dot(z, sightVector)/norm(sightVector));
+            cosTheta = dot(z, sightVector)/(norm(sightVector)*norm(z));
+            cosTheta = max(-1, min(1, cosTheta)); % clamp to [-1, 1] to avoid NaN from roundoff
+            elevation = acosd(cosTheta);
             elevation = 90 - elevation;
 
             upVector = ax.CameraUpVector;
             isUpsideDown = false;
-
-            if isequal(elevation, 90)
+            
+            tol = 1e-6; % tolerance for floating-point comparison
+            if abs(elevation - 90) < tol
                 % if the elevation is 90 or -90, the projection of sight to xy plane is zero
                 azimuth = -atan2d(zSign*xSign*upVector(1), zSign*ySign*upVector(2));
-            elseif isequal(elevation, -90)
+            elseif abs(elevation + 90) < tol
                 azimuth = -atan2d(-zSign*xSign*upVector(1), -zSign*ySign*upVector(2));
             else
                 azimuth = -atan2d(-xSign*sightVector(1), -ySign*sightVector(2));

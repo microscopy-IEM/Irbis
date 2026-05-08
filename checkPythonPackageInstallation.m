@@ -3,9 +3,9 @@ function checkPythonPackageInstallation(fig)
     packages = ["numpy", "trimesh", "scipy", "manifold3d", "networkx", "open3d", "pymeshfix", "skimage"];
 
     % Loop through and check each package
-    missing_packages = [];
+    missing_packages = strings(0, 1);
     for pkg = packages
-        is_installed = pyrun("import importlib.util; result = importlib.util.find_spec('" + pkg + "') is not None", "result");
+        is_installed = logical(pyrun("import importlib.util; result = importlib.util.find_spec('" + pkg + "') is not None", "result"));
         if is_installed
             disp(pkg + " is installed.");
         else

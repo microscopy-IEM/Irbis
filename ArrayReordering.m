@@ -2,11 +2,13 @@ classdef ArrayReordering
     methods(Static)
 
         function indexes = reorderElements(arrayLength, translatedIndexes, direction)
+            indexes = 1:arrayLength;
+
             if isempty(translatedIndexes)
                 return;
             end
 
-            indexes = 1:arrayLength;
+            translatedIndexes = unique(translatedIndexes(:).');
 
             connectedGroups = ArrayReordering.separateNumbersIntoConsecutiveGroups(translatedIndexes);
             for i = 1:numel(connectedGroups)
@@ -23,6 +25,8 @@ classdef ArrayReordering
                     if lastIdx < arrayLength
                         indexes = ArrayReordering.moveArrayElement(indexes, lastIdx+1, firstIdx);
                     end                            
+                else
+                    error('ArrayReordering:InvalidDirection', 'Direction must be ''up'' or ''down''.');
                 end
             end
         end
@@ -30,6 +34,13 @@ classdef ArrayReordering
 
 
         function groups = separateNumbersIntoConsecutiveGroups(array)
+            if isempty(array)
+                groups = {};
+                return;
+            end
+
+            array = unique(array(:).');
+
             % Initialize the first group with the first element of the array
             groups = {array(1)};
             currentGroupIndex = 1;

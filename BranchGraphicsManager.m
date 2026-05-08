@@ -189,6 +189,10 @@ classdef BranchGraphicsManager < handle
 
         function handleSelectionChange(obj, branch)
             % Handle selection change event for the specified branch
+            selectedIds = [];
+            selectedGroupIds = [];
+            currentTimePoint = [];
+            
             if isfield(obj.dataStruct, branch) && ~isempty(obj.dataStruct.(branch))
                 groupHandle = obj.dataStruct.(branch);
                 selectedIds = groupHandle.getSelectedIds();

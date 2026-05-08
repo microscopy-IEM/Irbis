@@ -67,15 +67,36 @@ classdef PythonMeshHelper
 
             nIntersections = int8(output{'n_intersections'});   % this should be 1
             intersectionMeshes = cell(1, nIntersections);
-            for i = 1:nIntersections
-                intersectionMeshes{i} = PythonMeshHelper.pyDictToMesh(output{'intersection_objects'}{i});
-            end
+                for i = 1:nIntersections
+                    try
+                        intersectionMeshes{i} = PythonMeshHelper.pyDictToMesh(output{'intersection_objects'}{i});
+                    catch ME
+                        if isequal(ME.identifier, 'PythonMeshHelper:InvalidMeshData')
+                            disp(['Intersection mesh ' num2str(i) ' is invalid and will be skipped.']);
+                        else
+                            rethrow(ME);
+                        end
+                    end
+                end
+            intersectionMeshes(cellfun('isempty', intersectionMeshes)) = [];
+
 
             nSubtractions = int8(output{'n_subtractions'});
             subtractionMeshes = cell(1, nSubtractions);
-            for i = 1:nSubtractions
-                subtractionMeshes{i} = PythonMeshHelper.pyDictToMesh(output{'subtraction_objects'}{i});
-            end
+
+                for i = 1:nSubtractions
+                    try
+                        subtractionMeshes{i} = PythonMeshHelper.pyDictToMesh(output{'subtraction_objects'}{i});
+                    catch ME
+                        if isequal(ME.identifier, 'PythonMeshHelper:InvalidMeshData')
+                            disp(['Subtraction mesh ' num2str(i) ' is invalid and will be skipped.']);
+                        else
+                            rethrow(ME);
+                        end
+                    end
+                end
+            subtractionMeshes(cellfun('isempty', subtractionMeshes)) = [];
+
             % this did not work because the input is py.dict:
             % differenceMeshCell = cellfun(@(x) PythonMeshHelper.pyDictToMesh(x), output{'subtraction_objects'});
         end
@@ -226,6 +247,11 @@ classdef PythonMeshHelper
             faces = int32(pythonDict{'faces'}) + 1; % Adjust for MATLAB 1-based indexing
             vertexNormals = double(pythonDict{'vertex_normals'});
             faceNormals = double(pythonDict{'face_normals'});
+
+            if isempty(vertices)
+                ME = MException('PythonMeshHelper:InvalidMeshData', 'The vertices data is empty. Cannot create a mesh.');
+                throw(ME);
+            end
 
             % Create the surfaceMesh for each component
             Mesh = surfaceMesh(vertices, faces, "VertexNormals", vertexNormals, "FaceNormals", faceNormals);

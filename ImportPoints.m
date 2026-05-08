@@ -10,15 +10,13 @@ function points = ImportPoints()
     origin = 'ThunderStorm';
     units = 'nm';
     
-    fullFileName = fullfile(path,coor_fileName);
-
-    coor_fileName
-    
     if isequal(coor_fileName,0)
        disp('User selected Cancel');
        points = [];
        return;
     end
+
+    fullFileName = fullfile(path,coor_fileName);
            
         disp(['User selected ', fullFileName]);
     
@@ -29,13 +27,13 @@ function points = ImportPoints()
             case 'ThunderStorm'
                 % replace space and brackets with undrescoper if present in column headers
                 coor.Properties.VariableNames = regexprep(coor.Properties.VariableNames, ' ', '');
-                coor.Properties.VariableNames = regexprep(coor.Properties.VariableNames, '[', '');
-                coor.Properties.VariableNames = regexprep(coor.Properties.VariableNames, ']', '');
+                coor.Properties.VariableNames = regexprep(coor.Properties.VariableNames, '\[', '');
+                coor.Properties.VariableNames = regexprep(coor.Properties.VariableNames, '\]', '');
                 coor.Properties.VariableNames = regexprep(coor.Properties.VariableNames, 'nm', '');
 
                 % ff = isfield(coor,'id')
 
-                if isfield(coor,'id')
+                if ismember('id', coor.Properties.VariableNames)
                     pointList = coor(:,["id","frame",'x','y','z','uncertainty_xy','uncertainty_z']);
                 else
                     

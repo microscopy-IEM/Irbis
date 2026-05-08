@@ -106,10 +106,14 @@ classdef OrbitToolClass < handle
 
             % at the moment intended only for 3D plot
             % TO OPTIMIZE: enable individual timer settings for each axes
-            obj.timerActive = true;
-            if nargin > 2
-                obj.timerDelay = timerDelay;
+            arguments
+                obj
+                timerFcn
+                timerDelay (1,1) {mustBeNumeric} = 0.2
             end
+            
+            obj.timerActive = true;
+            obj.timerDelay = timerDelay;
             obj.timerFcn = timerFcn;
 
             % singleShot means that it will be executed only once

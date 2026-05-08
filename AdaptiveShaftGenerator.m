@@ -70,7 +70,6 @@ classdef (Sealed) AdaptiveShaftGenerator
             vertices=verticesPy, faces=facesPy, centerline=centrelinePy, matlab_params=parameters);
 
             contoursPy = cell(contoursPy);
-            contoursPy = cell(contoursPy);
             contours = cell(size(contoursPy));
             for i = 1:numel(contoursPy) 
                 if py.isinstance(contoursPy{i}, py.type(py.None))
@@ -104,7 +103,6 @@ classdef (Sealed) AdaptiveShaftGenerator
             vertices=verticesPy, faces=facesPy, centerline=centrelinePy, matlab_params=parameters, test_point=position);
 
             contoursPy = cell(contoursPy);
-            contoursPy = cell(contoursPy);
             contours = cell(size(contoursPy));
             for i = 1:numel(contoursPy) 
                 if py.isinstance(contoursPy{i}, py.type(py.None))
@@ -132,10 +130,15 @@ classdef (Sealed) AdaptiveShaftGenerator
             for r=2:5:max(middlePointsIdx-5)
                 Idx = find(middlePoints(:,1) == unq(r),1);
 
-                [~,radius] = knnsearch(middlePoints(Idx,:),contours(Idx,:));
-
-                % radii = [radii;radius(1)];
-                radii(radiusId) = radius(1);
+                % compute distances from middle point to all contour points at this slice
+                contourAtSlice = contours(Idx,:);
+                middlePointAtSlice = middlePoints(Idx,:);
+                if ~isempty(contourAtSlice) && ~isempty(middlePointAtSlice)
+                    distances = pdist2(middlePointAtSlice, contourAtSlice);
+                    radii(radiusId) = mean(distances);
+                else
+                    radii(radiusId) = NaN;
+                end
                 radiusId = radiusId + 1;
             end
         end

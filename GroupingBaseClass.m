@@ -10,6 +10,8 @@ classdef GroupingBaseClass < handle
             obj.Conditions = conditions;
         end
 
+
+
         function categoryNames = getCategoryNames(obj)
             groups = fieldnames(obj.Conditions);
             categoryNames = cell(size(groups));
@@ -18,16 +20,7 @@ classdef GroupingBaseClass < handle
             end
         end
 
-        function groupConditions = getGroupConditions(obj, groupName)
-            groups = fieldnames(obj.Conditions);
-            for i = 1:numel(groups)
-                if isequal(obj.Conditions.(groups{i}).name, groupName)
-                    groupConditions = obj.Conditions.(groups{i}).conditions;
-                    return;
-                end
-            end
-            error('Group name %s not found', groupName);
-        end
+
 
         function listArray = updateTable(obj, listArray, timePoints)
             if istable(listArray)
@@ -45,6 +38,8 @@ classdef GroupingBaseClass < handle
                 end
             end
         end
+
+        
 
         function filterArray = updateFilterTable(obj, listArray, filterArray, timePoints)
             if istable(listArray)

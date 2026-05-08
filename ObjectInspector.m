@@ -127,12 +127,14 @@ classdef ObjectInspector < handle
                 if isempty(T) || ~ismember('Mesh', T.Properties.VariableNames)
                     continue;
                 end
-                mesh = T.Mesh{1};
-                if isempty(mesh) || ~isprop(mesh, 'Vertices')
-                    continue;
+                for meshIdx = 1:height(T)
+                    mesh = T.Mesh{meshIdx};
+                    if isempty(mesh) || ~isprop(mesh, 'Vertices')
+                        continue;
+                    end
+                    verts = mesh.Vertices;
+                    allVerts = [allVerts; verts];
                 end
-                verts = mesh.Vertices;
-                allVerts = [allVerts; verts];
             end
             if ~isempty(allVerts)
                 minXYZ = min(allVerts, [], 1);

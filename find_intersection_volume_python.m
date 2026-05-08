@@ -5,7 +5,7 @@ function [containsSynapse, intersectionVolume] = find_intersection_volume_python
         synapse_data=synapse_data);
 
     containsSynapse = logical(output{'contains_synapse'});
-    intersectionVolume = dobule(output{'intersection_volume'});
+    intersectionVolume = double(output{'intersection_volume'});
 
 end
 
