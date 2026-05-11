@@ -221,13 +221,15 @@ classdef PythonMeshHelper
             %
             % This function prepares the mesh data for use in Python scripts by converting it to a compatible format.
 
+            disp('here')
+            disp(class(Mesh));
             meshStruct = struct();
             meshStruct.vertices = Mesh.Vertices;
             meshStruct.faces = Mesh.Faces - 1; % Adjust for Python 0-based indexing
-            if ~isempty(Mesh.VertexNormals)
+            if isprop(Mesh, 'VertexNormals') && ~isempty(Mesh.VertexNormals)
                 meshStruct.vertex_normals = Mesh.VertexNormals;
             end
-            if ~isempty(Mesh.FaceNormals)
+            if isprop(Mesh, 'FaceNormals') && ~isempty(Mesh.FaceNormals)
                 meshStruct.face_normals = Mesh.FaceNormals;
             end
         end
