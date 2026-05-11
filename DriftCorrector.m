@@ -59,6 +59,18 @@ classdef (Sealed) DriftCorrector
                     
                 case 'pointCloud'
                     element = pctransform(element, rigidtform3d([0 0 0], drift));
+
+                case 'struct'
+                    for idx = 1:numel(element)
+                        % this is designed to translate basePatch that is stored as struct
+                        if isfield(element(idx), 'Vertices') && isnumeric(element(idx).Vertices)
+                            element(idx).Vertices = element(idx).Vertices + reshape(drift,1,[]);
+                        elseif isfield(element(idx), 'vertices') && isnumeric(element(idx).vertices)
+                            element(idx).vertices = element(idx).vertices + reshape(drift,1,[]);
+                        else
+                            warning('Struct missing ''Vertices'' field or not numeric – left unchanged.');
+                        end
+                    end
                     
                 otherwise
                     if ismethod(element, 'translate')   % primarily for Mesh objects

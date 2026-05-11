@@ -125,6 +125,7 @@ classdef ObjectInspector < handle
             for t = 1:numel(obj.rowArray)
                 T = obj.rowArray{t};
                 if isempty(T) || ~ismember('Mesh', T.Properties.VariableNames)
+                    disp('No mesh data for time point ' + string(t) + '; skipping bounding box calculation.');
                     continue;
                 end
                 for meshIdx = 1:height(T)
