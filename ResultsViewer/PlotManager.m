@@ -31,7 +31,9 @@ classdef PlotManager < handle
             obj.plotType = plotState.plotType;
             obj.useGrouping = plotState.useGrouping;
             obj.useIndividual = plotState.useIndividual;
-            obj.useJitter = plotState.useJitter;
+            if isfield(plotState, 'useJitter')
+                obj.useJitter = plotState.useJitter;
+            end
             obj.findRequiredParametersNum();
             obj.replaceFormatter();
         end
