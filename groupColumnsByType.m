@@ -1,4 +1,4 @@
-function [columnNamesScalar, columnNamesVector, columnNamesCategorical, columnNamesCell] = groupColumnsByType(T)
+function [columnNamesScalar, columnNamesVector, columnNamesCategorical, columnNamesLogical, columnNamesCell] = groupColumnsByType(T)
 
     % groupColumnsByType - Groups columns of a table by their data type.
     %
@@ -9,6 +9,7 @@ function [columnNamesScalar, columnNamesVector, columnNamesCategorical, columnNa
     %   columnNamesScalar - Cell array of names of columns containing scalar numeric values.
     %   columnNamesVector - Cell array of names of columns containing vector numeric values.
     %   columnNamesCategorical - Cell array of names of columns containing categorical values.
+    %   columnNamesLogical - Cell array of names of columns containing logical values.
     %   columnNamesCell - Cell array of names of columns containing cell values.
     %
     % Description:
@@ -24,6 +25,8 @@ function [columnNamesScalar, columnNamesVector, columnNamesCategorical, columnNa
     columnNamesNumeric = T.Properties.VariableNames(numericCols);
     categoricalCols = varfun(@iscategorical, T, 'OutputFormat', 'uniform');
     columnNamesCategorical = T.Properties.VariableNames(categoricalCols);
+    logicalCols = varfun(@islogical, T, 'OutputFormat', 'uniform');
+    columnNamesLogical = T.Properties.VariableNames(logicalCols);
     cellCols = varfun(@iscell, T, 'OutputFormat', 'uniform');
     columnNamesCell = T.Properties.VariableNames(cellCols);
 

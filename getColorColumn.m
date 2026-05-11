@@ -57,6 +57,11 @@ function colorColumn = getColorColumn(List, selectedParameter, colormap)
             [~, catIndices] = ismember(columnData(validRows), cats);
             c(validRows, :) = cr(catIndices, :);
         end
+    elseif islogical(columnData)
+        % Handle logical data: assign two distinct colors
+        cr = cmapFcn(2); % Generate colormap for two categories
+        c(columnData == true, :) = repmat(cr(2, :), sum(columnData == true), 1);
+        c(columnData == false, :) = repmat(cr(1, :), sum(columnData == false), 1);
     else
         error('Unsupported column data type for sorting.');
     end

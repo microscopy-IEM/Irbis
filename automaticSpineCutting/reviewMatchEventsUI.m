@@ -254,7 +254,7 @@ end
         currentAxesLimit = displayFrame.axesLimit;
         configureAxesForGizmo(ax, currentAxesLimit);
         resizeAxesToPanel();
-        drawnow;
+        % drawnow;
 
         activePlanePatchHandles = drawPlaneCuboids( ...
             ax, ...
@@ -1370,7 +1370,7 @@ end
 
 function drawContextMesh(ax, mesh, color)
 
-    disp(mean(mesh.Vertices, 1));
+    % disp(mean(mesh.Vertices, 1));
 
 patch(ax, ...
     'Vertices', mesh.Vertices, ...

@@ -276,6 +276,7 @@ for objectIndex = 1:numel(originalObjects)
 
     if numel(meshIndexes) == 1
         objectTable.Mesh{originalRowIndex} = separatedMeshes{meshIndexes(1)};
+        objectTable{originalRowIndex, 'edited'} = true;
         tableArray{originalObject.timePoint} = objectTable;
         continue
     end
@@ -288,6 +289,7 @@ for objectIndex = 1:numel(originalObjects)
         newObjectId = char(string(outputIds(localIndex)));
         objectTable(newObjectId, :) = objectTable(originalRowIndex, :);
         objectTable.Mesh{newObjectId} = separatedMeshes{meshIndexes(localIndex)};
+        objectTable{newObjectId, 'edited'} = true;
     end
 
     tableArray{originalObject.timePoint} = objectTable;

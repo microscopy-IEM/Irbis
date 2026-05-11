@@ -1,11 +1,16 @@
 classdef SpineCutting 
 
     methods (Static)
-        function [tableArray, editingTableFull, assignmentTableFull, objectsToRemoveFull] = runUserGuided(tableArray)
+        function [tableArray, editingTableFull, assignmentTableFull, objectsToRemoveFull] = runUserGuided(tableArray, fig)
 
             assignin("base", "tableArray", tableArray)
 
+            wb = uiprogressdlg(fig, 'Title', 'Semiautomatic spine cutting','Message',...
+                 'Finding merge events...', 'Cancelable', 'off', 'Indeterminate', 'on');
+
             mergeEvents = detectMergeEvents(tableArray)
+
+            close(wb)
 
             assignin("base", "mergeEvents", mergeEvents)
 
@@ -13,6 +18,9 @@ classdef SpineCutting
 
             assignin("base", "editingTable", editingTable)
 
+            wb = uiprogressdlg(fig, 'Title', 'Semiautomatic spine cutting','Message',...
+                 'Finding merge events...', 'Cancelable', 'off', 'Indeterminate', 'on');
+            wb.Message = "Processing edits...";
 
             nTimePoints = numel(unique(editingTable.timePoint));
             allAssignmentTables = cell(nTimePoints, 1);
@@ -45,6 +53,8 @@ classdef SpineCutting
             editingTableFull = editingTable;
             assignmentTableFull = vertcat(allAssignmentTables{:});
             objectsToRemoveFull = vertcat(allObjectsToRemove{:});
+
+            close(wb)
         end
     end
 end

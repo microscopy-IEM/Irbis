@@ -533,6 +533,11 @@ function updatedStruct = validateAndUpdateStruct(loadedStruct, baseStruct,loaded
                                     loadedStruct.model.(branch).List{idx}.groupId = categorical(string(loadedStruct.model.(branch).List{idx}.groupId));
                                 end
                             end
+
+                            % Add 'edited' column if it does not exist
+                            if ~ismember('edited',variableNames)
+                                loadedStruct.model.(branch).List{idx}.edited = false(height(List), 1);
+                            end
                         end
                     end
                 end

@@ -397,6 +397,7 @@ function List = createEmptyList(structType,varargin)
                 "color",          "cell",        "",      "Individual object color, stored as RGB triplet";
                 "excluded",       "logical",     "",      "Boolean value indicating whether the object is excluded by filters";
                 "timePoint",      "categorical", "",      "";
+                "edited",         "logical",     "",      "Boolean value indicating whether the object has been edited (semi)manually after creation"
             ];
 
             % Add derived features if needed

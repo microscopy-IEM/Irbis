@@ -34,6 +34,9 @@ function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColu
         cats = categories(columnData);
         nColors = numel(cats); % Number of unique categories
         hasNaN = any(isundefined(columnData)); % Check for uncategorized values
+    elseif islogical(columnData)
+        nColors = 2; % True and False
+        hasNaN = false; % Logical data cannot have NaN values
     else
         error('Unsupported data type for colorbar.');
     end
@@ -140,6 +143,14 @@ function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColu
                 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', ...
                 'Units', 'normalized', 'Color', textColor);
         end
+    elseif islogical(columnData)
+        % Logical data: add labels for true and false
+        text(colorbarAxesHandle, 0.25, -0.2, 'False', ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', ...
+            'Units', 'normalized', 'Color', textColor);
+        text(colorbarAxesHandle, 0.75, -0.2, 'True', ...
+            'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', ...
+            'Units', 'normalized', 'Color', textColor);
     end
 
     % Add column name label

@@ -64,7 +64,7 @@ classdef ManualEditing
             newRowIdx = height(T) + 1;
             T{newRowIdx, 'timestamp'} = datetime('now');
             T{newRowIdx, 'timePoint'} = timePoint;
-            T{newRowIdx, 'helperType'} = categorical("cuttingCuboid");
+            T{newRowIdx, 'helperType'} = categorical("thinCuboid");
             T{newRowIdx, 'helperMesh'} = {helperMesh};
             T{newRowIdx, 'helperParameters'} = {helperParameters};
             T{newRowIdx, 'branch'} = string(branch);
