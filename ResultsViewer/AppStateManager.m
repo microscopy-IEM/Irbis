@@ -360,17 +360,35 @@ classdef (Sealed) AppStateManager < handle
                 end
                 if isfield(state.topTable, 'processorState')
                     % disp('AppStateManager: setState - Setting state of the top table processor.');
-                    obj.topTableStateManagerHandle.setState(state.topTable.processorState);
+                    try
+                        obj.topTableStateManagerHandle.setState(state.topTable.processorState);
+                    catch ME
+                        if strcmp(ME.identifier, 'TableProcessor:InvalidState')
+                            disp('AppStateManager: setState - Warning: The state of the top table processor could not be fully applied due to invalid column definitions. The processor has been loaded with default values. Details:');
+                            disp(ME.message);
+                        else
+                            rethrow(ME);
+                        end
+                    end
                 end
             end
 
             if isfield(state, 'bottomTable')
-                disp('there is a bottom table')
+                % disp('there is a bottom table')
                 if isfield(state.bottomTable, 'type')
                     obj.showSummarizedAndIndicateSuccess();
                 end
                 if isfield(state.bottomTable, 'processorState')
-                    obj.bottomTableStateManagerHandle.setState(state.bottomTable.processorState);
+                    try
+                        obj.bottomTableStateManagerHandle.setState(state.bottomTable.processorState);
+                    catch ME
+                        if strcmp(ME.identifier, 'TableProcessor:InvalidState')
+                            disp('AppStateManager: setState - Warning: The state of the bottom table processor could not be fully applied due to invalid column definitions. The processor has been loaded with default values. Details:');
+                            disp(ME.message);
+                        else
+                            rethrow(ME);
+                        end
+                    end
                 end
             end
 

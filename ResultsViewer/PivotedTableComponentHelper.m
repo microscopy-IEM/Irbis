@@ -43,9 +43,15 @@ classdef PivotedTableComponentHelper < handle
 
         function setState(obj, processorState)
             if ~isempty(processorState)
+                % TO OPTIMIZE - calling set for parameters in component might be problematic, because it will trigger recalculation
                 obj.groupedDataParameter = processorState.groupedDataParameter;
+                obj.componentHandle.setDataParameter(obj.groupedDataParameter);
+
                 obj.columnParameter = processorState.columnParameter;
+                obj.componentHandle.setColumnParameter(obj.columnParameter);
+
                 obj.rowParameter = processorState.rowParameter;
+                obj.componentHandle.setRowParameter(obj.rowParameter);
             end
         end
 

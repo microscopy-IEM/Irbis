@@ -118,6 +118,16 @@ classdef (Sealed) TableStore < handle
             end
 
 
+
+            %% Validate existence of columns
+            function [isValid, invalidColumnNames] = validateColumnsExist(obj, columnNames)
+                % validate that the specified column names exist in the table
+                isValid = all(ismember(columnNames, obj.tableData.Properties.VariableNames));
+                invalidColumnNames = columnNames(~ismember(columnNames, obj.tableData.Properties.VariableNames));
+            end
+
+
+
             %% Get column names
             function columnNames = getColumnNames(obj)
                 if isempty(obj.tableData)
