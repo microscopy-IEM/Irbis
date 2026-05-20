@@ -180,7 +180,7 @@ function baseStructs = getBaseStruct(varargin)
                 
                     tracks.tracksList = arrayfun(@(x) T, 1:nTimePoints, 'UniformOutput', false);
                 
-                    tracks.filterTable = arrayfun(@(x) table(), 1:nTimePoints, 'UniformOutput', false);
+                    tracks.filterTable = arrayfun(@(x) table(), 1:nTimePoints, 'UniformOutput', false);     % TO FIX - remove, we do not use it anywhere
 
                 end
 
