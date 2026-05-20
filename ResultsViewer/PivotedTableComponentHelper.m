@@ -41,19 +41,25 @@ classdef PivotedTableComponentHelper < handle
             end
         end
 
+
+
         function setState(obj, processorState)
+            % store the selected parameters in this object and update the GUI component dropdowns¨
+            % this will not be called if TableProcessor finds out that not all parameters are in the table
             if ~isempty(processorState)
-                % TO OPTIMIZE - calling set for parameters in component might be problematic, because it will trigger recalculation
+                % the calls to the component only update the dropdown without any propagation side effects
                 obj.groupedDataParameter = processorState.groupedDataParameter;
-                obj.componentHandle.setDataParameter(obj.groupedDataParameter);
+                obj.componentHandle.setDataParameterSelection(obj.groupedDataParameter);
 
                 obj.columnParameter = processorState.columnParameter;
-                obj.componentHandle.setColumnParameter(obj.columnParameter);
+                obj.componentHandle.setColumnParameterSelection(obj.columnParameter);
 
                 obj.rowParameter = processorState.rowParameter;
-                obj.componentHandle.setRowParameter(obj.rowParameter);
+                obj.componentHandle.setRowParameterSelection(obj.rowParameter);
             end
         end
+
+
 
         function updateTableControls(obj)
             columnNames = obj.tableStoreHandle.getColumnNamesByCondition({'iscategorical', 'isnumeric', 'isstring', 'ischar'});

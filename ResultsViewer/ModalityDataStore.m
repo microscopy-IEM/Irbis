@@ -26,13 +26,22 @@ classdef (Sealed) ModalityDataStore < handle
             obj.addUserColumnDefinitionChangeListener(modalityPath, modalityData);
         end
 
+
+
         function modalityData = getModalityData(obj, modalityPath)
             if isempty(modalityPath)  % if no path is provided, get the data from the root
                 modalityData = obj.dataCollection;
             else
-                modalityData = getfield(obj.dataCollection, modalityPath{:});
+                if ModalityDataStore.hasNestedField(obj.dataCollection, modalityPath)
+                    modalityData = getfield(obj.dataCollection, modalityPath{:});
+                else
+                    ME = MException('ModalityDataStore:InvalidModalityPath', 'The specified modality path does not exist in the data store: %s', strjoin(modalityPath, '.'));
+                    throw(ME);
+                end
             end
         end
+
+
 
         function paths = getAvailableModalityPaths(obj)
             % Returns a cell array of all available modality paths in the data collection
@@ -56,6 +65,7 @@ classdef (Sealed) ModalityDataStore < handle
         end
 
 
+
         function addUserColumnDefinitionChangeListener(obj, modalityPath, modalityData)
             % Adds a listener for user column definition changes
             % listenerFunction should be a function handle that takes an event as input
@@ -64,6 +74,7 @@ classdef (Sealed) ModalityDataStore < handle
 
             obj.traverseAndAddListener(modalityPath, modalityData);
         end
+
 
 
         function notifyUserColumnDefinitionChange(obj, modalityPath, ~, event)
@@ -84,6 +95,8 @@ classdef (Sealed) ModalityDataStore < handle
     end
 
 
+
+
     methods (Access = ?matlab.unittest.TestCase)
         function traverseAndAddListener(obj, currentPath, data)
             if isstruct(data)
@@ -93,6 +106,27 @@ classdef (Sealed) ModalityDataStore < handle
                 end
             else
                 addlistener(data, 'userColumnDefinitionChanged', @(src, event) obj.notifyUserColumnDefinitionChange(currentPath, src, event));
+            end
+        end
+    end
+
+
+
+
+    methods (Static, Access = ?matlab.unittest.TestCase)
+        function tf = hasNestedField(s, path)
+            % Checks if a nested field exists in a structure given a path
+            tf = true;
+
+            for i = 1:numel(path)
+                field = path{i};
+
+                if isstruct(s) && isfield(s, field)
+                    s = s.(field);
+                else
+                    tf = false;
+                    return
+                end
             end
         end
     end
