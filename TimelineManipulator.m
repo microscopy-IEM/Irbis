@@ -46,6 +46,9 @@ classdef TimelineManipulator
             dataStruct.points = points;
             dataStruct.model = model;
             dataStruct.tools = tools;
+
+            disp("Time points " + strjoin(string(timePointsToDelete), ", ") + " have been deleted from the timeline and all branches. All following time points have been shifted accordingly.");
+            assignin("base", "dataStruct", dataStruct);
         end
 
 
@@ -138,6 +141,8 @@ classdef TimelineManipulator
                 doShift logical = true  % if true, the following time points will be shifter
                     % if false, the values will be replaced by 0/empty values
             end
+            
+            modifiedModel = model;
 
             branches = model.branches;
             for branchIdx = 1:numel(branches)
@@ -146,15 +151,15 @@ classdef TimelineManipulator
                 [modifiedBranchData, modifiedBranchIndices] = TimelineManipulator.deleteTimePointsInModelBranch(branchData, timePointsToDelete, indices.(branchName), doShift);
                 modifiedModel.(branchName) = modifiedBranchData;
                 modifiedIndices.(branchName) = modifiedBranchIndices;
+            end
 
-                if ~isempty(timePointsToDelete)
-                    % assignin("base", "model", modifiedModel);
-                    if isfield(modifiedModel, 'timeDrift')
-                        if doShift
-                            modifiedModel.timeDrift(timePointsToDelete) = [];
-                        else
-                            modifiedModel.timeDrift(timePointsToDelete) = repmat([0 0 0], numel(timePointsToDelete), 1);
-                        end
+            if ~isempty(timePointsToDelete)
+                % assignin("base", "model", modifiedModel);
+                if isfield(modifiedModel, 'timeDrift')
+                    if doShift
+                        modifiedModel.timeDrift(timePointsToDelete, :) = [];
+                    else
+                        modifiedModel.timeDrift(timePointsToDelete, :) = repmat([0 0 0], numel(timePointsToDelete), 1);
                     end
                 end
             end
@@ -342,12 +347,12 @@ classdef TimelineManipulator
 
             if doShift
                 modifiedPlanes.zstack(:, :, :, timePointsToDelete, :) = [];
-                modifiedPlanes.timeDrift(:, timePointsToDelete) = [];
+                modifiedPlanes.timeDrift(timePointsToDelete) = [];
                 modifiedPlanes.nTimePoints = modifiedPlanes.nTimePoints - numel(timePointsToDelete);
             else
                 nanMatrix = NaN(size(modifiedPlanes.zstack, 1), size(modifiedPlanes.zstack, 2), size(modifiedPlanes.zstack, 3), numel(timePointsToDelete), size(modifiedPlanes.zstack, 5));
                 modifiedPlanes.zstack(:, :, :, timePointsToDelete, :) = nanMatrix;
-                modifiedPlanes.timeDrift(:, timePointsToDelete) = repmat([NaN NaN NaN], numel(timePointsToDelete), 1);
+                modifiedPlanes.timeDrift(timePointsToDelete) = {nan(1,3)};
             end
             modifiedIndices = TimelineManipulator.shiftIndices(indices);
         end
