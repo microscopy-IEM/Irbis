@@ -97,7 +97,21 @@ classdef FullTableComponentHelper < handle
             if ~isempty(columnNamesCell)
                 cellNode = uitreenode(obj.treeHandle,'Text','cell');
                 for i = 1:length(columnNamesCell)
+                    % TO OPTIMIZE - if the column is not convertible to double, exclude it
                     name = columnNamesCell{i};
+                    node = uitreenode(cellNode,'Text', name, 'NodeData', name);
+                    contextMenu = PredefinedColumnContextMenu(node, name, obj);
+                    contextMenu.assignTo(node);
+                end
+            end
+
+            % logical parameters - hard-coded exclusion of 'excluded' column that is used internally for filtering
+            columnNamesLogical = obj.tableStoreHandle.getPredefinedColumnNamesByCondition('islogical');
+            if ~isempty(columnNamesLogical)
+                columnNamesLogical = setdiff(columnNamesLogical, 'excluded');
+                cellNode = uitreenode(obj.treeHandle, 'Text', 'logical');
+                for i = 1:length(columnNamesLogical)
+                    name = columnNamesLogical{i};
                     node = uitreenode(cellNode,'Text', name, 'NodeData', name);
                     contextMenu = PredefinedColumnContextMenu(node, name, obj);
                     contextMenu.assignTo(node);

@@ -5,7 +5,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
         rowParameter = ''   % decides which summarized table is going to be used
         
         filteredTable = table() 
-        activeColumns = {}
+        activeColumns = {}          % names of the columns shown in the UI table
 
         selectedTableCellsList (:,2) = [] % List of selected table cells nx2 array
 
@@ -23,6 +23,9 @@ classdef (Sealed) SummarizedTableProcessor < handle
         summarizedFilteringStorageListener
     end
 
+
+
+    
     events
         tableForDisplayChanged
         tableSelectionChanged
@@ -34,9 +37,14 @@ classdef (Sealed) SummarizedTableProcessor < handle
         plotUpdateRequired          % notify that plotting needs to be updated (used instead of tableSelectionChanged to avoid freezing)
     end
 
+
+
+
     methods
         function obj = SummarizedTableProcessor()
         end
+
+
 
         function delete(obj)
             % Destructor - clean up listeners
@@ -53,6 +61,8 @@ classdef (Sealed) SummarizedTableProcessor < handle
             end
         end
 
+
+
         function setHandles(obj, stateManagerHandle, dataStoreHandle)
             obj.stateManagerHandle = stateManagerHandle;
             if ~isempty(obj.stateManagerListener) && isvalid(obj.stateManagerListener)
@@ -62,18 +72,25 @@ classdef (Sealed) SummarizedTableProcessor < handle
 
             obj.dataStoreHandle = dataStoreHandle;
             obj.loadData();
-
         end
+
+
 
         function setState(obj, processorState)
 
             % Set the state of the processor
+            isValid = true;
             if isfield(processorState, 'activeColumns')
+                % TO OPTIMIZE - verify that the columns are valid (exist in the table)
+                [isValid, invalidColumnNames] = obj.summarizedTableStoreHandle.validateColumnsExist(processorState.activeColumns);
+                if ~isValid
+                    processorState.activeColumns = setdiff(processorState.activeColumns, invalidColumnNames);
+                end
                 obj.activeColumns = processorState.activeColumns;
                 obj.processData();
             end
 
-            if isfield(processorState, 'selectedTableCellsList')
+            if isValid && isfield(processorState, 'selectedTableCellsList')
                 obj.selectedTableCellsList = processorState.selectedTableCellsList;
             end
 
@@ -81,11 +98,19 @@ classdef (Sealed) SummarizedTableProcessor < handle
             % notify(obj, 'tableSelectionChanged');
             % call just plotting function instead
             notify(obj, 'plotUpdateRequired');
-        end 
+
+            if ~isValid
+                ME = MException('TableProcessor:InvalidState', 'The provided state contains invalid column names: %s. These columns have been ignored.', strjoin(invalidColumnNames, ', '));
+                throw(ME);
+            end
+        end
+
+
 
         function columnEditability = getColumnEditability(obj)
             columnEditability = obj.summarizedTableStoreHandle.getEditabilityOfColumns(obj.activeColumns);
         end
+
 
 
         function editManualColumnValue(obj, columnName, rowName, newValue)
@@ -104,6 +129,9 @@ classdef (Sealed) SummarizedTableProcessor < handle
             notify(obj, 'tableForDisplayChanged');
         end
     end
+
+
+
 
     methods
         function processData(obj)
@@ -142,10 +170,12 @@ classdef (Sealed) SummarizedTableProcessor < handle
         end
 
 
+
         function filterData(obj)
             obj.processData();
             notify(obj, 'newFiltersApplied')
         end
+
 
 
         function isKept = getKeptBooleanList(obj)
@@ -153,10 +183,12 @@ classdef (Sealed) SummarizedTableProcessor < handle
         end
 
 
+
         function setActiveColumns(obj, columnNames)
             obj.activeColumns = columnNames;
             obj.processData();
         end
+
 
 
         function setRowParameter(obj, rowParameter)
@@ -167,9 +199,11 @@ classdef (Sealed) SummarizedTableProcessor < handle
         end
 
 
+
         function rowParameter = getRowParameter(obj)
             rowParameter = obj.rowParameter;
         end
+
 
 
         function [name, type] = getRowParameterNameAndType(obj)
@@ -185,10 +219,12 @@ classdef (Sealed) SummarizedTableProcessor < handle
         end
 
 
+
         function tableForDisplay = getTableForDisplay(obj)
             % Get table for display
             tableForDisplay = obj.filteredTable;
         end
+
 
 
         function replaceData(obj)
@@ -197,9 +233,11 @@ classdef (Sealed) SummarizedTableProcessor < handle
         end
 
 
+
         function loadData(obj)
             obj.loadDataForGrouping();
         end
+
         
 
         function loadDataForGrouping(obj)
@@ -223,12 +261,14 @@ classdef (Sealed) SummarizedTableProcessor < handle
         end
 
 
+
         function storeSelectedTableCellsList(obj, selectedTableCellsList)
             % Validates and stores the selected table cells
             obj.selectedTableCellsList = selectedTableCellsList;
             notify(obj, 'tableSelectionSyncRequired'); % added first, because syncing must be before plotting (to be able to combine the data)
             notify(obj, 'tableSelectionChanged'); % this is observed by DataFormatter that processes data for plotting - needs data from both tables, if applicable
         end
+
 
 
         function programmaticallySetRowSelection(obj, selectedRowsList)
@@ -251,15 +291,18 @@ classdef (Sealed) SummarizedTableProcessor < handle
         end
 
 
+
         function selectedList = getSelectedTableCellsList(obj)
             selectedList = obj.selectedTableCellsList;
         end
+
 
 
         function setSelectedColumns(obj, columnNames)
             obj.activeColumns = columnNames;
             notify(obj, 'tableForDisplayChanged');
         end
+
 
 
         function [subtable, isCategorical] = getSelectedColumns(obj)
@@ -279,6 +322,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
         end
 
 
+
         function [subtable, isCategorical] = getSelectedRows(obj)
             selectedRowNumsInOrder = unique(obj.selectedTableCellsList(:,1), 'stable');
 
@@ -287,6 +331,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
             
             isCategorical = varfun(@iscategorical, subtable, 'OutputFormat', 'uniform');
         end
+
 
 
         function [subtable, isCategorical] = getSelected(obj)
@@ -300,6 +345,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
         end
 
 
+
         function processorState = getState(obj)
             % Return the current state of the processor
             processorState = struct();
@@ -307,6 +353,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
             processorState.activeColumns = obj.activeColumns;
             processorState.selectedTableCellsList = obj.selectedTableCellsList;
         end
+
 
 
         function programmaticallySetRowParameter(obj, rowParameter)

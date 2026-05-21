@@ -34,6 +34,8 @@ classdef TableStateManager < handle
             obj.createNewComponentPlusHelpers();
         end
 
+
+
         function delete(obj)
             if ~isempty(obj.tableProcessorHandle)
                 delete(obj.tableProcessorHandle);
@@ -56,12 +58,15 @@ classdef TableStateManager < handle
             end
         end
 
+
+
         function changeTableType(obj, newTableType)
             obj.tableType = newTableType;
 
             obj.createNewComponentPlusHelpers();
-
         end
+
+
 
         function createNewComponentPlusHelpers(obj)
             obj.generateTableProcessor();
@@ -72,6 +77,7 @@ classdef TableStateManager < handle
         end
 
 
+
         function silentlyLoadNewDataStore(obj)
             % load the new data store without notifying listeners
             % this is useful for setState - the table will be switched afterwards anyway
@@ -79,10 +85,13 @@ classdef TableStateManager < handle
         end
 
         
+
         function loadNewDataStore(obj)
             obj.dataStoreHandle = obj.appStateManagerHandle.getActiveDataStore();
             notify(obj, 'newModalityLoaded');
         end
+
+
 
         function generateTableProcessor(obj)
 
@@ -94,6 +103,8 @@ classdef TableStateManager < handle
 
         end
 
+
+
         function generateTableComponentHelper(obj)
 
             if ~isempty(obj.tableComponentHelperHandle)
@@ -101,9 +112,10 @@ classdef TableStateManager < handle
                 delete(obj.tableComponentHelperHandle);
             end
             obj.tableComponentHelperHandle = TableComponentHelperFactory.create(obj.tableType);
-
         end
 
+
+        
         function generateTableComponent(obj)
 
             if ~isempty(obj.tableComponentHandle)
@@ -119,6 +131,8 @@ classdef TableStateManager < handle
             obj.tableComponentHandle.Layout.Column = 1;
         end
 
+
+
         function setHandles(obj)
             % disp('TableStateManager:setHandles');
             % disp(obj.tableProcessorHandle);
@@ -128,21 +142,38 @@ classdef TableStateManager < handle
             obj.tableComponentHelperHandle.setHandles(obj, obj.dataStoreHandle, obj.tableComponentHandle);
         end
 
+        
+
         function tableProcessorHandle = getTableProcessorHandle(obj)
             tableProcessorHandle = obj.tableProcessorHandle;
         end
+
+
 
         function tableType = getTableType(obj)
             tableType = obj.tableType;
         end
 
+
+
         function dataStoreHandle = getActiveDataStore(obj)
             dataStoreHandle = obj.dataStoreHandle;
         end
 
+
+
         function setState(obj, processorState)
             % propagating the state setting to the table processor
-            obj.tableProcessorHandle.setState(processorState);
+            try
+                obj.tableProcessorHandle.setState(processorState);
+            catch ME
+                if strcmp(ME.identifier, 'TableProcessor:InvalidState')
+                    newME = MException('TableStateManager:InvalidState', ME.message);
+                    throw(newME);
+                else
+                    rethrow(ME);
+                end
+            end
             obj.tableComponentHelperHandle.setState(processorState);
         end
     end

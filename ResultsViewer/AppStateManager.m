@@ -342,51 +342,65 @@ classdef (Sealed) AppStateManager < handle
             obj.modality = state.modality;
             obj.branch = state.branch;
 
-            obj.getAndStoreActiveDataWithoutNotification(); % otherwise, the changes are happening multiple times
+            try
+                obj.getAndStoreActiveDataWithoutNotification(); % otherwise, the changes are happening multiple times
+            catch ME
+                if strcmp(ME.identifier, 'AppStateManager:InvalidModalityPath')
+                    % this will happen if the modality used in the view state is not available in the current data
+                    newME = MException('AppStateManager:InvalidState', ME.message);
+                    throw(newME);
+                else
+                    rethrow(ME);
+                end
+            end
 
             notify(obj, 'modalityChangedProgrammatically');
-
-            % disp('assigning')
-            % assignin("base", "state", state); % for debugging purposes
 
             % TO OPTIMIZE - table type changes even if not needed
 
             if isfield(state, 'topTable')
                 if isfield(state.topTable, 'type')
-                    % disp('AppStateManager: setState - Changing table type of the top table.');
                     obj.topTableStateManagerHandle.silentlyLoadNewDataStore();  % load data store before the components are swapped
                     obj.changeTopTableType(state.topTable.type);
                         % this notifies PlotManager about change in tableProcessor
                 end
                 if isfield(state.topTable, 'processorState')
-                    % disp('AppStateManager: setState - Setting state of the top table processor.');
-                    obj.topTableStateManagerHandle.setState(state.topTable.processorState);
+                    try
+                        obj.topTableStateManagerHandle.setState(state.topTable.processorState);
+                    catch ME
+                        if strcmp(ME.identifier, 'TableStateManager:InvalidState')
+                            newME = MException('AppStateManager:InvalidState', ME.message);
+                            throw(newME);
+                        else
+                            rethrow(ME);
+                        end
+                    end
                 end
             end
 
             if isfield(state, 'bottomTable')
-                disp('there is a bottom table')
                 if isfield(state.bottomTable, 'type')
                     obj.showSummarizedAndIndicateSuccess();
                 end
                 if isfield(state.bottomTable, 'processorState')
-                    obj.bottomTableStateManagerHandle.setState(state.bottomTable.processorState);
+                    try
+                        obj.bottomTableStateManagerHandle.setState(state.bottomTable.processorState);
+                    catch ME
+                        if strcmp(ME.identifier, 'TableStateManager:InvalidState')
+                            newME = MException('AppStateManager:InvalidState', ME.message);
+                            throw(newME);
+                        else
+                            rethrow(ME);
+                        end
+                    end
                 end
             end
 
             % obj.generateFilteringMenuStateManager();  % this is not needed, as it is already done in the changeTableType method
 
-            % if isfield(state, 'bottomTable')
-            %     if isfield(state.bottomTable, 'type')
-            %         obj.bottomTableStateManagerHandle.changeTableType(state.bottomTable.type);
-            %     end
-            %     if isfield(state.bottomTable, 'processorState')
-            %         obj.bottomTableStateManagerHandle.setState(state.bottomTable.processorState);
-            %     end
-            % end
-
             % notify(obj, 'newModalityLoaded');   % added to ensure proper setup of the plotManager
         end
+
 
 
         function establishBridgeForColumnDefinitions(obj, mainAppHandle)
@@ -395,6 +409,7 @@ classdef (Sealed) AppStateManager < handle
 
             obj.columnDefinitionBridge = ColumnDefinitionBridge(obj.modalityDataStoreHandle, mainAppHandle);
         end
+
 
 
         function burnBridgeForColumnDefinitions(obj)
@@ -406,6 +421,9 @@ classdef (Sealed) AppStateManager < handle
             end
         end
     end
+
+
+
 
     methods (Access = ?matlab.unittest.TestCase)
         function changeModalityForUserSelected(obj)
@@ -431,6 +449,7 @@ classdef (Sealed) AppStateManager < handle
         end
 
 
+
         function changeBranchForUserSelected(obj)
             newBranch = obj.appHandle.getActiveBranch();
             obj.branch = newBranch;
@@ -439,6 +458,7 @@ classdef (Sealed) AppStateManager < handle
 
             % at the moment, app does not need to be notified (no changes in the UI), and the rest is notified via getAndStoreActiveData by newModalityLoaded event
         end
+
 
 
         function loadData(obj, newDataStruct)
@@ -512,6 +532,7 @@ classdef (Sealed) AppStateManager < handle
         end
 
 
+
         function addStoredColumnDefinitionsToTableStore(~, tableStore, definitionList, namesToRecalculate)
             % Add stored categorizations to the table store
             if ~isempty(definitionList)
@@ -527,6 +548,7 @@ classdef (Sealed) AppStateManager < handle
                 tableStore.addExistingUserColumnDefinitions(definitionList, namesToRecalculate, namesToFreeze);
             end
         end
+
         
 
         function addModalityPath(obj, modalityPath)
@@ -550,6 +572,7 @@ classdef (Sealed) AppStateManager < handle
                     end
                 end
         end
+
 
 
         function setInitialModality(obj)
@@ -620,6 +643,7 @@ classdef (Sealed) AppStateManager < handle
         end
 
 
+
         function getAndStoreActiveDataWithoutNotification(obj)
             if isempty(obj.branch)  % happens for modalities that do not have branches (like tracks)
                 modalityPath = {obj.modality};
@@ -628,7 +652,16 @@ classdef (Sealed) AppStateManager < handle
             end
 
             % Get the DataStore from ModalityDataStore
-            obj.activeDataStoreHandle = obj.modalityDataStoreHandle.getModalityData(modalityPath);
+            try
+                obj.activeDataStoreHandle = obj.modalityDataStoreHandle.getModalityData(modalityPath);
+            catch ME
+                if strcmp(ME.identifier, 'ModalityDataStore:InvalidModalityPath')
+                    newME = MException('AppStateManager:InvalidModalityPath', ME.message);
+                    throw(newME);
+                else
+                    rethrow(ME);
+                end
+            end
         end
     end
 end

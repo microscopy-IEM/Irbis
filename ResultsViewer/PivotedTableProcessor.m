@@ -17,6 +17,9 @@ classdef (Sealed) PivotedTableProcessor < handle
         selectedTableCellsList (:,2) = [] % Initialize as empty array
     end
 
+
+
+
     events
         tableForDisplayChanged
         tableSelectionChanged
@@ -27,9 +30,14 @@ classdef (Sealed) PivotedTableProcessor < handle
         plotUpdateRequired
     end
 
+
+
+
     methods
         function obj = PivotedTableProcessor()
         end
+
+
 
         function delete(obj)
             % Destructor - clean up listeners
@@ -46,6 +54,8 @@ classdef (Sealed) PivotedTableProcessor < handle
             end
         end
 
+
+
         function setHandles(obj, stateManagerHandle, dataStoreHandle)
 
             obj.stateManagerHandle = stateManagerHandle;
@@ -57,6 +67,8 @@ classdef (Sealed) PivotedTableProcessor < handle
             obj.dataStoreHandle = dataStoreHandle;
             obj.loadData();
         end
+
+        
 
         function processData(obj)
 
@@ -90,6 +102,7 @@ classdef (Sealed) PivotedTableProcessor < handle
         end
 
 
+
         function processDataWithoutNotification(obj)
             % Process data without notifying observers
             rawTable = obj.tableStoreHandle.getTableData();
@@ -116,6 +129,7 @@ classdef (Sealed) PivotedTableProcessor < handle
         end
 
         
+
         function filterWithBooleanList(obj, isKept)
             % Filter the data with a boolean list
             if isempty(obj.tableStoreHandle)
@@ -131,14 +145,17 @@ classdef (Sealed) PivotedTableProcessor < handle
         end
 
 
+
         function setAggregationFunction(obj, func)
             obj.aggregationFunction = func;
         end
 
 
+
         function result = getTableForDisplay(obj)
             result = obj.pivotedTable;
         end
+
 
 
         function setGroupedDataParameter(obj, parameter)
@@ -147,10 +164,12 @@ classdef (Sealed) PivotedTableProcessor < handle
         end
 
 
+
         function setColumnParameter(obj, parameter)
             obj.columnParameter = parameter;
             obj.processData();
         end
+
 
 
         function setRowParameter(obj, parameter)
@@ -160,12 +179,14 @@ classdef (Sealed) PivotedTableProcessor < handle
         end
 
 
+
         function replaceData(obj)
             % this should be called when the data changes
 
             obj.dataStoreHandle = obj.stateManagerHandle.getActiveDataStore();
             obj.loadData();
         end
+
 
 
         function [name, type] = getRowParameterNameAndType(obj)
@@ -181,6 +202,7 @@ classdef (Sealed) PivotedTableProcessor < handle
                 end
             end
         end
+
 
 
         function loadData(obj)
@@ -202,12 +224,14 @@ classdef (Sealed) PivotedTableProcessor < handle
         end
 
 
+
         function storeSelectedTableCellsList(obj, selectedTableCellsList)
             % Validates and stores the selected table cells
             obj.selectedTableCellsList = selectedTableCellsList;
             notify(obj, 'tableSelectionSyncRequired'); % added first, because syncing must be before plotting (to be able to combine the data)
             notify(obj, 'tableSelectionChanged'); % this is observed by DataFormatter that processes data for plotting - needs data from both tables, if applicable
         end
+
 
 
         function programmaticallySetRowSelection(obj, selectedRowsList)
@@ -228,6 +252,7 @@ classdef (Sealed) PivotedTableProcessor < handle
 
             notify(obj, 'tableSelectionSetProgrammatically')     % notify the component, since we do not have direct link to it
         end
+
 
 
         function setRowSelection(obj, rowNames)
@@ -289,9 +314,11 @@ classdef (Sealed) PivotedTableProcessor < handle
         end
 
 
+
         function selectedList = getSelectedTableCellsList(obj)
             selectedList = obj.selectedTableCellsList;
         end
+
 
 
         function [subtable, isCategorical] = getSelectedColumns(obj)
@@ -311,6 +338,7 @@ classdef (Sealed) PivotedTableProcessor < handle
         end
 
 
+
         function [subtable, isCategorical] = getSelectedRows(obj)
             selectedRowNumsInOrder = unique(obj.selectedTableCellsList(:,1), 'stable');
 
@@ -319,6 +347,7 @@ classdef (Sealed) PivotedTableProcessor < handle
             
             isCategorical = varfun(@iscategorical, subtable, 'OutputFormat', 'uniform');
         end
+
 
 
         function [subtable, isCategorical] = getSelected(obj)
@@ -331,6 +360,7 @@ classdef (Sealed) PivotedTableProcessor < handle
             isCategorical = varfun(@iscategorical, subtable, 'OutputFormat', 'uniform');
         end
 
+        
 
         function processorState = getState(obj)
             % Return the current state of the processor
@@ -342,21 +372,78 @@ classdef (Sealed) PivotedTableProcessor < handle
         end
 
 
+
         function setState(obj, processorState)
             % Set the state of the processor
             if ~isempty(processorState)
+                usedColumnNames = {processorState.groupedDataParameter, processorState.columnParameter, processorState.rowParameter};
+                [areColumnsValid, invalidColumnNames] = obj.tableStoreHandle.validateColumnsExist(usedColumnNames);
+                if ~areColumnsValid
+                    % TO FIX - this check should be probably in ComponentHelper rather than here
+                    % TO FIX - with the current setup, there are loops in calls - should be cleaned
+                    % the dropdowns will be just filled with default values
+                    ME = MException('TableProcessor:InvalidState', 'The following columns specified in the state do not exist in the table: %s', strjoin(invalidColumnNames, ', '));
+                    throw(ME);
+                end
                 obj.groupedDataParameter = processorState.groupedDataParameter;
                 obj.columnParameter = processorState.columnParameter;
                 obj.rowParameter = processorState.rowParameter;
-                obj.selectedTableCellsList = processorState.selectedTableCellsList;
+                [validSelection, ~] = obj.validateSelection(processorState.selectedTableCellsList);
+                obj.selectedTableCellsList = validSelection;
+
+
+                notify(obj, 'tableForDisplayChanged')
+                notify(obj, 'tableSelectionSetProgrammatically')
+
+                % notify the plottling component that the plot needs to be updated 
+                notify(obj, 'plotUpdateRequired');
+            end
+        end
+
+
+
+        function [validSelection, isAllValid] = validateSelection(obj, selection)
+            % validates that selection fits within the size of the table
+            % used for example when applying view, so that out-of-bounds error is not thrown
+            % input: 
+            %   - selectionCellsList
+            %
+            % output: 
+            %   - validSelection - list of in-bounds selected cells, same format as selection (selectedTableCellsList)
+            %   - isAllValid - boolean value saying whether all cell indices fit within the table
+            % 
+            validSelection = [];
+            isAllValid = true;
+
+            if isempty(selection)
+                return
             end
 
-            notify(obj, 'tableForDisplayChanged')
-            notify(obj, 'tableSelectionSetProgrammatically')
+            if ~isnumeric(selection) || size(selection, 2) ~= 2
+                isAllValid = false;
+                return
+            end
 
-            % notify the plottling component that the plot needs to be updated 
-            notify(obj, 'plotUpdateRequired');
+            displayedTable = obj.getTableForDisplay();
+            if isempty(displayedTable)
+                isAllValid = false;
+                return
+            end
+
+            numRows = height(displayedTable);
+            numCols = width(displayedTable);
+
+            rows = selection(:, 1);
+            cols = selection(:, 2);
+
+            isFiniteInteger = isfinite(rows) & isfinite(cols) & (mod(rows, 1) == 0) & (mod(cols, 1) == 0);
+            isInBounds = rows >= 1 & rows <= numRows & cols >= 1 & cols <= numCols;
+            isValid = isFiniteInteger & isInBounds;
+
+            validSelection = selection(isValid, :);
+            isAllValid = all(isValid);
         end
+
 
 
         function programmaticallySetRowParameter(obj, rowParameter)

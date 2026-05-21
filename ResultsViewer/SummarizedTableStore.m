@@ -23,9 +23,15 @@ classdef SummarizedTableStore < handle
         % TO IMPLEMENT - before the ModalityDataStore is saved, clean the listeners and other temp variables
     end
 
+
+
+
     events
         tableDataChanged % event to notify when the table data changes
     end
+
+
+
 
     methods
         function obj = SummarizedTableStore(groupingName, tableStoreHandle, userColumnDefinitions)
@@ -49,6 +55,7 @@ classdef SummarizedTableStore < handle
             obj.createDefaultColumnDefinitions();
             obj.extractRowNames();
         end
+
 
 
         function createDefaultColumnDefinitions(obj, varargin)
@@ -103,10 +110,12 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function addColumnDefinition(obj, columnDefinitionHandle)
             % Add a column definition to the store
             obj.columnDefinitionHandles{end+1} = columnDefinitionHandle;
         end
+
 
 
         function addUserDefinedColumn(obj, columnName, newData, columnDefinitionHandle)
@@ -124,6 +133,7 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function updateUserDefinedColumn(obj, columnName, newData, userDefinitionHandle)
             % Update the data of a user-defined column
             if ismember(columnName, obj.userDefinedColumns)
@@ -137,6 +147,7 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function makeColumnEditable(obj, columnName)
             % Make a column editable in the store
             if ismember(columnName, obj.userDefinedColumns) && ~ismember(columnName, obj.editableColumns)   
@@ -148,6 +159,7 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function idx = getEditableColumnIdx(obj, columnName)
             % Get the index of an editable column
             idx = find(strcmp(obj.editableColumns, columnName), 1);
@@ -155,6 +167,7 @@ classdef SummarizedTableStore < handle
                 error('Column "%s" is not editable.', columnName);
             end
         end
+
 
 
         function editManualColumnValue(obj, columnName, rowName, newValue)
@@ -181,10 +194,12 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function columnCount = getNumberOfColumnsOfType(obj, type)
             % Get the number of columns of a specific type
             columnCount = sum(cellfun(@(x) isa(x, type), obj.columnDefinitionHandles));
         end
+
 
 
         function columnEditability = getEditabilityOfColumns(obj, columnNames)
@@ -193,10 +208,12 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function columnNames = getStatisticalColumnNames(obj)
             % Get the names of all columns in the store
             columnNames = cellfun(@(x) x.getColumnName(), obj.columnDefinitionHandles, 'UniformOutput', false);
         end
+
 
 
         function columnNames = getColumnNamesByCondition(obj, typeConditions)
@@ -212,16 +229,19 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function parentNames = getParentNames(obj)
             % Get the names of all parent columns
             parentNames = obj.parentColumnNames;
         end
 
 
+
         function columnNames = getColumnNames(obj)
             statisticalColumnNames = obj.getStatisticalColumnNames();
             columnNames = [statisticalColumnNames, obj.userDefinedColumns];
         end
+
 
         
         function columnNames = getStatisticalColumnNamesForParent(obj, parentName)
@@ -230,6 +250,7 @@ classdef SummarizedTableStore < handle
             isParentColumn = cellfun(@(x) strcmp(x.getDataParameter(), parentName), obj.columnDefinitionHandles);
             columnNames = columnNames(isParentColumn);
         end
+
 
 
         function columnNames = getUserDefinedColumnNames(obj)
@@ -241,6 +262,7 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function columnNames = getEditableColumnNames(obj)
             if isempty(obj.editableColumns)
                 columnNames = {};
@@ -248,6 +270,7 @@ classdef SummarizedTableStore < handle
                 columnNames = obj.editableColumns;
             end
         end
+
 
 
         function userColumnDefinition = getUserColumnDefinition(obj, columnName)
@@ -265,6 +288,7 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function numDefinitionsOfType = getNumDefinitionsOfType(obj, definitionType)
             % get the number of user-defined columns of a specific type
             numDefinitionsOfType = 0;
@@ -274,6 +298,16 @@ classdef SummarizedTableStore < handle
                 end
             end
         end
+
+
+
+        function [isValid, invalidColumnNames] = validateColumnsExist(obj, columnNames)
+            % validate that the specified column names exist in the table
+            existingColumnNames = obj.getColumnNames();
+            invalidColumnNames = setdiff(columnNames, existingColumnNames);
+            isValid = isempty(invalidColumnNames);
+        end
+
 
 
         function subset = getTableSubsetByName(obj, columnNames)
@@ -337,6 +371,7 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function updateTableData(obj)
             % check which columns are missing and create them
 
@@ -364,6 +399,7 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function removeParentColumnAndItsChildren(obj, parentName)
             % Remove a parent column and its child columns from the store
             
@@ -387,6 +423,7 @@ classdef SummarizedTableStore < handle
             obj.parentColumnTypes(idx) = [];
 
         end
+
 
 
         function removeColumn(obj, columnName)
@@ -416,6 +453,7 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function renameColumn(obj, oldName, newName)
             if ~isvarname(newName)
                 error('"%s" is not a valid MATLAB variable name.', newName);
@@ -441,6 +479,7 @@ classdef SummarizedTableStore < handle
         end
 
 
+
         function extractRowNames(obj)
             % get and store row names from the parent table to be able to combine them with calculated columns later
             parentTable = obj.tableStoreHandle.getTableSubsetByName(obj.groupingName);
@@ -459,6 +498,8 @@ classdef SummarizedTableStore < handle
             end
         end
 
+
+        
         function rowNum = getRowNumCorrespondingToName(obj, rowName)
             % Get the row number corresponding to a specific row name
             if ismember(rowName, obj.rowNames)
