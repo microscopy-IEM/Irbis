@@ -94,6 +94,9 @@ MSD.ma = ma;
 % save complete MSD analysis 
 % tracks.MSD = MSD;
 
+% Convert wrong (negative fits to nan)
+MSD.MSD5(MSD.MSD5<0) = nan;
+
 % add crucial numbers to tracksList
 T.MSD5(ids) = MSD.MSD5;
 T.MSDr2(ids) = MSD.MSD5_r2;
