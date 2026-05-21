@@ -1,4 +1,5 @@
-function res = log10(values)
+
+function res = customLog10(values)
 % custom version of log10 function
 % treats negative values at imput as NaN, to prevent complex number at
 % output of the function
