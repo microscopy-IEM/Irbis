@@ -7,7 +7,7 @@ classdef (Sealed) FormulaColumnDefinitionDialog
             dlgTitle = 'Define new column';
             numLines = 1;
             % defaultAns = {'', ''};
-            defaultAns = {'Dlog', 'log10(MSD5)'}; % temporal
+            defaultAns = {'Dlog', 'customLog10(MSD5)'}; % temporal
             input = inputdlg(prompt, dlgTitle, numLines, defaultAns);
 
             % Check if the user pressed cancel
