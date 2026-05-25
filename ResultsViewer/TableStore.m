@@ -7,6 +7,9 @@ classdef (Sealed) TableStore < handle
         userDefinedColumns = {}; % cell array of custom column names (e.g. derived data columns)
         editableColumns = {};  % cell array of editable column names (e.g. derived data columns)
         userColumnDefinitions = {};
+
+        doNormalizationByFirst = false  % whether to normalize the values in the pivot table by the first value in each row (e.g. to show relative changes compared to the first time point)
+        % TO OPTIMIZE - this might be replaced for something more complex, but I did not figure out where would be better to keep this information
     end
 
     events
@@ -447,6 +450,19 @@ classdef (Sealed) TableStore < handle
                 else
                     error('Column %s does not exist or is not editable.', columnName);
                 end
+            end
+
+
+            %% Edit/get normalization status
+            function setNormalizationStatus(obj, doNormalize)
+                obj.doNormalizationByFirst = doNormalize;
+                notify(obj, 'tableDataChanged');  % Notify that the data has changed to trigger any necessary updates in the views
+            end
+
+
+
+            function doNormalize = getNormalizationStatus(obj)
+                doNormalize = obj.doNormalizationByFirst;
             end
     end
 

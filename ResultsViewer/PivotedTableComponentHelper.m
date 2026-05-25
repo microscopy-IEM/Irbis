@@ -17,8 +17,9 @@ classdef PivotedTableComponentHelper < handle
 
     methods
         function obj = PivotedTableComponentHelper()
-
         end
+
+
 
         function setHandles(obj, stateManagerHandle, dataStoreHandle, componentHandle)
             % set the handles for the tree and other components
@@ -30,6 +31,8 @@ classdef PivotedTableComponentHelper < handle
             obj.dataStoreHandle = dataStoreHandle;
             obj.loadData();
         end
+
+
 
         function delete(obj)
             % delete the listeners
@@ -111,29 +114,52 @@ classdef PivotedTableComponentHelper < handle
             else 
                 obj.componentHandle.setDataParameter(columnNames{1});
             end
+
+            % set the normalization status in the component based on the table store
+            doNormalize = obj.tableStoreHandle.getNormalizationStatus();
+            obj.componentHandle.setNormalizationStatus(doNormalize);
         end
+
+
 
         function setGroupedDataParameter(obj, parameter)
             obj.groupedDataParameter = parameter;
         end
 
+
+
         function setColumnParameter(obj, parameter)
             obj.columnParameter = parameter;
         end
 
+
+
         function setRowParameter(obj, parameter)
             obj.rowParameter = parameter;
         end
+
+
+
+        function setNormalizationStatus(obj, doNormalize)
+            % should be called from the component when the user changes the normalization option in the GUI
+            obj.tableStoreHandle.setNormalizationStatus(doNormalize);
+        end
+
+
 
         function setRowParameterAndLoadData(obj, parameter)
             obj.rowParameter = parameter;
             obj.loadData();
         end
 
+
+
         function replaceData(obj)
             obj.dataStoreHandle = obj.stateManagerHandle.getActiveDataStore();
             obj.loadData();
         end
+
+
 
         function loadData(obj)
             obj.tableStoreHandle = obj.dataStoreHandle.getTableStore();

@@ -93,6 +93,13 @@ classdef (Sealed) PivotedTableProcessor < handle
             end
 
             obj.pivotedTable = pivotTable(filteredTable, obj.columnParameter, obj.rowParameter, obj.groupedDataParameter);
+
+            % apply normalization by dividing each value in the row by the first value in the row, if the setting is on
+            % if the first column is 0/NaN, find the first non-zero/non-NaN value and divide by it, if it exists, otherwise keep the row as is (all zeros/NaNs)
+            doNormalizeByFirst = obj.tableStoreHandle.getNormalizationStatus();
+            if doNormalizeByFirst
+                obj.pivotedTable = normalizeByFirstValueInRow(obj.pivotedTable);
+            end
             % disp(obj.pivotedTable)
 
             notify(obj, 'tableForDisplayChanged');
