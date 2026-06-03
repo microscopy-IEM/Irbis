@@ -81,7 +81,8 @@ function [outputFolder, selectedFormat, centerMeshes, selectedBranches, selected
     isCancelled = true;
 
     % Supported surface mesh file formats from writeSurfaceMesh.
-    outputFormats = {'stl', 'ply', 'fbx', 'obj', 'gltf', 'glb', 'off', 'dae'};
+    % 3mf format is special, should be able to also export colors, and goes through a dedicate function
+    outputFormats = {'stl', 'ply', 'fbx', 'obj', 'gltf', 'glb', 'off', 'dae', '3mf'};
     outputFormatsDocUrl = 'https://www.mathworks.com/help/lidar/ref/writesurfacemesh.html#mw_ca2fbf17-69fb-41ca-b2de-2bb249aeb950';
 
     % Create a modal dialog so the caller waits for a decision.
