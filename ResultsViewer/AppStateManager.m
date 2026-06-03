@@ -267,6 +267,13 @@ classdef (Sealed) AppStateManager < handle
             % Add new data to existing data store
             existingDataStruct = struct();
             modalityPaths = obj.modalityDataStoreHandle.getAvailableModalityPaths();
+
+            if isempty(modalityPaths)
+                % If there are no existing modalities, simply store the new data
+                obj.storeDataFromStruct(batchLoaderHandle.storeLoadedData());
+                return
+            end
+            
             for i = 1:length(modalityPaths)
                 currentPath = modalityPaths{i};
                 currentDataStore = obj.modalityDataStoreHandle.getModalityData(currentPath);
