@@ -13,49 +13,49 @@ classdef ObjectFeatureExtractor
     %   2) Faces reference 3-vertex triangles.
     %
     % Output feature definitions:
-    %   volume
+    %   #DOC_FEATURE volume
     %       Formula: V = |sum(dot(cross(v1, v2), v3))| / 6 over all faces
     %                where [v1 v2 v3] are the triangle vertex coordinates
     %       Meaning: signed-tetrahedra mesh volume magnitude (enclosed volume)
     %       Units: unit^3 (for example um^3)
     %
-    %   surface
+    %   #DOC_FEATURE surface
     %       Formula: A = 0.5 * sum(norm(cross(v2 - v1, v3 - v1))) over all faces
     %                where [v1 v2 v3] are the triangle vertex coordinates
     %       Meaning: total area of all mesh triangles
     %       Units: unit^2 (for example um^2)
     %
-    %   averageDistance
+    %   #DOC_FEATURE averageDistance
     %       Formula: mean(||v_i - p||)
     %       Meaning: average distance from basePoint p to vertices v_i
     %       Units: unit (for example um)
     %
-    %   euclideanLength
+    %   #DOC_FEATURE euclideanLength
     %       Formula: mean(top 5% of ||v_i - p||)
     %       Meaning: robust estimate of maximal spine extent from base point
     %       Units: unit (for example um)
     %
-    %   distanceCoefficientOfVariation
+    %   #DOC_FEATURE distanceCoefficientOfVariation
     %       Formula: std(d_i)/mean(d_i), where d_i = ||v_i - p||
     %       Meaning: relative spread of vertex distances from base point
     %       Units: dimensionless
     %
-    %   sphericity
+    %   #DOC_FEATURE sphericity
     %       Formula: (pi^(1/3) * (6V)^(2/3)) / S
     %       Meaning: compactness relative to a sphere (1 = perfect sphere)
     %       Units: dimensionless
     %
-    %   convexHullVolume
+    %   #DOC_FEATURE convexHullVolume
     %       Formula: second output of convhull(x, y, z)
     %       Meaning: volume of the convex hull enclosing all vertices
     %       Units: unit^3 (for example um^3)
     %
-    %   solidity
+    %   #DOC_FEATURE solidity
     %       Formula: V / V_hull
     %       Meaning: fraction of convex hull occupied by object volume
     %       Units: dimensionless
     %
-    %   openAngle
+    %   #DOC_FEATURE openAngle
     %       Formula:
     %           s = mean(v_i - p)
     %           theta_i = atan2d(||cross(s, v_i - p)||, dot(s, v_i - p))
@@ -63,12 +63,12 @@ classdef ObjectFeatureExtractor
     %       Meaning: average angular spread of vertex directions from base point
     %       Units: degrees
     %
-    %   baseToTipAngle
+    %   #DOC_FEATURE baseToTipAngle
     %       Formula: angle between the normal vector at the base point and the vector from base point to the mean of the 5% furthest vertices (tip point)
     %       Meaning: orientation of the base patch relative to the main axis of the object
     %       Units: degrees
     %
-    %   basePatchArea
+    %   #DOC_FEATURE basePatchArea
     %       Formula: sum of areas of faces in base patch
     %       Meaning: surface area of the patch where the spine is cut from the shaft
     %       Units: unit^2 (for example um^2)

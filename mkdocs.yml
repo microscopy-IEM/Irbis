@@ -1,0 +1,79 @@
+site_name: Irbis documentation
+
+theme:
+  name: material
+  logo: assets/irbis_logo_grouped.svg
+
+  palette:
+      primary: custom
+      accent: custom
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Tutorial flows:
+      - Importing data: tutorials/importing-data.md
+      - Import, reconstruct, track, export: tutorials/import-reconstruct-track-export.md
+  - Step-by-step:
+      - Overview: step-by-step/index.md
+      - Data import and saving:
+          - Overview: step-by-step/data-import/index.md
+          - Load data: step-by-step/data-import/load-data.md
+          - Export .irbis file: step-by-step/data-import/save-irbis.md
+      - Planes processing:
+          - Overview: step-by-step/planes/index.md
+          - View raw planes data: step-by-step/planes/view-raw-data.md
+          - Align planes across time points: step-by-step/planes/align-planes.md
+          - Crop planes: step-by-step/planes/crop-planes.md
+          - Preprocess planes: step-by-step/planes/preprocess-data.md
+          - Adjust channel histogram: step-by-step/planes/adjust-histogram.md
+          - Delete or save planes data: step-by-step/planes/delete-save-planes.md
+      - 3D model processing:
+          - Overview: step-by-step/model/index.md
+          - Create a new model: step-by-step/model/create-model.md
+          - Create a primary 3D model: step-by-step/model/reconstruct-primary-model.md
+          - Detect drift and correct it: step-by-step/model/drift-correction.md
+          - Register objects across time points: step-by-step/model/register-objects.md
+          - Track a dendrite: step-by-step/model/track-dendrite.md
+          - Generate the dendritic shaft: step-by-step/model/generate-shaft.md
+          - Separate spines from the shaft: step-by-step/model/separate-spines.md
+          - Select objects and export results: step-by-step/model/select-export-objects.md
+          - Manually adjust selected objects: step-by-step/model/manual-adjustment.md
+      - Tracks processing:
+          - Overview: step-by-step/tracks/index.md
+          - Import tracks: step-by-step/tracks/import-tracks.md
+          - View tracks: step-by-step/tracks/view-tracks.md
+          - Calculate track parameters: step-by-step/tracks/calculate-parameters.md
+          - Define and edit track categorizations: step-by-step/tracks/categorize-tracks.md
+      - ResultsViewer:
+          - Overview: step-by-step/results-viewer/index.md
+          - Use modes and plots: step-by-step/results-viewer/modes-plots.md
+          - Filter available data: step-by-step/results-viewer/filter-data.md
+          - Define categorization: step-by-step/results-viewer/categorize-data.md
+          - Use batch mode: step-by-step/results-viewer/batch-mode.md
+      - Viewport:
+          - Overview: step-by-step/viewport/index.md
+          - Navigate the visualization panel: step-by-step/viewport/navigation.md
+          - Use keyboard shortcuts: step-by-step/viewport/keyboard-shortcuts.md
+          - Create animations: step-by-step/viewport/animation.md
+          - Save views: step-by-step/viewport/save-views.md
+  - Reference:
+      - Irbis file structure: reference/irbis-file-structure.md
+      - Parameters:
+          - Areas table: reference/parameters/areas-table.md
+          - Model table: reference/parameters/model-table.md
+          - Object features: reference/parameters/object-features.md
+          - Points table: reference/parameters/points-table.md
+          - Tracks table: reference/parameters/tracks-table.md
+          - Views table: reference/parameters/views-table.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+
+plugins:
+  - search
