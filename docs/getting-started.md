@@ -10,3 +10,10 @@ Start here:
 - [Export processed data as an .irbis file](step-by-step/data-import/save-irbis.md)
 
 For a complete model workflow, follow [Import -> Reconstruct -> Track dendrite -> Separate spines -> Export results](tutorials/import-reconstruct-track-export.md).
+
+??? note "installation instructions"
+
+    --8<-- "getting-started/installation.md"
+
+
+--8<-- "getting-started/installation.md"

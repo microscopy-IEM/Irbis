@@ -2,6 +2,8 @@
 
 Welcome to the Irbis documentation.
 
+Irbis is an open-source software for analysis of multimodal fluorescence microscopy data, with a primary focus on 3D and time-lapse analysis of dendritic spines. It provides an end-to-end graphical interface covering image preprocessing, 3D reconstruction, segmentation, quantitative analysis and data exploration, combining automated analysis algorithms with extensive manual editing tools.
+
 Use the step-by-step guides when you need a short procedure with prerequisites and UI locations. Use the tutorial flows when you want a complete sequence from import to export.
 
 ## Start here
