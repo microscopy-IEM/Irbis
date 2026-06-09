@@ -24,7 +24,7 @@ Use registration to match individual dendrite models between time points.
 
 ## Next steps
 
-- Continue to [Track a dendrite](track-dendrite.md).
+- Continue to [Trace a dendrite](trace-dendrite.md).
 - Use [Manually adjust selected objects](manual-adjustment.md) if automatic matching needs correction.
 
 !!! example "Screenshot placeholder"

@@ -13,10 +13,12 @@ extra_css:
 
 nav:
   - Home: index.md
-  - Getting started: getting-started.md
+  - Getting started:
+      - Overview: getting-started.md
+      - Installation: getting-started/installation.md
   - Tutorial flows:
       - Importing data: tutorials/importing-data.md
-      - Import, reconstruct, track, export: tutorials/import-reconstruct-track-export.md
+      - Segment dendritic spines: tutorials/segment-spines.md
   - Step-by-step:
       - Overview: step-by-step/index.md
       - Data import and saving:
@@ -37,7 +39,7 @@ nav:
           - Create a primary 3D model: step-by-step/model/reconstruct-primary-model.md
           - Detect drift and correct it: step-by-step/model/drift-correction.md
           - Register objects across time points: step-by-step/model/register-objects.md
-          - Track a dendrite: step-by-step/model/track-dendrite.md
+          - Trace a dendrite: step-by-step/model/trace-dendrite.md
           - Generate the dendritic shaft: step-by-step/model/generate-shaft.md
           - Separate spines from the shaft: step-by-step/model/separate-spines.md
           - Select objects and export results: step-by-step/model/select-export-objects.md

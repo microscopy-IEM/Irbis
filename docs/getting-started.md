@@ -9,11 +9,5 @@ Start here:
 - [Create a primary 3D model](step-by-step/model/reconstruct-primary-model.md)
 - [Export processed data as an .irbis file](step-by-step/data-import/save-irbis.md)
 
-For a complete model workflow, follow [Import -> Reconstruct -> Track dendrite -> Separate spines -> Export results](tutorials/import-reconstruct-track-export.md).
+For a complete model workflow, follow [Import -> Reconstruct -> Trace dendrite -> Separate spines -> Export results](tutorials/segment-spines.md).
 
-??? note "installation instructions"
-
-    --8<-- "getting-started/installation.md"
-
-
---8<-- "getting-started/installation.md"

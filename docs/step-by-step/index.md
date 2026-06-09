@@ -4,7 +4,7 @@ These pages convert the Irbis manual into short task-focused workflows. Each pag
 
 ## Common tutorial flows
 
-- [Import -> Reconstruct -> Track dendrite -> Separate spines -> Export results](../tutorials/import-reconstruct-track-export.md)
+- [Import -> reconstruct -> trace dendrite -> separate spines -> export results](../tutorials/segment-spines.md)
 - [Importing data only](../tutorials/importing-data.md)
 
 ## Workflow areas
