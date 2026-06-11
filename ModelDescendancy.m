@@ -418,5 +418,55 @@ classdef (Sealed) ModelDescendancy
                 end
             end
         end
+
+
+
+        function [shaftT, fullVolumeT] = updateCentrelineParent(shaftT, fullVolumeT, samplingN)
+            % For each centreline, determine which fullVolume it belongs to and set/replace that fullVolume as its parent in the shaftT table.
+            % This is done by calculating the minimum distance from the centreline points to the vertices of each fullVolume mesh and assigning the closest fullVolume as the parent.
+
+            arguments
+                shaftT table
+                fullVolumeT table
+                samplingN (1,1) {mustBeNumeric} = 50    % specify the sampling interval (e.g., every 50th point)
+                % minVolume (1,1) {mustBeNumeric} = 1     % specify the minimum volume threshold for fullVolume meshes to be considered as potential parents
+            end
+
+            fullVolumeMeshes = fullVolumeT.Mesh;
+
+            % after regenerating the objects, the volumes are not yet calculated
+            % vol = fullVolumeT.volume
+
+            % fullVolumeMeshes = fullVolumeMeshes(vol > minVolume)
+
+            % fullVolumeIds = fullVolumeT.Properties.RowNames(vol > minVolume)
+            fullVolumeIds = fullVolumeT.Properties.RowNames;
+
+            for shaftIdx = 1 : height(shaftT)
+                centreline = shaftT.CentreLine{shaftIdx};
+
+                selectedPoints = centreline(1 : samplingN : end, :); 
+
+                alldMinDistances = inf([length(selectedPoints), numel(fullVolumeMeshes)]); 
+                for i = 1 : length(fullVolumeMeshes)
+                    fullVolumeMesh = fullVolumeMeshes{i};
+
+                    D = pdist2(selectedPoints, fullVolumeMesh.Vertices); % Compute distances from selected centreline points to mesh vertices
+                    [minDistances, ~] = min(D, [], 2);
+                    alldMinDistances(:, i) = minDistances;
+                end
+
+                [~, closestMeshIndices] = min(alldMinDistances, [], 2); % Find the index of the closest mesh for each selected centreline point
+
+                closestMeshIndex = mode(closestMeshIndices); % Determine the most frequently closest mesh index among the selected points
+                closestFullVolumeId = fullVolumeIds{closestMeshIndex};
+
+                shaftT = ModelDescendancy.replaceAncestor(shaftT, shaftT.Properties.RowNames{shaftIdx}, 'fullVolume', closestFullVolumeId);
+                
+                % this assumes that the old child ids were already removed: 
+                % that happens when repeating the 3D reconstruction, because the objects are created anew
+                fullVolumeT = ModelDescendancy.addRelatives(fullVolumeT, closestFullVolumeId, 'shaft', shaftT.Properties.RowNames{shaftIdx}, 'children');
+            end
+        end
     end
 end

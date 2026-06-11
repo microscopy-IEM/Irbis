@@ -1,9 +1,9 @@
 function features = extractFeatureDescriptions(sourceFile)
-% extractFeatureDescriptions Parse %#DOC_FEATURE blocks from a MATLAB source file.
+% extractFeatureDescriptions Parse %DOC_FEATURE blocks from a MATLAB source file.
 %
 % Supported format:
 %
-% %#DOC_FEATURE volume
+% %DOC_FEATURE volume
 % % Meaning: Enclosed volume of the reconstructed mesh.
 % % Formula: V
 % % Units: µm³
@@ -30,13 +30,13 @@ function features = extractFeatureDescriptions(sourceFile)
     for i = 1:numel(lines)
         line = strtrim(lines(i));
 
-        if startsWith(line, "%") && contains(line, "#DOC_FEATURE")
+        if startsWith(line, "%") && contains(line, "DOC_FEATURE")
             if current.name ~= ""
-                features(end+1) = current; %#ok<AGROW>
+                features(end+1) = current; %ok<AGROW>
             end
 
             current = emptyFeature();
-            current.name = strtrim(extractAfter(line, "#DOC_FEATURE"));
+            current.name = strtrim(extractAfter(line, "DOC_FEATURE"));
 
         elseif current.name ~= "" && startsWith(line, "%")
             cleaned = strtrim(extractAfter(line, "%"));
@@ -50,7 +50,7 @@ function features = extractFeatureDescriptions(sourceFile)
             elseif startsWith(cleaned, "Units:")
                 current.units = strtrim(extractAfter(cleaned, "Units:"));
 
-            elseif startsWith(line, "%#DOC_")
+            elseif startsWith(line, "%DOC_")
                 break
             end
         end

@@ -59,15 +59,15 @@ function [page, sections] = parseDocBlocks(lines)
     for i = 1:numel(lines)
         line = strtrim(lines(i));
 
-        if startsWith(line, "%#DOC_PAGE")
-            content = extractAfter(line, "%#DOC_PAGE");
+        if startsWith(line, "%DOC_PAGE")
+            content = extractAfter(line, "%DOC_PAGE");
             [~, meta] = parseTaggedLine(content);
 
             page.title = getMetaValue(meta, "title", page.title);
             page.description = getMetaValue(meta, "description", getNearbyDescription(lines, i));
 
-        elseif startsWith(line, "%#DOC_SECTION")
-            content = extractAfter(line, "%#DOC_SECTION");
+        elseif startsWith(line, "%DOC_SECTION")
+            content = extractAfter(line, "%DOC_SECTION");
             [sectionId, meta] = parseTaggedLine(content);
 
             section.title = getMetaValue(meta, "title", sectionId);
@@ -84,8 +84,8 @@ function [page, sections] = parseDocBlocks(lines)
             sections(end+1) = section; %#ok<AGROW>
             currentSectionId = sectionId;
 
-        elseif startsWith(line, "%#DOC_FIELD")
-            content = extractAfter(line, "%#DOC_FIELD");
+        elseif startsWith(line, "%DOC_FIELD")
+            content = extractAfter(line, "%DOC_FIELD");
             [fieldPath, meta] = parseTaggedLine(content);
 
             field.path = fieldPath;
@@ -148,7 +148,7 @@ function description = getNearbyDescription(lines, startIndex)
     for i = startIndex+1:min(startIndex+20, numel(lines))
         line = strtrim(lines(i));
 
-        if startsWith(line, "%#DOC_")
+        if startsWith(line, "%DOC_")
             break
         end
 
