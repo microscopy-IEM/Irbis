@@ -166,7 +166,8 @@ def segment_mesh(mesh_data):
     Returns:
         dict: Dictionary with parent mesh, intersection objects, subtraction objects, and their counts.
     """
-    main_mesh = fix_mesh(load_mesh(mesh_data[0]))
+    # main_mesh = fix_mesh(load_mesh(mesh_data[0]))
+    main_mesh = load_mesh(mesh_data[0])  # We do not fix this mesh because the repair step was added to the 3D reconstruction
     helper_mesh = load_mesh(mesh_data[1])   # We do not fix this mesh because it has already been 'fixed' during reconstruction
 
     intersection_objects = intersect(main_mesh, helper_mesh)

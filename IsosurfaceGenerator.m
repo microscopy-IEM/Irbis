@@ -130,7 +130,7 @@ classdef (Sealed) IsosurfaceGenerator < handle
 
 
 
-        function validTimePoints = run(obj, zstack, XYstep, Zstep, wb, tableExistChecker, tableSetter)
+        function [validTimePoints, timePointsWithInconsistentWinding] = run(obj, zstack, XYstep, Zstep, wb, tableExistChecker, tableSetter)
             % Drive the full reconstruction workflow and return a list of time points for which objects were successfully generated.
             
             arguments
@@ -153,6 +153,7 @@ classdef (Sealed) IsosurfaceGenerator < handle
             [newXstep, newYstep, newZstep] = obj.calculateNewStepSize(oldXsize, oldYsize, oldZsize, newXsize, newYsize, newZsize);
 
             validTimePoints = [];
+            timePointsWithInconsistentWinding = [];
 
             for tp = obj.timePoints
                 disp(newline)
@@ -206,13 +207,19 @@ classdef (Sealed) IsosurfaceGenerator < handle
                 T = getBaseStruct('table', 'model', nObj);
                 validObjectIdx = 0;
                 invalidRowsMask = false(nObj, 1);
+                inconsistentWindingMask = false(nObj, 1);
                 for objIdx = 1:nObj
-                    [T, validObjectIdx, invalidRowsMask] = obj.processObject(verts, faces, faceClusterIdx, objIdx, T, validObjectIdx, invalidRowsMask);
+                    [T, validObjectIdx, invalidRowsMask, inconsistentWindingMask] = obj.processObject(verts, faces, faceClusterIdx, objIdx, T, validObjectIdx, invalidRowsMask, inconsistentWindingMask);
                 end
 
                 if isequal(validObjectIdx, 0)
                     disp(['No valid objects reconstructed for time point ' num2str(tp) ', skipping saving.']);
                     continue
+                end
+
+                if any(inconsistentWindingMask)
+                    timePointsWithInconsistentWinding = [timePointsWithInconsistentWinding, tp];
+                    disp(['Warning: ' num2str(sum(inconsistentWindingMask)) ' out of ' num2str(validObjectIdx) ' objects have inconsistent winding at time point ' num2str(tp) '. These objects may not be suitable for boolean operations.']);
                 end
 
                 % remove empty row caused by skipped regions due to low number of vertices
@@ -388,7 +395,7 @@ classdef (Sealed) IsosurfaceGenerator < handle
 
 
 
-        function [T, validObjectIdx, invalidRowsMask] = processObject(obj, allVerts, allFaces, faceClusterIdx, objIdx, T, validObjectIdx, invalidRowsMask)
+        function [T, validObjectIdx, invalidRowsMask, inconsistentWindingMask] = processObject(obj, allVerts, allFaces, faceClusterIdx, objIdx, T, validObjectIdx, invalidRowsMask, inconsistentWindingMask)
             % Isolate a mesh chunk, validate it, and store it into the results table.
             
             singleObjMesh = obj.isolateMesh(allVerts, allFaces, faceClusterIdx, objIdx);
@@ -401,19 +408,23 @@ classdef (Sealed) IsosurfaceGenerator < handle
                 T.Properties.RowNames{objIdx} = num2str(validObjectIdx);  
 
                 T{objIdx, 'groupId'} = GroupIdHandler.getUntracked();   % this returns equivalent of 0 that is matching with the groupId type
-                % the reason why I am not just assigning 0 is because we might want to change the default value in the future - this requires less rewriting
-                T{objIdx, 'Mesh'} = {singleObjMesh};
+                % the reason why I am not just assigning 0 is because we might want to change the default value in the future - this requires less rewriting                
                 T{objIdx, 'positionShift'} = {[0,0,0]};
                 T{objIdx, 'color'} = {rand(1,3)};
 
                 if nVerts > 1000
-                    disp(newline)
-                    disp('-------------------------------------------------------------')
-                    disp(['Object ' num2str(validObjectIdx) ' with ' num2str(nVerts) ' vertices processed.']);
-                    PythonMeshHelper.testMeshValidity(singleObjMesh);
-                    disp('-------------------------------------------------------------')
-                    disp(newline)
+                    % disp(newline)
+                    % disp('-------------------------------------------------------------')
+                    % disp(['Object ' num2str(validObjectIdx) ' with ' num2str(nVerts) ' vertices processed.']);
+                    % PythonMeshHelper.testMeshValidity(singleObjMesh);
+                    % disp('-------------------------------------------------------------')
+                    % disp(newline)
+
+                    [singleObjMesh, isWindingConsistent] = PythonMeshHelper.repairMesh(singleObjMesh);   
+                    inconsistentWindingMask(objIdx) = ~isWindingConsistent;
                 end
+
+                T{objIdx, 'Mesh'} = {singleObjMesh};
             else
                 invalidRowsMask(objIdx) = true;    
             end

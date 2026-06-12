@@ -288,7 +288,7 @@ def fix_mesh(mesh):
             'faces': mesh.faces,
             'vertex_normals': mesh.vertex_normals,
             'face_normals': mesh.face_normals
-        }
+        }, mesh.is_winding_consistent
 
 
 
@@ -386,7 +386,7 @@ def find_holes(mesh):
 
 try:
     # Expects mesh_data as a dictionary with 'vertices' and 'faces' keys, where values are array-like (e.g. lists, numpy arrays, or memoryviews)
-    output = fix_mesh(load_mesh(mesh_data))
+    output, is_winding_consistent = fix_mesh(load_mesh(mesh_data))
 except Exception as e:
     print(f"Error performing mesh repair: {e}")
     traceback.print_exc()

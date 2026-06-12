@@ -123,18 +123,18 @@ classdef PythonMeshHelper
 
 
 
-        function repairedMesh = repairMesh(Mesh)
+        function [repairedMesh, isWindingConsistent] = repairMesh(Mesh)
             % repairMesh - Repairs a mesh using a Python script.
             %
             % Inputs:
             %   Mesh - MATLAB surfaceMesh object containing vertices, faces, and optionally vertex and face normals.
             %
             % This function calls 'repair_mesh_py_script.py' to perform the operations using trimesh in Python.
-
+            % isWindingConsistent pulled out because if it is false, the mesh will most likely not be usable for boolean operations
             mesh_data = PythonMeshHelper.meshToPyStruct(Mesh);
             
             try
-                outputDict = pyrunfile('repair_mesh_py_script.py', "output", ...
+                [outputDict, is_winding_consistent] = pyrunfile('repair_mesh_py_script.py', ["output", "is_winding_consistent"], ...
                     mesh_data=mesh_data);
             catch ME
                 disp(ME.message);
@@ -142,6 +142,33 @@ classdef PythonMeshHelper
             end
 
             repairedMesh = PythonMeshHelper.pyDictToMesh(outputDict);
+            isWindingConsistent = logical(is_winding_consistent);
+        end
+
+
+
+        function isConsistent = isWindingConsistent(Mesh)
+            % isWindingConsistent - Checks if the mesh winding is consistent using a Python script.
+            %
+            % Inputs:
+            %   Mesh - MATLAB surfaceMesh object containing vertices, faces, and optionally vertex and face normals.
+            %
+            % Outputs:
+            %   isConsistent - Boolean value indicating whether the mesh winding is consistent.
+            %
+            % This function calls 'check_mesh_winding_py_script.py' to perform the operations using trimesh in Python.
+
+            mesh_data = PythonMeshHelper.meshToPyStruct(Mesh);
+            
+            try
+                is_winding_consistent = pyrunfile('check_mesh_winding_py_script.py', "is_winding_consistent", ...
+                    mesh_data=mesh_data);
+            catch ME
+                disp(ME.message);
+                error("Error in running the python script.");
+            end
+
+            isConsistent = logical(is_winding_consistent);
         end
 
 
