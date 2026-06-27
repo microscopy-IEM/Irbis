@@ -19,6 +19,7 @@ nav:
   - Tutorial flows:
       - Importing data: tutorials/importing-data.md
       - Segment dendritic spines: tutorials/segment-spines.md
+      - Compare ResultsViewer datasets: tutorials/compare-results-viewer-datasets.md
   - Step-by-step:
       - Overview: step-by-step/index.md
       - Data import and saving:
@@ -52,9 +53,12 @@ nav:
           - Define and edit track categorizations: step-by-step/tracks/categorize-tracks.md
       - ResultsViewer:
           - Overview: step-by-step/results-viewer/index.md
-          - Use modes and plots: step-by-step/results-viewer/modes-plots.md
+          - Use table views and plots: step-by-step/results-viewer/modes-plots.md
           - Filter available data: step-by-step/results-viewer/filter-data.md
+          - Filter by temporal development: step-by-step/results-viewer/filter-temporal-development.md
           - Define categorization: step-by-step/results-viewer/categorize-data.md
+          - Edit columns in Full view: step-by-step/results-viewer/edit-columns-full.md
+          - Store a view: step-by-step/results-viewer/store-view.md
           - Use batch mode: step-by-step/results-viewer/batch-mode.md
       - Viewport:
           - Overview: step-by-step/viewport/index.md

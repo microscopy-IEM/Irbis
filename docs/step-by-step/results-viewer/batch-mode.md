@@ -1,6 +1,6 @@
-﻿# Use ResultsViewer in batch mode
+# Load data to ResultsViewer in batch
 
-Batch mode lets you explore data from multiple datasets together.
+Batch load mode lets you explore data from multiple datasets together.
 
 !!! info "Before you start"
     **Prerequisites:**
@@ -14,8 +14,11 @@ Batch mode lets you explore data from multiple datasets together.
 ## Steps
 
 1. Press **Batch load**.
-2. Select all files you want to open.
-3. Wait for the datasets to load.
+2. In the dialog, navigate to the folder containing the datasets and select the files you want to load.
+3. When the dialog opens again, select files from another folder if needed.
+4. Repeat until all datasets are loaded.
+5. Press **Cancel** to close the dialog.
+6. Wait for the datasets to load.
 
 !!! warning
     Batch loading can be computationally demanding and may take time.
@@ -25,9 +28,8 @@ Batch mode lets you explore data from multiple datasets together.
 
 ## Related
 
-- Use [Use ResultsViewer modes and plots](modes-plots.md) after loading batch data.
+- Use [Use ResultsViewer table views and plots](modes-plots.md) after loading batch data.
+- Create a unique object identifier with [Edit columns in Full table view](edit-columns-full.md).
 
 !!! example "Screenshot placeholder"
     Add a screenshot of Batch load and the loaded combined table.
-
-

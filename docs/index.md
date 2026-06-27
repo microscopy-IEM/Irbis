@@ -12,6 +12,7 @@ Use the step-by-step guides when you need a short procedure with prerequisites a
 - [Step-by-step guides](step-by-step/index.md)
 - [Import -> reconstruct -> trace dendrite -> separate spines -> export results](tutorials/segment-spines.md)
 - [Importing data only](tutorials/importing-data.md)
+- [Compare ResultsViewer datasets](tutorials/compare-results-viewer-datasets.md)
 
 ## Main areas
 

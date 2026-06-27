@@ -44,7 +44,7 @@ This is the main end-to-end flow for structural microscopy data.
 
         --8<-- "step-by-step/model/create-model.md"
 
-4. To generate the full dendrite reconstruction, go to the **Model** tab to the **Full** section and navigate to the **3D reconstruction** panel. Select the channel you want to reconstruct from the dropdown and press **Auto** to find a suitable intensity threshold. Click on **Show** to preview the foreground region, which will be overlayed as gray over the data in the right panel. When you are happy with the selected threshold, click on **Generate 3D** and wait a bit. 
+4. To generate the full dendrite reconstruction, go to the **Model** tab to the **Full** section and navigate to the **3D reconstruction** panel. Select the channel you want to reconstruct from the drop-down menu and press **Auto** to find a suitable intensity threshold. Click **Show** to preview the foreground region, which will be overlaid as gray over the data in the right panel. When you are happy with the selected threshold, click **Generate 3D** and wait a bit.
 
     ??? note "Generate full dendrite reconstruction"
 
