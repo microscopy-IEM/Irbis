@@ -1,7 +1,5 @@
 # Getting started
 
-Irbis workflows usually start by loading data, checking the visualization settings, and saving the project as an `.irbis` file.
-
 Start here:
 
 - [Load data](step-by-step/data-import/load-data.md)

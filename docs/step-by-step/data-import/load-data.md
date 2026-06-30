@@ -13,7 +13,7 @@
 ## Steps
 
 1. In the **Files** tab, press **New**.
-2. Choose the data type: **Import planes**, **Import tracks**, or **Load .irbis structure**.
+2. Choose the data type you want to load: **Import planes**, **Import tracks**, or **Load .irbis structure**.
 3. In the file dialog, select the file and press **Open**.
 
 ## Alternative: new raw data
