@@ -1,6 +1,6 @@
 # Step-by-step guides
 
-These pages convert the Irbis manual into short task-focused workflows. Each page keeps the prerequisites, UI location, and related next steps close to the instructions.
+These pages describe short task-focused workflows. Each page lists the prerequisites, UI location, and related next steps togehter with the instructions.
 
 ## Common tutorial flows
 

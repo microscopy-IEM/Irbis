@@ -1,6 +1,6 @@
 # Data import and saving
 
-Use these pages to open raw data, open existing `.irbis` projects, and save processed data.
+Use these pages to open raw data, open existing `.irbis` projects and save processed data.
 
 - [Load data](load-data.md)
 - [Export processed data as an .irbis file](save-irbis.md)
