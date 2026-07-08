@@ -10,6 +10,11 @@ classdef (Sealed) TableStore < handle
 
         doNormalizationByFirst = false  % whether to normalize the values in the pivot table by the first value in each row (e.g. to show relative changes compared to the first time point)
         % TO OPTIMIZE - this might be replaced for something more complex, but I did not figure out where would be better to keep this information
+
+        pivotedTranformationOn = false % whether we want to tranform pivoted table (for example divide by the first column)
+        pivotedTransformationName = '' % name of the transformation applied to the pivoted table
+        pivotedTransform = [] % handle for the transformation applied to the pivoted table - struct of two function handles: dataFcn and nameFcn
+        pivotedTransformParameter = [] % parameter for the transformation applied to the pivoted table - for example, reference column index or time point
     end
 
     events
@@ -463,6 +468,34 @@ classdef (Sealed) TableStore < handle
 
             function doNormalize = getNormalizationStatus(obj)
                 doNormalize = obj.doNormalizationByFirst;
+            end
+
+
+
+            %% Edit/get pivoted transformation status
+            function setPivotedTransformationStatus(obj, doTransform, transformationName, parameterValue)
+                obj.pivotedTranformationOn = doTransform;
+                obj.pivotedTransformationName = transformationName;
+                obj.pivotedTransformParameter = parameterValue;
+                obj.pivotedTransform = TableTransformationMapper.getTransformation(transformationName, parameterValue);
+                notify(obj, 'tableDataChanged');  % Notify that the data has changed to trigger any necessary updates in the views
+            end
+
+
+
+            function setPivotedTransformationParameter(obj, parameterValue)
+                % This function can be used to set a parameter for the transformation if needed
+                % For example, if the transformation requires a reference value or time point
+                obj.pivotedTransformParameter = parameterValue;
+                obj.pivotedTransform = TableTransformationMapper.getTransformation(obj.pivotedTransformationName, parameterValue);
+                notify(obj, 'tableDataChanged');  % Notify that the data has changed to trigger any necessary updates in the views
+            end
+
+
+
+            function [doTransform, transform] = getPivotedTransformationStatus(obj)
+                doTransform = obj.pivotedTranformationOn;
+                transform = obj.pivotedTransform;
             end
     end
 

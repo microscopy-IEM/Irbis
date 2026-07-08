@@ -102,6 +102,16 @@ classdef (Sealed) PivotedTableProcessor < handle
             end
             % disp(obj.pivotedTable)
 
+
+            % apply transformation to the pivoted table if the setting is on
+            [doTransform, transform] = obj.tableStoreHandle.getPivotedTransformationStatus();
+            if doTransform && ~isempty(transform)
+                A = table2array(obj.pivotedTable);
+                transformedA = transform.dataFcn(A);
+                transformedColumnNames = transform.nameFcn(obj.pivotedTable.Properties.VariableNames);
+                obj.pivotedTable = array2table(transformedA, 'VariableNames', transformedColumnNames, 'RowNames', obj.pivotedTable.Properties.RowNames);
+            end
+
             notify(obj, 'tableForDisplayChanged');
 
             % notify the plottling component that the plot needs to be updated

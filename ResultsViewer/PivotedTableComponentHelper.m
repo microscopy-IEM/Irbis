@@ -147,6 +147,27 @@ classdef PivotedTableComponentHelper < handle
 
 
 
+        function setTransformationStatus(obj, doTransform, transformationName, parameterValue)
+            % should be called from the component when the user changes the transformation option in the GUI
+            arguments
+                obj
+                doTransform (1,1) logical
+                transformationName
+                parameterValue = []  % Optional parameter for transformations that require it
+            end
+            
+            obj.tableStoreHandle.setPivotedTransformationStatus(doTransform, transformationName, parameterValue);
+        end
+
+
+
+        function setTransformationParameter(obj, parameterValue)
+            % should be called in case the transformation requires a user-specified parameter (such as reference time point)
+            obj.tableStoreHandle.setPivotedTransformationParameter(parameterValue);
+        end
+
+
+
         function setRowParameterAndLoadData(obj, parameter)
             obj.rowParameter = parameter;
             obj.loadData();

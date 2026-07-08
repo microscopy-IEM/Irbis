@@ -239,13 +239,19 @@ classdef DataFormatter < handle
         function [arrayCell, columnNames, columnNum] = convertPivotedTable(~, subtable)
             tableArray = table2array(subtable);
             
+            % TO OPTIMIZE: this is a problem with the transformed columns with more descriptive column names
+            % the plot function has an issue with the array dim
             columnNamesAsDouble = str2double(subtable.Properties.VariableNames);
             if all(~isnan(columnNamesAsDouble))
                 columnNamesMatrix = repmat(columnNamesAsDouble, size(tableArray,1), 1);
                 columnNum = {2};
             else
-                columnNamesMatrix = [];
-                columnNum = {1};
+                % columnNamesMatrix = [];
+                % columnNum = {1};
+
+                % this is a temporary fix:
+                columnNamesMatrix = repmat(1:width(subtable), size(tableArray,1), 1);
+                columnNum = {2};
             end
         
             permutedTableMatrix = permute(tableArray, [1, 3, 2]);
