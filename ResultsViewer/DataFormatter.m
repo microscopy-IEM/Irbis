@@ -57,30 +57,42 @@ classdef DataFormatter < handle
             end
         end
 
+
+
         function turnGroupingUseOn(obj)
             obj.useGrouping = true;
             obj.processData([]);
         end
+
+
 
         function turnGroupingUseOff(obj)
             obj.useGrouping = false;
             obj.processData([]);
         end
 
+
+
         function turnIndividualUseOn(obj)
             obj.useIndividual = true;
             obj.processData([]);
         end
+
+
         
         function turnIndividualUseOff(obj)
             obj.useIndividual = false;
             obj.processData([]);
         end
 
+
+
         function setRequiredParametersNum(obj, num)
             obj.requiredParametersNum = num;
             obj.processData([]);
         end
+
+
 
         function turnJitterOn(obj)
             % currently applied in TwoVariablesPlot, and nowhere else? 
@@ -90,12 +102,16 @@ classdef DataFormatter < handle
             end
         end
 
+
+
         function turnJitterOff(obj)
             if ~isempty(obj.lastProcessedData)
                 obj.lastProcessedData.useJitter = false;
                 obj.plotManagerHandle.plotData(obj.lastProcessedData);
             end
         end
+
+
 
         function delete(obj)
             % Destructor for DataFormatter class
@@ -122,7 +138,9 @@ classdef DataFormatter < handle
                     delete(obj.plotSpecificListener);
                 end
             end
-        end   
+        end  
+        
+        
         
         function processData(obj, src)
             if isempty(src)
@@ -181,12 +199,16 @@ classdef DataFormatter < handle
             end
         end
 
+
+
         function idx = getHandleIndex(obj, src)
             idx = find(cellfun(@(x) isequal(x, src), obj.tableProcessorHandles), 1);
             if isempty(idx)
                 error('Invalid handle provided.');
             end
         end
+
+
         
         function otherIdx = getOtherHandleIndex(obj, currentIdx)
             otherIdx = setdiff(1:numel(obj.tableProcessorHandles), currentIdx);
@@ -194,6 +216,8 @@ classdef DataFormatter < handle
                 otherIdx = [];
             end
         end
+
+
 
         function dataStruct = extractData(obj, idx)
             handle = obj.tableProcessorHandles{idx};
@@ -236,16 +260,24 @@ classdef DataFormatter < handle
             end
         end
 
+
+
         function [arrayCell, columnNames, columnNum] = convertPivotedTable(~, subtable)
             tableArray = table2array(subtable);
             
+            % TO OPTIMIZE: this is a problem with the transformed columns with more descriptive column names
+            % the plot function has an issue with the array dim
             columnNamesAsDouble = str2double(subtable.Properties.VariableNames);
             if all(~isnan(columnNamesAsDouble))
                 columnNamesMatrix = repmat(columnNamesAsDouble, size(tableArray,1), 1);
                 columnNum = {2};
             else
-                columnNamesMatrix = [];
-                columnNum = {1};
+                % columnNamesMatrix = [];
+                % columnNum = {1};
+
+                % this is a temporary fix:
+                columnNamesMatrix = repmat(1:width(subtable), size(tableArray,1), 1);
+                columnNum = {2};
             end
         
             permutedTableMatrix = permute(tableArray, [1, 3, 2]);
@@ -255,8 +287,15 @@ classdef DataFormatter < handle
             end
         
             arrayCell = {permutedTableMatrix};
-            columnNames = {'rows'};
+
+            if isfield(subtable.Properties.UserData, 'groupedDataParameter') && isfield(subtable.Properties.UserData, 'columnParameter')
+                columnNames = {subtable.Properties.UserData.columnParameter, subtable.Properties.UserData.groupedDataParameter};
+            else
+                columnNames = {'rows'};
+            end
         end
+
+
 
         function [arrayCell, columnNames, columnNum] = convertStandardTable(obj, subtable)
             arrayCell = cell(1, width(subtable));
@@ -274,6 +313,8 @@ classdef DataFormatter < handle
                 end
             end
         end
+
+
 
         function integratedData = integrateData(~, primaryData, secondaryData)
             if isempty(primaryData)
@@ -340,6 +381,8 @@ classdef DataFormatter < handle
         % 
         % end
 
+
+
         function isValid = validateWithGrouping(obj, dataStruct)
             % at least one categorical
             % enough for categorical + required rest
@@ -356,10 +399,14 @@ classdef DataFormatter < handle
             isValid = hasEnoughColumns && hasCategorical;
         end
 
+
+
         function isValid = validateWithoutGrouping(obj, dataStruct)
             % enough for required parameters
             isValid = sum([dataStruct.columnNum{:}]) >= obj.requiredParametersNum;
         end
+
+
 
         function processWithGrouping(obj, dataStruct)
             data = struct('xData', [], 'yData', [], 'groupData', [], 'xLabel', '', 'yLabel', '', 'groupLabel', '');
@@ -397,16 +444,23 @@ classdef DataFormatter < handle
                 assert(obj.Y_COLUMN_NUM <= dataStruct.columnNum{end}, ...
                     'Y_COLUMN_NUM exceeds the available columns in the current cell.');
                 data.xData = dataStruct.cellArray{end}(:, obj.X_COLUMN_NUM, :);
-                data.xLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.X_COLUMN_NUM);
-
                 data.yData = dataStruct.cellArray{end}(:, obj.Y_COLUMN_NUM, :);
-                data.yLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.Y_COLUMN_NUM);
+
+                if numel(dataStruct.columnNames) > 1
+                    data.xLabel = dataStruct.columnNames{end - 1};
+                    data.yLabel = dataStruct.columnNames{end};
+                else
+                    data.xLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.X_COLUMN_NUM);
+                    data.yLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.Y_COLUMN_NUM);
+                end
             end
 
             data.useJitter = obj.useJitter;
             obj.lastProcessedData = data; 
             obj.plotManagerHandle.plotData(data);
         end
+
+
 
         function processWithoutGrouping(obj, dataStruct)
             data = struct('xData', [], 'yData', [], 'groupData', [], 'xLabel', '', 'yLabel', '', 'groupLabel', '');
@@ -433,16 +487,23 @@ classdef DataFormatter < handle
                 assert(obj.Y_COLUMN_NUM <= dataStruct.columnNum{end}, ...
                     'Y_COLUMN_NUM exceeds the available columns in the current cell.');
                 data.xData = dataStruct.cellArray{end}(:, obj.X_COLUMN_NUM, :);
-                data.xLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.X_COLUMN_NUM);
-
                 data.yData = dataStruct.cellArray{end}(:, obj.Y_COLUMN_NUM, :);
-                data.yLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.Y_COLUMN_NUM);
+
+                if numel(dataStruct.columnNames) > 1
+                    data.xLabel = dataStruct.columnNames{end - 1};
+                    data.yLabel = dataStruct.columnNames{end};
+                else
+                    data.xLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.X_COLUMN_NUM);
+                    data.yLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.Y_COLUMN_NUM);
+                end
             end
 
             data.useJitter = obj.useJitter;
             obj.lastProcessedData = data;
             obj.plotManagerHandle.plotData(data);
         end
+
+
 
         function handleInsufficientParameters(obj)
             % disp('handling insufficient parameters')
@@ -452,6 +513,8 @@ classdef DataFormatter < handle
             % warning('Insufficient parameters for plotting. Please select more data.');
             % obj.plotManagerHandle.resetPlot(struct('xData', [], 'yData', [], 'groupData', [], 'xLabel', '', 'yLabel', '', 'groupLabel', ''));
         end
+
+
 
         % scenario: 
         % everything empty

@@ -59,5 +59,58 @@ classdef (Sealed) GUI
                 channelNames{i} = ['ch' num2str(i)];
             end
         end
+
+
+        function useIconsForTheme(allComponents, theme)
+          
+            % Recursively search through containers (e.g., panels, tabs)
+            allButtons = findall(allComponents, 'Type', 'uibutton');
+            allStateButtons = findall(allComponents, 'Type', 'uistatebutton');
+
+            allRelevantComponentsCell = {allButtons, allStateButtons};  % for some reason, if I concatenate them, something goes wrong
+            for cellId = 1:numel(allRelevantComponentsCell)
+                allComponentsOfType = allRelevantComponentsCell{cellId};
+            
+                % Find those that have a nonempty Icon property
+                buttonsWithIcons = allComponentsOfType(~cellfun(@isempty, {allComponentsOfType.Icon}));
+                
+                for i = 1:numel(buttonsWithIcons)
+                    iconPath = buttonsWithIcons(i).Icon;
+                
+                    % Split path by either forward or backward slash
+                    pathList = regexp(iconPath, '[\\/]', 'split');
+                    iconName = pathList{end};  % last part of path (e.g. 'blue_home.svg')
+                
+                    % Split the icon name by underscore
+                    nameParts = split(iconName, '_');
+                
+                    % Get color prefix (first part)
+                    colorPrefix = nameParts{1};
+                    if isequal(colorPrefix, 'blue') || isequal(colorPrefix, 'white')
+                        switch theme
+                            case 'dark'
+                                newColor = 'white';
+                            case 'light'
+                                newColor = 'blue';
+                            otherwise
+                                continue; % skip icons that don't start with blue/white
+                        end
+    
+                
+                        % Replace old color with new color in full path
+                        newIconPath = regexprep(iconPath, ['(?<=^|[\\/])' colorPrefix], newColor);
+                    
+                        % Apply new icon
+                        buttonsWithIcons(i).Icon = newIconPath;
+                    end
+                end
+            end
+
+            % adjust also icons within components - I did not find a way how to get all components, so I just take the relevant ones
+            positionComps = findall(allComponents, 'Type', 'positionAdjustment');
+            for i = 1:numel(positionComps)
+                positionComps(i).updateTheme(theme);
+            end
+        end
     end
 end
