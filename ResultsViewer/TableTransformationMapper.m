@@ -15,12 +15,16 @@ classdef (Sealed) TableTransformationMapper
                     transform.nameFcn = @(names) names;
 
                 case 'detrend'
-                    transform.dataFcn = @(A) detrend(A);
+                    transform.dataFcn = @(A) detrend(A')';  % transformation added because detrend operates on columns, so we transpose twice to apply it to rows
                     transform.nameFcn = @(names) "detrended_" + names;
 
-                case 'percentChangeToFirst'
+                case 'percChangeToFirst'
                     transform.dataFcn = @(A) (A - A(:, 1)) ./ A(:, 1) * 100;
                     transform.nameFcn = @(names) "percChange_" + names + "_to_" + names(1);
+
+                case 'ratioToBaselineMean'
+                    transform.dataFcn = @(A) A ./ mean(A(:, 1), 'omitnan');
+                    transform.nameFcn = @(names) "ratio_" + names + "_to_baselineMean";
 
                 case 'ratioToFirst'
                     transform.dataFcn = @(A) A ./ A(:, 1);
