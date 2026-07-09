@@ -59,6 +59,18 @@ classdef PivotedTableComponentHelper < handle
 
                 obj.rowParameter = processorState.rowParameter;
                 obj.componentHandle.setRowParameterSelection(obj.rowParameter);
+
+                % Update the transformation controls based on the saved state
+                % The update of the tableStore is left to the processor, because that one is run before table update
+                if isfield(processorState, 'transformation')
+                    doTransformation = processorState.transformation.do;
+                    transformationName = processorState.transformation.name;
+                    parameterValue = processorState.transformation.parameterValue;
+
+                    obj.componentHandle.setTransformationSpecs(doTransformation, transformationName, parameterValue);
+                else
+                    obj.componentHandle.setTransformationSpecs(false, 'none', []);
+                end
             end
         end
 
@@ -115,9 +127,9 @@ classdef PivotedTableComponentHelper < handle
                 obj.componentHandle.setDataParameter(columnNames{1});
             end
 
-            % set the normalization status in the component based on the table store
-            doNormalize = obj.tableStoreHandle.getNormalizationStatus();
-            obj.componentHandle.setNormalizationStatus(doNormalize);
+            % set the transformation status in the component based on the table store
+            [doTransformation, transformationName, parameterValue] = obj.tableStoreHandle.getPivotedTransformationSpecs();
+            obj.componentHandle.setTransformationSpecs(doTransformation, transformationName, parameterValue);
         end
 
 
@@ -136,13 +148,6 @@ classdef PivotedTableComponentHelper < handle
 
         function setRowParameter(obj, parameter)
             obj.rowParameter = parameter;
-        end
-
-
-
-        function setNormalizationStatus(obj, doNormalize)
-            % should be called from the component when the user changes the normalization option in the GUI
-            obj.tableStoreHandle.setNormalizationStatus(doNormalize);
         end
 
 

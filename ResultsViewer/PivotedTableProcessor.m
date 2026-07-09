@@ -94,14 +94,9 @@ classdef (Sealed) PivotedTableProcessor < handle
 
             obj.pivotedTable = pivotTable(filteredTable, obj.columnParameter, obj.rowParameter, obj.groupedDataParameter);
 
+            % REPLACED WITH GENERAL TRANFORMATIONS, kept here for now for info about NaN handling:
             % apply normalization by dividing each value in the row by the first value in the row, if the setting is on
             % if the first column is 0/NaN, find the first non-zero/non-NaN value and divide by it, if it exists, otherwise keep the row as is (all zeros/NaNs)
-            doNormalizeByFirst = obj.tableStoreHandle.getNormalizationStatus();
-            if doNormalizeByFirst
-                obj.pivotedTable = normalizeByFirstValueInRow(obj.pivotedTable);
-            end
-            % disp(obj.pivotedTable)
-
 
             % apply transformation to the pivoted table if the setting is on
             [doTransform, transform] = obj.tableStoreHandle.getPivotedTransformationStatus();
@@ -171,6 +166,14 @@ classdef (Sealed) PivotedTableProcessor < handle
 
         function result = getTableForDisplay(obj)
             result = obj.pivotedTable;
+             
+            % Add names of the row and column parameters to the table, so that they can be ingested during plotting
+            % Added here because the getSelected functions is getting the data directly from here, so there is lower risk of lost or outdated info
+            if ~isempty(result)
+                result.Properties.UserData.rowParameter = obj.rowParameter;
+                result.Properties.UserData.columnParameter = obj.columnParameter;
+                result.Properties.UserData.groupedDataParameter = obj.groupedDataParameter;
+            end
         end
 
 
@@ -386,6 +389,12 @@ classdef (Sealed) PivotedTableProcessor < handle
             processorState.columnParameter = obj.columnParameter;
             processorState.rowParameter = obj.rowParameter;
             processorState.selectedTableCellsList = obj.selectedTableCellsList;
+
+            % include also information about table transformation
+            [doTransformation, transformationName, parameterValue] = obj.tableStoreHandle.getPivotedTransformationSpecs();
+            processorState.transformation.do = doTransformation;
+            processorState.transformation.name = transformationName;
+            processorState.transformation.parameterValue = parameterValue;
         end
 
 
@@ -408,6 +417,18 @@ classdef (Sealed) PivotedTableProcessor < handle
                 [validSelection, ~] = obj.validateSelection(processorState.selectedTableCellsList);
                 obj.selectedTableCellsList = validSelection;
 
+                % Set the transformation status to the tableStore based on the saved state
+                % GUI update is left for the componentHelper, because processor does not have component's handle
+                if isfield(processorState, 'transformation')
+                    doTransformation = processorState.transformation.do;
+                    transformationName = processorState.transformation.name;
+                    parameterValue = processorState.transformation.parameterValue;
+
+                    obj.tableStoreHandle.setPivotedTransformationStatus(doTransformation, transformationName, parameterValue);
+                else
+                    % If the transformation field is not present in the state, reset to default (no transformation)
+                    obj.tableStoreHandle.setPivotedTransformationStatus(false, 'none', []);
+                end
 
                 notify(obj, 'tableForDisplayChanged')
                 notify(obj, 'tableSelectionSetProgrammatically')
