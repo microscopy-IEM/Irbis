@@ -288,10 +288,6 @@ classdef DataFormatter < handle
         
             arrayCell = {permutedTableMatrix};
 
-            assignin("base", "props", subtable.Properties);
-            isfield(subtable.Properties, 'UserData')
-            isfield(subtable.Properties.UserData, 'groupedDataParameter')
-            isfield(subtable.Properties.UserData, 'columnParameter')
             if isfield(subtable.Properties.UserData, 'groupedDataParameter') && isfield(subtable.Properties.UserData, 'columnParameter')
                 columnNames = {subtable.Properties.UserData.columnParameter, subtable.Properties.UserData.groupedDataParameter};
             else
