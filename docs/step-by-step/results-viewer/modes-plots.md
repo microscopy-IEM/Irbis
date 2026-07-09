@@ -12,14 +12,14 @@
 ## Full table view
 
 1. Switch to **Full** table view from the drop-down menu in the upper-left corner.
-2. Select parameters from the checkbox list on the left.
+2. From the checkbox list on the left, select parameters to show in the table.
 3. Review the table. Each column is a parameter, and data from all time points are pooled.
 
 ## Pivoted table view
 
 1. Switch to **Pivoted** table view from the drop-down menu in the upper-left corner.
 2. Select the desired parameter from **Grouped data**.
-3. Review the table. Each column is one time point and each row is one object connected in time by a single group ID.
+3. Review the table. By default, each column is one time point and each row is one object connected in time by a single group ID.
 
 !!! warning
     Only model parts connected with group ID can be shown in Pivoted table view.
