@@ -13,4 +13,6 @@ check_git_status.m
 startup.m
 IrbisStart Standalone Application/
 Irbis packaged/
+IrbisPackaged/
 deploymentScript.m
+.agents/
