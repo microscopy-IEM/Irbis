@@ -333,7 +333,7 @@ classdef BranchGraphicsGroup < handle
                 return
             end
             groupId = obj.groupIdArray(idx);
-            if groupId == 0
+            if (groupId == 0) || isnan(groupId)
                 groupId = '-'; % Handle case where groupId is zero
             end
             obj.idLabel.String = [num2str(id) ' (' num2str(groupId) ')'];

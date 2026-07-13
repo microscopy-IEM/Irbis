@@ -56,10 +56,10 @@ classdef GroupIdHandler
 
         function isTracked = isTracked(groupId)
             % checks whether groupId corresponds to a lineage or is untracked
-            % currently, groupId > 0 means tracked, groupId == 0 is the default untracked value
+            % currently, groupId > 0 means tracked, groupId == 0 is the default untracked value (or the string can be <missing> if the categorical values are defaulted to <undefined>)
             % defined as a function so that we don't have to replace the check everywhere if we change handling/class of groupId
 
-            isTracked = ~isequal(string(groupId), string(0));
+            isTracked = ~(isequal(string(groupId), string(0)) || ismissing(string(groupId)));
         end
 
 
@@ -71,7 +71,7 @@ classdef GroupIdHandler
             if isnumeric(groupIds)
                 groupIds = groupIds(groupIds ~= 0);
             else
-                groupIds = groupIds(~isundefined(groupIds) & string(groupIds) ~= "0");
+                groupIds = groupIds(~isundefined(groupIds) & string(groupIds) ~= "0" & ~ismissing(string(groupIds)));
             end
             
             if isempty(groupIds)
@@ -117,7 +117,7 @@ classdef GroupIdHandler
             if isnumeric(groupIds)
                 trackedGroupIds = groupIds(groupIds ~= 0);
             else
-                trackedGroupIds = groupIds(string(groupIds) ~= "0");
+                trackedGroupIds = groupIds(string(groupIds) ~= "0" & ~ismissing(string(groupIds)));
             end
         end
     end

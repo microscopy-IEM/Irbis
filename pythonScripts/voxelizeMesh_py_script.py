@@ -40,9 +40,7 @@ def voxelize_mesh(mesh_data, voxel_size=0.05):
     # Extract voxel coordinates
     voxels = voxel_grid.get_voxels()
     voxel_coordinates = []
-    print(voxel_grid.origin)
     origin_pix = np.round(voxel_grid.origin / voxel_size)
-    print(origin_pix)
 
     # Just getting the grid index is not enough, because the origin is not (0,0,0)
     # We need to add the origin to each voxel's grid index, and take into account um-pixel conversion

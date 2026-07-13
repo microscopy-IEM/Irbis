@@ -910,7 +910,7 @@ def parse_matlab_parameters(matlab_struct: dict) -> ProcessingParams:
                 value = bool(matlab_value)
             else:
                 continue  # Skip if type is not recognized
-            print('Setting attribute:', matlab_key, 'to value:', value, ', type:', type(value))
+            # print('Setting attribute:', matlab_key, 'to value:', value, ', type:', type(value))
             setattr(parameters_object, matlab_key, value)
 
     return parameters_object

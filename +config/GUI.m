@@ -111,6 +111,11 @@ classdef (Sealed) GUI
             for i = 1:numel(positionComps)
                 positionComps(i).updateTheme(theme);
             end
+
+            reconstructionComps = findall(allComponents, 'Type', 'surfaceReconstructionComp');
+            for i = 1:numel(reconstructionComps)
+                reconstructionComps(i).updateTheme(theme);
+            end
         end
     end
 end

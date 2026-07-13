@@ -2,7 +2,7 @@ import open3d as o3d
 import numpy as np
 import trimesh
 import sys
-import pymeshfix 
+
 
 def to_numpy_array(data, dtype):
     """Ensure data is a NumPy array, converting memoryview if needed."""
@@ -10,29 +10,53 @@ def to_numpy_array(data, dtype):
         return np.array(data, dtype=dtype)
     return np.asarray(data, dtype=dtype)
 
+
+
+def fix_mesh(mesh):
+    """
+    Attempt to repair a mesh to ensure watertightness, winding consistency, and positive volume.
+
+    Args:
+        mesh (trimesh.Trimesh): Input mesh to repair.
+
+    Returns:
+        trimesh.Trimesh: Repaired mesh.
+    """
+    if not mesh.is_watertight:
+
+        is_watertight = trimesh.repair.fill_holes(mesh, use_fan=True) # This also does check of is_watertight, but the value should already be cached
+        if not is_watertight:
+            try:
+                # try-except statemenent added here, because the stitch function fails if no faces are produced
+                new_faces, new_vertices = trimesh.repair.stitch(mesh, insert_vertices=True)
+                all_faces = np.vstack((mesh.faces, new_faces))
+                mesh.faces = all_faces
+                all_vertices = np.vstack((mesh.vertices, new_vertices))
+                mesh.vertices = all_vertices
+            except Exception as e:
+                pass
+
+    if not mesh.is_winding_consistent:
+        # This should be after fixing watertightness, as fixing watertightness may change the winding consistency
+        trimesh.repair.fix_winding(mesh)  # This also does check of is_winding_consistent, but the value should already be cached
+
+    if mesh.volume < 0:
+        mesh.invert()
+
+    return mesh
+
+
 def fix_mesh_with_trimesh(o3d_mesh):
-    # Use trimesh and if needed, pymeshfix, to repair the mesh
+    # Use trimesh to repair the mesh
     vertices = np.asarray(o3d_mesh.vertices)
     faces = np.asarray(o3d_mesh.triangles)
     trimesh_mesh = trimesh.Trimesh(vertices, faces)
-    
-    if not trimesh_mesh.is_watertight:
-        # print('mesh is not watertight')
-        # not watertight means it has holes or non-m    anifold edges
-        new_vertices, new_faces = pymeshfix.clean_from_arrays(vertices, faces)
-        trimesh_mesh = trimesh.Trimesh(vertices=new_vertices, faces=new_faces, process=True)
 
-    # use this intstead of fix_normals() - which does almost the same if I understand it correctly
-    if not trimesh_mesh.is_winding_consistent:
-        # non-consistent winding means that two adjacent faces have normals in opposite directions
-        # print('winding is not consistent')
-        trimesh.repair.fix_winding(trimesh_mesh)
-    if not trimesh_mesh.is_volume:
-        # not volume means (at least in some situation) that the volume is negative - normals point inward
-        # print('mesh is not volume')
-        trimesh.repair.fix_inversion(trimesh_mesh, multibody=False)
+    trimesh_mesh = fix_mesh(trimesh_mesh)
 
     return trimesh_mesh
+
+
 
 def reconstruct_mesh(mesh_data, depth=8, fraction_to_keep=0.8, min_vertex_num=20, separate=True):
     """

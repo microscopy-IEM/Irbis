@@ -1,6 +1,7 @@
 function checkPythonPackageInstallation(fig)
     % List of packages to check
-    packages = ["numpy", "trimesh", "scipy", "manifold3d", "networkx", "open3d", "pymeshfix", "skimage"];
+    packages = ["numpy", "trimesh", "scipy", "manifold3d", "networkx", "open3d", "skimage"];
+    % pymeshlab and pymeshfix no longer used
 
     % Loop through and check each package
     missing_packages = strings(0, 1);

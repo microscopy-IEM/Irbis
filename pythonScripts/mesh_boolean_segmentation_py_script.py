@@ -55,15 +55,15 @@ def fix_mesh(mesh):
         trimesh.Trimesh: Repaired mesh.
     """
     if not mesh.is_watertight:
-        print("Mesh is not watertight. Attempting to fix...")
+        # print("Mesh is not watertight. Attempting to fix...")
 
         is_watertight = trimesh.repair.fill_holes(mesh, use_fan=True) # This also does check of is_watertight, but the value should already be cached
         if not is_watertight:
             try:
                 # try-except statemenent added here, because the stitch function fails if no faces are produced
-                print("Filling holes did not help. Using stitch")
+                # print("Filling holes did not help. Using stitch")
                 new_faces, new_vertices = trimesh.repair.stitch(mesh, insert_vertices=True)
-                print(f'Added {len(new_faces)} faces and {len(new_vertices)} vertices to stitch the mesh.')
+                # print(f'Added {len(new_faces)} faces and {len(new_vertices)} vertices to stitch the mesh.')
                 all_faces = np.vstack((mesh.faces, new_faces))
                 mesh.faces = all_faces
                 all_vertices = np.vstack((mesh.vertices, new_vertices))
@@ -76,19 +76,21 @@ def fix_mesh(mesh):
                 # mesh.faces = all_faces
                 # mesh.remove_unreferenced_vertices()
             except Exception as e:
-                print(f"Error during stitching: {e}")
-                traceback.print_exc()
+                # print(f"Error during stitching: {e}")
+                # traceback.print_exc()
+                pass
+
 
     if not mesh.is_winding_consistent:
-        print("Mesh is not winding consistent. Attempting to fix...")
+        # print("Mesh is not winding consistent. Attempting to fix...")
         # This should be after fixing watertightness, as fixing watertightness may change the winding consistency
         trimesh.repair.fix_winding(mesh)  # This also does check of is_winding_consistent, but the value should already be cached
 
     if mesh.volume < 0:
-        print("Mesh has negative volume. Attempting to fix...")
+        # print("Mesh has negative volume. Attempting to fix...")
         mesh.invert()
 
-    print(f"Final mesh properties: Watertight={mesh.is_watertight}, Winding Consistent={mesh.is_winding_consistent}, Volume={mesh.volume}")
+    # print(f"Final mesh properties: Watertight={mesh.is_watertight}, Winding Consistent={mesh.is_winding_consistent}, Volume={mesh.volume}")
 
     return mesh
 
@@ -115,8 +117,6 @@ def intersect(main_mesh, helper_mesh):
         'vertex_normals': intersection_mesh.vertex_normals if len(intersection_mesh.vertex_normals) > 0 else np.zeros_like(intersection_mesh.vertices),
         'face_normals': intersection_mesh.face_normals if len(intersection_mesh.face_normals) > 0 else np.zeros_like(intersection_mesh.faces)
     }
-
-    print(intersection_objects)
 
     return intersection_objects
 

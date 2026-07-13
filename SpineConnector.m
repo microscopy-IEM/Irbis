@@ -46,7 +46,6 @@ classdef SpineConnector < handle
 
         function umPathInfo = main(obj, spineMesh, shaftMesh, zstack, varargin)
             % TO OPTIMIZE - if this is run in batch, some of the steps (dendrite conversion, speed map calculation) can be done only once
-            profile on
             tic
             % convert the spine meshes to a list of coordinates in pixels - already assumes upsampled z
             spinePoints = obj.generateCoordinatesFromMesh(spineMesh);
@@ -125,8 +124,6 @@ classdef SpineConnector < handle
 
             % assignin('base', 'umPathInfo', umPathInfo);  % Assign to base workspace for debugging
             toc
-            profile off
-            profile viewer
         end
 
 
