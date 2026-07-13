@@ -40,9 +40,7 @@ function T = generateConstantShaft(T, selectedRowIds, radius)
         mesh_data{1} = struct('vertices', ptVertices, ...
                                 'vertexNormals', ptNormals);
 
-        [nObjects, meshCell, ~] = reconstruct_mesh_python(depth,mesh_data,0);
-
-        % [mesh,radii] = pc2surfacemesh(ptCloudIn,"ball-pivot")
+        [nObjects, meshCell] = PythonMeshHelper.reconstruct(depth, mesh_data);
 
         dendriticMesh = meshCell{1};
         if nObjects > 1

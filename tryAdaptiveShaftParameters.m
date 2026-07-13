@@ -585,8 +585,8 @@ function [contours, middlePoints, shaftNorms, mesh] = generateAdaptiveShaft(cent
     depth = 9; % Adjust as needed
     mesh_data{1} = struct('vertices', ptVertices, ...
                             'vertexNormals', ptNormals);
-    [~, meshCell, ~] = reconstruct_mesh_python(depth,mesh_data,0);
-    % [~, vertices, faces, vertex_normals,face_normals] = reconstruct_mesh_python(depth, ptVertices, ptNormals, 0);
+
+    [~, meshCell] = PythonMeshHelper.reconstruct(depth, mesh_data);
 
     % % Convert Python arrays to MATLAB arrays
     % regionID = 1;

@@ -15,4 +15,5 @@ IrbisStart Standalone Application/
 Irbis packaged/
 IrbisPackaged/
 deploymentScript.m
+pythonBundled/
 .agents/

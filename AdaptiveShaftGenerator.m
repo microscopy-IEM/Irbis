@@ -338,7 +338,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             mesh_data{1} = struct('vertices', verticesNumpy, ...
                                     'vertexNormals', normalsNumpy);
 
-            [nObjects, meshCell, ~] = reconstruct_mesh_python(depth,mesh_data,0);
+            [nObjects, meshCell] = PythonMeshHelper.reconstruct(depth, mesh_data);
 
             mesh = meshCell{1};
             if nObjects > 1
