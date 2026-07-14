@@ -22,55 +22,298 @@ classdef GenerateScreenshotsTest < matlab.uitest.TestCase
     end
 
     methods (Test)
-        function testGenerateScreenshots(testCase)
-            filesPanelFile = fullfile(testCase.OutputDir, "files-panel.png");
-            visualizationPanelFile = fullfile(testCase.OutputDir, "visualization-panel.png");
-            modelSpinesPanelFile = fullfile(testCase.OutputDir, "model-spines-panel.png");
+        function gettingStartedScreenshots(testCase)
+            testCase.openFilesTab();
+            testCase.captureSnapshot(testCase.App.FilesTab, ...
+                "files-panel.png");
+            testCase.captureSnapshot(testCase.App.RightPanel, ...
+                "visualization-panel.png");
+        end
 
-            testCase.choose(testCase.App.FilesTab);
-            drawnow
-            pause(0.2)
+        function modelScreenshots(testCase)
+            testCase.openModelSpines();
+            testCase.captureSnapshot(testCase.App.LeftPanel, ...
+                "model-spines-panel.png");
 
-            testCase.exportPanelSnapshot(testCase.App.FilesTab, ...
-                filesPanelFile);
-            testCase.verifyTrue(isfile(filesPanelFile));
+            testCase.openSpinesObjectList();
+            testCase.captureSnapshot(testCase.App.objectListComponent_spines, ...
+                "spines-objects-panel.png");
+        end
 
-            testCase.exportPanelSnapshot(testCase.App.RightPanel, ...
-                visualizationPanelFile);
-            testCase.verifyTrue(isfile(visualizationPanelFile));
+        function segmentSpinesTutorialScreenshots(testCase)
+            testCase.openFilesTab();
+            testCase.captureSnapshot(testCase.App.FilesTab, ...
+                "tutorial-segment-spines-load-data.png");
 
-            testCase.choose(testCase.App.ModelTab);
-            testCase.choose(testCase.App.spinesTab);
+            testCase.openPlanesTab();
+            testCase.captureSnapshot(testCase.App.LeftPanel, ...
+                "tutorial-segment-spines-view-planes.png");
 
-            testCase.exportPanelSnapshot(testCase.App.LeftPanel, ...
-                modelSpinesPanelFile);
-            testCase.verifyTrue(isfile(modelSpinesPanelFile));
+            testCase.openModelTab();
+            testCase.captureSnapshot(testCase.App.LeftPanel, ...
+                "tutorial-segment-spines-create-model.png");
 
-            spinesObjectPanel = testCase.App.objectListComponent_spines;
-            testCase.press(spinesObjectPanel.ObjectlistButton);
+            testCase.captureModelSubtabOrPlaceholder( ...
+                "fullVolumeTab", ...
+                "tutorial-segment-spines-full-volume-tab.png", ...
+                "Full Volume tab", ...
+                "Open Model > Go to Model tab and Full subtab.");
 
-            testCase.exportPanelSnapshot(spinesObjectPanel, ...
-                fullfile(testCase.OutputDir, "spines-objects-panel.png"));
+            testCase.captureSnapshot(testCase.App.surfaceReconstructionComp_fullVolume, ...
+            "tutorial-segment-spines-reconstruction-panel.png");
+
+            testCase.checkModelCheckboxes("fullVolume");
+            testCase.captureSnapshot(testCase.App.RightPanel, ...
+                "tutorial-segment-spines-full-volume-visualization.png");
+
+            testCase.captureModelSubtabOrPlaceholder( ...
+                "shaftTab", ...
+                "tutorial-segment-spines-shaft-tab.png", ...
+                "Shaft tab", ...
+                "Open Model > Go to Model tab and Dendrites subtab.");
+
+            testCase.openMainAppPanel("DendritetracingSectionButton")
+            testCase.capturePanelSnapshotWithHeader(testCase.App.dendriteTracingPanel, ...
+                "tutorial-segment-spines-dendrite-tracing-panel.png");
+
+            testCase.openMainAppPanel("ShaftgenerationandadjustmentSectionButton")
+            testCase.capturePanelSnapshotWithHeader(testCase.App.shaftGenerationPanel, ...
+                "tutorial-segment-spines-shaft-generation-panel.png");
+
+            testCase.checkModelCheckboxes(["fullVolume", "shaft"]);
+            testCase.captureSnapshot(testCase.App.RightPanel, ...
+                "tutorial-segment-spines-shaft-visualization.png");
+
+            testCase.captureModelSubtabOrPlaceholder( ...
+                "spinesTab", ...
+                "tutorial-segment-spines-spines-tab.png", ...
+                "Spines tab", ...
+                "Open Model > Go to Model tab and Spines subtab.");
+
+            testCase.openModelSpines();
+            testCase.captureSnapshot(testCase.App.LeftPanel, ...
+                "tutorial-segment-spines-separate-spines.png");
+
+            testCase.checkModelCheckboxes(["spines", "dendrite"]);
+            testCase.captureSnapshot(testCase.App.RightPanel, ...
+                "tutorial-segment-spines-spines-visualization.png");
+
+            testCase.openModelSpines();
+            testCase.captureSnapshot(testCase.App.LeftPanel, ...
+                "tutorial-segment-spines-calculate-features.png");
+
+            testCase.openFilesTab();
+            testCase.captureSnapshot(testCase.App.FilesTab, ...
+                "tutorial-segment-spines-save-irbis.png");
+        end
+
+        function compareResultsViewerDatasetsTutorialScreenshots(testCase)
+            testCase.captureResultsViewerPlaceholder( ...
+                "compare-rv-batch-load.png", ...
+                "Batch load", ...
+                "Press Batch load and select each folder of .irbis datasets.");
+
+            testCase.captureResultsViewerPlaceholder( ...
+                "compare-rv-select-model-spines.png", ...
+                "Select model spines", ...
+                "Set Modality to model and Object type to spines.");
+
+            testCase.captureResultsViewerPlaceholder( ...
+                "compare-rv-add-categorization.png", ...
+                "Add categorization", ...
+                "Open the parameter menu and define the condition categories.");
+
+            testCase.captureResultsViewerPlaceholder( ...
+                "compare-rv-filter-groupid.png", ...
+                "Filter groupId", ...
+                "Open Filtering, select groupId, untick 0, and press Filter.");
+
+            testCase.captureResultsViewerPlaceholder( ...
+                "compare-rv-merged-identifier.png", ...
+                "Create merged ID", ...
+                "Use add merged to combine fileId and groupId.");
+
+            testCase.captureResultsViewerPlaceholder( ...
+                "compare-rv-pivoted-development.png", ...
+                "Pivoted development plot", ...
+                "Switch to Pivoted, set rows and columns, then plot line: averaged.");
+
+            testCase.captureResultsViewerPlaceholder( ...
+                "compare-rv-summarized-by-condition.png", ...
+                "Summarized by condition", ...
+                "Show summarized and use group or condition as categorical labels.");
+
+            testCase.captureResultsViewerPlaceholder( ...
+                "compare-rv-export-plot.png", ...
+                "Export plot", ...
+                "Use the plot export control and save the image.");
+
+            testCase.captureResultsViewerPlaceholder( ...
+                "compare-rv-save-dataset.png", ...
+                "Save combined dataset", ...
+                "Press Save .irbisRes and choose the output file.");
         end
     end
 
     methods (Access = private)
+        function openFilesTab(testCase)
+            testCase.choose(testCase.App.FilesTab);
+            testCase.waitForUi();
+        end
+
+        function openPlanesTab(testCase)
+            testCase.choose(testCase.App.PlanesTab);
+            testCase.waitForUi();
+        end
+
+        function openModelTab(testCase)
+            testCase.choose(testCase.App.ModelTab);
+            testCase.waitForUi();
+        end
+
+        function openModelSpines(testCase)
+            testCase.choose(testCase.App.ModelTab);
+            testCase.choose(testCase.App.spinesTab);
+            testCase.waitForUi();
+        end
+
+        function openSpinesObjectList(testCase)
+            spinesObjectPanel = testCase.App.objectListComponent_spines;
+            testCase.press(spinesObjectPanel.ObjectlistButton);
+            testCase.waitForUi();
+        end
+
+        function openMainAppPanel(testCase, buttonName)
+            testCase.choose(testCase.App.(buttonName), true);
+            testCase.waitForUi();
+        end
+
+        function captureSnapshot(testCase, componentHandle, fileName)
+            outputFile = fullfile(testCase.OutputDir, fileName);
+
+            testCase.exportPanelSnapshot(componentHandle, outputFile);
+            testCase.verifyTrue(isfile(outputFile), ...
+                "Missing screenshot: " + outputFile);
+        end
+
+        function capturePanelSnapshotWithHeader(testCase, componentHandle, fileName)
+            outputFile = fullfile(testCase.OutputDir, fileName);
+
+            testCase.exportPanelSnapshotWithHeader(componentHandle, outputFile);
+            testCase.verifyTrue(isfile(outputFile), ...
+                "Missing screenshot: " + outputFile);
+        end
+
+        function checkModelCheckboxes(testCase, namesToCheck)
+            % Normalize names
+            testCase.choose(testCase.App.ColorMixerButton, true);
+            allBranches = ["fullVolume", "shaft", "dendrite", "spines", "synapses"];
+            desired = string(namesToCheck);
+
+
+            for idx = 1:numel(allBranches)
+                prop = allBranches(idx);
+                propName = [char(prop) 'CheckBox'];
+                if endsWith(propName, 'CheckBox', 'IgnoreCase', true) && isprop(testCase.App, propName)
+                    comp = testCase.App.(propName);
+                    shouldCheck = any(strcmpi(prop, desired));
+                    testCase.choose(comp, shouldCheck);
+                end
+            end
+
+            testCase.waitForUi();
+        end
+
+        function captureModelSubtabOrPlaceholder(testCase, tabPropertyNames, ...
+                fileName, titleText, detailsText)
+            testCase.openModelTab();
+
+            if testCase.chooseFirstAppComponentIfPresent(tabPropertyNames)
+                testCase.captureSnapshot(testCase.App.LeftPanel, fileName);
+            else
+                testCase.capturePlaceholderSnapshot(fileName, ...
+                    titleText, detailsText);
+            end
+        end
+
+        function didChoose = chooseFirstAppComponentIfPresent(testCase, ...
+                componentNames)
+            didChoose = false;
+
+            for componentName = string(componentNames)
+                componentPropertyName = char(componentName);
+
+                if isprop(testCase.App, componentPropertyName)
+                    component = testCase.App.(componentPropertyName);
+                    testCase.choose(component);
+                    testCase.waitForUi();
+                    didChoose = true;
+                    return
+                end
+            end
+        end
+
+        function captureResultsViewerPlaceholder(testCase, fileName, ...
+                titleText, detailsText)
+            testCase.capturePlaceholderSnapshot(fileName, ...
+                "ResultsViewer: " + titleText, detailsText);
+        end
+
+        function capturePlaceholderSnapshot(testCase, fileName, titleText, ...
+                detailsText)
+            outputFile = fullfile(testCase.OutputDir, fileName);
+
+            fig = figure("Visible", "off", ...
+                "Color", [0.96 0.96 0.96], ...
+                "Position", [100 100 900 420]);
+            cleanup = onCleanup(@() close(fig));
+
+            ax = axes(fig, ...
+                "Position", [0 0 1 1], ...
+                "Visible", "off", ...
+                "XLim", [0 1], ...
+                "YLim", [0 1]);
+
+            rectangle(ax, ...
+                "Position", [0.025 0.025 0.95 0.95], ...
+                "EdgeColor", [0.65 0.65 0.65], ...
+                "LineStyle", "--");
+
+            text(ax, 0.06, 0.68, titleText, ...
+                "FontSize", 24, ...
+                "FontWeight", "bold", ...
+                "Color", [0.12 0.12 0.12], ...
+                "Interpreter", "none");
+
+            text(ax, 0.06, 0.48, detailsText, ...
+                "FontSize", 14, ...
+                "Color", [0.25 0.25 0.25], ...
+                "Interpreter", "none");
+
+            text(ax, 0.06, 0.22, ...
+                "TODO: replace this placeholder with the exact UI sequence.", ...
+                "FontSize", 12, ...
+                "Color", [0.45 0.45 0.45], ...
+                "Interpreter", "none");
+
+            exportgraphics(fig, outputFile, "Resolution", 120);
+            testCase.verifyTrue(isfile(outputFile), ...
+                "Missing placeholder screenshot: " + outputFile);
+
+            clear cleanup
+        end
+
         function exportPanelSnapshot(testCase, panelHandle, outputFile)
+            testCase.waitForUi(0.1);
+
             tmpFile = tempname + ".png";
             cleanup = onCleanup(@() testCase.deleteTempFile(tmpFile));
 
             exportapp(testCase.App.IrbisMainFig, tmpFile);
 
             img = imread(tmpFile);
-            pos = panelHandle.Position;
-            h = size(img, 1);
-
-            [xParentPix, yParentPix] = testCase.calculateContainerOrigin(panelHandle);
-
-            x = round(pos(1) + xParentPix);
-            y = round(h - pos(2) - pos(4) + 1 + yParentPix);
-            w = round(pos(3));
-            hh = round(pos(4));
+            [x, y, w, hh] = testCase.calculateSnapshotRectangle( ...
+                panelHandle, size(img));
 
             yMin = max(1, y);
             yMax = min(size(img, 1), y + hh - 1);
@@ -83,18 +326,54 @@ classdef GenerateScreenshotsTest < matlab.uitest.TestCase
             clear cleanup
         end
 
-        function [xParentPix, yParentPix] = calculateContainerOrigin(~, containerHandle)
-            xParentPix = 0;
-            yParentPix = 0;
+        function exportPanelSnapshotWithHeader(testCase, panelHandle, outputFile)
+            % extracts the panel with the button for toggling the panel
+            testCase.waitForUi(0.1);
 
-            currentObject = containerHandle.Parent;
+            tmpFile = tempname + ".png";
+            cleanup = onCleanup(@() testCase.deleteTempFile(tmpFile));
 
-            while ~isa(currentObject, 'matlab.ui.Figure')
-                pos = currentObject.Position;
-                xParentPix = xParentPix + pos(1);
-                yParentPix = yParentPix + pos(2);
-                currentObject = currentObject.Parent;
+            exportapp(testCase.App.IrbisMainFig, tmpFile);
+
+            img = imread(tmpFile);
+            [x, y, w, hh] = testCase.calculateSnapshotRectangle( ...
+                panelHandle, size(img));
+            y = y - 35; % move up to include the header
+            hh = hh + 35; % add extra height for the header
+
+            yMin = max(1, y);
+            yMax = min(size(img, 1), y + hh - 1);
+            xMin = max(1, x);
+            xMax = min(size(img, 2), x + w - 1);
+
+            cropped = img(yMin:yMax, xMin:xMax, :);
+            imwrite(cropped, outputFile);
+
+            clear cleanup
+        end
+        function [x, y, w, h] = calculateSnapshotRectangle(testCase, ...
+                componentHandle, imageSize)
+            componentPosition = getpixelposition(componentHandle, true);
+            figurePosition = getpixelposition(testCase.App.IrbisMainFig);
+
+            scaleX = imageSize(2) / figurePosition(3);
+            scaleY = imageSize(1) / figurePosition(4);
+
+            x = round(componentPosition(1) * scaleX);
+            y = round(imageSize(1) - ...
+                (componentPosition(2) + componentPosition(4)) * scaleY + 1);
+            w = max(1, round(componentPosition(3) * scaleX));
+            h = max(1, round(componentPosition(4) * scaleY));
+        end
+
+        function waitForUi(~, seconds)
+            if nargin < 2
+                seconds = 0.2;
             end
+
+            drawnow
+            pause(seconds)
+            drawnow
         end
 
         function deleteTempFile(~, tmpFile)

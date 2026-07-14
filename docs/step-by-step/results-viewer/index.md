@@ -1,6 +1,6 @@
 # ResultsViewer
 
-ResultsViewer is part of Irbis dedicated to exploring generated data in tables and plots. It supports filtering, custom categorizations and new column creation, as well as storing specific settings as views. It can be either run in connection with the main app, providing linked visualization of selected objects, or in batch mode, when multiple datasets can be loaded and explored together. 
+ResultsViewer is part of Irbis dedicated to exploring generated data in tables and plots. It supports filtering, custom categorizations and new column creation, as well as storing specific settings as views. It can run in connection with the main app, providing linked visualization of selected objects, or in batch mode, when multiple datasets can be loaded and explored together.
 
 !!! info "Before you start"
     **Prerequisites:**
@@ -22,9 +22,9 @@ ResultsViewer is part of Irbis dedicated to exploring generated data in tables a
 
 - **Full** table view pools data from all time points; table columns are parameters.
 - **Pivoted** table view shows one parameter across time (or another selected parameter); by default, columns are time points and rows are objects connected by group ID.
-- **Summarized** table view contains values that summarize development of each row in the Pivoted table. 
+- **Summarized** table view contains values that summarize development of each row in the Pivoted table.
 
-Pages:
+## Pages
 
 - [Use table views and plots](modes-plots.md)
 - [Filter available data](filter-data.md)

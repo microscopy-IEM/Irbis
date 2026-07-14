@@ -11,13 +11,16 @@ theme:
 extra_css:
   - stylesheets/extra.css
 
+exclude_docs: |
+  _generated/
+
 nav:
   - Home: index.md
   - Getting started:
       - Overview: getting-started.md
       - Installation: getting-started/installation.md
   - Tutorial flows:
-      - Importing data: tutorials/importing-data.md
+      - Overview: tutorials/index.md
       - Segment dendritic spines: tutorials/segment-spines.md
       - Compare ResultsViewer datasets: tutorials/compare-results-viewer-datasets.md
   - Step-by-step:
@@ -67,14 +70,17 @@ nav:
           - Create animations: step-by-step/viewport/animation.md
           - Save views: step-by-step/viewport/save-views.md
   - Reference:
+      - Overview: reference/index.md
       - Irbis file structure: reference/irbis-file-structure.md
       - Parameters:
+          - Overview: reference/parameters/index.md
           - Areas table: reference/parameters/areas-table.md
           - Model table: reference/parameters/model-table.md
           - Object features: reference/parameters/object-features.md
           - Points table: reference/parameters/points-table.md
           - Tracks table: reference/parameters/tracks-table.md
           - Views table: reference/parameters/views-table.md
+  - Contact: contact.md
 
 markdown_extensions:
   - admonition
@@ -82,6 +88,6 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.snippets:
       base_path: docs
-      
+
 plugins:
   - search

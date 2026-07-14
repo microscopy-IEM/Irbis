@@ -1,18 +1,14 @@
 # Step-by-step guides
 
-These pages describe short task-focused workflows. Each page lists the prerequisites, UI location, and related next steps togehter with the instructions.
+These pages describe short task-focused workflows. Use them when you already work with Irbis and want to find out how to do a specific operation.
 
-## Common tutorial flows
-
-- [Import -> reconstruct -> trace dendrite -> separate spines -> export results](../tutorials/segment-spines.md)
-- [Importing data only](../tutorials/importing-data.md)
-- [Compare ResultsViewer datasets](../tutorials/compare-results-viewer-datasets.md)
+Most step-by-step pages list prerequisites, the UI location, related next steps, and the task instructions.
 
 ## Workflow areas
 
-- [Data import and saving](data-import/index.md)
-- [Planes processing](planes/index.md)
-- [3D model processing](model/index.md)
-- [Tracks processing](tracks/index.md)
-- [ResultsViewer](results-viewer/index.md)
-- [Viewport, animation, and shortcuts](viewport/index.md)
+- [Data import and saving](data-import/index.md): open raw data, open existing projects, and save processed data.
+- [Planes processing](planes/index.md): inspect, align, crop, preprocess, and manage planes data.
+- [3D model processing](model/index.md): create 3D models, correct drift, trace dendrites, separate spines, and export object results.
+- [Tracks processing](tracks/index.md): import, view, analyze, and categorize TrackMate tracks.
+- [ResultsViewer](results-viewer/index.md): explore generated data in tables and plots.
+- [Viewport, animation, and shortcuts](viewport/index.md): navigate the visualization panel, store views, and create animations.

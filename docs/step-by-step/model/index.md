@@ -2,6 +2,8 @@
 
 3D reconstruction is currently based on planes data.
 
+## Pages
+
 - [Create a new model](create-model.md)
 - [Create a primary 3D model](reconstruct-primary-model.md)
 - [Detect drift and correct it](drift-correction.md)
@@ -12,6 +14,6 @@
 - [Select objects and export results](select-export-objects.md)
 - [Manually adjust selected objects](manual-adjustment.md)
 
-Tutorial:
+## Tutorial
 
-- [Import -> reconstruct -> trace dendrite -> separate spines -> export results](../../tutorials/segment-spines.md)
+- [Segment dendritic spines from a single time point](../../tutorials/segment-spines.md)

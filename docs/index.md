@@ -1,18 +1,18 @@
-﻿# Irbis documentation
+# Irbis documentation
 
 Welcome to the Irbis documentation.
 
 Irbis is an open-source software for analysis of multimodal fluorescence microscopy data, with a primary focus on 3D and time-lapse analysis of dendritic spines. It provides an end-to-end graphical interface covering image preprocessing, 3D reconstruction, segmentation, quantitative analysis and data exploration, combining automated analysis algorithms with extensive manual editing tools.
 
-Use the step-by-step guides when you need help with a specific procedure with prerequisites and UI locations. Use the tutorial flows when you want a complete sequence from import to export.
+Use the tutorials to learn Irbis through complete guided workflows. Use the step-by-step guides when you already know the app and need help with a specific task.
 
 ## Start here
 
-- [Getting started](getting-started.md)
-- [Step-by-step guides](step-by-step/index.md)
-- [Import -> reconstruct -> trace dendrite -> separate spines -> export results](tutorials/segment-spines.md)
-- [Importing data only](tutorials/importing-data.md)
-- [Compare datasets in ResultsViewer](tutorials/compare-results-viewer-datasets.md)
+- New to Irbis: [Getting started](getting-started.md)
+- Learn the basic workflow: [Segment dendritic spines from a single time point](tutorials/segment-spines.md)
+- Explore guided workflows: [Tutorial flows](tutorials/index.md)
+- Look up a specific task: [Step-by-step guides](step-by-step/index.md)
+- Check file and parameter details: [Reference](reference/index.md)
 
 ## Main areas
 
@@ -26,4 +26,8 @@ Use the step-by-step guides when you need help with a specific procedure with pr
 ## Reference
 
 - [Irbis file structure](reference/irbis-file-structure.md)
-- [Parameter tables](reference/parameters/model-table.md)
+- [Parameter tables](reference/parameters/index.md)
+
+## Contact
+
+- [Contact and project information](contact.md)

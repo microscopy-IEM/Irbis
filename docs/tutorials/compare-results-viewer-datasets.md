@@ -19,6 +19,9 @@ Use this tutorial to load several datasets into ResultsViewer, add treatment cat
     - Features have been calculated for the objects you want to compare.
     - ResultsViewer is open.
 
+!!! note "Folded details"
+    Folded sections in this tutorial are not separate tutorial steps. They provide additional detailed information from the step-by-step guides.
+
 ## Flow
 
 ### Load datasets
@@ -28,12 +31,16 @@ Use this tutorial to load several datasets into ResultsViewer, add treatment cat
 3. When the dialog opens again, select datasets from another folder if needed.
 4. Repeat until all datasets are loaded, then press **Cancel** to close the dialog.
 
+    ![Batch load workflow in ResultsViewer](../assets/compare-rv-batch-load.png)
+
     ??? note "Use ResultsViewer in batch mode"
 
-        --8<-- "step-by-step/results-viewer/batch-mode.md"
+        --8<-- "_generated/snippets/step-by-step/results-viewer/batch-mode.md"
 
 5. Select **model** from **Modality**.
 6. Select **spines** from **Object type**.
+
+    ![Model and spines selection in ResultsViewer](../assets/compare-rv-select-model-spines.png)
 
 If the parameter list does not contain the expected spine parameters, check that **spines** is selected as the object type. If the object type is correct, check the source dataset.
 
@@ -50,9 +57,11 @@ If treatment information is already stored in the file **group** field in the **
 7. If you have more conditions, press **Add category** and define the extra categories.
 8. Press **Save categorization**.
 
+    ![Add treatment categorization in ResultsViewer](../assets/compare-rv-add-categorization.png)
+
     ??? note "Define ResultsViewer categorization"
 
-        --8<-- "step-by-step/results-viewer/categorize-data.md"
+        --8<-- "_generated/snippets/step-by-step/results-viewer/categorize-data.md"
 
 ### Remove objects not connected over time
 
@@ -63,6 +72,8 @@ Objects with `groupId` set to `0` are not connected across time points. Remove t
 3. Select `groupId` from the parameter drop-down menu.
 4. Untick `0`.
 5. Press **Filter**.
+
+![Filter groupId in ResultsViewer](../assets/compare-rv-filter-groupid.png)
 
 A filter button named `groupId` appears in the **Filtering** panel. Toggle it to temporarily disable or enable the filter.
 
@@ -75,6 +86,8 @@ When several datasets are loaded together, `groupId` is no longer unique because
 3. In the dialog, use `fileId` in the first drop-down menu and `groupId` in the second.
 4. Press **Save**.
 
+![Create a merged fileId and groupId column](../assets/compare-rv-merged-identifier.png)
+
 ### Show object development over time
 
 Use Pivoted table view to show time points as columns and connected objects as rows.
@@ -85,6 +98,8 @@ Use Pivoted table view to show time points as columns and connected objects as r
 4. Check that **Columns** uses `timePoint`.
 5. Select **line: averaged** from the plot type drop-down menu in the upper-right corner.
 6. Click the header of the first time-point column to include all rows in the plot.
+
+![Pivoted object development plot](../assets/compare-rv-pivoted-development.png)
 
 The plot should show one averaged line with a shaded confidence interval.
 
@@ -97,6 +112,8 @@ Use the summarized table to add condition labels to the selected object-developm
 3. Tick **Categorical as labels** in the upper-right corner.
 4. Click the header of the `group` or `condition` column.
 
+![Summarized table grouped by condition](../assets/compare-rv-summarized-by-condition.png)
+
 The plot should show one averaged line with a confidence interval for each condition.
 
 ### Export the plot
@@ -106,6 +123,8 @@ The plot should show one averaged line with a confidence interval for each condi
 3. Select the image export option, such as PNG or SVG.
 4. In the dialog, choose a folder, enter a file name, and press **Save**.
 
+![Export a ResultsViewer plot](../assets/compare-rv-export-plot.png)
+
 ### Save the combined dataset
 
 Save the combined dataset if you want to reopen it later in ResultsViewer.
@@ -113,3 +132,5 @@ Save the combined dataset if you want to reopen it later in ResultsViewer.
 1. In the upper-left corner, press **Save .irbisRes**.
 2. In the dialog, choose a folder and enter a file name.
 3. Press **Save**.
+
+![Save a combined ResultsViewer dataset](../assets/compare-rv-save-dataset.png)
