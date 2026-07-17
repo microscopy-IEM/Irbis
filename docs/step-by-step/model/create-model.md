@@ -1,4 +1,4 @@
-﻿# Create a new model
+# Create a new model
 
 Create an empty model structure before generating model parts, unless you loaded data that already contain a model.
 
@@ -20,8 +20,4 @@ Create an empty model structure before generating model parts, unless you loaded
 ## Next steps
 
 - Continue to [Create a primary 3D model](reconstruct-primary-model.md).
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of the Model tab before and after Create model is pressed.
-
 

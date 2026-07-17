@@ -1,4 +1,4 @@
-﻿# Preprocess planes
+# Preprocess planes
 
 Preprocessing is applied only to the currently editable channel.
 
@@ -30,8 +30,4 @@ Saved pipelines appear in the preprocessing window and in the main window **Filt
 
 - Check channel selection in [View raw planes data](view-raw-data.md).
 - Continue to [Create a primary 3D model](../model/reconstruct-primary-model.md).
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of the preprocessing window with original data, adjusted data, method buttons, and Save settings visible.
-
 

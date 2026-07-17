@@ -1,4 +1,4 @@
-﻿# Crop planes
+# Crop planes
 
 Cropping lets you analyze a subset of the image and can reduce processing requirements.
 
@@ -21,8 +21,4 @@ Cropping lets you analyze a subset of the image and can reduce processing requir
 ## Related
 
 - After cropping, continue to [Preprocess planes](preprocess-data.md) or [Create a primary 3D model](../model/reconstruct-primary-model.md).
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of the crop window with the red outline visible.
-
 

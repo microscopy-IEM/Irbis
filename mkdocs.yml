@@ -22,7 +22,7 @@ nav:
   - Tutorial flows:
       - Overview: tutorials/index.md
       - Segment dendritic spines: tutorials/segment-spines.md
-      - Compare ResultsViewer datasets: tutorials/compare-results-viewer-datasets.md
+      - Compare datasets in ResultsViewer: tutorials/compare-datasets-results-viewer.md
   - Step-by-step:
       - Overview: step-by-step/index.md
       - Data import and saving:

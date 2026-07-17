@@ -1,4 +1,4 @@
-﻿# Define and edit track categorizations
+# Define and edit track categorizations
 
 !!! info "Before you start"
     **Prerequisites:**
@@ -41,8 +41,4 @@ Complex categorizations can combine multiple numerical and categorical parameter
 ## Related
 
 - ResultsViewer has a separate [Define ResultsViewer categorization](../results-viewer/categorize-data.md) workflow.
-
-!!! example "Screenshot placeholder"
-    Add screenshots of simple thresholds and the Add categorization dialog.
-
 

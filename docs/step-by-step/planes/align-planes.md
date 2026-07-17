@@ -1,4 +1,4 @@
-﻿# Align planes across time points
+# Align planes across time points
 
 !!! info "Before you start"
     **Prerequisites:**
@@ -21,8 +21,4 @@ Irbis shifts each time point and crops the hanging edges.
 
 - Check raw data first with [View raw planes data](view-raw-data.md).
 - Continue cleanup with [Crop planes](crop-planes.md) or [Preprocess planes](preprocess-data.md).
-
-!!! example "Video placeholder"
-    Add a short clip showing Pre-register and Accept.
-
 

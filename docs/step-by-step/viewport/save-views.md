@@ -1,4 +1,4 @@
-﻿# Save views
+# Save views
 
 Saved views store the rotation and zoom of the axes and the selection of visible elements. The current time point is not saved.
 
@@ -29,8 +29,4 @@ Saved views store the rotation and zoom of the axes and the selection of visible
 ## Related
 
 - Use [Create animations](animation.md) when you need transitions between views.
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of View storing option with Store view, Rename view, and Delete view.
-
 

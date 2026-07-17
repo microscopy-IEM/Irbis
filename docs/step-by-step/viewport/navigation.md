@@ -1,4 +1,4 @@
-﻿# Navigate the visualization panel
+# Navigate the visualization panel
 
 !!! info "Before you start"
     **UI location:**
@@ -26,8 +26,4 @@
 
 - Learn shortcuts in [Use keyboard shortcuts](keyboard-shortcuts.md).
 - Store camera setups with [Save views](save-views.md).
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of the visualization panel bottom controls.
-
 

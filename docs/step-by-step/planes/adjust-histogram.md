@@ -1,4 +1,4 @@
-﻿# Adjust channel histogram
+# Adjust channel histogram
 
 This changes only visualization. It does not change the raw data.
 
@@ -21,8 +21,4 @@ This changes only visualization. It does not change the raw data.
 ## Related
 
 - For data-changing adjustments, use [Preprocess planes](preprocess-data.md).
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of the channel histogram controls.
-
 

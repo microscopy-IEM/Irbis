@@ -20,5 +20,3 @@ Irbis shifts each time point and crops the hanging edges.
 - Check raw data first with [View raw planes data](../step-by-step/planes/view-raw-data.md).
 - Continue cleanup with [Crop planes](../step-by-step/planes/crop-planes.md) or [Preprocess planes](../step-by-step/planes/preprocess-data.md).
 
-!!! example "Video placeholder"
-    Add a short clip showing Pre-register and Accept.

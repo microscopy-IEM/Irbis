@@ -33,5 +33,3 @@ The filter is applied to both the pivoted and summarized tables.
 - See the general filtering controls in [Filter available data](filter-data.md).
 - Use [Use ResultsViewer table views and plots](modes-plots.md) to plot the filtered data.
 
-!!! example "Screenshot placeholder"
-    Add screenshots of Pivoted table view with the summarized table shown and the Filtering panel set to Summarized.

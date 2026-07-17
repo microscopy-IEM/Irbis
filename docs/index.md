@@ -6,6 +6,8 @@ Irbis is an open-source software for analysis of multimodal fluorescence microsc
 
 Use the tutorials to learn Irbis through complete guided workflows. Use the step-by-step guides when you already know the app and need help with a specific task.
 
+![IrbisApp GUI](assets/irbis-gui.png)
+
 ## Start here
 
 - New to Irbis: [Getting started](getting-started.md)

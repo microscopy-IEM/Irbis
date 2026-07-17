@@ -1,4 +1,4 @@
-﻿# Separate spines from the shaft
+# Separate spines from the shaft
 
 !!! info "Before you start"
     **Prerequisites:**
@@ -23,8 +23,4 @@
 
 - Continue to [Select objects and export results](select-export-objects.md).
 - If a spine split needs correction, use [Manually adjust selected objects](manual-adjustment.md).
-
-!!! example "Video placeholder"
-    Add a clip showing shaft selection and the resulting separated spines.
-
 

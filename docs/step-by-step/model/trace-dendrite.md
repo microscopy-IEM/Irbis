@@ -1,4 +1,4 @@
-﻿# Trace a dendrite
+# Trace a dendrite
 
 !!! info "Before you start"
     **Prerequisites:**
@@ -24,8 +24,4 @@
 ## Next steps
 
 - Continue to [Generate the dendritic shaft](generate-shaft.md).
-
-!!! example "Video placeholder"
-    Add a clip showing dendrite end-point selection on planes data.
-
 

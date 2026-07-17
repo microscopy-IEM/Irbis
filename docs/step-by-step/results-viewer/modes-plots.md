@@ -48,5 +48,3 @@ In **Full** table view, plots usually use the whole table column, even if only s
 - Filter by object development with [Filter by temporal development](filter-temporal-development.md).
 - Create groups with [Define ResultsViewer categorization](categorize-data.md).
 
-!!! example "Screenshot placeholder"
-    Add screenshots of Full table view, Pivoted table view, Summarized table view, and the plot type drop-down menu.

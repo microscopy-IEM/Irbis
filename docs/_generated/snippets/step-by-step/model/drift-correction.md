@@ -29,5 +29,3 @@ If all time points are generated at once during 3D reconstruction, drift correct
 
 - Continue to [Register objects across time points](../step-by-step/model/register-objects.md).
 
-!!! example "Video placeholder"
-    Add a short clip showing Detect drift, enabling Drift correction, and manual arrow adjustment.

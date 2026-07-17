@@ -11,7 +11,6 @@ This is the main end-to-end flow for structural microscopy data.
     - Calculate quantitative morphological measurements for individual spines.
     - Save the project for further analysis.
 
-
 ???+ info "Before you start"
     Before starting this tutorial, make sure that:
 
@@ -50,10 +49,9 @@ This is the main end-to-end flow for structural microscopy data.
 
         --8<-- "_generated/snippets/step-by-step/model/create-model.md"
 
-4. To generate the full dendrite reconstruction, go to the **Model** tab to the **Full** section and navigate to the **3D reconstruction** panel. Select the channel you want to reconstruct from the drop-down menu and press **Auto** to find a suitable intensity threshold. Click **Show** to preview the foreground region, which will be overlaid as gray over the data in the right panel. When you are happy with the selected threshold, click **Generate 3D** and wait a bit.
-
     ![Full Volume tab with model reconstruction controls](../assets/tutorial-segment-spines-full-volume-tab.png)
 
+4. To generate the full dendrite reconstruction, go to the **Model** tab to the **Full** section and navigate to the **3D reconstruction** panel. Select the channel you want to reconstruct from the drop-down menu and press **Auto** to find a suitable intensity threshold. Click **Show** to preview the foreground region, which will be overlaid as gray over the data in the right panel. When you are happy with the selected threshold, click **Generate 3D** and wait a bit.
 
     ![Detailed 3D reconstruction panel](../assets/tutorial-segment-spines-reconstruction-panel.png)
 
@@ -67,7 +65,6 @@ This is the main end-to-end flow for structural microscopy data.
 
 *Now, you need to generate a model of the dendritic shaft that will be used to separate the spines from the centre. This happens in two steps - first, the dendrite is traced, and the output centreline is then used together with the full dendrite model to create the model of the shaft.*
 
-
 ![Shaft tab with dendrite and shaft controls](../assets/tutorial-segment-spines-shaft-tab.png)
 
 6. To trace the dendrite, go to the **Model** tab to the **Dendrites** section and navigate to the **Trace dendrite** panel. There, click on **Trace dendrite**. Afterwards, click on the dendrite you want to trace. When the planes are shown, left-click first on one end of the dendrite and then on the other. After a few moments, a centreline should appear over the visualization in the right panel.
@@ -78,7 +75,7 @@ This is the main end-to-end flow for structural microscopy data.
 
         --8<-- "_generated/snippets/step-by-step/model/trace-dendrite.md"
 
-7. To generate the shaft model, stay in the same tab and navigate down to the **Shaft generation and adjustment** panel. Click on **Generate shaft** and wait a bit. 
+7. To generate the shaft model, stay in the same tab and navigate down to the **Shaft generation and adjustment** panel. Select **Adaptive** from the Methods drop-down menu, click on **Generate shaft** and wait a bit. 
 
     ![Detailed shaft generation and adjustment panel](../assets/tutorial-segment-spines-shaft-generation-panel.png)
 
@@ -95,7 +92,6 @@ This is the main end-to-end flow for structural microscopy data.
 ![Spines tab with spine separation controls](../assets/tutorial-segment-spines-spines-tab.png)
 
 9. To separate the spines from the shaft, go to the **Model tab** to the **Spines** section and navigate to the **Spine separation** panel. Click on **Separate spines** and wait a bit. 
-
 
     ![Separated spine objects shown in the visualization panel](../assets/tutorial-segment-spines-spines-visualization.png)
 

@@ -1,4 +1,4 @@
-﻿# View tracks
+# View tracks
 
 !!! info "Before you start"
     **Prerequisites:**
@@ -34,8 +34,4 @@
 
 - Continue to [Calculate track parameters](calculate-parameters.md).
 - Then [Define and edit track categorizations](categorize-tracks.md).
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of Tracks visualization controls, Colorcode controls, Filter, histogram, and category checkboxes.
-
 

@@ -10,7 +10,7 @@ classdef (Sealed) TableTransformationMapper
             disp(['Getting transformation for: ', transformationName]);
 
             switch transformationName
-                case 'none'
+                case ['none', '']
                     transform.dataFcn = @(A) A;
                     transform.nameFcn = @(names) names;
 

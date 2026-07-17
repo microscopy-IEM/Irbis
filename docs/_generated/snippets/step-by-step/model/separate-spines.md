@@ -22,5 +22,3 @@
 - Continue to [Select objects and export results](../step-by-step/model/select-export-objects.md).
 - If a spine split needs correction, use [Manually adjust selected objects](../step-by-step/model/manual-adjustment.md).
 
-!!! example "Video placeholder"
-    Add a clip showing shaft selection and the resulting separated spines.

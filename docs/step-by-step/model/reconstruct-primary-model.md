@@ -1,4 +1,4 @@
-﻿# Create a primary 3D model
+# Create a primary 3D model
 
 !!! info "Before you start"
     **Prerequisites:**
@@ -41,8 +41,4 @@ If signal strength is stable, define the threshold for one time point. Irbis use
 
 - Continue to [Detect drift and correct it](drift-correction.md).
 - Then [Register objects across time points](register-objects.md).
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of Full > 3D reconstruction with threshold, Show, Advanced reconstruction settings, and Generate 3D visible.
-
 

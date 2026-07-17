@@ -1,4 +1,4 @@
-﻿# Register objects across time points
+# Register objects across time points
 
 Use registration to match individual dendrite models between time points.
 
@@ -26,8 +26,4 @@ Use registration to match individual dendrite models between time points.
 
 - Continue to [Trace a dendrite](trace-dendrite.md).
 - Use [Manually adjust selected objects](manual-adjustment.md) if automatic matching needs correction.
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of Object list with Register and group IDs visible.
-
 

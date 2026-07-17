@@ -1,4 +1,4 @@
-﻿# Generate the dendritic shaft
+# Generate the dendritic shaft
 
 !!! info "Before you start"
     **Prerequisites:**
@@ -17,20 +17,15 @@
 
 1. Select the shaft generation method from the drop-down menu.
 2. Use **Constant diameter** to approximate the shaft as a tube with circular cross-section, or elliptical cross-section when z scale is not `1`.
-3. If desired, check **Parallel computing**. This can speed calculations, but startup may take some time.
-4. Press **Generate shaft**.
-5. If **All time points** is checked in **Dendrite tracking**, the shaft is generated for all time points. Otherwise, it is generated only for the current time point.
-6. Adjust shaft diameter with the **Radius** slider.
-7. To apply the diameter to all time points, check **Same radius for all time points**.
-8. For the Constant diameter model, adjust **z scale** if needed. A value of `1` is circular; higher values make the cross-section more rectangular.
-9. For the Adaptive shaft model, tune parameters in **Adaptive shaft settings**.
-10. Press **Test one plane** to check adaptive model accuracy before applying settings broadly.
+3. Press **Generate shaft**.
+4. If **All time points** is checked in **Dendrite tracing**, the shaft is generated for all time points. Otherwise, it is generated only for the current time point.
+5. Adjust shaft diameter with the **Radius** slider.
+6. To apply the diameter to all time points, check **Same radius for all time points**.
+7. For the Constant diameter model, adjust **z scale** if needed. A value of `1` is circular; higher values make the cross-section more rectangular.
+8. For the Adaptive shaft model, tune parameters in **Adaptive shaft settings**.
+9. Press **Test one plane** to check adaptive model accuracy before applying settings broadly.
 
 ## Next steps
 
 - Continue to [Separate spines from the shaft](separate-spines.md).
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of Shaft generation and adjustment with method, Parallel computing, Generate shaft, Radius, Same radius, and z scale visible.
-
 

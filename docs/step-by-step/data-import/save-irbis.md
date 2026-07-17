@@ -1,4 +1,4 @@
-﻿# Export processed data as an .irbis file
+# Export processed data as an .irbis file
 
 Exporting data as an `.irbis` file lets you reopen the processed project in Irbis later.
 
@@ -23,8 +23,4 @@ Exporting data as an `.irbis` file lets you reopen the processed project in Irbi
 
 - Start a project with [Load data](load-data.md).
 - Export object tables from [Select objects and export results](../model/select-export-objects.md).
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of the Save as .irbis button and File info section.
-
 

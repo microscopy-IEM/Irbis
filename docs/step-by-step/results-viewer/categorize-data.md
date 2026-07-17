@@ -45,5 +45,3 @@ To do additional actions, press **Templates** and work in the newly opened dialo
 
 - Track categorizations are described in [Define and edit track categorizations](../tracks/categorize-tracks.md).
 
-!!! example "Screenshot placeholder"
-    Add screenshots of Add new categorization, Template controls, and Export templates.

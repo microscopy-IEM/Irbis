@@ -48,5 +48,3 @@ The keyframe setup can be saved and applied to another model.
 
 - Save static views with [Save views](../step-by-step/viewport/save-views.md).
 
-!!! example "Video placeholder"
-    Add a video showing Add keyframe, Duration, Play animation, and Expand spines.

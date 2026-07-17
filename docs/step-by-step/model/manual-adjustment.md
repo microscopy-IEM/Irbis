@@ -1,4 +1,4 @@
-﻿# Manually adjust selected objects
+# Manually adjust selected objects
 
 Use object context menus to correct registration, divide merged objects, redefine spines, delete objects, or attach objects at the registration level.
 
@@ -80,8 +80,4 @@ This does not form a geometric connection; objects are connected at the registra
 
 - Use [Register objects across time points](register-objects.md) before manual registration corrections.
 - Use [Separate spines from the shaft](separate-spines.md) before redefining spine separation.
-
-!!! example "Video placeholder"
-    Add clips for Divide, Redefine, Delete, and Attach context-menu actions.
-
 

@@ -31,5 +31,3 @@ Batch load mode lets you explore data from multiple datasets together.
 - Use [Use ResultsViewer table views and plots](modes-plots.md) after loading batch data.
 - Create a unique object identifier with [Edit columns in Full table view](edit-columns-full.md).
 
-!!! example "Screenshot placeholder"
-    Add a screenshot of Batch load and the loaded combined table.

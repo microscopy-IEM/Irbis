@@ -37,5 +37,3 @@ ResultsViewer updates to the stored state.
 
 - Use [Use ResultsViewer table views and plots](modes-plots.md) before storing a view.
 
-!!! example "Screenshot placeholder"
-    Add a screenshot of the Store view, Use view, and Delete view controls.

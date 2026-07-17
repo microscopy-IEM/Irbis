@@ -29,5 +29,3 @@ Filters should sync with the main Irbis app. Changing a filter in Irbis updates 
 - Use [Use ResultsViewer table views and plots](modes-plots.md) to inspect filtered data.
 - Use [Filter by temporal development](filter-temporal-development.md) when the filter should use summarized object development rather than individual time points.
 
-!!! example "Screenshot placeholder"
-    Add a screenshot of the Filtering panel with a numerical and categorical filter.

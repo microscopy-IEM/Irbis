@@ -4,7 +4,7 @@ Start here if you are new to Irbis.
 
 Irbis documentation is organized around two kinds of guidance:
 
-- **Tutorials** introduce Irbis through complete workflows. Use them when you are learning the app or want to see how the basic functionality fits together.
+- **Tutorials** introduce Irbis through complete workflows. Use them when you are learning the software or want to see how the basic functionality fits together.
 - **Step-by-step guides** explain individual tasks. Use them when you already work with Irbis and need help with a specific operation.
 
 ## First steps

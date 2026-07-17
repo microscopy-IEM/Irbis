@@ -23,11 +23,8 @@ classdef GenerateScreenshotsTest < matlab.uitest.TestCase
 
     methods (Test)
         function gettingStartedScreenshots(testCase)
-            testCase.openFilesTab();
-            testCase.captureSnapshot(testCase.App.FilesTab, ...
-                "files-panel.png");
-            testCase.captureSnapshot(testCase.App.RightPanel, ...
-                "visualization-panel.png");
+            testCase.captureWindowSnapshot(testCase.App.IrbisMainFig, ...
+                "irbis-gui.png");
         end
 
         function modelScreenshots(testCase)
@@ -38,6 +35,14 @@ classdef GenerateScreenshotsTest < matlab.uitest.TestCase
             testCase.openSpinesObjectList();
             testCase.captureSnapshot(testCase.App.objectListComponent_spines, ...
                 "spines-objects-panel.png");
+        end
+
+        function cropPlanesScreenshots(testCase)
+            testCase.openPlanesTab();
+            testCase.captureSnapshot(testCase.App.LeftPanel, ...
+                "planes-panel.png");
+            testCase.captureUiwaitWindowSnapshot(@() testCase.press(testCase.App.CropButton), ...
+                "crop-planes-window.png", 2);   % the test will error because we resume the app without necessary info
         end
 
         function segmentSpinesTutorialScreenshots(testCase)
@@ -202,6 +207,105 @@ classdef GenerateScreenshotsTest < matlab.uitest.TestCase
             testCase.exportPanelSnapshotWithHeader(componentHandle, outputFile);
             testCase.verifyTrue(isfile(outputFile), ...
                 "Missing screenshot: " + outputFile);
+        end
+
+
+        function captureWindowSnapshot(testCase, windowHandle, fileName)
+            outputFile = fullfile(testCase.OutputDir, fileName);
+
+            exportapp(windowHandle, outputFile);
+            testCase.verifyTrue(isfile(outputFile), ...
+                "Missing screenshot: " + outputFile);
+        end
+        
+
+        function captureNewWindowSnapshot(testCase, interactionFcn, fileName, waitSeconds)
+            if nargin < 4
+                waitSeconds = 0.5;
+            end
+
+            outputFile = fullfile(testCase.OutputDir, fileName);
+            existingFigures = findall(groot, "Type", "figure");
+
+            interactionFcn();
+            testCase.waitForUi(waitSeconds);
+
+            currentFigures = findall(groot, "Type", "figure");
+            newFigures = currentFigures(~ismember(currentFigures, existingFigures));
+
+            testCase.assertNumElements(newFigures, 1, ...
+                "Expected exactly one new window after the interaction.");
+
+            exportapp(newFigures(1), outputFile);
+            testCase.verifyTrue(isfile(outputFile), ...
+                "Missing screenshot: " + outputFile);
+        end
+
+        function captureUiwaitWindowSnapshot(testCase, interactionFcn, fileName, waitSeconds, releaseFcn)
+            if nargin < 4 || isempty(waitSeconds)
+                waitSeconds = 0.5;
+            end
+            if nargin < 5 || isempty(releaseFcn)
+                releaseFcn = @uiresume;
+            end
+
+            outputFile = fullfile(testCase.OutputDir, fileName);
+            existingFigures = findall(groot, "Type", "figure");
+            captureError = [];
+
+            captureTimer = timer( ...
+                "ExecutionMode", "singleShot", ...
+                "StartDelay", waitSeconds, ...
+                "TimerFcn", @captureAndReleaseNewWindow);
+            cleanup = onCleanup(@() delete(captureTimer));
+
+            start(captureTimer);
+            interactionFcn();
+
+            if ~isempty(captureError)
+                rethrow(captureError);
+            end
+            testCase.verifyTrue(isfile(outputFile), ...
+                "Missing screenshot: " + outputFile);
+
+            clear cleanup
+
+            function captureAndReleaseNewWindow(~, ~)
+                try
+                    drawnow
+                    currentFigures = findall(groot, "Type", "figure");
+                    newFigures = currentFigures(~ismember(currentFigures, existingFigures));
+
+                    if numel(newFigures) ~= 1
+                        captureError = MException( ...
+                            "docgen:GenerateScreenshotsTest:UnexpectedNewWindowCount", ...
+                            "Expected exactly one new window after the interaction, but found %d.", ...
+                            numel(newFigures));
+                        releaseWaitCandidates(newFigures);
+                        return
+                    end
+
+                    exportapp(newFigures(1), outputFile);
+                    releaseFcn(newFigures(1));
+                catch err
+                    captureError = err;
+                    currentFigures = findall(groot, "Type", "figure");
+                    newFigures = currentFigures(~ismember(currentFigures, existingFigures));
+                    releaseWaitCandidates(newFigures);
+                end
+            end
+
+            function releaseWaitCandidates(newFigures)
+                for idx = 1:numel(newFigures)
+                    uiresume(newFigures(idx));
+                end
+                try
+                    if isvalid(testCase.App.IrbisMainFig)
+                        uiresume(testCase.App.IrbisMainFig);
+                    end
+                catch
+                end
+            end
         end
 
         function checkModelCheckboxes(testCase, namesToCheck)

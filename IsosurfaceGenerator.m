@@ -308,13 +308,13 @@ classdef (Sealed) IsosurfaceGenerator < handle
             
             % Resize factor to increase number of points (especially in z)
             resFactorXY = obj.scaleFactor;
-            newXsize = ceil(oldXsize*resFactorXY);
-            newYsize = ceil(oldYsize*resFactorXY);
+            newXsize = max(1, ceil(oldXsize * resFactorXY));
+            newYsize = max(1, ceil(oldYsize * resFactorXY));
 
-            zRatio = round(obj.Zstep/obj.XYstep, 1);
-            resFactorZ = zRatio*obj.scaleFactor*obj.zScaleFactor;
+            zRatio = round(obj.Zstep / obj.XYstep, 1);
+            resFactorZ = zRatio * obj.scaleFactor * obj.zScaleFactor;
             % TO DISCUSS - the outcome is not isotropic, which might be problematic for example for gaussian blurring
-            newZsize = round(oldZsize*resFactorZ);   
+            newZsize = max(1, round(oldZsize * resFactorZ));
         end
 
 
@@ -342,7 +342,13 @@ classdef (Sealed) IsosurfaceGenerator < handle
         function resizedIm = resizeImage(~, im, newXsize, newYsize, newZsize)
             % Generate a cubic-interpolated volume matching the target voxel grid.
             
-            resizedIm = imresize3(im, [newXsize,newYsize,newZsize], 'method', 'cubic');
+            if newZsize == 1
+                % This should be the case for 2D images
+                resizedIm = imresize(im, [newXsize, newYsize], 'method', 'cubic');
+            else
+                % For 3D resizing, use imresize3 with cubic interpolation.
+                resizedIm = imresize3(im, [newXsize, newYsize, newZsize], 'method', 'cubic');
+            end
             
             % used in the past:
             % im = imresize3(im,[newXsize,newYsize,newZsize],'method','linear');

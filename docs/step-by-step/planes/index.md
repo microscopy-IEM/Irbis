@@ -1,6 +1,6 @@
 # Planes processing
 
-Planes are structural microscopy images with at least two dimensions, `xy`. To create a 3D model, the planes data must be at least 3D, such as a z-stack.
+Planes are structural microscopy images with at least two dimensions, `xy`.
 
 ## Pages
 

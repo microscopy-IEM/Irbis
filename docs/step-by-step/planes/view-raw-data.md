@@ -1,4 +1,4 @@
-﻿# View raw planes data
+# View raw planes data
 
 !!! info "Before you start"
     **Prerequisites:**
@@ -45,8 +45,4 @@
 - Improve alignment with [Align planes across time points](align-planes.md).
 - Reduce the region with [Crop planes](crop-planes.md).
 - Continue to [Create a new model](../model/create-model.md).
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of the Planes tab with Plane, Projection, Depth, Channels, pixel size, z step, Scale bar, and Box visible.
-
 

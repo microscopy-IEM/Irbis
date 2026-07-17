@@ -1,4 +1,4 @@
-﻿# Create animations
+# Create animations
 
 Use animation options to set keyframes and play transitions between saved views.
 
@@ -49,8 +49,4 @@ The keyframe setup can be saved and applied to another model.
 ## Related
 
 - Save static views with [Save views](save-views.md).
-
-!!! example "Video placeholder"
-    Add a video showing Add keyframe, Duration, Play animation, and Expand spines.
-
 

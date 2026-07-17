@@ -1,4 +1,4 @@
-﻿# Calculate track parameters
+# Calculate track parameters
 
 !!! info "Before you start"
     **Prerequisites:**
@@ -20,8 +20,4 @@ This step can take a while.
 
 - Continue to [Define and edit track categorizations](categorize-tracks.md).
 - Explore results in [ResultsViewer](../results-viewer/index.md).
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of Calculate parameters in the Tracks tab.
-
 

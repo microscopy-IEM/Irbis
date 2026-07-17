@@ -1,4 +1,4 @@
-﻿# Import tracks
+# Import tracks
 
 Track data can be uploaded as TrackMate `.xml` files.
 
@@ -18,8 +18,4 @@ Track data can be uploaded as TrackMate `.xml` files.
 
 - Continue to [View tracks](view-tracks.md).
 - Then [Calculate track parameters](calculate-parameters.md).
-
-!!! example "Screenshot placeholder"
-    Add a screenshot of Import tracks and the time-point assignment window.
-
 

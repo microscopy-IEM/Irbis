@@ -23,5 +23,3 @@
 
 - Continue to [Generate the dendritic shaft](../step-by-step/model/generate-shaft.md).
 
-!!! example "Video placeholder"
-    Add a clip showing dendrite end-point selection on planes data.

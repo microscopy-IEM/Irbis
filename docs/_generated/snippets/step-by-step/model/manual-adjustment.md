@@ -79,5 +79,3 @@ This does not form a geometric connection; objects are connected at the registra
 - Use [Register objects across time points](../step-by-step/model/register-objects.md) before manual registration corrections.
 - Use [Separate spines from the shaft](../step-by-step/model/separate-spines.md) before redefining spine separation.
 
-!!! example "Video placeholder"
-    Add clips for Divide, Redefine, Delete, and Attach context-menu actions.
