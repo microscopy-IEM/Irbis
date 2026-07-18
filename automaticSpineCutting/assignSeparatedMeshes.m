@@ -1,19 +1,16 @@
 function [tableArray, usedGizmos, assignmentTable, objectsToRemove] = assignSeparatedMeshes(tableArray, usedGizmos, separatedMeshes, timePoint, opts)
-%ASSIGNSEPARATEDMESHESTOUSEGIZMOS Assign boolean result meshes to original objects.
+%ASSIGNSEPARATEDMESHES Assign boolean result meshes to original objects.
 %
 % [tableArray, usedGizmos, assignmentTable, objectsToRemove] = ...
-%     assignSeparatedMeshesToUsedGizmos(...)
-% maps each mesh in separatedMeshes back to the original object referenced
-% by usedGizmos.timePoint/inputId, fills usedGizmos.outputIds, and writes
-% the separated meshes into tableArray.
+%     assignSeparatedMeshes(...)
+% Maps separatedMeshes back to original objects referenced by usedGizmos.timePoint/inputId.
+% Fills usedGizmos.outputIds and writes the separated meshes into tableArray.
 %
-% One original object may receive many separated meshes. If any referenced
-% original object receives no separated mesh, an exception is thrown.
-% If exactly one separated mesh maps to an original object, it keeps the
-% original object id and overwrites that row's Mesh. If multiple meshes map
-% to one original object, all of them receive new unused ids and are added
-% to the end of the time point table. The original id is returned in
-% objectsToRemove but is not removed from tableArray.
+% One original object may receive many separated meshes.
+% If any referenced original object receives no separated mesh, an exception is thrown.
+% If exactly one separated mesh maps to an original object, it keeps the original object id and overwrites that row's Mesh.
+% If multiple meshes map to one original object, all of them receive new unused ids and are added to the end of the time point table.
+% The original id is returned in objectsToRemove but is not removed from tableArray.
 
 arguments
     tableArray cell
@@ -27,16 +24,21 @@ end
 assignmentTable = initializeAssignmentTable();
 objectsToRemove = initializeObjectsToRemoveTable();
 
+% Nothing to resolve if the user did not accept any cutting gizmos.
 if height(usedGizmos) == 0
     return
 end
 
+% Work with unique original objects for this time point.
+% Several gizmos can target the same object, but assignment should happen once per object.
 originalObjects = collectReferencedOriginalObjects(tableArray, usedGizmos, timePoint);
 
 if isempty(originalObjects)
     return
 end
 
+% Compare every separated result mesh against every referenced original object.
+% The score is intentionally geometric, because the boolean backend returns meshes without provenance.
 scoreMatrix = zeros(numel(separatedMeshes), numel(originalObjects));
 
 for meshIndex = 1:numel(separatedMeshes)
@@ -57,12 +59,14 @@ for meshIndex = 1:numel(separatedMeshes)
     end
 end
 
+% Assign each separated mesh to the original object with the best score.
+% Low-score meshes are ignored so small fragments/noise do not become output objects.
 [bestScores, bestObjectIndexes] = max(scoreMatrix, [], 2);
 assignedOutputIds = cell(numel(originalObjects), 1);
 assignedMeshIndexes = cell(numel(originalObjects), 1);
 
 for meshIndex = 1:numel(separatedMeshes)
-    if bestScores(meshIndex) < opts.MinimumOverlapScore
+    if ~isfinite(bestScores(meshIndex)) || bestScores(meshIndex) < opts.MinimumOverlapScore
         continue
     end
 
@@ -72,6 +76,8 @@ end
 
 missingObjectIndexes = find(cellfun(@isempty, assignedMeshIndexes));
 
+% Every referenced object must produce at least one output.
+% Otherwise later removal/replacement logic would leave the model table inconsistent.
 if ~isempty(missingObjectIndexes)
     missingDescriptions = strings(numel(missingObjectIndexes), 1);
 
@@ -83,7 +89,7 @@ if ~isempty(missingObjectIndexes)
             originalObjects(objectIndex).inputId);
     end
 
-    warning('AssignSeparatedMeshes:MissingOutputForOriginalObject', ...
+    error('AssignSeparatedMeshes:MissingOutputForOriginalObject', ...
         'No separated mesh was assigned to original object(s): %s.', ...
         strjoin(missingDescriptions, ', '));
 end
@@ -93,6 +99,7 @@ assignedOutputIds = deduceOutputIdsFromOriginalTables( ...
     originalObjects, ...
     assignedMeshIndexes);
 
+% Mutate tableArray only after the full assignment is known to be complete.
 [tableArray, objectsToRemove] = applySeparatedMeshesToTableArray( ...
     tableArray, ...
     originalObjects, ...
@@ -100,6 +107,9 @@ assignedOutputIds = deduceOutputIdsFromOriginalTables( ...
     assignedOutputIds, ...
     separatedMeshes);
 
+% Return an audit table.
+% Write the resulting ids back to every matching editing row.
+% Duplicate gizmos for the same input object receive the same output ids.
 for objectIndex = 1:numel(originalObjects)
     meshIndexes = assignedMeshIndexes{objectIndex};
 
@@ -125,6 +135,7 @@ end
 
 function assignmentTable = initializeAssignmentTable()
 
+% Empty typed table used as a stable return value and append target.
 assignmentTable = table( ...
     zeros(0, 1), ...
     zeros(0, 1), ...
@@ -144,6 +155,8 @@ end
 
 function objectsToRemove = initializeObjectsToRemoveTable()
 
+% Split originals are not deleted here.
+% Callers need to know which old ids should be removed after replacement rows are created.
 objectsToRemove = table( ...
     zeros(0, 1), ...
     zeros(0, 1), ...
@@ -157,7 +170,7 @@ end
 
 function originalObjects = collectReferencedOriginalObjects(tableArray, usedGizmos, timePoint)
 
-% keep only entries matching the requested timePoint
+% Keep only valid object references for the requested time point.
 tpMask = usedGizmos.timePoint(:) == timePoint;
 keys = [usedGizmos.timePoint(tpMask), usedGizmos.inputId(tpMask)];
 validMask = all(isfinite(keys), 2);
@@ -178,6 +191,7 @@ for keyIndex = 1:size(keys, 1)
     originalMesh = getObjectMeshById(tableArray, timePoint, inputId);
     vertices = meshVertices(originalMesh);
 
+    % Empty originals cannot be matched reliably, so fail before scoring.
     if isempty(vertices)
         error('AssignSeparatedMeshes:EmptyOriginalMesh', ...
             'Original object timePoint=%g inputId=%g has no vertices.', ...
@@ -206,6 +220,8 @@ function assignedOutputIds = deduceOutputIdsFromOriginalTables( ...
     originalObjects, ...
     assignedMeshIndexes)
 
+% Reuse the original id for a one-to-one replacement.
+% For true splits, assign fresh ids per time point so new rows never collide with existing objects.
 assignedOutputIds = cell(numel(originalObjects), 1);
 timePoints = unique([originalObjects.timePoint]);
 nextObjectIds = containers.Map('KeyType', 'double', 'ValueType', 'double');
@@ -243,6 +259,7 @@ end
 
 function existingIds = existingObjectIdsAtTimePoint(tableArray, timePoint)
 
+% Row names are the source of truth for object ids in these model tables.
 if timePoint < 1 || timePoint > numel(tableArray)
     error('AssignSeparatedMeshes:InvalidTimePoint', ...
         'Time point %g is outside tableArray.', timePoint);
@@ -250,7 +267,11 @@ end
 
 rowNames = string(tableArray{timePoint}.Properties.RowNames);
 existingIds = str2double(rowNames);
-existingIds = existingIds(isfinite(existingIds));
+
+if any(~isfinite(existingIds))
+    error('AssignSeparatedMeshes:NonNumericObjectId', ...
+        'Object table row names must be numeric object IDs.');
+end
 
 end
 
@@ -264,7 +285,10 @@ function [tableArray, objectsToRemove] = applySeparatedMeshesToTableArray( ...
     separatedMeshes)
 
 objectsToRemove = initializeObjectsToRemoveTable();
+columnsToInherit = tableUtils.getInheritableColumnNames();
 
+% One output overwrites the original row.
+% Multiple outputs start as blank rows and copy only stable provenance/display columns from the original object.
 for objectIndex = 1:numel(originalObjects)
     originalObject = originalObjects(objectIndex);
     meshIndexes = assignedMeshIndexes{objectIndex};
@@ -274,7 +298,7 @@ for objectIndex = 1:numel(originalObjects)
         objectTable, ...
         originalObject.inputId);
 
-    if numel(meshIndexes) == 1
+    if isequal(numel(meshIndexes), 1)
         objectTable.Mesh{originalRowIndex} = separatedMeshes{meshIndexes(1)};
         objectTable{originalRowIndex, 'edited'} = true;
         tableArray{originalObject.timePoint} = objectTable;
@@ -286,10 +310,12 @@ for objectIndex = 1:numel(originalObjects)
     objectsToRemove.objectId(newRemoveRow) = originalObject.inputId;
 
     for localIndex = 1:numel(meshIndexes)
-        newObjectId = char(string(outputIds(localIndex)));
-        objectTable(newObjectId, :) = objectTable(originalRowIndex, :);
-        objectTable.Mesh{newObjectId} = separatedMeshes{meshIndexes(localIndex)};
-        objectTable{newObjectId, 'edited'} = true;
+        newObjectId = outputIds(localIndex);
+        newObjectRowName = char(string(newObjectId));
+        objectTable = tableUtils.addBlankRow(objectTable, string(newObjectId));
+        objectTable = tableUtils.copySelectedColumnsFromOriginal(objectTable, originalObject.inputId, newObjectId, columnsToInherit);
+        objectTable.Mesh{newObjectRowName} = separatedMeshes{meshIndexes(localIndex)};
+        objectTable{newObjectRowName, 'edited'} = true;
     end
 
     tableArray{originalObject.timePoint} = objectTable;
@@ -301,6 +327,8 @@ end
 
 function score = objectCorrespondenceScore(separatedVertices, separatedCenter, originalObject, paddingFraction)
 
+% Score mostly by bbox containment, with center distance as a soft tie-breaker.
+% Padding absorbs small numerical/boolean-operation shifts at cut boundaries.
 padding = max(originalObject.bboxSize) * paddingFraction;
 bboxMin = originalObject.bboxMin - padding;
 bboxMax = originalObject.bboxMax + padding;
@@ -320,6 +348,7 @@ end
 
 function mesh = getObjectMeshById(tableArray, timePoint, inputId)
 
+% Centralized lookup keeps object id validation consistent across helpers.
 if timePoint < 1 || timePoint > numel(tableArray)
     error('AssignSeparatedMeshes:InvalidTimePoint', ...
         'Time point %g is outside tableArray.', timePoint);
@@ -336,6 +365,7 @@ end
 
 function rowIndex = objectRowIndexById(objectTable, objectId)
 
+% Model object ids are stored as row names, not as a regular table variable.
 rowNames = string(objectTable.Properties.RowNames);
 rowIndex = find(rowNames == string(objectId), 1);
 
@@ -351,6 +381,8 @@ end
 
 function vertices = meshVertices(mesh)
 
+% Accept the mesh shapes used in this project and normalize them to double vertices.
+% This keeps the geometric scoring code type-agnostic.
 if isempty(mesh)
     vertices = zeros(0, 3);
 elseif isstruct(mesh)
