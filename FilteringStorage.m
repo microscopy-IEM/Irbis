@@ -26,8 +26,6 @@ classdef FilteringStorage < GroupingStorageBaseClass
             filterObj = Filtering(columnName,conditions,active);
             obj.Groupings{end+1} = filterObj;
 
-            % disp(['Added range filter for column: ', columnName]);
-
             % Notify listeners that the filters have changed
             notify(obj, 'filtersChanged');
         end
@@ -39,8 +37,6 @@ classdef FilteringStorage < GroupingStorageBaseClass
             active = true;
             filterObj = Filtering(columnName,conditions,active);
             obj.Groupings{end+1} = filterObj;
-
-            % disp(['Added categorical filter for column: ', columnName]);
 
             notify(obj, 'filtersChanged');
         end
@@ -225,7 +221,6 @@ classdef FilteringStorage < GroupingStorageBaseClass
                 % Update the key in the conditions dictionary
                 conditionsDict = filter.Conditions.('group1').conditions;
                 if isKey(conditionsDict, oldName)
-                    disp('It is a key in the conditions dictionary');
                     % Get the condition value for the old key
                     conditionValue = conditionsDict(oldName);
                     % Remove the old key-value pair
@@ -234,7 +229,6 @@ classdef FilteringStorage < GroupingStorageBaseClass
                     conditionsDict(newName) = conditionValue;
                     filter.Conditions.('group1').conditions = conditionsDict;
                 else
-                    disp('It is not a key in the conditions dictionary');
                     % If the old name is not a key, we do not need to update the conditions
                     % This might happen if the filter was created without a specific condition
                 end

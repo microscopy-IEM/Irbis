@@ -306,6 +306,9 @@ classdef (Sealed) AppStateManager < handle
         function storeModalityDataStore(obj, modalityDataStoreHandle)
             obj.modalityDataStoreHandle = modalityDataStoreHandle;
 
+            % I have to regenerate the listeners for the new modalityDataStoreHandle, as the old one is not valid anymore
+            obj.modalityDataStoreHandle.regenerateListeners();
+
             % Store the info about the available modalities and branches
             availablePaths = obj.modalityDataStoreHandle.getAvailableModalityPaths();
             for i = 1:length(availablePaths)

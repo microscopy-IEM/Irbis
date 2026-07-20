@@ -1,6 +1,6 @@
 classdef (Sealed) PivotedTableProcessor < handle
     properties (Access = ?matlab.unittest.TestCase)
-        pivotedTable
+        pivotedTable = table();     % initialized already as a table because if it was empty, some downstream components were asking for .Properties and were thus throwing warnings
         groupedDataParameter
         columnParameter
         rowParameter
@@ -11,10 +11,12 @@ classdef (Sealed) PivotedTableProcessor < handle
         dataStoreHandle
 
         tableStoreListener
+        tableStoreTransformationListener
         filterListener
         stateManagerListener
 
         selectedTableCellsList (:,2) = [] % Initialize as empty array
+        rowSelectionMode (1,1) string = "specific"
     end
 
 
@@ -72,40 +74,7 @@ classdef (Sealed) PivotedTableProcessor < handle
 
         function processData(obj)
 
-            rawTable = obj.tableStoreHandle.getTableData();
-
-            isMissingParameters = isempty(obj.groupedDataParameter) || isempty(obj.columnParameter) || isempty(obj.rowParameter);
-            if isMissingParameters
-                return;
-            end
-
-            isMissingData = isempty(rawTable);
-            if isMissingData
-                return;
-            end
-
-            % filter
-            isKept = obj.filteringStorageHandle.filter(rawTable);
-            if ~isempty(isKept)
-                filteredTable = rawTable(isKept, :);
-            else
-                filteredTable = rawTable;
-            end
-
-            obj.pivotedTable = pivotTable(filteredTable, obj.columnParameter, obj.rowParameter, obj.groupedDataParameter);
-
-            % REPLACED WITH GENERAL TRANFORMATIONS, kept here for now for info about NaN handling:
-            % apply normalization by dividing each value in the row by the first value in the row, if the setting is on
-            % if the first column is 0/NaN, find the first non-zero/non-NaN value and divide by it, if it exists, otherwise keep the row as is (all zeros/NaNs)
-
-            % apply transformation to the pivoted table if the setting is on
-            [doTransform, transform] = obj.tableStoreHandle.getPivotedTransformationStatus();
-            if doTransform && ~isempty(transform)
-                A = table2array(obj.pivotedTable);
-                transformedA = transform.dataFcn(A);
-                transformedColumnNames = transform.nameFcn(obj.pivotedTable.Properties.VariableNames);
-                obj.pivotedTable = array2table(transformedA, 'VariableNames', transformedColumnNames, 'RowNames', obj.pivotedTable.Properties.RowNames);
-            end
+            obj.processDataWithoutNotification(); 
 
             notify(obj, 'tableForDisplayChanged');
 
@@ -137,7 +106,29 @@ classdef (Sealed) PivotedTableProcessor < handle
                 filteredTable = rawTable;
             end
 
+            if isempty(filteredTable)
+                obj.pivotedTable = table(); % Return an empty table if filteredTable is empty
+                return;
+            end
+
             obj.pivotedTable = pivotTable(filteredTable, obj.columnParameter, obj.rowParameter, obj.groupedDataParameter);
+
+            % REPLACED WITH GENERAL TRANFORMATIONS, kept here for now for info about NaN handling:
+            % apply normalization by dividing each value in the row by the first value in the row, if the setting is on
+            % if the first column is 0/NaN, find the first non-zero/non-NaN value and divide by it, if it exists, otherwise keep the row as is (all zeros/NaNs)
+
+            % apply transformation to the pivoted table if the setting is on
+            [doTransform, transform] = obj.tableStoreHandle.getPivotedTransformationStatus();
+            if doTransform && ~isempty(transform)
+                A = table2array(obj.pivotedTable);
+                transformedA = transform.dataFcn(A);
+                transformedColumnNames = transform.nameFcn(obj.pivotedTable.Properties.VariableNames);
+                obj.pivotedTable = array2table(transformedA, 'VariableNames', transformedColumnNames, 'RowNames', obj.pivotedTable.Properties.RowNames);
+            end
+
+            if obj.rowSelectionMode == "allVisible"
+                obj.selectedTableCellsList = obj.getAllVisibleRowSelection();
+            end
         end
 
         
@@ -153,7 +144,34 @@ classdef (Sealed) PivotedTableProcessor < handle
                 obj.pivotedTable = obj.pivotedTable(isKept, :);
             end
 
+            if obj.rowSelectionMode == "allVisible"
+                obj.selectedTableCellsList = obj.getAllVisibleRowSelection();
+            end
+
             notify(obj, 'tableForDisplayChanged');
+        end
+
+
+
+        function setRowSynchronizedFilteringStorage(obj, rowParameter, keptRowNames)
+            % Activate persistent row synchronization filtering for future pivot table recalculations.
+            obj.ensureRowSynchronizedFilteringStorage();
+            obj.filteringStorageHandle.setRowSync(rowParameter, keptRowNames);
+        end
+
+
+
+        function clearRowSynchronizedFilteringStorage(obj)
+            % Restore the original filtering storage when row synchronization is no longer needed.
+            if ~isa(obj.filteringStorageHandle, 'RowSynchronizedFilteringStorage')
+                return
+            end
+
+            synchronizedFilteringStorage = obj.filteringStorageHandle;
+            obj.filteringStorageHandle = synchronizedFilteringStorage.getBaseFilteringStorage();
+            delete(synchronizedFilteringStorage);
+            obj.rebuildFilterListener();
+            obj.processData();
         end
 
 
@@ -232,13 +250,15 @@ classdef (Sealed) PivotedTableProcessor < handle
                 delete(obj.tableStoreListener);
             end
             obj.tableStoreListener = addlistener(obj.tableStoreHandle, 'tableDataChanged', @(~, ~) processData(obj));
+
+            if ~isempty(obj.tableStoreTransformationListener) && isvalid(obj.tableStoreTransformationListener)
+                delete(obj.tableStoreTransformationListener);
+            end
+            obj.tableStoreTransformationListener = addlistener(obj.tableStoreHandle, 'pivotedTransformationChanged', @(~, ~) processData(obj));
             
             obj.filteringStorageHandle = obj.dataStoreHandle.getFilteringStorage();
 
-            if ~isempty(obj.filterListener) && isvalid(obj.filterListener)
-                delete(obj.filterListener);
-            end
-            obj.filterListener = addlistener(obj.filteringStorageHandle, 'filtersChanged', @(~, ~) processData(obj));
+            obj.rebuildFilterListener();
 
             obj.processData();
         end
@@ -248,6 +268,7 @@ classdef (Sealed) PivotedTableProcessor < handle
         function storeSelectedTableCellsList(obj, selectedTableCellsList)
             % Validates and stores the selected table cells
             obj.selectedTableCellsList = selectedTableCellsList;
+            obj.rowSelectionMode = obj.detectRowSelectionMode(selectedTableCellsList);
             notify(obj, 'tableSelectionSyncRequired'); % added first, because syncing must be before plotting (to be able to combine the data)
             notify(obj, 'tableSelectionChanged'); % this is observed by DataFormatter that processes data for plotting - needs data from both tables, if applicable
         end
@@ -269,6 +290,7 @@ classdef (Sealed) PivotedTableProcessor < handle
             end
 
             obj.selectedTableCellsList = processedSelectionList;
+            obj.rowSelectionMode = obj.detectRowSelectionMode(processedSelectionList);
 
             notify(obj, 'tableSelectionSetProgrammatically')     % notify the component, since we do not have direct link to it
         end
@@ -290,6 +312,7 @@ classdef (Sealed) PivotedTableProcessor < handle
             if isempty(displayedTable) || isempty(rowNames)
                 disp("No table to select from or empty row names provided. Clearing selection.")
                 obj.selectedTableCellsList = [];
+                obj.rowSelectionMode = "specific";
                 notify(obj, 'tableSelectionChanged');
                 return;
             end
@@ -304,6 +327,7 @@ classdef (Sealed) PivotedTableProcessor < handle
             
             if isempty(rowIndices)
                 obj.selectedTableCellsList = [];
+                obj.rowSelectionMode = "specific";
                 notify(obj, 'tableSelectionChanged');
                 return;
             end
@@ -325,6 +349,7 @@ classdef (Sealed) PivotedTableProcessor < handle
             
             % Store the selection
             obj.selectedTableCellsList = selectedCells;
+            obj.rowSelectionMode = obj.detectRowSelectionMode(selectedCells);
             % disp(obj.selectedTableCellsList)
             
             % Notify changes
@@ -389,6 +414,7 @@ classdef (Sealed) PivotedTableProcessor < handle
             processorState.columnParameter = obj.columnParameter;
             processorState.rowParameter = obj.rowParameter;
             processorState.selectedTableCellsList = obj.selectedTableCellsList;
+            processorState.rowSelectionMode = obj.rowSelectionMode;
 
             % include also information about table transformation
             [doTransformation, transformationName, parameterValue] = obj.tableStoreHandle.getPivotedTransformationSpecs();
@@ -416,6 +442,16 @@ classdef (Sealed) PivotedTableProcessor < handle
                 obj.rowParameter = processorState.rowParameter;
                 [validSelection, ~] = obj.validateSelection(processorState.selectedTableCellsList);
                 obj.selectedTableCellsList = validSelection;
+
+                if isfield(processorState, 'rowSelectionMode')
+                    obj.rowSelectionMode = string(processorState.rowSelectionMode);
+                else
+                    obj.rowSelectionMode = obj.detectRowSelectionMode(obj.selectedTableCellsList);
+                end
+
+                if obj.rowSelectionMode == "allVisible"
+                    obj.selectedTableCellsList = obj.getAllVisibleRowSelection();
+                end
 
                 % Set the transformation status to the tableStore based on the saved state
                 % GUI update is left for the componentHelper, because processor does not have component's handle
@@ -484,6 +520,41 @@ classdef (Sealed) PivotedTableProcessor < handle
 
 
 
+        function rowSelectionMode = detectRowSelectionMode(obj, selectedTableCellsList)
+            % Return all-visible mode when every currently displayed row has at least one selected cell.
+            displayedTable = obj.getTableForDisplay();
+
+            if isempty(displayedTable) || isempty(selectedTableCellsList)
+                rowSelectionMode = "specific";
+                return
+            end
+
+            selectedRows = unique(selectedTableCellsList(:, 1));
+            allDisplayedRows = (1:height(displayedTable))';
+            if numel(selectedRows) == height(displayedTable) && all(ismember(allDisplayedRows, selectedRows))
+                rowSelectionMode = "allVisible";
+            else
+                rowSelectionMode = "specific";
+            end
+        end
+
+
+
+        function selectedCells = getAllVisibleRowSelection(obj)
+            % Select every cell in the displayed table because the user selected all visible rows before filtering changed.
+            displayedTable = obj.getTableForDisplay();
+
+            if isempty(displayedTable) || width(displayedTable) == 0
+                selectedCells = [];
+                return
+            end
+
+            [rowGrid, colGrid] = ndgrid(1:height(displayedTable), 1:width(displayedTable));
+            selectedCells = [rowGrid(:), colGrid(:)];
+        end
+
+
+
         function programmaticallySetRowParameter(obj, rowParameter)
             % Set the row parameter programmatically
             obj.rowParameter = rowParameter;
@@ -491,6 +562,29 @@ classdef (Sealed) PivotedTableProcessor < handle
             notify(obj, 'rowParameterSetProgrammatically')
 
             obj.processData();
+        end
+
+
+
+        function ensureRowSynchronizedFilteringStorage(obj)
+            % Wrap the current filtering storage when row synchronization needs to be applied.
+            if isa(obj.filteringStorageHandle, 'RowSynchronizedFilteringStorage')
+                return
+            end
+
+            obj.filteringStorageHandle = RowSynchronizedFilteringStorage(obj.filteringStorageHandle);
+            obj.rebuildFilterListener();
+        end
+
+
+
+        function rebuildFilterListener(obj)
+            % Recreate the filter listener after the filtering storage handle changes.
+            if ~isempty(obj.filterListener) && isvalid(obj.filterListener)
+                delete(obj.filterListener);
+            end
+
+            obj.filterListener = addlistener(obj.filteringStorageHandle, 'filtersChanged', @(~, ~) processData(obj));
         end
     end
 end

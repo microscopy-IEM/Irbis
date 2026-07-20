@@ -10,6 +10,7 @@ classdef (Sealed) FullTableProcessor < handle
         tableStoreListener
         stateManagerListener
         selectedTableCellsList (:,2) = [] % Initialize as empty array
+        rowSelectionMode (1,1) string = "specific"
 
         isColumnSelectionPreserved = true % when there are no cells selected for a given column (for example after filtering), the first row of that column is selected automatically if this is true
     end
@@ -87,6 +88,7 @@ classdef (Sealed) FullTableProcessor < handle
             end
 
             obj.selectedTableCellsList = selectedTableCellsList;
+            obj.rowSelectionMode = obj.detectRowSelectionMode(selectedTableCellsList);
             notify(obj, 'tableSelectionChanged'); % TO OPTIMIZE - this again activates the component, which caused this in the first place
         end
 
@@ -100,6 +102,9 @@ classdef (Sealed) FullTableProcessor < handle
             obj.selectedTableCellsList = obj.updateSelectionAfterColumnChange(previouslyActiveColumns, columnNames);
 
             obj.activeColumns = columnNames;
+            if obj.rowSelectionMode == "allVisible"
+                obj.selectedTableCellsList = obj.getAllVisibleRowSelection();
+            end
             notify(obj, 'tableForDisplayChanged');  
         end
 
@@ -185,6 +190,7 @@ classdef (Sealed) FullTableProcessor < handle
             processorState = struct();
             processorState.activeColumns = obj.activeColumns;
             processorState.selectedTableCellsList = obj.selectedTableCellsList;
+            processorState.rowSelectionMode = obj.rowSelectionMode;
         end
 
 
@@ -198,6 +204,16 @@ classdef (Sealed) FullTableProcessor < handle
 
             if isfield(processorState, 'selectedTableCellsList')
                 obj.selectedTableCellsList = processorState.selectedTableCellsList;
+            end
+
+            if isfield(processorState, 'rowSelectionMode')
+                obj.rowSelectionMode = string(processorState.rowSelectionMode);
+            else
+                obj.rowSelectionMode = obj.detectRowSelectionMode(obj.selectedTableCellsList);
+            end
+
+            if obj.rowSelectionMode == "allVisible"
+                obj.selectedTableCellsList = obj.getAllVisibleRowSelection();
             end
 
             notify(obj, 'tableForDisplayChanged');
@@ -224,6 +240,7 @@ classdef (Sealed) FullTableProcessor < handle
             
             if isempty(displayedTable) || isempty(rowNames)
                 obj.selectedTableCellsList = [];
+                obj.rowSelectionMode = "specific";
                 notify(obj, 'tableSelectionChanged');
                 return;
             end
@@ -238,6 +255,7 @@ classdef (Sealed) FullTableProcessor < handle
             
             if isempty(rowIndices)
                 obj.selectedTableCellsList = [];
+                obj.rowSelectionMode = "specific";
                 notify(obj, 'tableSelectionChanged');
                 return;
             end
@@ -259,6 +277,7 @@ classdef (Sealed) FullTableProcessor < handle
             
             % Store the selection
             obj.selectedTableCellsList = selectedCells;
+            obj.rowSelectionMode = obj.detectRowSelectionMode(selectedCells);
             
             % Notify changes
             notify(obj, 'tableForDisplayChanged');  % handles also selection update
@@ -308,8 +327,12 @@ classdef (Sealed) FullTableProcessor < handle
                 obj.filteredTable = obj.filteredTable(isKept, :);
             end
 
-            % Restore selection using rowNames and colNames as coordinate pairs
-            obj.selectedTableCellsList = obj.getSelectedCellsFromNames(rowNames, colNames);
+            % Restore either the user's all-visible-row intent or the previously selected row and column coordinate pairs.
+            if obj.rowSelectionMode == "allVisible"
+                obj.selectedTableCellsList = obj.getAllVisibleRowSelection();
+            else
+                obj.selectedTableCellsList = obj.getSelectedCellsFromNames(rowNames, colNames);
+            end
 
             notify(obj, 'tableForDisplayChanged');
             % notify(obj, 'tableSelectionChanged');
@@ -413,6 +436,41 @@ classdef (Sealed) FullTableProcessor < handle
                     colNamesOut{k} = [];
                 end
             end
+        end
+
+
+
+        function rowSelectionMode = detectRowSelectionMode(obj, selectedTableCellsList)
+            % Return all-visible mode when every currently displayed row has at least one selected cell.
+            displayedTable = obj.getTableForDisplay();
+
+            if isempty(displayedTable) || isempty(selectedTableCellsList)
+                rowSelectionMode = "specific";
+                return
+            end
+
+            selectedRows = unique(selectedTableCellsList(:, 1));
+            allDisplayedRows = (1:height(displayedTable))';
+            if numel(selectedRows) == height(displayedTable) && all(ismember(allDisplayedRows, selectedRows))
+                rowSelectionMode = "allVisible";
+            else
+                rowSelectionMode = "specific";
+            end
+        end
+
+
+
+        function selectedCells = getAllVisibleRowSelection(obj)
+            % Select every cell in the displayed table because the user selected all visible rows before filtering changed.
+            displayedTable = obj.getTableForDisplay();
+
+            if isempty(displayedTable) || width(displayedTable) == 0
+                selectedCells = [];
+                return
+            end
+
+            [rowGrid, colGrid] = ndgrid(1:height(displayedTable), 1:width(displayedTable));
+            selectedCells = [rowGrid(:), colGrid(:)];
         end
 
         function selectedCells = getSelectedCellsFromNames(obj, rowNames, colNames)

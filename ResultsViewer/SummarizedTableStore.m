@@ -11,16 +11,18 @@ classdef SummarizedTableStore < handle
         editedValueMap = {}; % this is a dictionary for manually assigned values and corresponding row names
             % cells are matched with editableColumns names
 
-        tableStoreHandle
+        tableStoreHandle    % handle to table store wrapped in filter
         userColumnDefinitions = {}; % handle to the user column definitions (NOT STORE)
 
         cachedTableData = table(); % stores the summarized table data
 
         rowNames = {}; % stores the names of the rows in the table
 
-        tableStoreListener
-
         % TO IMPLEMENT - before the ModalityDataStore is saved, clean the listeners and other temp variables
+    end
+
+    properties (Transient)
+        tableStoreListener
     end
 
 
@@ -507,6 +509,45 @@ classdef SummarizedTableStore < handle
             else
                 error('Row name "%s" does not exist in the table.', rowName);
             end
+        end
+
+
+
+        function regenerateListeners(obj)
+            % Regenerate the listeners - no longer valid when ModalityDataStore is reloaded from file
+
+            % We have to call the TableStoreWrappedInFilter to regenerate its listeners, as it is not valid anymore when the ModalityDataStore is reloaded from file
+            if isa(obj.tableStoreHandle, 'TableStoreWrappedInFilter') && isvalid(obj.tableStoreHandle)
+                obj.tableStoreHandle.regenerateListeners();
+            end
+
+            obj.deleteTableStoreListener();
+            obj.tableStoreListener = addlistener(obj.tableStoreHandle, 'tableDataChanged', @(~, ~)updateTableData(obj));
+
+        end
+
+
+
+        function deleteListeners(obj)
+            % Delete runtime listeners owned by this summarized table store and its wrapped table store before serialization.
+            if isa(obj.tableStoreHandle, 'TableStoreWrappedInFilter') && isvalid(obj.tableStoreHandle)
+                obj.tableStoreHandle.deleteListeners();
+            end
+
+            obj.deleteTableStoreListener();
+        end
+    end
+
+
+
+    methods (Access = ?matlab.unittest.TestCase)
+        function deleteTableStoreListener(obj)
+            % Delete the listener that watches the wrapped table store.
+            if ~isempty(obj.tableStoreListener) && isvalid(obj.tableStoreListener)
+                delete(obj.tableStoreListener);
+            end
+
+            obj.tableStoreListener = [];
         end
     end
 end

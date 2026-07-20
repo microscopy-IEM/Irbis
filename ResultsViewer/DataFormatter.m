@@ -20,6 +20,8 @@ classdef DataFormatter < handle
 
         listener
         plotSpecificListener
+        processTimer
+        pendingSource = []
 
         lastProcessedData = [] % stored processed data, to be used when redoing the plot
             % not enough - we might need to get more info
@@ -31,6 +33,7 @@ classdef DataFormatter < handle
     properties (Constant)
         X_COLUMN_NUM = 1
         Y_COLUMN_NUM = 2
+        PROCESS_DEBOUNCE_DELAY_SECONDS = 0.05
     end
 
     methods
@@ -44,16 +47,17 @@ classdef DataFormatter < handle
             obj.requiredParametersNum = requiredParametersNum;
             obj.tableTypes = tableTypes;
 
+            % Listened table events are debounced because synchronized tables can emit several valid events for one logical change.
             if iscell(obj.tableProcessorHandles)
                 obj.listener = cell(1, numel(obj.tableProcessorHandles));
                 obj.plotSpecificListener = cell(1, numel(obj.tableProcessorHandles));
                 for i = 1:numel(obj.tableProcessorHandles)
-                    obj.listener{i} = addlistener(obj.tableProcessorHandles{i}, 'tableSelectionChanged', @(src, ~) obj.processData(src));
-                    obj.plotSpecificListener{i} = addlistener(obj.tableProcessorHandles{i}, 'plotUpdateRequired', @(src, ~) obj.processData(src));
+                    obj.listener{i} = addlistener(obj.tableProcessorHandles{i}, 'tableSelectionChanged', @(src, ~) obj.requestProcessData(src));
+                    obj.plotSpecificListener{i} = addlistener(obj.tableProcessorHandles{i}, 'plotUpdateRequired', @(src, ~) obj.requestProcessData(src));
                 end
             else
-                obj.listener = addlistener(obj.tableProcessorHandles, 'tableSelectionChanged', @(src, ~) obj.processData(src));
-                obj.plotSpecificListener = addlistener(obj.tableProcessorHandles, 'plotUpdateRequired', @(src, ~) obj.processData(src));
+                obj.listener = addlistener(obj.tableProcessorHandles, 'tableSelectionChanged', @(src, ~) obj.requestProcessData(src));
+                obj.plotSpecificListener = addlistener(obj.tableProcessorHandles, 'plotUpdateRequired', @(src, ~) obj.requestProcessData(src));
             end
         end
 
@@ -115,6 +119,8 @@ classdef DataFormatter < handle
 
         function delete(obj)
             % Destructor for DataFormatter class
+            obj.deleteProcessTimer();
+
             if iscell(obj.listener)
                 for i = 1:numel(obj.listener)
                     if isvalid(obj.listener{i})
@@ -142,6 +148,59 @@ classdef DataFormatter < handle
         
         
         
+        function requestProcessData(obj, src)
+            % Schedule formatting after a short event burst so synchronized tables can both report their changes before plotting.
+            obj.pendingSource = src;
+            obj.ensureProcessTimer();
+
+            if strcmp(obj.processTimer.Running, 'on')
+                stop(obj.processTimer);
+            end
+
+            start(obj.processTimer);
+        end
+
+
+
+        function runPendingProcessData(obj)
+            % Run one formatting pass for the latest event source after the debounce window has settled.
+            src = obj.pendingSource;
+            obj.pendingSource = [];
+            obj.processData(src);
+        end
+
+
+
+        function ensureProcessTimer(obj)
+            % Create the debounce timer lazily because formatters are replaced whenever the plot setup changes.
+            if ~isempty(obj.processTimer) && isvalid(obj.processTimer)
+                return
+            end
+
+            obj.processTimer = timer('ExecutionMode', 'singleShot', 'StartDelay', obj.PROCESS_DEBOUNCE_DELAY_SECONDS, 'TimerFcn', @(~, ~) obj.runPendingProcessData());
+        end
+
+
+
+        function deleteProcessTimer(obj)
+            % Stop and delete the debounce timer so a delayed callback cannot run after the formatter is replaced.
+            if isempty(obj.processTimer)
+                return
+            end
+
+            if isvalid(obj.processTimer)
+                if strcmp(obj.processTimer.Running, 'on')
+                    stop(obj.processTimer);
+                end
+
+                delete(obj.processTimer);
+            end
+
+            obj.processTimer = [];
+        end
+
+
+
         function processData(obj, src)
             if isempty(src)
                 if isempty(obj.storedLastSource)
@@ -317,9 +376,9 @@ classdef DataFormatter < handle
 
 
         function integratedData = integrateData(~, primaryData, secondaryData)
-            if isempty(primaryData)
+            if isempty(primaryData) || isequal(primaryData.rowNum, 0)
                 integratedData = secondaryData;
-            elseif isempty(secondaryData)
+            elseif isempty(secondaryData) || isequal(secondaryData.rowNum, 0)
                 integratedData = primaryData;
             else
                 % TO OPTIMIZE - if one table has only one row selected, it could be repeated
@@ -419,8 +478,6 @@ classdef DataFormatter < handle
             dataStruct.columnNames(groupColumnIdx) = [];
             dataStruct.columnNum(groupColumnIdx) = [];
             dataStruct.isCategorical(groupColumnIdx) = [];
-
-            disp(dataStruct.cellArray)
 
             nColumnsLast = dataStruct.columnNum{end};
 

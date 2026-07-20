@@ -4,10 +4,12 @@ classdef DataStore < handle
         tableStoreHandle TableStore = TableStore()
         summarizedTablesStruct struct
 
-        columnDefinitionChangeListener
-
         filteringStorageHandle FilteringStorage = FilteringStorage()
         summarizedFilteringStruct struct
+    end
+
+    properties (Access = private, Transient)
+        columnDefinitionChangeListener
     end
 
     events
@@ -75,10 +77,58 @@ classdef DataStore < handle
                 obj.summarizedTablesStruct = rmfield(obj.summarizedTablesStruct, columnName);
             end
         end
+
+
+
+        function regenerateListeners(obj)
+            % Regenerate the listeners - no longer valid when ModalityDataStore is reloaded from file
+            obj.deleteColumnDefinitionChangeListener();
+            obj.columnDefinitionChangeListener = addlistener(obj.tableStoreHandle, 'userColumnDefinitionChanged', @(src, event) obj.notifyUserColumnDefinitionChange(src, event));
+
+            % TableStore should not have any listeners on it
+
+            % SummarizedTableStore listens to TableStore (to be able to add newly created columns)
+            summarizedColumns = fieldnames(obj.summarizedTablesStruct);
+            for i = 1:length(summarizedColumns)
+                columnName = summarizedColumns{i};
+                summarizedTableStore = obj.summarizedTablesStruct.(columnName);
+                if isa(summarizedTableStore, 'SummarizedTableStore') && isvalid(summarizedTableStore)
+                    summarizedTableStore.regenerateListeners();
+                end
+            end
+            
+        end
+
+
+
+        function deleteListeners(obj)
+            % Delete runtime listeners owned by this store and by summarized table stores before serialization.
+            obj.deleteColumnDefinitionChangeListener();
+
+            summarizedColumns = fieldnames(obj.summarizedTablesStruct);
+            for i = 1:length(summarizedColumns)
+                columnName = summarizedColumns{i};
+                summarizedTableStore = obj.summarizedTablesStruct.(columnName);
+                if isa(summarizedTableStore, 'SummarizedTableStore') && isvalid(summarizedTableStore)
+                    summarizedTableStore.deleteListeners();
+                end
+            end
+        end
     end
 
 
-    methods (Access = private)
+    methods (Access = ?matlab.unittest.TestCase)
+        function deleteColumnDefinitionChangeListener(obj)
+            % Delete the listener that forwards column definition changes from the table store.
+            if ~isempty(obj.columnDefinitionChangeListener) && isvalid(obj.columnDefinitionChangeListener)
+                delete(obj.columnDefinitionChangeListener);
+            end
+
+            obj.columnDefinitionChangeListener = [];
+        end
+
+
+
         function notifyUserColumnDefinitionChange(obj, ~, event)
             % Notify the user about the column definition change
             % This method is called when a column definition change occurs

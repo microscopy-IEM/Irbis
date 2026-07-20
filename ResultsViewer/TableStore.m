@@ -17,6 +17,7 @@ classdef (Sealed) TableStore < handle
     events
         tableDataChanged
         userColumnDefinitionChanged    % event with event data passed
+        pivotedTransformationChanged
     end
 
     methods (Access = public)
@@ -462,7 +463,7 @@ classdef (Sealed) TableStore < handle
                 obj.pivotedTransformationName = transformationName;
                 obj.pivotedTransformationParameter = parameterValue;
                 obj.pivotedTransform = TableTransformationMapper.getTransformation(transformationName, parameterValue);
-                notify(obj, 'tableDataChanged');  % Notify that the data has changed to trigger any necessary updates in the views
+                notify(obj, 'pivotedTransformationChanged');  % Notify that the data has changed to trigger any necessary updates in the views
             end
 
 
@@ -472,7 +473,7 @@ classdef (Sealed) TableStore < handle
                 % For example, if the transformation requires a reference value or time point
                 obj.pivotedTransformationParameter = parameterValue;
                 obj.pivotedTransform = TableTransformationMapper.getTransformation(obj.pivotedTransformationName, parameterValue);
-                notify(obj, 'tableDataChanged');  % Notify that the data has changed to trigger any necessary updates in the views
+                notify(obj, 'pivotedTransformationChanged');  % Notify that the data has changed to trigger any necessary updates in the views
             end
 
 

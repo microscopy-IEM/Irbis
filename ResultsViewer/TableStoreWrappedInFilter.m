@@ -5,6 +5,12 @@ classdef TableStoreWrappedInFilter < handle
     properties (Access = private)
         tableStoreHandle   % The original TableStore object
         filteringStorageHandle   % A function handle to apply as a filter
+
+    end
+
+    properties (Access = private, Transient)
+        tableStoreListener  % Listener for the tableDataChanged event from the original TableStore.
+        filteringStorageListener  % Listener for the filtersChanged event from the filtering storage.
     end
 
     events
@@ -19,11 +25,13 @@ classdef TableStoreWrappedInFilter < handle
             end
             obj.tableStoreHandle = tableStoreHandle;
             % pass the event further
-            addlistener(obj.tableStoreHandle, 'tableDataChanged', @(~, ~) notify(obj, 'tableDataChanged'));
+            obj.deleteTableStoreListener();
+            obj.tableStoreListener = addlistener(obj.tableStoreHandle, 'tableDataChanged', @(~, ~) notify(obj, 'tableDataChanged'));
 
             obj.filteringStorageHandle = filteringStorageHandle;
             % if the filters change, this also means that the data has changed
-            addlistener(obj.filteringStorageHandle, 'filtersChanged', @(~, ~) notify(obj, 'tableDataChanged'));
+            obj.deleteFilteringStorageListener();
+            obj.filteringStorageListener = addlistener(obj.filteringStorageHandle, 'filtersChanged', @(~, ~) notify(obj, 'tableDataChanged'));
         end
     end
 
@@ -152,6 +160,48 @@ classdef TableStoreWrappedInFilter < handle
 
         function editManualColumnValue(obj, columnName, rowName, newValue)
             obj.tableStoreHandle.editManualColumnValue(columnName, rowName, newValue);
+        end
+
+        %% Regenerate listeners when the ModalityDataStore is reloaded from file
+        function regenerateListeners(obj)
+            % Regenerate the listeners - no longer valid when ModalityDataStore is reloaded from file
+            obj.deleteTableStoreListener();
+            obj.tableStoreListener = addlistener(obj.tableStoreHandle, 'tableDataChanged', @(~, ~) notify(obj, 'tableDataChanged'));
+
+            obj.deleteFilteringStorageListener();
+            obj.filteringStorageListener = addlistener(obj.filteringStorageHandle, 'filtersChanged', @(~, ~) notify(obj, 'tableDataChanged'));
+        end
+
+
+
+        function deleteListeners(obj)
+            % Delete runtime listeners owned by this wrapper before serialization.
+            obj.deleteTableStoreListener();
+            obj.deleteFilteringStorageListener();
+        end
+    end
+
+
+
+    methods (Access = ?matlab.unittest.TestCase)
+        function deleteTableStoreListener(obj)
+            % Delete the listener that watches the wrapped table store.
+            if ~isempty(obj.tableStoreListener) && isvalid(obj.tableStoreListener)
+                delete(obj.tableStoreListener);
+            end
+
+            obj.tableStoreListener = [];
+        end
+
+
+
+        function deleteFilteringStorageListener(obj)
+            % Delete the listener that watches the filtering storage.
+            if ~isempty(obj.filteringStorageListener) && isvalid(obj.filteringStorageListener)
+                delete(obj.filteringStorageListener);
+            end
+
+            obj.filteringStorageListener = [];
         end
     end
 end

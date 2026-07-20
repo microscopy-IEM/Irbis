@@ -1,35 +1,53 @@
 classdef (Sealed) ModalityDataStore < handle
-    %MODALITYDATASTORE Modality data storage
-    % it is handle because I need to dynamically update the data stored in the object
+    % ModalityDataStore stores modality data and forwards column definition change events.
 
     properties (Access = private)
         dataCollection = struct();
     end
 
-    methods
-        function obj = ModalityDataStore()
-        end
+    properties (Access = private, Transient)
+        userColumnDefinitionChangeListeners = struct('pathKey', {}, 'listener', {});
     end
 
     events
-        userColumnDefinitionChanged  % Event triggered when a column definition changes
+        userColumnDefinitionChanged
     end
 
-    methods (Access = public)
+    %% Lifecycle
+
+    methods
+        function obj = ModalityDataStore()
+            % Create an empty modality data store.
+        end
+
+
+
+        function delete(obj)
+            % Delete runtime listeners owned by the modality data store.
+            obj.deleteListeners();
+        end
+
+
+
+        %% Data access
+
         function setModalityData(obj, modalityPath, modalityData)
-            if isempty(modalityPath)    % if no path is provided, set the data to the root
+            % Store modality data at the requested path and refresh listeners for that path.
+            if isempty(modalityPath)
                 obj.dataCollection = modalityData;
             else
                 obj.dataCollection = setfield(obj.dataCollection, modalityPath{:}, modalityData);
             end
 
+            obj.deleteUserColumnDefinitionChangeListeners(modalityPath);
             obj.addUserColumnDefinitionChangeListener(modalityPath, modalityData);
         end
 
 
 
         function modalityData = getModalityData(obj, modalityPath)
-            if isempty(modalityPath)  % if no path is provided, get the data from the root
+            % Return modality data from the requested path.
+            if isempty(modalityPath)
                 modalityData = obj.dataCollection;
             else
                 if ModalityDataStore.hasNestedField(obj.dataCollection, modalityPath)
@@ -44,78 +62,122 @@ classdef (Sealed) ModalityDataStore < handle
 
 
         function paths = getAvailableModalityPaths(obj)
-            % Returns a cell array of all available modality paths in the data collection
-
-            % NOTE - I could preallocate paths, but that would require counting the number of fields
-            %   meaning I would need to do one more for loop
-            %   for about 10 fields, it is probably not worth it
-
+            % Return a cell array of all available modality paths in the data collection.
             paths = {};
             fields = fieldnames(obj.dataCollection);
             for i = 1:length(fields)
                 if isstruct(obj.dataCollection.(fields{i}))
                     subfields = fieldnames(obj.dataCollection.(fields{i}));
                     for j = 1:length(subfields)
-                        paths{end+1} = {fields{i}, subfields{j}};
+                        paths{end + 1} = {fields{i}, subfields{j}};
                     end
                 else
-                    paths{end+1} = fields(i);
+                    paths{end + 1} = fields(i);
                 end
             end
         end
 
 
 
-        function addUserColumnDefinitionChangeListener(obj, modalityPath, modalityData)
-            % Adds a listener for user column definition changes
-            % listenerFunction should be a function handle that takes an event as input
-            % modalityPath specifies the starting path for traversal
-            % Add listener for changes in each of the leaf nodes
+        %% Listener lifecycle
 
+        function addUserColumnDefinitionChangeListener(obj, modalityPath, modalityData)
+            % Add listeners that forward user column definition changes from all leaf data stores under the requested path.
             obj.traverseAndAddListener(modalityPath, modalityData);
         end
 
 
 
+        function deleteListeners(obj)
+            % Delete all runtime listeners owned by this store and by nested data stores before serialization.
+            obj.deleteUserColumnDefinitionChangeListeners({});
+
+            paths = obj.getAvailableModalityPaths();
+            for i = 1:length(paths)
+                currentDataStore = obj.getModalityData(paths{i});
+                if isa(currentDataStore, 'DataStore') && isvalid(currentDataStore)
+                    currentDataStore.deleteListeners();
+                end
+            end
+        end
+
+
+
+        function regenerateListeners(obj)
+            % Regenerate all runtime listeners after loading the modality data store from file.
+            obj.deleteUserColumnDefinitionChangeListeners({});
+
+            paths = obj.getAvailableModalityPaths();
+            for i = 1:length(paths)
+                currentDataStore = obj.getModalityData(paths{i});
+                if isa(currentDataStore, 'DataStore') && isvalid(currentDataStore)
+                    currentDataStore.regenerateListeners();
+                    obj.addUserColumnDefinitionChangeListener(paths{i}, currentDataStore);
+                end
+            end
+        end
+
+
+
+        %% Event forwarding
+
         function notifyUserColumnDefinitionChange(obj, modalityPath, ~, event)
-            % Notify the user about the column definition change
-            % This method is called when a column definition change occurs
-            % It creates a ColumnDefinitionEvent and notifies the listeners
-
-            % if isempty(modalityPath)
-            %     disp(['Column definition changed in the root: ', event.name, ' - ', event.typeOfChange]);
-            % else
-            %     disp(['Column definition changed in ', strjoin(modalityPath, '.'), ': ', event.name, ' - ', event.typeOfChange]);
-            % end
-
-            event.setModalityPath(modalityPath);  % Add the modality path to the event for context
-            
+            % Add modality context to a column definition event and forward it from the modality data store.
+            event.setModalityPath(modalityPath);
             notify(obj, 'userColumnDefinitionChanged', event);
-        end  
+        end
     end
-
 
 
 
     methods (Access = ?matlab.unittest.TestCase)
         function traverseAndAddListener(obj, currentPath, data)
+            % Traverse stored data and add listeners to leaf data stores.
             if isstruct(data)
                 fields = fieldnames(data);
                 for i = 1:length(fields)
                     obj.traverseAndAddListener([currentPath, {fields{i}}], data.(fields{i}));
                 end
             else
-                addlistener(data, 'userColumnDefinitionChanged', @(src, event) obj.notifyUserColumnDefinitionChange(currentPath, src, event));
+                listener = addlistener(data, 'userColumnDefinitionChanged', @(src, event) obj.notifyUserColumnDefinitionChange(currentPath, src, event));
+                obj.userColumnDefinitionChangeListeners(end + 1).pathKey = ModalityDataStore.pathToKey(currentPath);
+                obj.userColumnDefinitionChangeListeners(end).listener = listener;
             end
+        end
+
+
+
+        function deleteUserColumnDefinitionChangeListeners(obj, modalityPath)
+            % Delete stored leaf listeners under the requested modality path.
+            if isempty(obj.userColumnDefinitionChangeListeners)
+                return
+            end
+
+            pathKey = ModalityDataStore.pathToKey(modalityPath);
+            listenerPathKeys = string({obj.userColumnDefinitionChangeListeners.pathKey});
+            if pathKey == ""
+                isListenerUnderPath = true(size(listenerPathKeys));
+            else
+                isListenerUnderPath = listenerPathKeys == pathKey | startsWith(listenerPathKeys, pathKey + ModalityDataStore.pathDelimiter());
+            end
+
+            listenersToDelete = obj.userColumnDefinitionChangeListeners(isListenerUnderPath);
+            for i = 1:numel(listenersToDelete)
+                listener = listenersToDelete(i).listener;
+                if ~isempty(listener) && isvalid(listener)
+                    delete(listener);
+                end
+            end
+
+            obj.userColumnDefinitionChangeListeners(isListenerUnderPath) = [];
         end
     end
 
 
 
-
     methods (Static, Access = ?matlab.unittest.TestCase)
         function tf = hasNestedField(s, path)
-            % Checks if a nested field exists in a structure given a path
+            % Check if a nested field exists in a structure for the requested path.
             tf = true;
 
             for i = 1:numel(path)
@@ -128,6 +190,25 @@ classdef (Sealed) ModalityDataStore < handle
                     return
                 end
             end
+        end
+
+
+
+        function key = pathToKey(path)
+            % Convert a modality path to a stable string key used for listener ownership.
+            if isempty(path)
+                key = "";
+                return
+            end
+
+            key = strjoin(string(path), ModalityDataStore.pathDelimiter());
+        end
+
+
+
+        function delimiter = pathDelimiter()
+            % Return the delimiter used in internal modality path keys.
+            delimiter = "/";
         end
     end
 end

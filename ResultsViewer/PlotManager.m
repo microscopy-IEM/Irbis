@@ -24,6 +24,8 @@ classdef PlotManager < handle
             [obj.tableProcessorHandles, obj.tableTypes] = appStateManagerHandle.getTableProcessorHandles();
 
             obj.replaceFormatter();
+
+            obj.setDefaultInterpreterForAxes();
         end
 
 
@@ -112,6 +114,13 @@ classdef PlotManager < handle
             cla(obj.axesHandle);
             xlabel(obj.axesHandle, '');
             ylabel(obj.axesHandle, '');
+
+            % Turn of formatting of the text, to prevent _ from being interpreted as subscript
+            % set(obj.axesHandle, 'TickLabelInterpreter', 'none');
+            % set(obj.axesHandle, 'legend', 'Interpreter', 'none');
+            % set(obj.axesHandle, 'Title', 'Interpreter', 'none');
+            % set(obj.axesHandle, 'XLabel', 'Interpreter', 'none');
+            % set(obj.axesHandle, 'YLabel', 'Interpreter', 'none');
         end
 
         function plotData(obj, data)
@@ -159,6 +168,16 @@ classdef PlotManager < handle
             % disp(obj.tableProcessorHandles);
             % disp(class(obj.tableProcessorHandles));
             obj.replaceFormatter(); % Recreate formatter with the new table store
+        end
+
+
+        
+        function setDefaultInterpreterForAxes(~)
+            % Set the default interpreter for axes to 'none' to prevent underscores from being interpreted as subscripts
+            set(groot, 'defaultAxesTickLabelInterpreter', 'none')
+            set(groot, 'defaultTextInterpreter', 'none')
+            set(groot, 'defaultLegendInterpreter', 'none')
+            set(groot, 'defaultColorbarTickLabelInterpreter', 'none')
         end
     end
 end

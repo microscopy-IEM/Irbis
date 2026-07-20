@@ -8,6 +8,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
         activeColumns = {}          % names of the columns shown in the UI table
 
         selectedTableCellsList (:,2) = [] % List of selected table cells nx2 array
+        rowSelectionMode (1,1) string = "specific"
 
         isKeptBooleanList = []
 
@@ -94,6 +95,16 @@ classdef (Sealed) SummarizedTableProcessor < handle
                 obj.selectedTableCellsList = processorState.selectedTableCellsList;
             end
 
+            if isfield(processorState, 'rowSelectionMode')
+                obj.rowSelectionMode = string(processorState.rowSelectionMode);
+            else
+                obj.rowSelectionMode = obj.detectRowSelectionMode(obj.selectedTableCellsList);
+            end
+
+            if obj.rowSelectionMode == "allVisible"
+                obj.selectedTableCellsList = obj.getAllVisibleRowSelection();
+            end
+
             notify(obj, 'tableForDisplayChanged');
             % notify(obj, 'tableSelectionChanged');
             % call just plotting function instead
@@ -134,8 +145,34 @@ classdef (Sealed) SummarizedTableProcessor < handle
 
 
     methods
+        function processAndAnnounceFilterChange(obj)
+            % Process data and announce that the filters have changed
+            obj.processData();
+            notify(obj, 'newFiltersApplied');
+        end
+
+
+
         function processData(obj)
             % Process data
+            % Processing data includes taking the raw data  
+            %   aggegate them into rows (for example by having each row for one category)
+            % doing statistics on the columns across another variable
+                % broader version: allow different column aggregation (timepoint, ...)
+                % narrower version: only one column aggregation (timepoint)
+
+            obj.processDataWithoutNotification();
+
+            notify(obj, 'tableForDisplayChanged');
+
+            % notify the plottling component that the plot needs to be updated
+            notify(obj, 'plotUpdateRequired');
+        end
+
+
+
+        function processDataWithoutNotification(obj)
+            % Process data without notifying observers
 
             % Processing data includes taking the raw data  
             %   aggegate them into rows (for example by having each row for one category)
@@ -166,20 +203,39 @@ classdef (Sealed) SummarizedTableProcessor < handle
                 obj.filteredTable = table();
             end
 
-            notify(obj, 'tableForDisplayChanged');
+            if obj.rowSelectionMode == "allVisible"
+                obj.selectedTableCellsList = obj.getAllVisibleRowSelection();
+            end
         end
 
 
 
         function filterData(obj)
-            obj.processData();
+            obj.processDataWithoutNotification();
+            notify(obj, 'tableForDisplayChanged');
+
             notify(obj, 'newFiltersApplied')
+
+            % notify the plottling component that the plot needs to be updated
+            notify(obj, 'plotUpdateRequired');
         end
 
 
 
         function isKept = getKeptBooleanList(obj)
             isKept = obj.isKeptBooleanList;
+        end
+
+
+
+        function rowNames = getKeptRowNames(obj)
+            % Get the row names of the filtered table
+            if isempty(obj.filteredTable)
+                rowNames = strings(0, 1);
+                return
+            end
+
+            rowNames = string(obj.filteredTable.Properties.RowNames(:));
         end
 
 
@@ -248,7 +304,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
             if ~isempty(obj.summarizedTableListener) && isvalid(obj.summarizedTableListener)
                 delete(obj.summarizedTableListener);
             end
-            obj.summarizedTableListener = addlistener(obj.summarizedTableStoreHandle, 'tableDataChanged', @(~,~)processData(obj));
+            obj.summarizedTableListener = addlistener(obj.summarizedTableStoreHandle, 'tableDataChanged', @(~,~)processAndAnnounceFilterChange(obj));
 
             obj.summarizedFilteringStorageHandle = obj.dataStoreHandle.getSummarizedFilteringStorage(obj.rowParameter);
 
@@ -265,6 +321,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
         function storeSelectedTableCellsList(obj, selectedTableCellsList)
             % Validates and stores the selected table cells
             obj.selectedTableCellsList = selectedTableCellsList;
+            obj.rowSelectionMode = obj.detectRowSelectionMode(selectedTableCellsList);
             notify(obj, 'tableSelectionSyncRequired'); % added first, because syncing must be before plotting (to be able to combine the data)
             notify(obj, 'tableSelectionChanged'); % this is observed by DataFormatter that processes data for plotting - needs data from both tables, if applicable
         end
@@ -286,6 +343,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
             end
 
             obj.selectedTableCellsList = processedSelectionList;
+            obj.rowSelectionMode = obj.detectRowSelectionMode(processedSelectionList);
 
             notify(obj, 'tableSelectionSetProgrammatically')     % notify the component, since we do not have direct link to it
         end
@@ -300,6 +358,9 @@ classdef (Sealed) SummarizedTableProcessor < handle
 
         function setSelectedColumns(obj, columnNames)
             obj.activeColumns = columnNames;
+            if obj.rowSelectionMode == "allVisible"
+                obj.selectedTableCellsList = obj.getAllVisibleRowSelection();
+            end
             notify(obj, 'tableForDisplayChanged');
         end
 
@@ -352,6 +413,7 @@ classdef (Sealed) SummarizedTableProcessor < handle
             processorState.rowParameter = obj.rowParameter;
             processorState.activeColumns = obj.activeColumns;
             processorState.selectedTableCellsList = obj.selectedTableCellsList;
+            processorState.rowSelectionMode = obj.rowSelectionMode;
         end
 
 
@@ -364,6 +426,41 @@ classdef (Sealed) SummarizedTableProcessor < handle
 
             obj.loadDataForGrouping();
             obj.processData();
+        end
+
+
+
+        function rowSelectionMode = detectRowSelectionMode(obj, selectedTableCellsList)
+            % Return all-visible mode when every currently displayed row has at least one selected cell.
+            displayedTable = obj.getTableForDisplay();
+
+            if isempty(displayedTable) || isempty(selectedTableCellsList)
+                rowSelectionMode = "specific";
+                return
+            end
+
+            selectedRows = unique(selectedTableCellsList(:, 1));
+            allDisplayedRows = (1:height(displayedTable))';
+            if numel(selectedRows) == height(displayedTable) && all(ismember(allDisplayedRows, selectedRows))
+                rowSelectionMode = "allVisible";
+            else
+                rowSelectionMode = "specific";
+            end
+        end
+
+
+
+        function selectedCells = getAllVisibleRowSelection(obj)
+            % Select every cell in the displayed table because the user selected all visible rows before filtering changed.
+            displayedTable = obj.getTableForDisplay();
+
+            if isempty(displayedTable) || width(displayedTable) == 0
+                selectedCells = [];
+                return
+            end
+
+            [rowGrid, colGrid] = ndgrid(1:height(displayedTable), 1:width(displayedTable));
+            selectedCells = [rowGrid(:), colGrid(:)];
         end
     end
 end
