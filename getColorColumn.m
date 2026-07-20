@@ -1,6 +1,13 @@
-function colorColumn = getColorColumn(List, selectedParameter, colormap)
+function colorColumn = getColorColumn(List, selectedParameter, colormap, baseColor)
     % Assign colors based on selected parameter and colormap, handling NaN/undefined values efficiently.
 
+    arguments
+        List
+        selectedParameter
+        colormap
+        baseColor = [0.5, 0.5, 0.5]; % Default gray color for undefined values
+    end
+    
     nRows = height(List);
 
     % Handle 'random' colormap case: assign random colors
@@ -10,7 +17,11 @@ function colorColumn = getColorColumn(List, selectedParameter, colormap)
     end
 
     % Convert colormap name to function handle
-    cmapFcn = str2func(colormap);
+    if isequal(colormap, 'monochrome')
+        cmapFcn = @(n) monochromeColormap(baseColor, n);
+    else
+        cmapFcn = str2func(colormap);
+    end
 
     % Extract data and identify valid rows
     columnData = List.(selectedParameter);
@@ -68,6 +79,14 @@ function colorColumn = getColorColumn(List, selectedParameter, colormap)
 
     % Convert RGB matrix to cell array of row-wise colors
     colorColumn = mat2cell(c, ones(nRows, 1), 3);
+end
+
+
+function cmap = monochromeColormap(color, n)
+    if nargin < 2
+        n = 256;
+    end
+    cmap = gray(n) .* color(:).';
 end
     
 
