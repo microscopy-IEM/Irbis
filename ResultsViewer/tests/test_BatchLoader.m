@@ -67,6 +67,37 @@ classdef test_BatchLoader < matlab.unittest.TestCase
             testCase.verifyNotEmpty(updatedDataStruct, 'updatedDataStruct should not be empty after appendLoadedData');
             testCase.verifyEqual(updatedDataStruct.model.branch1.combinedList, 'existingData', 'existing data not preserved after append');
         end
+
+
+        function testStoreLoadedDataAddsFileIdGroupIdMergedDefinition(testCase)
+            loader = BatchLoader();
+            loader.modalities = {'model'};
+
+            modelTable = table( ...
+                categorical([1; 1; 2]), ...
+                categorical([10; 11; 10]), ...
+                [5; 6; 7], ...
+                'VariableNames', {'fileId', 'groupId', 'Value'});
+
+            loader.combinedTablesModel = struct('spines', {{modelTable}});
+            loader.combinedColumnDefinitionsModel = struct('spines', {{CategorizationStorage()}});
+            loader.combinedFilteringsModel = struct('spines', {{FilteringStorage()}});
+
+            newDataStruct = loader.storeLoadedData();
+            combinedList = newDataStruct.model.spines.combinedList;
+
+            testCase.verifyTrue(ismember('fileId_groupId', combinedList.Properties.VariableNames), ...
+                'Batch-loaded model tables should include the automatic merged identifier.');
+            testCase.verifyEqual(string(combinedList.fileId_groupId), ["1_10"; "1_11"; "2_10"]);
+
+            [definitionList, ~] = ColumnDefinitionCombiner.combineStorage(newDataStruct.model.spines.storedCategorizations);
+            definitionNames = cellfun(@(definition) char(definition.getColumnName()), definitionList, 'UniformOutput', false);
+            testCase.verifyTrue(ismember('fileId_groupId', definitionNames), ...
+                'The automatic merged identifier should be registered as a user-defined column.');
+
+            definitionIdx = find(strcmp(definitionNames, 'fileId_groupId'), 1);
+            testCase.verifyEqual(definitionList{definitionIdx}.getDefinitionType(), 'merged');
+        end
     end
 
 

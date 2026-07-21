@@ -460,9 +460,22 @@ classdef (Sealed) TableStore < handle
             %% Edit/get pivoted transformation status
             function setPivotedTransformationStatus(obj, doTransform, transformationName, parameterValue)
                 obj.pivotedTranformationOn = doTransform;
+                if ~doTransform
+                    % Stored views may contain an empty transformation name when
+                    % transformations are disabled. Keep the persisted state
+                    % normalized to "none" and avoid resolving a function that will
+                    % not be used.
+                    transformationName = 'none';
+                    parameterValue = [];
+                end
+
                 obj.pivotedTransformationName = transformationName;
                 obj.pivotedTransformationParameter = parameterValue;
-                obj.pivotedTransform = TableTransformationMapper.getTransformation(transformationName, parameterValue);
+                if doTransform
+                    obj.pivotedTransform = TableTransformationMapper.getTransformation(transformationName, parameterValue);
+                else
+                    obj.pivotedTransform = [];
+                end
                 notify(obj, 'pivotedTransformationChanged');  % Notify that the data has changed to trigger any necessary updates in the views
             end
 

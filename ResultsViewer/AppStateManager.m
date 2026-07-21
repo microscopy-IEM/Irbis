@@ -113,6 +113,14 @@ classdef (Sealed) AppStateManager < handle
         function changeTopTableType(obj, newTableType)
             % Change the table type of the top table state manager
             obj.tableType = newTableType;
+
+            % Replacing the top processor invalidates any existing two-table
+            % synchronizer because its listener callbacks still point at the old
+            % processor handles. Delete it before the processor swap so stored-view
+            % restore cannot leave bottom-table filter events targeting deleted
+            % pivoted storage.
+            obj.deleteMultitableSynchronizer();
+
             if isa(obj.topTableStateManagerHandle, 'TableStateManager') && isvalid(obj.topTableStateManagerHandle)
                 % disp('AppStateManager: changeTopTableType - Changing table type.');
                 obj.topTableStateManagerHandle.changeTableType(newTableType);
@@ -207,6 +215,12 @@ classdef (Sealed) AppStateManager < handle
                 return
             end	
 
+            % Creating a summarized companion creates fresh listeners for the
+            % current top and bottom processors. Remove any older synchronizer
+            % first; otherwise stored views can accumulate callbacks that still
+            % reference processors from the previous table layout.
+            obj.deleteMultitableSynchronizer();
+
             obj.generateBottomTableStateManager('Summarized');
             bottomProcessorHandle = obj.bottomTableStateManagerHandle.getTableProcessorHandle();
 
@@ -220,13 +234,14 @@ classdef (Sealed) AppStateManager < handle
 
         
         function destroySummarized(obj)
+            % Delete synchronization listeners before deleting the bottom table
+            % manager. The synchronizer cleanup may need to clear row-sync filters
+            % from live processors, so it should run while the processors still
+            % exist.
+            obj.deleteMultitableSynchronizer();
+
             if isa(obj.bottomTableStateManagerHandle, 'handle') && isvalid(obj.bottomTableStateManagerHandle)
                 delete(obj.bottomTableStateManagerHandle)
-            end
-
-            % destroy also the multitable synchronizer, so that the outdated ones are not getting accummulated
-            if isa(obj.multitableSynchronizer, 'MultitableSynchronizer') && isvalid(obj.multitableSynchronizer)
-                delete(obj.multitableSynchronizer);
             end
 
             obj.generateFilteringMenuStateManager();
@@ -248,17 +263,10 @@ classdef (Sealed) AppStateManager < handle
         function storeDataFromStruct(obj, structToLoad)
             % assignin("base", "structToLoad", structToLoad); % for debugging purposes
 
-            obj.loadData(structToLoad);
-            
-            % Set initial modality and branch if not set
-            if (isempty(obj.modality) || isequal(strlength(obj.modality), 0)) && ~isempty(obj.availableModalities)
-                obj.modality = obj.availableModalities{1};
-                if ~isempty(obj.availableBranches{1})
-                    obj.branch = obj.availableBranches{1}{1};
-                end
-            else
-                disp('AppStateManager: storeLoadedData - Modality and branch already set.');
-            end
+            % Opening a dataset should put the user on the most common object
+            % view when it exists. Appending data does not use this forced path,
+            % so it does not unexpectedly move the current user-selected view.
+            obj.loadData(structToLoad, true);
             obj.getAndStoreActiveData();
         end
 
@@ -406,6 +414,13 @@ classdef (Sealed) AppStateManager < handle
                 end
             end
 
+            % When a stored view includes the summarized table, the synchronizer
+            % is created before the bottom processor has restored its saved active
+            % columns/selection. Refresh row synchronization after both table
+            % states are applied so the pivoted table is filtered by the final
+            % summarized display rather than by the temporary empty/default one.
+            obj.refreshMultitableSynchronizationAfterStateRestore();
+
             % obj.generateFilteringMenuStateManager();  % this is not needed, as it is already done in the changeTableType method
 
             % notify(obj, 'newModalityLoaded');   % added to ensure proper setup of the plotManager
@@ -444,8 +459,10 @@ classdef (Sealed) AppStateManager < handle
             % Find the branches for the new modality
             modalityIdx = find(strcmp(obj.availableModalities, newModality));
             if ~isempty(modalityIdx) && ~isempty(obj.availableBranches{modalityIdx})
-                % Set the first available branch for this modality
-                obj.branch = obj.availableBranches{modalityIdx}{1};
+                % When modality changes, the active branch must be valid for the
+                % new modality. Prefer spines for model data, then fall back to
+                % the first available branch for older or differently named data.
+                obj.branch = AppStateManager.selectPreferredName(obj.availableBranches{modalityIdx}, {'spines'});
             else
                 % If no branches available, set empty branch
                 obj.branch = '';
@@ -471,8 +488,11 @@ classdef (Sealed) AppStateManager < handle
 
 
 
-        function loadData(obj, newDataStruct)
+        function loadData(obj, newDataStruct, forcePreferredSelection)
             % Handle data loading from the main app
+            if nargin < 3
+                forcePreferredSelection = false;
+            end
 
             % assignin("base", "newDataStruct", newDataStruct); % for debugging purposes
             if isfield(newDataStruct, 'model')
@@ -528,12 +548,7 @@ classdef (Sealed) AppStateManager < handle
                 obj.addModalityPath(modalityPath);
             end
 
-            if (isempty(obj.modality) || isequal(strlength(obj.modality), 0)) && ~isempty(obj.availableModalities)
-                obj.modality = obj.availableModalities{1};
-                if ~isempty(obj.availableBranches{1})
-                    obj.branch = obj.availableBranches{1}{1};
-                end
-            end
+            obj.setPreferredModalityAndBranch(forcePreferredSelection);
 
             % disp(obj.availableModalities)
             % disp(obj.availableBranches)
@@ -586,13 +601,10 @@ classdef (Sealed) AppStateManager < handle
 
 
         function setInitialModality(obj)
-            % Set the initial modality and branch if not set
-            if (isempty(obj.modality) || isequal(strlength(obj.modality), 0)) && ~isempty(obj.availableModalities)
-                obj.modality = obj.availableModalities{1};
-                if ~isempty(obj.availableBranches{1})
-                    obj.branch = obj.availableBranches{1}{1};
-                end
-            end
+            % Set the initial modality and branch if not set. The preference
+            % mirrors the app's common workflow: model data first, then spines
+            % when that object type is available.
+            obj.setPreferredModalityAndBranch(false);
 
             obj.getAndStoreActiveData();
         end
@@ -670,6 +682,77 @@ classdef (Sealed) AppStateManager < handle
                     throw(newME);
                 else
                     rethrow(ME);
+                end
+            end
+        end
+
+
+
+        function setPreferredModalityAndBranch(obj, forceSelection)
+            % Choose defaults centrally so loading from structs and loading from
+            % stored ModalityDataStore objects follow the same rule.
+            if isempty(obj.availableModalities)
+                obj.modality = '';
+                obj.branch = '';
+                return
+            end
+
+            shouldChooseModality = forceSelection || isempty(obj.modality) || isequal(strlength(obj.modality), 0) || ~ismember(obj.modality, obj.availableModalities);
+            if shouldChooseModality
+                obj.modality = AppStateManager.selectPreferredName(obj.availableModalities, {'model'});
+            end
+
+            modalityIdx = find(strcmp(obj.availableModalities, obj.modality), 1);
+            if isempty(modalityIdx) || isempty(obj.availableBranches{modalityIdx})
+                obj.branch = '';
+                return
+            end
+
+            availableBranchesForModality = obj.availableBranches{modalityIdx};
+            shouldChooseBranch = forceSelection || isempty(obj.branch) || isequal(strlength(obj.branch), 0) || ~ismember(obj.branch, availableBranchesForModality);
+            if shouldChooseBranch
+                obj.branch = AppStateManager.selectPreferredName(availableBranchesForModality, {'spines'});
+            end
+        end
+
+
+
+        function deleteMultitableSynchronizer(obj)
+            % Remove the synchronizer and its listeners in one guarded place.
+            % Stored-view restore can rebuild table processors several times; if an
+            % older synchronizer survives, its callbacks may later dereference
+            % deleted processors or filtering storage handles.
+            if isa(obj.multitableSynchronizer, 'MultitableSynchronizer') && isvalid(obj.multitableSynchronizer)
+                delete(obj.multitableSynchronizer);
+            end
+
+            obj.multitableSynchronizer = [];
+        end
+
+
+
+        function refreshMultitableSynchronizationAfterStateRestore(obj)
+            % Stored views restore table processors in phases. If a summarized
+            % table is present, row-synchronized pivoted filtering must be updated
+            % after the bottom processor has finished restoring its saved state.
+            if isa(obj.multitableSynchronizer, 'MultitableSynchronizer') && isvalid(obj.multitableSynchronizer)
+                obj.multitableSynchronizer.refreshSynchronizedFiltering();
+            end
+        end
+    end
+
+    methods (Static, Access = private)
+        function selectedName = selectPreferredName(availableNames, preferredNames)
+            % Return the first preferred name that exists, otherwise the first
+            % available option. This keeps default selection readable at callsites
+            % while preserving a deterministic fallback for older datasets.
+            selectedName = availableNames{1};
+
+            for preferredId = 1:numel(preferredNames)
+                preferredName = preferredNames{preferredId};
+                if ismember(preferredName, availableNames)
+                    selectedName = preferredName;
+                    return
                 end
             end
         end

@@ -56,6 +56,8 @@ classdef BatchLoader < handle
                 newDataStruct.tracks.storedCategorizations = obj.combinedColumnDefinitionsTracks;
                 newDataStruct.tracks.storedFilters = obj.combinedFilteringsTracks;
             end
+
+            newDataStruct = obj.addAutomaticModelMergedIdentifier(newDataStruct);
         end
         
         function runBatchLoad(obj, varargin)
@@ -134,6 +136,8 @@ classdef BatchLoader < handle
                 newDataStruct.tracks.storedCategorizations = obj.combinedColumnDefinitionsTracks;
                 newDataStruct.tracks.storedFilters = obj.combinedFilteringsTracks;
             end
+
+            newDataStruct = obj.addAutomaticModelMergedIdentifier(newDataStruct);
         end
 
         function updatedDataStruct = appendLoadedData(obj, existingDataStruct)
@@ -180,7 +184,7 @@ classdef BatchLoader < handle
                     existingDataStruct.tracks.storedFilters = obj.combinedFilteringsTracks;
                 end
             end
-            updatedDataStruct = existingDataStruct;
+            updatedDataStruct = obj.addAutomaticModelMergedIdentifier(existingDataStruct);
         end
     end
 
@@ -402,6 +406,42 @@ classdef BatchLoader < handle
             end
         end
 
+        function dataStruct = addAutomaticModelMergedIdentifier(~, dataStruct)
+            % Batch-loaded model tables contain fileId metadata and often reused
+            % groupId values. Creating fileId_groupId immediately gives every
+            % model object type a stable cross-file grouping key, and storing the
+            % matching definition makes the column behave like other user-defined
+            % merged columns in ResultsViewer.
+            if ~isfield(dataStruct, 'model')
+                return
+            end
+
+            branches = fieldnames(dataStruct.model);
+            for branchId = 1:numel(branches)
+                branch = branches{branchId};
+                if ~isfield(dataStruct.model.(branch), 'combinedList')
+                    continue
+                end
+
+                combinedList = dataStruct.model.(branch).combinedList;
+                if ~BatchLoader.canCreateFileIdGroupId(combinedList)
+                    continue
+                end
+
+                if ~ismember('fileId_groupId', combinedList.Properties.VariableNames)
+                    combinedList.fileId_groupId = categorical(string(combinedList.fileId) + "_" + string(combinedList.groupId));
+                    dataStruct.model.(branch).combinedList = combinedList;
+                end
+
+                if ~isfield(dataStruct.model.(branch), 'storedCategorizations')
+                    dataStruct.model.(branch).storedCategorizations = {CategorizationStorage()};
+                end
+
+                dataStruct.model.(branch).storedCategorizations = BatchLoader.ensureFileIdGroupIdDefinition( ...
+                    dataStruct.model.(branch).storedCategorizations);
+            end
+        end
+
 
     end
 
@@ -423,6 +463,57 @@ classdef BatchLoader < handle
 
         function finalizeBatchLoad(wb)
             close(wb);
+        end
+    end
+
+    methods (Static, Access = private)
+        function tf = canCreateFileIdGroupId(tableData)
+            tf = istable(tableData) && ...
+                all(ismember({'fileId', 'groupId'}, tableData.Properties.VariableNames));
+        end
+
+        function storageArray = ensureFileIdGroupIdDefinition(storageArray)
+            storageArray = BatchLoader.normalizeStorageArray(storageArray);
+
+            if BatchLoader.hasColumnDefinition(storageArray, 'fileId_groupId')
+                return
+            end
+
+            mergedDefinition = FormulaColumnDefinition( ...
+                'fileId_groupId', ...
+                'string(fileId) + "_" + string(groupId)');
+            mergedDefinition.setDefinitionType('merged');
+
+            storage = CategorizationStorage();
+            storage.addCategorization(mergedDefinition);
+            storageArray{end + 1} = storage;
+        end
+
+        function storageArray = normalizeStorageArray(storageArray)
+            if isempty(storageArray)
+                storageArray = {CategorizationStorage()};
+            elseif isa(storageArray, 'CategorizationStorage')
+                storageArray = {storageArray};
+            elseif ~iscell(storageArray)
+                storageArray = {storageArray};
+            end
+        end
+
+        function tf = hasColumnDefinition(storageArray, columnName)
+            tf = false;
+
+            for storageId = 1:numel(storageArray)
+                storage = storageArray{storageId};
+                if ~isa(storage, 'CategorizationStorage')
+                    continue
+                end
+
+                names = storage.returnCategorizationNames();
+                if any(strcmp(names, columnName))
+                    tf = true;
+                    return
+                end
+            end
         end
     end
 end

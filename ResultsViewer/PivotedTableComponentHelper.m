@@ -105,12 +105,13 @@ classdef PivotedTableComponentHelper < handle
             if ~isempty(obj.rowParameter) && ismember(obj.rowParameter, columnNames)
                 obj.componentHandle.setRowParameter(obj.rowParameter);
                 columnNames(strcmp(columnNames, obj.rowParameter)) = [];
-            elseif ismember('groupId', columnNames)
-                obj.componentHandle.setRowParameter('groupId');
-                columnNames(strcmp(columnNames, 'groupId')) = [];
             else
-                obj.componentHandle.setRowParameter(columnNames{1});
-                columnNames(1) = [];
+                % Prefer the combined file/group identifier when present. It is
+                % more specific across merged datasets, while groupId remains the
+                % backward-compatible fallback for older data.
+                preferredRowParameter = selectPreferredColumnName(columnNames, {'fileId_groupId', 'groupId'});
+                obj.componentHandle.setRowParameter(preferredRowParameter);
+                columnNames(strcmp(columnNames, preferredRowParameter)) = [];
             end
 
             % handle the situation when there are no columns left

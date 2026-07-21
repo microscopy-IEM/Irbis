@@ -100,6 +100,7 @@ classdef DataFormatter < handle
 
         function turnJitterOn(obj)
             % currently applied in TwoVariablesPlot, and nowhere else? 
+            obj.useJitter = true;
             if ~isempty(obj.lastProcessedData)
                 obj.lastProcessedData.useJitter = true;
                 obj.plotManagerHandle.plotData(obj.lastProcessedData);
@@ -109,6 +110,7 @@ classdef DataFormatter < handle
 
 
         function turnJitterOff(obj)
+            obj.useJitter = false;
             if ~isempty(obj.lastProcessedData)
                 obj.lastProcessedData.useJitter = false;
                 obj.plotManagerHandle.plotData(obj.lastProcessedData);
@@ -149,8 +151,10 @@ classdef DataFormatter < handle
         
         
         function requestProcessData(obj, src)
-            % Schedule formatting after a short event burst so synchronized tables can both report their changes before plotting.
-            obj.pendingSource = src;
+            if obj.shouldReplacePendingSource(src)
+                obj.pendingSource = src;
+            end
+
             obj.ensureProcessTimer();
 
             if strcmp(obj.processTimer.Running, 'on')
@@ -158,6 +162,29 @@ classdef DataFormatter < handle
             end
 
             start(obj.processTimer);
+        end
+
+
+
+        function tf = shouldReplacePendingSource(obj, src)
+            if isempty(obj.pendingSource)
+                tf = true;
+                return
+            end
+
+            pendingIdx = obj.getHandleIndex(obj.pendingSource);
+            srcIdx = obj.getHandleIndex(src);
+
+            pendingType = obj.tableTypes{pendingIdx};
+            srcType = obj.tableTypes{srcIdx};
+
+            if isequal(srcType, 'Pivoted') && ~isequal(pendingType, 'Pivoted')
+                tf = true;
+            elseif isequal(pendingType, 'Pivoted') && ~isequal(srcType, 'Pivoted')
+                tf = false;
+            else
+                tf = true;
+            end
         end
 
 
@@ -557,6 +584,8 @@ classdef DataFormatter < handle
 
             data.useJitter = obj.useJitter;
             obj.lastProcessedData = data;
+
+            assignin("base", "data", data);
             obj.plotManagerHandle.plotData(data);
         end
 

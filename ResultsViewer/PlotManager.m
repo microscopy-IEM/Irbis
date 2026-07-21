@@ -10,8 +10,13 @@ classdef PlotManager < handle
         useGrouping = false
         useIndividual = false
         useJitter = false
+        lineErrorMetric = "sem"
+        lineErrorStyle = "shaded"
+        lineColor = [0 0.4470 0.7410]
+        lineErrorColor = [0.9 0.9 0.9]
 
         requiredParametersNum = 1; % number of parameters required for the plot
+        lastPlotData = []
     end
     
     methods
@@ -36,8 +41,37 @@ classdef PlotManager < handle
             if isfield(plotState, 'useJitter')
                 obj.useJitter = plotState.useJitter;
             end
+            if isfield(plotState, 'lineErrorMetric')
+                obj.lineErrorMetric = string(plotState.lineErrorMetric);
+            end
+            if isfield(plotState, 'lineErrorStyle')
+                obj.lineErrorStyle = string(plotState.lineErrorStyle);
+            end
+            if isfield(plotState, 'lineColor')
+                obj.lineColor = obj.normalizeColor(plotState.lineColor);
+            end
+            if isfield(plotState, 'lineErrorColor')
+                obj.lineErrorColor = obj.normalizeColor(plotState.lineErrorColor);
+            end
             obj.findRequiredParametersNum();
             obj.replaceFormatter();
+        end
+
+        function plotState = getState(obj)
+            % Return every plot option needed to recreate the current plot view.
+            % App Designer should store this struct directly instead of rebuilding
+            % plotState from individual UI controls; otherwise newer dialog-owned
+            % settings such as errorMetric, errorStyle, and colors are easy to
+            % forget when saving a stored view.
+            plotState = struct();
+            plotState.plotType = obj.plotType;
+            plotState.useGrouping = obj.useGrouping;
+            plotState.useIndividual = obj.useIndividual;
+            plotState.useJitter = obj.useJitter;
+            plotState.lineErrorMetric = obj.lineErrorMetric;
+            plotState.lineErrorStyle = obj.lineErrorStyle;
+            plotState.lineColor = obj.lineColor;
+            plotState.lineErrorColor = obj.lineErrorColor;
         end
 
         function turnGroupingUseOn(obj)
@@ -61,14 +95,67 @@ classdef PlotManager < handle
         end
 
         function turnJitterOn(obj)
-            % currently applied in TwoVariablesPlot, and nowhere else? 
-            obj.useJitter = true;
-            obj.formatter.turnJitterOn();
+            % Keep the legacy app callbacks working while routing all jitter
+            % updates through the same setting path used by the settings dialog.
+            obj.setUseJitter(true);
         end
 
         function turnJitterOff(obj)
-            obj.useJitter = false;
-            obj.formatter.turnJitterOff();
+            % Keep the legacy app callbacks working while routing all jitter
+            % updates through the same setting path used by the settings dialog.
+            obj.setUseJitter(false);
+        end
+
+        function setLineErrorMetric(obj, metric)
+            obj.lineErrorMetric = string(metric);
+            obj.redrawLastPlot();
+        end
+
+        function setLineErrorStyle(obj, style)
+            obj.lineErrorStyle = string(style);
+            obj.redrawLastPlot();
+        end
+
+        function settings = getPlotSettings(obj)
+            % Expose plot rendering settings as a plain struct so UI code can
+            % build controls without reaching into PlotManager internals.
+            settings = struct();
+            settings.useJitter = obj.useJitter;
+            settings.lineErrorMetric = obj.lineErrorMetric;
+            settings.lineErrorStyle = obj.lineErrorStyle;
+            settings.lineColor = obj.lineColor;
+            settings.lineErrorColor = obj.lineErrorColor;
+        end
+
+        function setPlotSetting(obj, name, value)
+            % Central dispatch keeps the dialog generic: it only needs setting
+            % names, while PlotManager remains responsible for side effects such
+            % as redrawing cached data or updating DataFormatter state.
+            switch lower(string(name))
+                case "usejitter"
+                    obj.setUseJitter(value);
+                case "lineerrormetric"
+                    obj.setLineErrorMetric(value);
+                case "lineerrorstyle"
+                    obj.setLineErrorStyle(value);
+                case "linecolor"
+                    obj.setLineColor(value);
+                case "lineerrorcolor"
+                    obj.setLineErrorColor(value);
+                otherwise
+                    error('PlotManager:UnknownPlotSetting', 'Unknown plot setting: %s', string(name));
+            end
+        end
+
+        function dialog = openPlotSettingsDialog(obj, parentFigure)
+            % App Designer code can call this one method from a toolbar/button
+            % callback. PlotManager owns the settings, while PlotSettingsDialog
+            % owns the UI that edits them.
+            if nargin < 2
+                parentFigure = [];
+            end
+
+            dialog = PlotSettingsDialog.show(parentFigure, obj);
         end
 
         function changePlotType(obj, plotType)
@@ -94,6 +181,7 @@ classdef PlotManager < handle
 
         function replaceFormatter(obj)
             obj.cleanPlot();
+            obj.lastPlotData = [];
             if ~isempty(obj.formatter)
                 % disp('Deleting old formatter...');
                 delete(obj.formatter);  % this does not work if DataFormatter is not a handle class
@@ -110,8 +198,10 @@ classdef PlotManager < handle
         end
 
         function cleanPlot(obj)
-            % Clear the plot
-            cla(obj.axesHandle);
+            % Clear every child, including objects with HandleVisibility='off'.
+            % This matters for shaded error regions: they are not legend entries,
+            % but they still must be removed on every redraw when settings change.
+            delete(allchild(obj.axesHandle));
             xlabel(obj.axesHandle, '');
             ylabel(obj.axesHandle, '');
 
@@ -124,6 +214,45 @@ classdef PlotManager < handle
         end
 
         function plotData(obj, data)
+            obj.lastPlotData = data;
+            obj.renderData(data);
+        end
+    end
+
+    methods (Access = private)
+        function setUseJitter(obj, useJitter)
+            obj.useJitter = logical(useJitter);
+
+            if isempty(obj.formatter)
+                return
+            end
+
+            if obj.useJitter
+                obj.formatter.turnJitterOn();
+            else
+                obj.formatter.turnJitterOff();
+            end
+        end
+
+        function setLineColor(obj, color)
+            obj.lineColor = obj.normalizeColor(color);
+            obj.redrawLastPlot();
+        end
+
+        function setLineErrorColor(obj, color)
+            obj.lineErrorColor = obj.normalizeColor(color);
+            obj.redrawLastPlot();
+        end
+
+        function redrawLastPlot(obj)
+            if isempty(obj.lastPlotData)
+                return
+            end
+
+            obj.renderData(obj.lastPlotData);
+        end
+
+        function renderData(obj, data)
 
             plotter = obj.getPlotter();
             % cla(obj.axesHandle);
@@ -133,9 +262,7 @@ classdef PlotManager < handle
 
             plotter.plot(data, obj.axesHandle);
         end
-    end
 
-    methods (Access = private)
         function plotter = getPlotter(obj)
             switch obj.plotType
                 case 'histogram'
@@ -151,7 +278,12 @@ classdef PlotManager < handle
                 case 'line: individual'
                     plotter = plot.LineIndividualPlot();
                 case 'line: averaged'
-                    plotter = plot.LineAveragedPlot();
+                    options = struct( ...
+                        'errorMetric', obj.lineErrorMetric, ...
+                        'errorStyle', obj.lineErrorStyle, ...
+                        'lineColor', obj.lineColor, ...
+                        'errorColor', obj.lineErrorColor);
+                    plotter = plot.LineAveragedPlot(options);
                 case 'radial density histogram'
                     plotter = plot.RadialDensityHistogramPlot();
                 case 'ratio bar plot'
@@ -178,6 +310,18 @@ classdef PlotManager < handle
             set(groot, 'defaultTextInterpreter', 'none')
             set(groot, 'defaultLegendInterpreter', 'none')
             set(groot, 'defaultColorbarTickLabelInterpreter', 'none')
+        end
+
+        function color = normalizeColor(~, color)
+            % Color pickers return numeric RGB triplets, but keeping this guard
+            % here protects PlotManager if a future UI sends string/cell values.
+            color = double(color);
+            if ~isnumeric(color) || numel(color) ~= 3
+                error('PlotManager:InvalidColor', 'Plot colors must be RGB triplets.');
+            end
+
+            color = reshape(color, 1, 3);
+            color = min(max(color, 0), 1);
         end
     end
 end

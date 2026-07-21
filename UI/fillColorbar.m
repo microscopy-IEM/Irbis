@@ -48,8 +48,13 @@ function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColu
         nColors = nColors + 1;
 
         % Generate the colormap
-        cmapFcn = str2func(colormapName); % Convert colormap name to function handle
-        cmap = cmapFcn(nColors - 1); % Generate colors for valid values
+        if isequal(colormapName,'monochrome')
+            pickedColor = repmat(pickedColor,nColors-1,1);            
+            cmap = gray(nColors-1).*pickedColor;
+        else
+            cmapFcn = str2func(colormapName); % Convert colormap name to function handle
+            cmap = cmapFcn(nColors - 1); % Generate colors for valid values
+        end
 
         % Assign a default color for NaN or uncategorized values
         if strcmp(colormapName, 'gray')
@@ -68,12 +73,14 @@ function fillColorbar(colorbarAxesHandle, columnData, colormapName, selectedColu
         % disp('does not have nan')
 
         % Generate the colormap
-        cmapFcn = str2func(colormapName); % Convert colormap name to function handle
-        cmap = cmapFcn(nColors); % Generate colors for valid values
 
-        if isequal(colormapName,'gray')
+
+        if isequal(colormapName,'monochrome')
             pickedColor = repmat(pickedColor,nColors,1);            
-            cmap = cmap.*pickedColor;         
+            cmap = gray(nColors).*pickedColor;
+        else   
+            cmapFcn = str2func(colormapName); % Convert colormap name to function handle
+            cmap = cmapFcn(nColors); % Generate colors for valid values      
         end
 
         % Create coordinates for the colorbar

@@ -40,6 +40,10 @@ classdef (Sealed) MultitableSynchronizer < handle
             % Register listeners that keep selection, row parameters and summarized filtering synchronized.
             obj.deleteExistingListeners();
 
+            if ~obj.isValidProcessor(obj.topTableProcessorHandle) || ~obj.isValidProcessor(obj.bottomTableProcessorHandle)
+                return
+            end
+
             sourceTableId = 1;
             obj.topSyncRequestListener = addlistener(obj.topTableProcessorHandle, 'tableSelectionSyncRequired', @(~, ~) obj.changeSelectionInOtherTable(sourceTableId));
             obj.topRowParameterListener = addlistener(obj.topTableProcessorHandle, 'rowParameterChanged', @(~, ~) obj.changeRowParameterInOtherTable(sourceTableId));
@@ -56,6 +60,19 @@ classdef (Sealed) MultitableSynchronizer < handle
             % Clear row synchronization and delete listeners owned by this synchronizer.
             obj.clearSynchronizedFiltering();
             obj.deleteExistingListeners();
+        end
+
+
+
+        function refreshSynchronizedFiltering(obj)
+            % Reapply summarized-to-pivoted row filtering for the current table
+            % state. Stored-view restore builds the summarized table before its
+            % saved processor state is applied, so the constructor's initial sync
+            % can run against an empty/default summarized display. Calling this
+            % after restore makes the pivoted row-sync filter reflect the final
+            % summarized table.
+            sourceTableId = 2;
+            obj.applyFiltersToOtherTable(sourceTableId);
         end
 
 
@@ -90,11 +107,21 @@ classdef (Sealed) MultitableSynchronizer < handle
         %% Row selection synchronization
 
         function changeSelectionInOtherTable(obj, sourceTableId)
-            % Copy selected row indices from the source processor to the target processor.
+            % Synchronize selected rows from the source processor to the target
+            % processor. Prefer row names over raw row indices because Pivoted and
+            % Summarized displays can have different row counts/order while still
+            % representing the same category labels. If row names are unavailable,
+            % fall back to bounded row-index syncing; each processor clips indices
+            % again before updating the UI.
             [sourceProcessor, targetProcessor] = obj.getProcessorsForSourceTable(sourceTableId);
+
+            if ~obj.areProcessorsUsable(sourceProcessor, targetProcessor)
+                return
+            end
 
             selectedList = sourceProcessor.getSelectedTableCellsList();
             selectedRowsList = selectedList(:, 1);
+            selectedRowsList = obj.mapRowsByDisplayRowNames(sourceProcessor, targetProcessor, selectedRowsList);
             targetProcessor.programmaticallySetRowSelection(selectedRowsList);
         end
 
@@ -105,6 +132,10 @@ classdef (Sealed) MultitableSynchronizer < handle
         function changeRowParameterInOtherTable(obj, sourceTableId)
             % Keep the summarized row parameter aligned with the pivoted row parameter.
             [sourceProcessor, targetProcessor] = obj.getProcessorsForSourceTable(sourceTableId);
+
+            if ~obj.areProcessorsUsable(sourceProcessor, targetProcessor)
+                return
+            end
 
             [parameterName, parameterType] = sourceProcessor.getRowParameterNameAndType();
 
@@ -125,20 +156,18 @@ classdef (Sealed) MultitableSynchronizer < handle
             % Apply the currently displayed summarized row names as a persistent row filter on the pivoted table.
             [sourceProcessor, targetProcessor] = obj.getProcessorsForSourceTable(sourceTableId);
 
+            if ~obj.areProcessorsUsable(sourceProcessor, targetProcessor)
+                return
+            end
+
             if ~ismethod(sourceProcessor, 'getKeptRowNames') || ~ismethod(targetProcessor, 'setRowSynchronizedFilteringStorage')
                 return
             end
 
-            if ismethod(sourceProcessor, 'getTableForDisplay')
-                sourceTableForDisplay = sourceProcessor.getTableForDisplay();
-                if height(sourceTableForDisplay) == 0 && width(sourceTableForDisplay) == 0
-                    if ismethod(targetProcessor, 'clearRowSynchronizedFilteringStorage')
-                        targetProcessor.clearRowSynchronizedFilteringStorage();
-                    end
-                    return
-                end
-            end
-
+            % Do not use an empty visible summarized table as a reason to clear
+            % row sync. During initial open and stored-view restore, the bottom
+            % processor may not have active display columns yet, but it can still
+            % report the row names kept by its summarized filters.
             keptRowNames = sourceProcessor.getKeptRowNames();
             targetProcessor.setRowSynchronizedFilteringStorage(obj.rowParameter, keptRowNames);
         end
@@ -177,7 +206,63 @@ classdef (Sealed) MultitableSynchronizer < handle
 
         function tf = isValidProcessor(~, processorHandle)
             % Return true when a processor handle can still be used.
-            tf = isa(processorHandle, 'handle') && isvalid(processorHandle);
+            try
+                tf = isa(processorHandle, 'handle') && isvalid(processorHandle);
+            catch
+                tf = false;
+            end
+        end
+
+
+
+        function tf = areProcessorsUsable(obj, sourceProcessor, targetProcessor)
+            % Listener callbacks may run after a stored view has replaced one of
+            % the processors. Treat that as a stale sync request and ignore it.
+            tf = obj.isValidProcessor(sourceProcessor) && obj.isValidProcessor(targetProcessor);
+        end
+
+
+
+        function targetRows = mapRowsByDisplayRowNames(~, sourceProcessor, targetProcessor, sourceRows)
+            % Convert source display row indices to target display row indices by
+            % matching row names. This keeps selection tied to the underlying group
+            % label instead of to an incidental table position, which is important
+            % after loading a new dataset or switching between groupId and
+            % fileId_groupId based summaries.
+            targetRows = sourceRows;
+
+            if isempty(sourceRows) || ...
+                    ~ismethod(sourceProcessor, 'getTableForDisplay') || ...
+                    ~ismethod(targetProcessor, 'getTableForDisplay')
+                return
+            end
+
+            sourceTable = sourceProcessor.getTableForDisplay();
+            targetTable = targetProcessor.getTableForDisplay();
+
+            if isempty(sourceTable) || isempty(targetTable) || ...
+                    isempty(sourceTable.Properties.RowNames) || ...
+                    isempty(targetTable.Properties.RowNames)
+                return
+            end
+
+            sourceRows = unique(sourceRows(:), 'stable');
+            isSourceRowValid = isfinite(sourceRows) & ...
+                mod(sourceRows, 1) == 0 & ...
+                sourceRows >= 1 & ...
+                sourceRows <= height(sourceTable);
+            sourceRows = sourceRows(isSourceRowValid);
+
+            if isempty(sourceRows)
+                targetRows = [];
+                return
+            end
+
+            sourceRowNames = string(sourceTable.Properties.RowNames(sourceRows));
+            targetRowNames = string(targetTable.Properties.RowNames);
+            [isMatched, matchedRows] = ismember(sourceRowNames, targetRowNames);
+
+            targetRows = matchedRows(isMatched);
         end
     end
 end

@@ -158,7 +158,11 @@ classdef SummarizedTableComponentHelper < handle
             if ~isempty(obj.rowParameter) && ismember(obj.rowParameter, categoricalParameters)
                 obj.componentHandle.setRowParameter(obj.rowParameter);
             else
-                obj.rowParameter = categoricalParameters{1};
+                % Use the same row-defaulting preference as Pivoted tables so
+                % both views summarize the same logical object identifier by
+                % default. fileId_groupId is preferred for multi-file data; groupId
+                % keeps older single-file datasets behaving as before.
+                obj.rowParameter = selectPreferredColumnName(categoricalParameters, {'fileId_groupId', 'groupId'});
                 obj.componentHandle.setRowParameter(obj.rowParameter);
             end
 

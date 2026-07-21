@@ -245,6 +245,14 @@ classdef SummarizedTableStore < handle
         end
 
 
+        function rowNames = getRowNames(obj)
+            % Return summarized row names without requiring any visible columns.
+            % Row synchronization needs the available groups even when the
+            % summarized table has not selected active display columns yet.
+            rowNames = string(obj.rowNames(:));
+        end
+
+
         
         function columnNames = getStatisticalColumnNamesForParent(obj, parentName)
             % Get the names of all statistical columns for a specific parent column

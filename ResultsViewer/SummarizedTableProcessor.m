@@ -205,6 +205,12 @@ classdef (Sealed) SummarizedTableProcessor < handle
 
             if obj.rowSelectionMode == "allVisible"
                 obj.selectedTableCellsList = obj.getAllVisibleRowSelection();
+            else
+                % A summarized table can change size when a new dataset, row
+                % parameter, or synchronized filter is applied. Specific selections
+                % from the previous display must be clipped before the component
+                % attempts to assign them to UITable.Selection.
+                [obj.selectedTableCellsList, ~] = obj.validateSelection(obj.selectedTableCellsList);
             end
         end
 
@@ -229,13 +235,43 @@ classdef (Sealed) SummarizedTableProcessor < handle
 
 
         function rowNames = getKeptRowNames(obj)
-            % Get the row names of the filtered table
-            if isempty(obj.filteredTable)
-                rowNames = strings(0, 1);
+            % Return row names that pass summarized filters, independent of the
+            % currently visible columns. When a summarized table is first opened or
+            % restored from a view, activeColumns may still be empty, but row-sync
+            % filtering of the pivoted table must already honor any preexisting
+            % summarized filters.
+            rowNames = strings(0, 1);
+
+            if isempty(obj.summarizedTableStoreHandle)
                 return
             end
 
-            rowNames = string(obj.filteredTable.Properties.RowNames(:));
+            if isempty(obj.summarizedFilteringStorageHandle)
+                if ismethod(obj.summarizedTableStoreHandle, 'getRowNames')
+                    rowNames = obj.summarizedTableStoreHandle.getRowNames();
+                elseif ~isempty(obj.filteredTable)
+                    rowNames = string(obj.filteredTable.Properties.RowNames(:));
+                end
+                return
+            end
+
+            filterColumnNames = obj.summarizedFilteringStorageHandle.returnGroupingNames();
+            if isempty(filterColumnNames)
+                if ismethod(obj.summarizedTableStoreHandle, 'getRowNames')
+                    rowNames = obj.summarizedTableStoreHandle.getRowNames();
+                elseif ~isempty(obj.filteredTable)
+                    rowNames = string(obj.filteredTable.Properties.RowNames(:));
+                end
+                return
+            end
+
+            filterTable = obj.summarizedTableStoreHandle.getTableSubsetByName(filterColumnNames);
+            isKept = obj.summarizedFilteringStorageHandle.filter(filterTable);
+            if isempty(isKept)
+                rowNames = string(filterTable.Properties.RowNames(:));
+            else
+                rowNames = string(filterTable.Properties.RowNames(isKept));
+            end
         end
 
 
@@ -329,9 +365,15 @@ classdef (Sealed) SummarizedTableProcessor < handle
 
 
         function programmaticallySetRowSelection(obj, selectedRowsList)
-            % convert row selection to selectedTableCellsList
+            % Convert row indices to selectedTableCellsList after clipping them
+            % against the current display. In two-table mode the source table may
+            % have more rows than this summarized table, especially during dataset
+            % replacement, so raw row indices are not always safe to render.
+            displayedTable = obj.getTableForDisplay();
+            selectedRowsList = obj.keepValidDisplayedRows(selectedRowsList, displayedTable);
+
             numRows = numel(selectedRowsList);
-            numCols = width(obj.filteredTable);
+            numCols = width(displayedTable);
             processedSelectionList = NaN(numRows * numCols, 2); % Preallocate the array
             index = 1;
 
@@ -450,6 +492,45 @@ classdef (Sealed) SummarizedTableProcessor < handle
 
 
 
+        function [validSelection, isAllValid] = validateSelection(obj, selection)
+            % Keep only cells that fit inside the current summarized display.
+            % Summarized tables are rebuilt from grouping/filter state, so a saved
+            % or synchronized selection can become stale whenever those inputs
+            % change. Returning a clipped selection prevents UI boundary errors.
+            validSelection = [];
+            isAllValid = true;
+
+            if isempty(selection)
+                return
+            end
+
+            if ~isnumeric(selection) || size(selection, 2) ~= 2
+                isAllValid = false;
+                return
+            end
+
+            displayedTable = obj.getTableForDisplay();
+            if isempty(displayedTable)
+                isAllValid = false;
+                return
+            end
+
+            numRows = height(displayedTable);
+            numCols = width(displayedTable);
+
+            rows = selection(:, 1);
+            cols = selection(:, 2);
+
+            isFiniteInteger = isfinite(rows) & isfinite(cols) & (mod(rows, 1) == 0) & (mod(cols, 1) == 0);
+            isInBounds = rows >= 1 & rows <= numRows & cols >= 1 & cols <= numCols;
+            isValid = isFiniteInteger & isInBounds;
+
+            validSelection = selection(isValid, :);
+            isAllValid = all(isValid);
+        end
+
+
+
         function selectedCells = getAllVisibleRowSelection(obj)
             % Select every cell in the displayed table because the user selected all visible rows before filtering changed.
             displayedTable = obj.getTableForDisplay();
@@ -461,6 +542,26 @@ classdef (Sealed) SummarizedTableProcessor < handle
 
             [rowGrid, colGrid] = ndgrid(1:height(displayedTable), 1:width(displayedTable));
             selectedCells = [rowGrid(:), colGrid(:)];
+        end
+
+
+
+        function validRows = keepValidDisplayedRows(~, selectedRowsList, displayedTable)
+            % Return only finite integer row indices that exist in displayedTable.
+            % This is the last processor-level guard before UITable.Selection is
+            % updated, so it protects the app from stale two-table sync events.
+            validRows = [];
+
+            if isempty(selectedRowsList) || isempty(displayedTable) || width(displayedTable) == 0
+                return
+            end
+
+            selectedRowsList = selectedRowsList(:);
+            isValid = isfinite(selectedRowsList) & ...
+                mod(selectedRowsList, 1) == 0 & ...
+                selectedRowsList >= 1 & ...
+                selectedRowsList <= height(displayedTable);
+            validRows = selectedRowsList(isValid);
         end
     end
 end

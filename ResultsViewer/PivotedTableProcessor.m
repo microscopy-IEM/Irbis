@@ -47,6 +47,10 @@ classdef (Sealed) PivotedTableProcessor < handle
                 delete(obj.tableStoreListener);
             end
 
+            if ~isempty(obj.tableStoreTransformationListener) && isvalid(obj.tableStoreTransformationListener)
+                delete(obj.tableStoreTransformationListener);
+            end
+
             if ~isempty(obj.filterListener) && isvalid(obj.filterListener)
                 delete(obj.filterListener);
             end
@@ -128,6 +132,12 @@ classdef (Sealed) PivotedTableProcessor < handle
 
             if obj.rowSelectionMode == "allVisible"
                 obj.selectedTableCellsList = obj.getAllVisibleRowSelection();
+            else
+                % Loading a different dataset or applying synchronized filters can shrink
+                % the pivoted table while a previous specific selection is still stored.
+                % Keep only cells that are valid for the current display so the UI table
+                % never receives stale row/column indices.
+                [obj.selectedTableCellsList, ~] = obj.validateSelection(obj.selectedTableCellsList);
             end
         end
 
@@ -146,6 +156,10 @@ classdef (Sealed) PivotedTableProcessor < handle
 
             if obj.rowSelectionMode == "allVisible"
                 obj.selectedTableCellsList = obj.getAllVisibleRowSelection();
+            else
+                % Filtering can remove rows from the displayed table. Specific
+                % selections must be clipped before listeners forward them to the UI.
+                [obj.selectedTableCellsList, ~] = obj.validateSelection(obj.selectedTableCellsList);
             end
 
             notify(obj, 'tableForDisplayChanged');
@@ -155,7 +169,16 @@ classdef (Sealed) PivotedTableProcessor < handle
 
         function setRowSynchronizedFilteringStorage(obj, rowParameter, keptRowNames)
             % Activate persistent row synchronization filtering for future pivot table recalculations.
+            if ~obj.hasUsableFilteringStorage()
+                return
+            end
+
             obj.ensureRowSynchronizedFilteringStorage();
+
+            if ~obj.hasUsableFilteringStorage()
+                return
+            end
+
             obj.filteringStorageHandle.setRowSync(rowParameter, keptRowNames);
         end
 
@@ -163,6 +186,10 @@ classdef (Sealed) PivotedTableProcessor < handle
 
         function clearRowSynchronizedFilteringStorage(obj)
             % Restore the original filtering storage when row synchronization is no longer needed.
+            if ~obj.hasUsableFilteringStorage()
+                return
+            end
+
             if ~isa(obj.filteringStorageHandle, 'RowSynchronizedFilteringStorage')
                 return
             end
@@ -171,7 +198,14 @@ classdef (Sealed) PivotedTableProcessor < handle
             obj.filteringStorageHandle = synchronizedFilteringStorage.getBaseFilteringStorage();
             delete(synchronizedFilteringStorage);
             obj.rebuildFilterListener();
-            obj.processData();
+
+            % During stored-view teardown or app shutdown, row-sync cleanup can be
+            % called after the table store has already been deleted. In that case
+            % the important work is listener/storage cleanup; there is no live UI
+            % left that needs a recalculated pivoted table.
+            if obj.hasUsableTableStore()
+                obj.processData();
+            end
         end
 
 
@@ -276,9 +310,15 @@ classdef (Sealed) PivotedTableProcessor < handle
 
 
         function programmaticallySetRowSelection(obj, selectedRowsList)
-            % convert row selection to selectedTableCellsList
+            % Convert row indices to selectedTableCellsList after clipping them
+            % against the current display. Selection sync can receive indices from
+            % a different table shape during dataset changes, and MATLAB rejects
+            % out-of-bounds UITable.Selection values.
+            displayedTable = obj.getTableForDisplay();
+            selectedRowsList = obj.keepValidDisplayedRows(selectedRowsList, displayedTable);
+
             numRows = numel(selectedRowsList);
-            numCols = width(obj.pivotedTable);
+            numCols = width(displayedTable);
             processedSelectionList = NaN(numRows * numCols, 2); % Preallocate the array
             index = 1;
 
@@ -555,6 +595,27 @@ classdef (Sealed) PivotedTableProcessor < handle
 
 
 
+        function validRows = keepValidDisplayedRows(~, selectedRowsList, displayedTable)
+            % Return only finite integer row indices that exist in displayedTable.
+            % This helper is deliberately close to the UI-facing selection code:
+            % the processor is the last reliable place to prevent stale synchronized
+            % rows from reaching UITable.Selection.
+            validRows = [];
+
+            if isempty(selectedRowsList) || isempty(displayedTable) || width(displayedTable) == 0
+                return
+            end
+
+            selectedRowsList = selectedRowsList(:);
+            isValid = isfinite(selectedRowsList) & ...
+                mod(selectedRowsList, 1) == 0 & ...
+                selectedRowsList >= 1 & ...
+                selectedRowsList <= height(displayedTable);
+            validRows = selectedRowsList(isValid);
+        end
+
+
+
         function programmaticallySetRowParameter(obj, rowParameter)
             % Set the row parameter programmatically
             obj.rowParameter = rowParameter;
@@ -568,6 +629,10 @@ classdef (Sealed) PivotedTableProcessor < handle
 
         function ensureRowSynchronizedFilteringStorage(obj)
             % Wrap the current filtering storage when row synchronization needs to be applied.
+            if ~obj.hasUsableFilteringStorage()
+                return
+            end
+
             if isa(obj.filteringStorageHandle, 'RowSynchronizedFilteringStorage')
                 return
             end
@@ -585,6 +650,35 @@ classdef (Sealed) PivotedTableProcessor < handle
             end
 
             obj.filterListener = addlistener(obj.filteringStorageHandle, 'filtersChanged', @(~, ~) processData(obj));
+        end
+
+
+
+        function tf = hasUsableFilteringStorage(obj)
+            % Stored-view restore can leave an old processor with a property that
+            % still points to a deleted filtering-storage handle. Accessing class
+            % information or methods on that handle raises "Invalid or deleted
+            % object", so row synchronization must check liveness first.
+            try
+                tf = ~isempty(obj.filteringStorageHandle) && ...
+                    (~isa(obj.filteringStorageHandle, 'handle') || isvalid(obj.filteringStorageHandle));
+            catch
+                tf = false;
+            end
+        end
+
+
+
+        function tf = hasUsableTableStore(obj)
+            % Return true only when the table store can still be queried. Listener
+            % cleanup can happen late in UI/app teardown, where handle properties
+            % may still exist but point to deleted objects.
+            try
+                tf = ~isempty(obj.tableStoreHandle) && ...
+                    (~isa(obj.tableStoreHandle, 'handle') || isvalid(obj.tableStoreHandle));
+            catch
+                tf = false;
+            end
         end
     end
 end
