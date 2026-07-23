@@ -8,6 +8,15 @@ classdef TwoVariablesPlot < plot.PlotInterface
             yData = data.yData;
 
             axesHandle.TickLabelInterpreter = 'none';
+
+            if ~obj.canPlotDataPair(xData, yData)
+                % The formatter can temporarily provide enough parameters that do
+                % not form a valid two-variable pair, for example one summarized
+                % scalar column together with paged pivoted values. In that case
+                % the correct UI behavior is an empty plot, not a MATLAB scatter
+                % dimension error.
+                return
+            end
             
             
             if isnumeric(xData) && isnumeric(yData)
@@ -47,7 +56,32 @@ classdef TwoVariablesPlot < plot.PlotInterface
 
 
     methods (Access = private)
-        function plotScatter(~, data, axesHandle)
+        function tf = canPlotDataPair(~, xData, yData)
+            % TwoVariablesPlot is intended for paired x/y observations. Keep the
+            % guard close to the plotter because it is the final boundary before
+            % MATLAB graphics functions enforce shape rules with hard errors.
+            isSupportedType = (isnumeric(xData) || iscategorical(xData)) && ...
+                (isnumeric(yData) || iscategorical(yData));
+            if ~isSupportedType
+                tf = false;
+                return
+            end
+
+            if ndims(xData) > 2 || ndims(yData) > 2
+                tf = false;
+                return
+            end
+
+            xSize = size(squeeze(xData));
+            ySize = size(squeeze(yData));
+
+            tf = isequal(xSize, ySize) || ...
+                (isvector(squeeze(xData)) && isvector(squeeze(yData)) && numel(xData) == numel(yData));
+        end
+
+
+
+        function plotScatter(obj, data, axesHandle)
 
             xData = data.xData;
             yData = data.yData;
@@ -55,15 +89,31 @@ classdef TwoVariablesPlot < plot.PlotInterface
             useJitter = data.useJitter;     % added as a property of the data struct, which is set by the formatter based on the state of the plot manager - read from the checkbox in ResultsViewer GUI
 
             if isempty(groupData)
-                if useJitter
+                [colorData, hasNumericColor] = obj.getNumericPointColorData(data, xData, yData);
+
+                if hasNumericColor
+                    % Numeric colorcoding is an optional third variable for scatter plots.
+                    % We only use it when it maps cleanly to the plotted points.
+                    % Otherwise the plot should remain a plain scatter rather than failing inside MATLAB graphics.
+                    if useJitter
+                        plotHandle = scatter(axesHandle, xData, yData, 36, colorData, 'filled', 'XJitter', 'rand');
+                    else
+                        plotHandle = scatter(axesHandle, xData, yData, 36, colorData, 'filled');
+                    end
+
+                    obj.addRowNameDatatips(plotHandle, data, xData, yData);
+                    plot.ColorbarHelper.addInsideNorthColorbar(axesHandle, data.colorLabel);
+                elseif useJitter
                     % jitter implemented in undocumented way: 
                     % https://undocumentedmatlab.com/articles/undocumented-scatter-plot-jitter
-                    scatter(axesHandle, xData, yData,'XJitter','rand');
+                    plotHandle = scatter(axesHandle, xData, yData,'XJitter','rand');
+                    obj.addRowNameDatatips(plotHandle, data, xData, yData);
 
                     xlabel(axesHandle, data.xLabel,'Interpreter','none');
                     ylabel(axesHandle, data.yLabel,'Interpreter','none');
                 else
-                    scatter(axesHandle, xData, yData);
+                    plotHandle = scatter(axesHandle, xData, yData);
+                    obj.addRowNameDatatips(plotHandle, data, xData, yData);
                 end
 
                 % figure
@@ -95,6 +145,7 @@ classdef TwoVariablesPlot < plot.PlotInterface
                         'Color', categoryColormap(i, :));
                     end
 
+                    obj.addRowNameDatatips(plotHandle, data, xData, yData, mask);
                     legendHandles(i) = plotHandle(1); 
                     legendNames{i} = char(categoryList(i));
                 end
@@ -118,8 +169,6 @@ classdef TwoVariablesPlot < plot.PlotInterface
             yData = data.yData;
             groupData = data.groupData;
 
-            assignin("base",'data',data)
-          
             % Decide, which of the columns is categorical
             if iscategorical(xData)
                 categoricalData = xData;
@@ -224,8 +273,6 @@ classdef TwoVariablesPlot < plot.PlotInterface
                     islogical(categoricalData)
                     
                     if concatenateCategories
-
-                        disp('two categorical columns concatenated')
 
                         axesHandle.NextPlot = 'replace';
                         xDataDuplicated = cat(1,numericalData,numericalData);
@@ -392,6 +439,94 @@ classdef TwoVariablesPlot < plot.PlotInterface
             ylim(axesHandle, [0.5, length(xCats)+1]);
             grid(axesHandle, 'on');
     
+        end
+
+
+
+        function [colorData, hasNumericColor] = getNumericPointColorData(~, data, xData, yData)
+            colorData = [];
+            hasNumericColor = false;
+
+            if ~isfield(data, 'colorData') || isempty(data.colorData)
+                return
+            end
+
+            if ~isfield(data, 'colorType') || string(data.colorType) ~= "numeric"
+                return
+            end
+
+            if ~isfield(data, 'colorScope') || string(data.colorScope) ~= "point"
+                return
+            end
+
+            squeezedXData = squeeze(xData);
+            squeezedYData = squeeze(yData);
+            squeezedColorData = squeeze(data.colorData);
+
+            if ~(isvector(squeezedXData) && isvector(squeezedYData) && isvector(squeezedColorData))
+                return
+            end
+
+            if numel(squeezedXData) ~= numel(squeezedYData) || numel(squeezedXData) ~= numel(squeezedColorData)
+                return
+            end
+
+            colorData = double(squeezedColorData(:));
+            hasNumericColor = true;
+        end
+
+
+
+        function addRowNameDatatips(obj, plotHandle, data, xData, yData, mask)
+            % Row-name datatips are intentionally attached to the scatter object, not to individual points.
+            % This keeps the feature cheap for large selections while still letting MATLAB resolve the row text only when the user asks for a datatip.
+            if nargin < 6
+                mask = [];
+            end
+
+            rowNames = obj.getScatterRowNames(data, xData, yData, mask);
+            if isempty(rowNames) || isempty(plotHandle) || ~isvalid(plotHandle)
+                return
+            end
+
+            try
+                plotHandle.DataTipTemplate.DataTipRows(end + 1) = dataTipTextRow('Row', rowNames);
+                plotHandle.DataTipTemplate.Interpreter = 'none';
+            catch
+                % Datatip customization is a convenience feature.
+                % If a MATLAB graphics object does not support it, plotting should still succeed normally.
+            end
+        end
+
+
+
+        function rowNames = getScatterRowNames(~, data, xData, yData, mask)
+            rowNames = strings(0, 1);
+
+            if ~isfield(data, 'rowNames') || isempty(data.rowNames)
+                return
+            end
+
+            squeezedXData = squeeze(xData);
+            squeezedYData = squeeze(yData);
+            if ~(isvector(squeezedXData) && isvector(squeezedYData) && numel(squeezedXData) == numel(squeezedYData))
+                return
+            end
+
+            candidateRowNames = string(data.rowNames(:));
+            if numel(candidateRowNames) ~= numel(squeezedXData)
+                return
+            end
+
+            if ~isempty(mask)
+                mask = mask(:);
+                if numel(mask) ~= numel(candidateRowNames)
+                    return
+                end
+                candidateRowNames = candidateRowNames(mask);
+            end
+
+            rowNames = candidateRowNames(:);
         end
     end
 end

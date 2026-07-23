@@ -55,7 +55,7 @@ If treatment information is already stored in the file **group** field in the **
 7. If you have more conditions, press **Add category** and define the extra categories.
 8. Press **Save categorization**.
 
-    ??? note "Define ResultsViewer categorization"
+    ??? note "Create and manage user-defined columns"
 
         --8<-- "_generated/snippets/step-by-step/results-viewer/categorize-data.md"
 

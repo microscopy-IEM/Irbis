@@ -162,10 +162,10 @@ classdef LineAveragedPlot < plot.PlotInterface
 
             xlim(axesHandle, [minX - padding, maxX + padding]);
 
-            % currentTicks = axesHandle.XTick;
-            % if numel(currentTicks) > numel(uniqueX)
-            %     axesHandle.XTick = sort(uniqueX);
-            % end
+            currentTicks = axesHandle.XTick;
+            if numel(currentTicks) > numel(uniqueX)
+                axesHandle.XTick = sort(uniqueX);
+            end
         end
     end
 

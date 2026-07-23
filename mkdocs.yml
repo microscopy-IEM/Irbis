@@ -57,10 +57,9 @@ nav:
       - ResultsViewer:
           - Overview: step-by-step/results-viewer/index.md
           - Use table views and plots: step-by-step/results-viewer/modes-plots.md
-          - Filter available data: step-by-step/results-viewer/filter-data.md
-          - Filter by temporal development: step-by-step/results-viewer/filter-temporal-development.md
-          - Define categorization: step-by-step/results-viewer/categorize-data.md
-          - Edit columns in Full view: step-by-step/results-viewer/edit-columns-full.md
+          - Filter ResultsViewer data: step-by-step/results-viewer/filter-data.md
+          - Create and manage user-defined columns: step-by-step/results-viewer/categorize-data.md
+          - Open, save, and export data: step-by-step/results-viewer/open-save-export.md
           - Store a view: step-by-step/results-viewer/store-view.md
           - Use batch mode: step-by-step/results-viewer/batch-mode.md
       - Viewport:

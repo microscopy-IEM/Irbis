@@ -161,6 +161,11 @@ classdef PlotManager < handle
         function changePlotType(obj, plotType)
             obj.plotType = plotType;
             obj.findRequiredParametersNum();
+            if isempty(obj.formatter)
+                return
+            end
+
+            obj.formatter.setPlotType(obj.plotType);
             obj.formatter.setRequiredParametersNum(obj.requiredParametersNum);
         end
 
@@ -190,7 +195,7 @@ classdef PlotManager < handle
 
             if ~isempty(obj.tableProcessorHandles)
                 % assignin("base", 'processor', obj.tableProcessorHandles)
-                obj.formatter = DataFormatter(obj, obj.tableProcessorHandles, obj.useGrouping, obj.useIndividual, obj.useJitter, obj.requiredParametersNum, obj.tableTypes);
+                obj.formatter = DataFormatter(obj, obj.tableProcessorHandles, obj.useGrouping, obj.useIndividual, obj.useJitter, obj.requiredParametersNum, obj.tableTypes, obj.plotType);
                 obj.formatter.processData([]);
             else
                 % disp('empty')
@@ -202,6 +207,7 @@ classdef PlotManager < handle
             % This matters for shaded error regions: they are not legend entries,
             % but they still must be removed on every redraw when settings change.
             delete(allchild(obj.axesHandle));
+            obj.deleteAxesColorbars();
             xlabel(obj.axesHandle, '');
             ylabel(obj.axesHandle, '');
 
@@ -322,6 +328,26 @@ classdef PlotManager < handle
 
             color = reshape(color, 1, 3);
             color = min(max(color, 0), 1);
+        end
+
+        function deleteAxesColorbars(obj)
+            % Colorbars are separate axes-level objects, so deleting plot children is not enough to remove them.
+            % Restrict deletion to colorbars linked to this axes to avoid surprising other figures.
+            parentFigure = ancestor(obj.axesHandle, 'figure');
+            if isempty(parentFigure)
+                return
+            end
+
+            colorbars = findall(parentFigure, 'Type', 'ColorBar');
+            if isempty(colorbars)
+                colorbars = findall(parentFigure, 'Type', 'colorbar');
+            end
+            for colorbarIdx = 1:numel(colorbars)
+                colorbarHandle = colorbars(colorbarIdx);
+                if isprop(colorbarHandle, 'Axes') && isequal(colorbarHandle.Axes, obj.axesHandle)
+                    delete(colorbarHandle);
+                end
+            end
         end
     end
 end

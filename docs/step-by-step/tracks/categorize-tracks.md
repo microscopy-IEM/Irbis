@@ -40,5 +40,5 @@ Complex categorizations can combine multiple numerical and categorical parameter
 
 ## Related
 
-- ResultsViewer has a separate [Define ResultsViewer categorization](../results-viewer/categorize-data.md) workflow.
+- ResultsViewer has a separate [Create and manage user-defined columns](../results-viewer/categorize-data.md) workflow.
 

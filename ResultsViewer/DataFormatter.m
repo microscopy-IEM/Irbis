@@ -5,9 +5,11 @@ classdef DataFormatter < handle
     %   - xData: the x data for the plot    array, size: n x 1 x l (n - number of rows, l - width of the table/cell size)
     %   - yData: the y data for the plot    array, size: n x 1 x l (n - number of rows, l - width of the table/cell size)
     %   - groupData: the group data for the plot (if applicable)    array, size: n x 1 (n - number of rows)
+    %   - colorData: the colorcoding data for the plot (if applicable)    array, size depends on colorScope
     %   - xLabel: the x label for the plot    string
     %   - yLabel: the y label for the plot    string
     %   - groupLabel: the group label for the plot (if applicable)    string
+    %   - colorLabel: the colorcoding label for the plot (if applicable)    string
 
     properties (Access = private)
         plotManagerHandle
@@ -17,6 +19,7 @@ classdef DataFormatter < handle
         useJitter = false;
         requiredParametersNum
         tableTypes
+        plotType = ""
 
         listener
         plotSpecificListener
@@ -37,7 +40,10 @@ classdef DataFormatter < handle
     end
 
     methods
-        function obj = DataFormatter(plotManagerHandle, tableProcessorHandles, useGrouping, useIndividual, useJitter, requiredParametersNum, tableTypes)
+        function obj = DataFormatter(plotManagerHandle, tableProcessorHandles, useGrouping, useIndividual, useJitter, requiredParametersNum, tableTypes, plotType)
+            if nargin < 8
+                plotType = "";
+            end
 
             obj.plotManagerHandle = plotManagerHandle;
             obj.tableProcessorHandles = tableProcessorHandles;
@@ -46,6 +52,7 @@ classdef DataFormatter < handle
             obj.useJitter = useJitter;
             obj.requiredParametersNum = requiredParametersNum;
             obj.tableTypes = tableTypes;
+            obj.plotType = string(plotType);
 
             % Listened table events are debounced because synchronized tables can emit several valid events for one logical change.
             if iscell(obj.tableProcessorHandles)
@@ -94,6 +101,15 @@ classdef DataFormatter < handle
         function setRequiredParametersNum(obj, num)
             obj.requiredParametersNum = num;
             obj.processData([]);
+        end
+
+
+
+        function setPlotType(obj, plotType)
+            % Plot type affects optional role selection.
+            % For example, it decides whether a numeric extra column can become continuous color data.
+            % It is kept separate from requiredParametersNum because several plot types need the same number of required parameters but support different roles.
+            obj.plotType = string(plotType);
         end
 
 
@@ -328,6 +344,7 @@ classdef DataFormatter < handle
                 dataStruct.isCategorical = false;
                 dataStruct.sourceType = sourceType;
                 [dataStruct.cellArray, dataStruct.columnNames, dataStruct.columnNum] = obj.convertPivotedTable(subtable);
+                dataStruct.rowNames = obj.getTableRowNames(subtable);
 
                 % assignin("base", "dataStruct1", dataStruct);
             else
@@ -342,6 +359,7 @@ classdef DataFormatter < handle
                 dataStruct.sourceType = sourceType;
 
                 [dataStruct.cellArray, dataStruct.columnNames, dataStruct.columnNum] = obj.convertStandardTable(subtable);
+                dataStruct.rowNames = obj.getTableRowNames(subtable);
                 % assignin("base", "dataStruct2", dataStruct);
             end
         end
@@ -375,9 +393,9 @@ classdef DataFormatter < handle
             arrayCell = {permutedTableMatrix};
 
             if isfield(subtable.Properties.UserData, 'groupedDataParameter') && isfield(subtable.Properties.UserData, 'columnParameter')
-                columnNames = {subtable.Properties.UserData.columnParameter, subtable.Properties.UserData.groupedDataParameter};
+                columnNames = {{subtable.Properties.UserData.columnParameter, subtable.Properties.UserData.groupedDataParameter}};
             else
-                columnNames = {'rows'};
+                columnNames = {{'column', 'value'}};
             end
         end
 
@@ -388,7 +406,7 @@ classdef DataFormatter < handle
             columnNames = cell(1, width(subtable));
             columnNum = cell(1, width(subtable));
             for columnId = 1:width(subtable)
-                columnNames{columnId} = subtable.Properties.VariableNames{columnId};
+                baseName = subtable.Properties.VariableNames{columnId};
                 if iscell(subtable{:, columnId})
                     dataArray = obj.reorganizeCellArray(subtable{:, columnId});
                     arrayCell{columnId} = dataArray;
@@ -397,6 +415,7 @@ classdef DataFormatter < handle
                     arrayCell{columnId} = subtable{:, columnId};
                     columnNum{columnId} = size(subtable{:, columnId}, 2);
                 end
+                columnNames{columnId} = obj.makeBlockColumnLabels(baseName, columnNum{columnId});
             end
         end
 
@@ -421,6 +440,7 @@ classdef DataFormatter < handle
                 integratedData.columnNum = [secondaryData.columnNum, primaryData.columnNum];
                 integratedData.rowNum = primaryData.rowNum;
                 integratedData.isCategorical = [secondaryData.isCategorical, primaryData.isCategorical];
+                integratedData.rowNames = primaryData.rowNames;
             end
         end
 
@@ -470,19 +490,11 @@ classdef DataFormatter < handle
 
 
         function isValid = validateWithGrouping(obj, dataStruct)
-            % at least one categorical
-            % enough for categorical + required rest
-            % this can be increased by having cell columns with more than 1 column
-
-            % TODO: instead of requiring categorical, we could just use colorcoding 
-            availableColumnNum = sum([dataStruct.columnNum{:}]);
-            hasEnoughColumns = availableColumnNum >= (obj.requiredParametersNum + 1); % +1 for the group column
-            % disp(dataStruct.isCategorical)
-            % disp(class(dataStruct.isCategorical))
-            % disp('was here')
-            hasCategorical = any(dataStruct.isCategorical);
-
-            isValid = hasEnoughColumns && hasCategorical;
+            % Grouping is now treated as a color role, not only as a categorical-only mode.
+            % A categorical block is still preferred because all existing grouped plots understand categorical groups.
+            % Numeric color data is only accepted for plot types that explicitly know how to draw a continuous color channel.
+            colorColumnIdx = obj.chooseColorBlock(dataStruct);
+            isValid = ~isempty(colorColumnIdx);
         end
 
 
@@ -495,49 +507,35 @@ classdef DataFormatter < handle
 
 
         function processWithGrouping(obj, dataStruct)
-            data = struct('xData', [], 'yData', [], 'groupData', [], 'xLabel', '', 'yLabel', '', 'groupLabel', '');
+            data = obj.createEmptyPlotData();
+            data.rowNames = dataStruct.rowNames;
 
-            groupColumnIdx = find(dataStruct.isCategorical, 1, 'last'); % problem - this takes the categorical from pivoted, which I did not want
-            data.groupData = dataStruct.cellArray{groupColumnIdx};
-            data.groupLabel = dataStruct.columnNames{groupColumnIdx};
-
-            dataStruct.cellArray(groupColumnIdx) = [];
-            dataStruct.columnNames(groupColumnIdx) = [];
-            dataStruct.columnNum(groupColumnIdx) = [];
-            dataStruct.isCategorical(groupColumnIdx) = [];
-
-            nColumnsLast = dataStruct.columnNum{end};
-
-            if isequal(nColumnsLast, 1)
-                data.xData = dataStruct.cellArray{end};
-                data.xLabel = dataStruct.columnNames{end};
-
-                if numel(dataStruct.columnNum) > 1
-                    nColumnsSecondLast = dataStruct.columnNum{end-1};
-                    if isequal(nColumnsSecondLast, 1)
-                        data.yData = dataStruct.cellArray{end-1};
-                        data.yLabel = dataStruct.columnNames{end-1};
-                    else
-                        data.yData = dataStruct.cellArray{end-1}(:, 1, :);
-                        data.yLabel = dataStruct.columnNames{end-1};
-                    end
-                end
-            else
-                assert(obj.X_COLUMN_NUM <= dataStruct.columnNum{end}, ...
-                    'X_COLUMN_NUM exceeds the available columns in the current cell.');
-                assert(obj.Y_COLUMN_NUM <= dataStruct.columnNum{end}, ...
-                    'Y_COLUMN_NUM exceeds the available columns in the current cell.');
-                data.xData = dataStruct.cellArray{end}(:, obj.X_COLUMN_NUM, :);
-                data.yData = dataStruct.cellArray{end}(:, obj.Y_COLUMN_NUM, :);
-
-                if numel(dataStruct.columnNames) > 1
-                    data.xLabel = dataStruct.columnNames{end - 1};
-                    data.yLabel = dataStruct.columnNames{end};
-                else
-                    data.xLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.X_COLUMN_NUM);
-                    data.yLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.Y_COLUMN_NUM);
-                end
+            colorColumnIdx = obj.chooseColorBlock(dataStruct);
+            if isempty(colorColumnIdx)
+                obj.handleInsufficientParameters();
+                return
             end
+
+            data.colorData = dataStruct.cellArray{colorColumnIdx};
+            colorLabels = obj.getBlockLabels(dataStruct, colorColumnIdx);
+            data.colorLabel = colorLabels{1};
+            data.colorType = obj.classifyColorData(data.colorData);
+            data.colorScope = obj.getColorScope();
+
+            if data.colorType == "categorical"
+                % Keep the legacy group fields populated for existing plotters.
+                % New plotters can read colorData/colorType.
+                % Older grouped plotters continue to work with groupData/groupLabel unchanged.
+                data.groupData = data.colorData;
+                data.groupLabel = data.colorLabel;
+            end
+
+            dataStruct.cellArray(colorColumnIdx) = [];
+            dataStruct.columnNames(colorColumnIdx) = [];
+            dataStruct.columnNum(colorColumnIdx) = [];
+            dataStruct.isCategorical(colorColumnIdx) = [];
+
+            data = obj.addXYDataAndLabels(data, dataStruct);
 
             data.useJitter = obj.useJitter;
             obj.lastProcessedData = data; 
@@ -547,45 +545,14 @@ classdef DataFormatter < handle
 
 
         function processWithoutGrouping(obj, dataStruct)
-            data = struct('xData', [], 'yData', [], 'groupData', [], 'xLabel', '', 'yLabel', '', 'groupLabel', '');
+            data = obj.createEmptyPlotData();
+            data.rowNames = dataStruct.rowNames;
 
-            nColumnsLast = dataStruct.columnNum{end};
-
-            if isequal(nColumnsLast, 1)
-                data.xData = dataStruct.cellArray{end};
-                data.xLabel = dataStruct.columnNames{end};
-
-                if numel(dataStruct.columnNum) > 1
-                    nColumnsSecondLast = dataStruct.columnNum{end-1};
-                    if isequal(nColumnsSecondLast, 1)
-                        data.yData = dataStruct.cellArray{end-1};
-                        data.yLabel = dataStruct.columnNames{end-1};
-                    else
-                        data.yData = dataStruct.cellArray{end-1}(:, 1, :);
-                        data.yLabel = dataStruct.columnNames{end-1};
-                    end
-                end
-            else
-                assert(obj.X_COLUMN_NUM <= dataStruct.columnNum{end}, ...
-                    'X_COLUMN_NUM exceeds the available columns in the current cell.');
-                assert(obj.Y_COLUMN_NUM <= dataStruct.columnNum{end}, ...
-                    'Y_COLUMN_NUM exceeds the available columns in the current cell.');
-                data.xData = dataStruct.cellArray{end}(:, obj.X_COLUMN_NUM, :);
-                data.yData = dataStruct.cellArray{end}(:, obj.Y_COLUMN_NUM, :);
-
-                if numel(dataStruct.columnNames) > 1
-                    data.xLabel = dataStruct.columnNames{end - 1};
-                    data.yLabel = dataStruct.columnNames{end};
-                else
-                    data.xLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.X_COLUMN_NUM);
-                    data.yLabel = sprintf('%s_%d', dataStruct.columnNames{end}, obj.Y_COLUMN_NUM);
-                end
-            end
+            data = obj.addXYDataAndLabels(data, dataStruct);
 
             data.useJitter = obj.useJitter;
             obj.lastProcessedData = data;
 
-            assignin("base", "data", data);
             obj.plotManagerHandle.plotData(data);
         end
 
@@ -598,6 +565,206 @@ classdef DataFormatter < handle
             % Handle the case when there are not enough parameters for plotting
             % warning('Insufficient parameters for plotting. Please select more data.');
             % obj.plotManagerHandle.resetPlot(struct('xData', [], 'yData', [], 'groupData', [], 'xLabel', '', 'yLabel', '', 'groupLabel', ''));
+        end
+
+
+        function data = addXYDataAndLabels(obj, data, dataStruct)
+            % x/y labels must be read from the same data block as x/y data.
+            % Pivoted tables are represented as one data block with two internal
+            % columns, while standard tables are usually one block per table
+            % column. Keeping labels block-local prevents a grouping column from
+            % shifting the label indices of a pivoted x/y pair.
+            nColumnsLast = dataStruct.columnNum{end};
+            lastLabels = obj.getBlockLabels(dataStruct, numel(dataStruct.columnNum));
+
+            if isequal(nColumnsLast, 1)
+                data.xData = dataStruct.cellArray{end};
+                data.xLabel = lastLabels{1};
+
+                if numel(dataStruct.columnNum) > 1
+                    nColumnsSecondLast = dataStruct.columnNum{end-1};
+                    secondLastLabels = obj.getBlockLabels(dataStruct, numel(dataStruct.columnNum) - 1);
+                    if isequal(nColumnsSecondLast, 1)
+                        data.yData = dataStruct.cellArray{end-1};
+                        data.yLabel = secondLastLabels{1};
+                    else
+                        data.yData = dataStruct.cellArray{end-1}(:, 1, :);
+                        data.yLabel = secondLastLabels{1};
+                    end
+                end
+            else
+                assert(obj.X_COLUMN_NUM <= dataStruct.columnNum{end}, ...
+                    'X_COLUMN_NUM exceeds the available columns in the current cell.');
+                assert(obj.Y_COLUMN_NUM <= dataStruct.columnNum{end}, ...
+                    'Y_COLUMN_NUM exceeds the available columns in the current cell.');
+                data.xData = dataStruct.cellArray{end}(:, obj.X_COLUMN_NUM, :);
+                data.yData = dataStruct.cellArray{end}(:, obj.Y_COLUMN_NUM, :);
+                data.xLabel = lastLabels{obj.X_COLUMN_NUM};
+                data.yLabel = lastLabels{obj.Y_COLUMN_NUM};
+            end
+        end
+
+
+
+        function data = createEmptyPlotData(~)
+            % The formatter has one canonical output shape.
+            % Keeping the optional color fields present even when they are empty means plotters can check capabilities without guarding every field access.
+            data = struct( ...
+                'xData', [], ...
+                'yData', [], ...
+                'groupData', [], ...
+                'colorData', [], ...
+                'xLabel', '', ...
+                'yLabel', '', ...
+                'groupLabel', '', ...
+                'colorLabel', '', ...
+                'colorType', "none", ...
+                'colorScope', "none", ...
+                'rowNames', strings(0, 1));
+        end
+
+
+
+        function rowNames = getTableRowNames(~, subtable)
+            % Row names are lightweight plot metadata for datatips and future selection links.
+            % If a table has no row names, fall back to displayed row numbers so the datatip remains informative.
+            if isempty(subtable.Properties.RowNames)
+                rowNames = string((1:height(subtable))');
+            else
+                rowNames = string(subtable.Properties.RowNames(:));
+            end
+        end
+
+
+
+        function colorColumnIdx = chooseColorBlock(obj, dataStruct)
+            % Select one optional block for colorcoding while leaving enough data behind for the actual plot parameters.
+            % This prevents a categorical x-axis from being stolen as grouping when the user selected only the two columns needed for a two-variable plot.
+            colorColumnIdx = [];
+
+            if isempty(dataStruct.cellArray)
+                return
+            end
+
+            candidateIdx = find(cellfun(@(columnCount) isequal(columnCount, 1), dataStruct.columnNum));
+            candidateIdx = candidateIdx(arrayfun(@(idx) obj.hasEnoughColumnsAfterRemoving(dataStruct, idx), candidateIdx));
+
+            categoricalCandidates = candidateIdx(dataStruct.isCategorical(candidateIdx));
+            if ~isempty(categoricalCandidates)
+                colorColumnIdx = categoricalCandidates(end);
+                return
+            end
+
+            if ~obj.supportsNumericColorcoding()
+                return
+            end
+
+            numericCandidates = candidateIdx(arrayfun(@(idx) obj.isNumericColorCandidate(dataStruct.cellArray{idx}), candidateIdx));
+            if ~isempty(numericCandidates)
+                colorColumnIdx = numericCandidates(end);
+            end
+        end
+
+
+
+        function tf = hasEnoughColumnsAfterRemoving(obj, dataStruct, removedIdx)
+            remainingColumnNum = dataStruct.columnNum;
+            remainingColumnNum(removedIdx) = [];
+
+            if isempty(remainingColumnNum)
+                tf = false;
+                return
+            end
+
+            tf = sum([remainingColumnNum{:}]) >= obj.requiredParametersNum;
+        end
+
+
+
+        function tf = supportsNumericColorcoding(obj)
+            % Continuous color needs plot-specific rendering support.
+            % Other plots deliberately remain categorical-only so a random numeric column does not change the meaning of histograms, ratios, or averaged lines.
+            tf = ismember(obj.plotType, ["two variables", "line: individual"]);
+        end
+
+
+
+        function tf = isNumericColorCandidate(~, data)
+            tf = isnumeric(data) || islogical(data);
+        end
+
+
+
+        function colorType = classifyColorData(~, colorData)
+            if iscategorical(colorData)
+                colorType = "categorical";
+            elseif isnumeric(colorData) || islogical(colorData)
+                colorType = "numeric";
+            else
+                colorType = "none";
+            end
+        end
+
+
+
+        function colorScope = getColorScope(obj)
+            % Scope tells plotters how to interpret colorData.
+            % Scatter plots use one color value per point; individual line plots use one color value per line; categorical legacy plots use colorData as a grouping key.
+            switch obj.plotType
+                case "two variables"
+                    colorScope = "point";
+                case "line: individual"
+                    colorScope = "line";
+                otherwise
+                    colorScope = "group";
+            end
+        end
+
+
+
+        function labels = getBlockLabels(obj, dataStruct, blockIdx)
+            % Return labels for the internal columns of one data block.
+            % Older saved/debug data may still contain a flat label, so normalize
+            % defensively to keep formatter behavior stable while the internal
+            % representation is block-aligned.
+            labels = dataStruct.columnNames{blockIdx};
+            labels = obj.normalizeBlockLabels(labels);
+
+            expectedNum = dataStruct.columnNum{blockIdx};
+            if numel(labels) < expectedNum
+                baseName = labels{1};
+                labels = obj.makeBlockColumnLabels(baseName, expectedNum);
+            end
+        end
+
+
+
+        function labels = normalizeBlockLabels(~, labels)
+            if isstring(labels)
+                labels = cellstr(labels);
+            elseif ischar(labels)
+                labels = {labels};
+            elseif ~iscell(labels)
+                labels = {char(string(labels))};
+            end
+        end
+
+
+
+        function labels = makeBlockColumnLabels(~, baseName, columnCount)
+            % Create one label per internal column of a data block. Single-column
+            % standard table fields keep their original name; multi-column fields
+            % get stable suffixes so each internal dimension can be labelled.
+            baseName = char(string(baseName));
+            if columnCount <= 1
+                labels = {baseName};
+                return
+            end
+
+            labels = arrayfun( ...
+                @(columnId) sprintf('%s_%d', baseName, columnId), ...
+                1:columnCount, ...
+                'UniformOutput', false);
         end
 
 

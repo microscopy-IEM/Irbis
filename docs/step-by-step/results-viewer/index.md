@@ -12,27 +12,39 @@ ResultsViewer is part of Irbis dedicated to exploring generated data in tables a
     - **ResultsViewer** window.
     - Open it from the right side of the bottom panel by pressing the **Explore results** button.
 
+![IrbisResultsViewer GUI](../../assets/rv.png)
+
 ## Layout
 
-- Left side: parameter selection and table.
-- Right side: plots.
-- Bottom-right panel: filtering.
+- Top-left controls: load combined results, open or save a `.irbisRes` ResultsViewer file, and select the active modality and object type.
+- Left side: table controls, parameter or column selection, and the current table.
+- Right side: plot type, plot options, plot axes, and the **Filtering** panel.
+- Bottom-left controls: show the summarized companion table when **Pivoted** view is active, export the current table, and export or evaluate the current plot.
 
 ## Table views
 
 - **Full** table view pools data from all time points; table columns are parameters.
 - **Pivoted** table view shows one parameter across time (or another selected parameter); by default, columns are time points and rows are objects connected by group ID.
-- **Summarized** table view contains values that summarize development of each row in the Pivoted table.
+- **Summarized** table view contains values that summarize development of each row in the Pivoted table. In the GUI code it is usually created as a bottom companion table from **Show summarized** while **Pivoted** is selected.
+
+## Data sources
+
+ResultsViewer can receive data directly from the main Irbis app, batch-load one or more `.irbis` files, append files to the current ResultsViewer session, or reopen a saved `.irbisRes` file.
+
+When ResultsViewer is opened from the main app, filters and user-defined column definitions can sync with Irbis. Batch loading disconnects ResultsViewer from the main app. Based on the code, **Add files** appends data to the current ResultsViewer data store.
+
+The loader code I could inspect handles model and tracks data.
+
+!!! warning
+    Filters and categorizations are synced between the main Irbis app and ResultsViewer, but generated data itself is not. If you change or generate data in the main app, close and reopen ResultsViewer to sync changes.
 
 ## Pages
 
 - [Use table views and plots](modes-plots.md)
-- [Filter available data](filter-data.md)
-- [Filter by temporal development](filter-temporal-development.md)
-- [Define ResultsViewer categorization](categorize-data.md)
-- [Edit columns in Full table view](edit-columns-full.md)
+- [Filter ResultsViewer data](filter-data.md)
+- [Create and manage user-defined columns](categorize-data.md)
+- [Open, save, and export ResultsViewer data](open-save-export.md)
 - [Store a view](store-view.md)
 - [Use batch mode](batch-mode.md)
 
-!!! warning
-    Filters and categorizations are synced between the main Irbis app and ResultsViewer, but generated data itself is not. If you change or generate data in the main app, close and reopen ResultsViewer to sync changes.
+
