@@ -1,10 +1,12 @@
-# Viewport, animation, and shortcuts
+# Views and animations
 
-Use these pages to navigate the visualization panel, manage views, and create animations.
+Use these pages to save camera setups and create animations from saved views.
 
 ## Pages
 
-- [Navigate the visualization panel](navigation.md)
-- [Use keyboard shortcuts](keyboard-shortcuts.md)
 - [Create animations](animation.md)
 - [Save views](save-views.md)
+
+## Related
+
+- Use [Visualization and navigation](../visualization-and-navigation/index.md) for mouse controls, scene navigation and keyboard shortcuts.

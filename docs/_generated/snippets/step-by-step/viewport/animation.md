@@ -47,4 +47,3 @@ The keyframe setup can be saved and applied to another model.
 **Related**
 
 - Save static views with [Save views](../step-by-step/viewport/save-views.md).
-

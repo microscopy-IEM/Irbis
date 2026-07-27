@@ -9,4 +9,5 @@ Most step-by-step pages list prerequisites, the UI location, related next steps,
 - [3D model processing](../step-by-step/model/index.md): create 3D models, correct drift, trace dendrites, separate spines, and export object results.
 - [Tracks processing](../step-by-step/tracks/index.md): import, view, analyze, and categorize TrackMate tracks.
 - [ResultsViewer](../step-by-step/results-viewer/index.md): explore generated data in tables and plots.
-- [Viewport, animation, and shortcuts](../step-by-step/viewport/index.md): navigate the visualization panel, store views, and create animations.
+- [Visualization and navigation](../step-by-step/visualization-and-navigation/index.md): navigate the visualization panel and use keyboard shortcuts.
+- [Views and animations](../step-by-step/viewport/index.md): store views and create animations.

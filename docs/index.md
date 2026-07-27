@@ -23,12 +23,15 @@ Use the tutorials to learn Irbis through complete guided workflows. Use the step
 - [3D model processing](step-by-step/model/index.md)
 - [Tracks processing](step-by-step/tracks/index.md)
 - [ResultsViewer](step-by-step/results-viewer/index.md)
-- [Viewport, animation, and shortcuts](step-by-step/viewport/index.md)
+- [Visualization and navigation](step-by-step/visualization-and-navigation/index.md)
+- [Views and animations](step-by-step/viewport/index.md)
 
 ## Reference
 
 - [Irbis file structure](reference/irbis-file-structure.md)
-- [Parameter tables](reference/parameters/index.md)
+- [Object data tables](reference/parameters/index.md)
+- [Object connection](reference/object-connection/index.md)
+- [Spine generation parameters](reference/spine-generation-parameters/index.md)
 
 ## Contact
 

@@ -27,5 +27,5 @@ Use this after 3D reconstruction if you no longer need planes data and want to s
 
 ## Related
 
-- Save the full project with [Export processed data as an .irbis file](../data-import/save-irbis.md).
+- Save the full project with [Save processed data as an `.irbis` file](../data-import/save-irbis.md).
 

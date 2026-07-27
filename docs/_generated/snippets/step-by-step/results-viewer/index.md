@@ -27,9 +27,12 @@ ResultsViewer is part of Irbis dedicated to exploring generated data in tables a
 
 ResultsViewer can receive data directly from the main Irbis app, batch-load one or more `.irbis` files, append files to the current ResultsViewer session, or reopen a saved `.irbisRes` file.
 
-When ResultsViewer is opened from the main app, filters and user-defined column definitions can sync with Irbis. Batch loading disconnects ResultsViewer from the main app. Based on the code, **Add files** appends data to the current ResultsViewer data store; **PLACEHOLDER:** verify whether this should also be described as disconnecting sync in every GUI workflow.
+When ResultsViewer is opened from the main app, filters and user-defined column definitions can sync with Irbis. Batch loading disconnects ResultsViewer from the main app. Based on the code, **Add files** appends data to the current ResultsViewer data store.
 
-The loader code I could inspect handles model and tracks data. **PLACEHOLDER:** confirm whether points data can be supplied to ResultsViewer by another path before listing it as a documented modality.
+The loader code I could inspect handles model and tracks data.
+
+!!! warning
+    Filters and categorizations are synced between the main Irbis app and ResultsViewer, but generated data itself is not. If you change or generate data in the main app, close and reopen ResultsViewer to sync changes.
 
 **Pages**
 
@@ -39,6 +42,3 @@ The loader code I could inspect handles model and tracks data. **PLACEHOLDER:** 
 - [Open, save, and export ResultsViewer data](../step-by-step/results-viewer/open-save-export.md)
 - [Store a view](../step-by-step/results-viewer/store-view.md)
 - [Use batch mode](../step-by-step/results-viewer/batch-mode.md)
-
-!!! warning
-    Filters and categorizations are synced between the main Irbis app and ResultsViewer, but generated data itself is not. If you change or generate data in the main app, close and reopen ResultsViewer to sync changes.

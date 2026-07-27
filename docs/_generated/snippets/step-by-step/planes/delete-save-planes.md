@@ -23,9 +23,6 @@ Use this after 3D reconstruction if you no longer need planes data and want to s
 2. Select the output folder.
 3. Enter the file name.
 
-!!! warning
-    Each channel is saved in a separate TIFF file, and most metadata are lost.
-
 **Related**
 
-- Save the full project with [Export processed data as an .irbis file](../step-by-step/data-import/save-irbis.md).
+- Save the full project with [Save processed data as an `.irbis` file](../step-by-step/data-import/save-irbis.md).

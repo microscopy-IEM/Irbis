@@ -1,4 +1,4 @@
-Planes are structural microscopy images with at least two dimensions, `xy`. To create a 3D model, the planes data must be at least 3D, such as a z-stack.
+Planes are structural microscopy images with at least two dimensions, `xy`.
 
 **Pages**
 
@@ -11,4 +11,4 @@ Planes are structural microscopy images with at least two dimensions, `xy`. To c
 
 **Related workflows**
 
-- After planes are ready, continue to [Create a new model](../step-by-step/model/create-model.md).
+- After planes are ready, continue to [Initialize a new model](../step-by-step/model/initialize-model.md).

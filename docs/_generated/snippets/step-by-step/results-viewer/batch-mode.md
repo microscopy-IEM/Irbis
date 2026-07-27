@@ -23,7 +23,7 @@ Batch load mode lets you explore data from multiple datasets together. It combin
     Batch loading can be computationally demanding and may take time.
 
 !!! warning
-    Loading multiple datasets severs the connection with the main Irbis app. Uploaded data, filters, and categorizations are reset and are no longer synced.
+    Loading multiple datasets breaks the connection with the main Irbis app. Uploaded data, filters, and categorizations are reset and are no longer synced.
 
 **What batch loading adds**
 
@@ -37,10 +37,10 @@ Batch loading also combines stored filters and stored user-defined column defini
 
 1. Press **Add files**.
 2. Select more `.irbis` files with the same repeated file-selection workflow.
-3. Select **Model**, **Tracks**, or **Both**.
+3. Select what to load: **Model**, **Tracks**, or **Both**.
 4. Wait for loading to finish.
 
-Based on the code, **Add files** appends the newly loaded data to the current ResultsViewer data store without forcing the current modality and branch selection to reset. **PLACEHOLDER:** verify expected behavior when adding files to a ResultsViewer instance that is still connected to the main Irbis app.
+Based on the code, **Add files** appends the newly loaded data to the current ResultsViewer data store without forcing the current modality and branch selection to reset.
 
 **Save batch-loaded data**
 

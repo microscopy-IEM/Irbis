@@ -13,4 +13,4 @@ Planes are structural microscopy images with at least two dimensions, `xy`.
 
 ## Related workflows
 
-- After planes are ready, continue to [Create a new model](../model/create-model.md).
+- After planes are ready, continue to [Initialize a new model](../model/initialize-model.md).

@@ -1,6 +1,6 @@
-# Parameter tables
+# Object data tables
 
-These pages describe tables and object features stored or displayed by Irbis.
+These pages describe object tables, stored object properties, relationships, and calculated features stored or displayed by Irbis.
 
 - [Areas table](areas-table.md)
 - [Model table](model-table.md)

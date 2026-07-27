@@ -3,6 +3,7 @@ site_name: Irbis documentation
 theme:
   name: material
   logo: assets/irbis_logo_grouped.svg
+  favicon: assets/irbis_logo.png
 
   palette:
       primary: custom
@@ -28,7 +29,7 @@ nav:
       - Data import and saving:
           - Overview: step-by-step/data-import/index.md
           - Load data: step-by-step/data-import/load-data.md
-          - Export .irbis file: step-by-step/data-import/save-irbis.md
+          - Save an .irbis file: step-by-step/data-import/save-irbis.md
       - Planes processing:
           - Overview: step-by-step/planes/index.md
           - View raw planes data: step-by-step/planes/view-raw-data.md
@@ -39,15 +40,19 @@ nav:
           - Delete or save planes data: step-by-step/planes/delete-save-planes.md
       - 3D model processing:
           - Overview: step-by-step/model/index.md
-          - Create a new model: step-by-step/model/create-model.md
+          - Initialize a new model: step-by-step/model/initialize-model.md
           - Create a primary 3D model: step-by-step/model/reconstruct-primary-model.md
           - Detect drift and correct it: step-by-step/model/drift-correction.md
-          - Register objects across time points: step-by-step/model/register-objects.md
+          - Connect objects in time: step-by-step/model/connect-objects-in-time.md
+          - Visualize and adjust model objects: step-by-step/model/visualize-model-objects.md
+          - Select and manipulate model objects: step-by-step/model/object-list-context-menu.md
           - Trace a dendrite: step-by-step/model/trace-dendrite.md
           - Generate the dendritic shaft: step-by-step/model/generate-shaft.md
           - Separate spines from the shaft: step-by-step/model/separate-spines.md
-          - Select objects and export results: step-by-step/model/select-export-objects.md
-          - Manually adjust selected objects: step-by-step/model/manual-adjustment.md
+          - Review and correct spine separation: step-by-step/model/review-correct-spine-separation.md
+          - Calculate spine features: step-by-step/model/calculate-spine-features.md
+          - Classify spines manually: step-by-step/model/classify-spines-manually.md
+          - Export model objects: step-by-step/model/export-model-objects.md
       - Tracks processing:
           - Overview: step-by-step/tracks/index.md
           - Import tracks: step-by-step/tracks/import-tracks.md
@@ -62,16 +67,18 @@ nav:
           - Open, save, and export data: step-by-step/results-viewer/open-save-export.md
           - Store a view: step-by-step/results-viewer/store-view.md
           - Use batch mode: step-by-step/results-viewer/batch-mode.md
-      - Viewport:
+      - Visualization and navigation:
+          - Overview: step-by-step/visualization-and-navigation/index.md
+          - Navigate the visualization panel: step-by-step/visualization-and-navigation/navigation.md
+          - Use keyboard shortcuts: step-by-step/visualization-and-navigation/keyboard-shortcuts.md
+      - Views and animations:
           - Overview: step-by-step/viewport/index.md
-          - Navigate the visualization panel: step-by-step/viewport/navigation.md
-          - Use keyboard shortcuts: step-by-step/viewport/keyboard-shortcuts.md
           - Create animations: step-by-step/viewport/animation.md
           - Save views: step-by-step/viewport/save-views.md
   - Reference:
       - Overview: reference/index.md
       - Irbis file structure: reference/irbis-file-structure.md
-      - Parameters:
+      - Object data tables:
           - Overview: reference/parameters/index.md
           - Areas table: reference/parameters/areas-table.md
           - Model table: reference/parameters/model-table.md
@@ -79,6 +86,13 @@ nav:
           - Points table: reference/parameters/points-table.md
           - Tracks table: reference/parameters/tracks-table.md
           - Views table: reference/parameters/views-table.md
+      - Object connection:
+          - Overview: reference/object-connection/index.md
+          - Object connection in time: reference/object-connection/greedy-object-connection.md
+      - Model generation parameters:
+          - Overview: reference/spine-generation-parameters/index.md
+          - Surface generation parameters: reference/spine-generation-parameters/surface-generation-parameters.md
+          - Adaptive shaft generation parameters: reference/spine-generation-parameters/adaptive-shaft-generation-parameters.md
   - Contact: contact.md
 
 markdown_extensions:

@@ -1,4 +1,4 @@
-Use these controls when you want to preserve a combined ResultsViewer session or export the visible table data for external analysis.
+Use these controls when you want to preserve a combined ResultsViewer dataset or export the visible table data for external analysis.
 
 !!! info "Before you start"
     **Prerequisites:**

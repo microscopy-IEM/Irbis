@@ -44,5 +44,5 @@
 
 - Improve alignment with [Align planes across time points](align-planes.md).
 - Reduce the region with [Crop planes](crop-planes.md).
-- Continue to [Create a new model](../model/create-model.md).
+- Continue to [Initialize a new model](../model/initialize-model.md).
 

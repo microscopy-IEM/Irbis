@@ -10,7 +10,6 @@
     - Main app: **Model** tab, **Spines** subtab, **Spine separation** section.
 
 **Steps**
-
 1. Go to **Model** > **Spines**.
 2. To generate the model for all time points, check **All time points**.
 3. Press **Separate spines**.
@@ -19,6 +18,5 @@
 
 **Next steps**
 
-- Continue to [Select objects and export results](../step-by-step/model/select-export-objects.md).
-- If a spine split needs correction, use [Manually adjust selected objects](../step-by-step/model/manual-adjustment.md).
-
+- Review the result with [Review and correct spine separation](../step-by-step/model/review-correct-spine-separation.md).
+- Continue to [Calculate spine features](../step-by-step/model/calculate-spine-features.md) after the separation is acceptable.

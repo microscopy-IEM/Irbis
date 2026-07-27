@@ -20,4 +20,4 @@ Exporting data as an `.irbis` file lets you reopen the processed project in Irbi
 **Related**
 
 - Start a project with [Load data](../step-by-step/data-import/load-data.md).
-- Export object tables from [Select objects and export results](../step-by-step/model/select-export-objects.md).
+- Export object meshes or masks from [Export model objects](../step-by-step/model/export-model-objects.md).

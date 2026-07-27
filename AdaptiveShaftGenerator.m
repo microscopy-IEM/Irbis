@@ -1,10 +1,26 @@
 classdef (Sealed) AdaptiveShaftGenerator
+%DOC_PAGE adaptiveShaftGeneration; Title: Adaptive shaft generation parameters; 
+% Description: This page describes the adaptive shaft reconstruction workflow and parameters used by `AdaptiveShaftGenerator`.
+%
+%DOC_SECTION overview; Title: Reconstruction workflow
+% Description: `AdaptiveShaftGenerator` creates a dendritic shaft model from an existing centreline and parent surface mesh.
+% The workflow samples positions along the centreline, sends the centreline and parent mesh to the Python contour extraction script, receives cross-sectional contours and local normals, fills missing contours by transforming nearby valid contours, converts the contour output into arrays, estimates shaft radii, and can reconstruct a closed shaft mesh from the resulting contour points.
+%
+%DOC_SECTION reasoning; Title: Reconstruction reasoning
+% Description: The adaptive shaft model follows the local shape of the reconstructed dendrite instead of using a fixed-radius cylinder.
+% Each centreline position defines a local cutting plane. Nearby slices can be combined to stabilize the contour estimate, which helps when the parent mesh is noisy or sparse.
+% Optional morphological postprocessing can clean the binary slice before contour extraction. Missing contours are repaired from the closest valid contour so the downstream mesh reconstruction receives a continuous sequence of cross sections.
+%
+%DOC_SECTION meshConstruction; Title: Mesh construction
+% Description: After contours are generated, contour normals are calculated from the centreline to each contour point.
+% Start and end plugs are added so the reconstructed shaft can be closed.
+% The final mesh is produced by Poisson surface reconstruction through `PythonMeshHelper.reconstruct`, and optional smoothing is applied by `smoothSurfaceMesh`.
 
     properties
-        endsBuffer = 30
+        endsBuffer = 30 % number of centreline points ignored near each end during contour extraction
 
         sizeIm = 100 % size of the image in which the contours are calculated
-        realCenterDim
+        realCenterDim % physical coordinate of the contour image centre
 
         ringSpacingPix = 20 % spacing between points of centreline used for generating mesh slices, in points of the centreline
         nRingNeighbors = 2 % number of slices on each side to add to the current slice to generate one contour (2 means that 1+2+2 = 5 will be combined)
@@ -12,7 +28,7 @@ classdef (Sealed) AdaptiveShaftGenerator
         doMorphologicalPostprocessing = false % whether to apply morphological opening and closing to the binary image before extracting the contour
         structuringElementRadius = 2 % radius of the structuring element used in morphological operations
 
-        verbose = false;
+        verbose = false % whether to print additional diagnostic output
     end
 
     methods

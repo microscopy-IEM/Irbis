@@ -9,8 +9,9 @@ function generatedFiles = generateTutorialSnippets(sourceRoot, outputRoot, inclu
 %   ## Section title   -> **Section title**
 %   ### Section title  -> **Section title**
 %
-% Screenshot placeholder admonitions are omitted from snippets. Relative
-% Markdown links are rewritten for pages in docs/tutorials by default.
+% Screenshot placeholder admonitions and standalone images are omitted from
+% snippets. Relative Markdown links are rewritten for pages in docs/tutorials
+% by default.
 
     if nargin < 1 || isempty(sourceRoot)
         sourceRoot = fullfile(pwd, "docs", "step-by-step");
@@ -123,6 +124,11 @@ function snippet = transformMarkdownForSnippet(markdown, sourceFile, includeRoot
             continue
         end
 
+        if isStandaloneMarkdownImage(line)
+            previousWasBlank = true;
+            continue
+        end
+
         [isHeading, level, title] = parseMarkdownHeading(line);
 
         if isHeading && level == 1
@@ -158,6 +164,13 @@ function tf = isScreenshotPlaceholderAdmonition(line)
     trimmed = strtrim(line);
     tf = startsWith(trimmed, "!!! example") && ...
         contains(lower(trimmed), "screenshot placeholder");
+end
+
+function tf = isStandaloneMarkdownImage(line)
+
+    trimmed = strtrim(line);
+    tf = ~isempty(regexp(char(trimmed), "^!\[[^\]]*\]\([^)]+\)\s*$", ...
+        "once"));
 end
 
 function [isHeading, level, title] = parseMarkdownHeading(line)

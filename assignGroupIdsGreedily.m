@@ -1,22 +1,29 @@
 function tableArray = assignGroupIdsGreedily(tableArray, distanceThreshold)
-    % This function performs a greedy matching of objects across consecutive time points based on spatial proximity and volume similarity.
-    % 
-    % Inputs:
-    %   tableArray: a cell array of tables, each containing object data for a specific time point. Each table must have a 'Mesh' column with 3D meshes of the objects, and may optionally have a 'volume' column.
-    %   distanceThreshold: a scalar value specifying the maximum allowed distance between object centers for them to be considered a valid match.
-    % 
-    % Output:
-    %   tableArray: the input cell array of tables, but with an calculated 'groupId' column in each table. Objects that are matched across time points will have the same groupId.
-    % 
-    % The matching is done in the following way: 
-    %   1) For each pair of consecutive time points, compute the distance between the centers of all objects in the current time point and all objects in the next time point.
-    %   2) Apply the distance threshold to find valid candidate matches.
-    %   3) If volume data is available, compute a combined cost that incorporates both distance and volume difference (normalized to [0,1]) for the valid candidates.
-    %   4) For each object in the current time point, identify the best candidate match
-    %   5) Since multiple objects in the current time point may prefer the same next object as their best match, assign the next object to the current object with the best (lowest) combined cost, and mark that pair as a winner.
-    %   6) Assign groupIds to the winning pairs, ensuring that matched objects across time points receive the same groupId.
-    % 
-    % The other objects that do not have valid matches will retain a groupId of 0.
+    %DOC_PAGE greedyObjectTracking; Title: Greedy object connection in time; 
+    % Description: This page describes the greedy matching procedure used to assign group IDs to model objects across consecutive time points.
+    %
+    %DOC_SECTION overview; Title: Purpose
+    % Description: `assignGroupIdsGreedily` connects reconstructed objects in time by assigning the same group ID to objects that are likely to represent the same structure in consecutive time points.
+    % The function works on a cell array of object tables, where each table represents one time point.
+    % It updates the `groupId` column so downstream tools can follow objects through time.
+    %
+    %DOC_SECTION matching; Title: Matching strategy
+    % Description: The algorithm compares each pair of consecutive time points.
+    % For every object, it calculates the centre of the object's mesh and measures distances to objects in the next time point.
+    % Candidate matches are limited by the distance threshold selected in the user interface.
+    % If object volume is available, the matching cost combines centre distance and relative volume difference.
+    %
+    %DOC_SECTION conflicts; Title: Conflict handling
+    % Description: Each object in the current time point chooses its best candidate in the next time point.
+    % If several current objects prefer the same next object, only the pair with the lowest cost is accepted.
+    % Accepted pairs receive the same group ID.
+    % Objects without a valid accepted match remain untracked.
+    %
+    %DOC_SECTION limitations; Title: Practical limitations
+    % Description: This is a greedy local matching method, not a global optimization over the whole time series.
+    % It works best when objects move gradually between consecutive time points and when the distance threshold is large enough to cover expected motion but small enough to reject unrelated nearby objects.
+    % Large movements, object merges, object splits, missing objects, or very crowded reconstructions may require manual correction.
+    %
 
     uniqueGroupId = 1;
     distanceWeight = 0.7;

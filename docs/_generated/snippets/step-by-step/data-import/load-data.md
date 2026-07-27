@@ -38,4 +38,4 @@ If you repeatedly use files from the same folder:
 
 - For structural images, continue to [View raw planes data](../step-by-step/planes/view-raw-data.md).
 - For TrackMate data, continue to [View tracks](../step-by-step/tracks/view-tracks.md).
-- Save your work with [Export processed data as an .irbis file](../step-by-step/data-import/save-irbis.md).
+- Save your work with [Save processed data as an `.irbis` file](../step-by-step/data-import/save-irbis.md).

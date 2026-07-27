@@ -64,6 +64,7 @@ classdef GenerateScreenshotsTest < matlab.uitest.TestCase
                 "Full Volume tab", ...
                 "Open Model > Go to Model tab and Full subtab.");
 
+            testCase.App.surfaceReconstructionComp_fullVolume.expand();
             testCase.captureSnapshot(testCase.App.surfaceReconstructionComp_fullVolume, ...
             "tutorial-segment-spines-reconstruction-panel.png");
 
@@ -104,13 +105,57 @@ classdef GenerateScreenshotsTest < matlab.uitest.TestCase
                 "tutorial-segment-spines-spines-visualization.png");
 
             testCase.openModelSpines();
-            testCase.captureSnapshot(testCase.App.LeftPanel, ...
-                "tutorial-segment-spines-calculate-features.png");
+            testCase.openMainAppPanel("SpinefeaturesSectionButton");
+            testCase.capturePanelSnapshotWithHeader(testCase.App.SpinefeaturesPanel, ...
+                "tutorial-segment-spines-calculate-features.png"); 
 
             testCase.openFilesTab();
             testCase.captureSnapshot(testCase.App.FilesTab, ...
                 "tutorial-segment-spines-save-irbis.png");
         end
+
+
+
+        function generateModelGenerationScreenshots(testCase)
+            testCase.openModelTab();
+            testCase.openModelSubtab("fullVolumeTab");
+            testCase.openMainAppPanel("DriftcorrectionSectionButton");
+            testCase.capturePanelSnapshotWithHeader(testCase.App.ModelDriftCorrectionPanel, ...
+                "segment-spines-drift-correction-panel.png");
+
+            testCase.App.positionAdjustment_fullVolume.expand();
+            testCase.captureSnapshot(testCase.App.positionAdjustment_fullVolume, ...
+                "segment-spines-manual-correction-panel.png");
+
+            testCase.openModelSubtab("shaftTab");
+            testCase.openMainAppPanel("AdvancedtracingsettingsButton");
+            testCase.capturePanelSnapshotWithHeader(testCase.App.AdvancedtracingsettingsPanel, ...
+                "segment-spines-advanced-shaft-tracing-panel.png");
+
+            testCase.openMainAppPanel("AdaptiveshaftsettingsSectionButton");
+            testCase.capturePanelSnapshotWithHeader(testCase.App.AdaptiveshaftsettingsPanel, ...
+                "segment-spines-advanced-adaptive-shaft-settings-panel.png"); 
+
+            testCase.openModelSpines();
+            testCase.openMainAppPanel("ColorcodingSectionButton_spines");
+            testCase.capturePanelSnapshotWithHeader(testCase.App.ColorcodingPanel_spines, ...
+                "segment-spines-colorcoding-panel.png");
+
+            testCase.openMainAppPanel("ManualeditingoptionsButton");
+            testCase.capturePanelSnapshotWithHeader(testCase.App.ManualEditingPanel, ...
+                "segment-spines-manual-spine-editing-panel.png"); 
+
+            testCase.openMainAppPanel("ManualcategorizationSectionButton");
+            testCase.capturePanelSnapshotWithHeader(testCase.App.manualCategorizationPanel, ...
+                "segment-spines-manual-categorization-panel.png"); 
+
+            testCase.openMainAppPanel("ColorcodingSectionButton_spines");
+            testCase.capturePanelSnapshotWithHeader(testCase.App.ColorcodingPanel_spines, ...
+                "segment-spines-colorcoding-panel.png");
+
+        end
+
+
 
         function compareResultsViewerDatasetsTutorialScreenshots(testCase)
             testCase.captureResultsViewerPlaceholder( ...
@@ -179,6 +224,12 @@ classdef GenerateScreenshotsTest < matlab.uitest.TestCase
         function openModelSpines(testCase)
             testCase.choose(testCase.App.ModelTab);
             testCase.choose(testCase.App.spinesTab);
+            testCase.waitForUi();
+        end
+
+        function openModelSubtab(testCase, subtabName)
+            testCase.choose(testCase.App.ModelTab);
+            testCase.choose(testCase.App.(subtabName));
             testCase.waitForUi();
         end
 
@@ -445,16 +496,19 @@ classdef GenerateScreenshotsTest < matlab.uitest.TestCase
             y = y - 35; % move up to include the header
             hh = hh + 35; % add extra height for the header
 
-            yMin = max(1, y);
-            yMax = min(size(img, 1), y + hh - 1);
-            xMin = max(1, x);
-            xMax = min(size(img, 2), x + w - 1);
+            % the -5 and +5 are to add a small margin around the panel
+            yMin = max(1, y - 5);
+            yMax = min(size(img, 1), y + hh - 1 + 5);
+            xMin = max(1, x - 5);
+            xMax = min(size(img, 2), x + w - 1 + 5);
 
             cropped = img(yMin:yMax, xMin:xMax, :);
             imwrite(cropped, outputFile);
 
             clear cleanup
         end
+
+
         function [x, y, w, h] = calculateSnapshotRectangle(testCase, ...
                 componentHandle, imageSize)
             componentPosition = getpixelposition(componentHandle, true);

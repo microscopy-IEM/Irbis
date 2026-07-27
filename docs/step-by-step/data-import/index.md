@@ -5,7 +5,7 @@ Use these pages to open raw data, open existing `.irbis` projects, and save proc
 ## Pages
 
 - [Load data](load-data.md)
-- [Export processed data as an .irbis file](save-irbis.md)
+- [Save processed data as an `.irbis` file](save-irbis.md)
 
 ## Related workflows
 

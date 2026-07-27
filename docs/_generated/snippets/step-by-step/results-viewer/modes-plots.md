@@ -40,7 +40,7 @@ Use Pivoted transformations when you want to compare changes relative to a refer
 Available transformations in the code are **Subtract first column**, **Subtract previous column**, **Difference from selected column**, **Ratio to first column**, **Ratio to selected column**, **Percent change from first column**, **Moving average**, and **Detrend**.
 
 !!! warning
-    The **Show summarized** button tooltip says that Pivoted table transformations are not reflected in summarized data.
+    Pivoted table transformations are not reflected in summarized data.
 
 **Summarized table view**
 
