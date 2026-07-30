@@ -31,6 +31,13 @@ classdef (Sealed) AdaptiveShaftGenerator
         verbose = false % whether to print additional diagnostic output
     end
 
+    
+    properties (Constant)
+        % mesh generation parameters
+        DEPTH = 9 % depth parameter for Poisson surface reconstruction  
+        SMOOTHINGFACTOR = 1 % smoothing factor for the final mesh (0 means no smoothing)
+    end
+
     methods
         function obj = AdaptiveShaftGenerator(contourSpacingPix, nNeighbors, doMorphologicalPostprocessing, structuringElementRadius)
             % Constructor - stores all the user-defined parameters
@@ -237,6 +244,17 @@ classdef (Sealed) AdaptiveShaftGenerator
             % Concatenate all repeated middle points into a single array
             middlePointsArray = vertcat(tempCellStructure{:});
         end
+
+
+
+        function parameters = getCurrentParameters(obj)
+            % Provide a structure of default settings for the generation.
+            % We export all parameters that are not in the propertiesToExclude list
+            warning('off','all')
+            parameters = struct(obj);
+            % parameters = rmfield(parameters, AdaptiveShaftGenerator.propertiesToExclude);
+            warning('on','all')
+        end
     end
 
 
@@ -272,6 +290,7 @@ classdef (Sealed) AdaptiveShaftGenerator
         end
 
 
+
         function mesh = generateScaledMesh(contourPoints, middlePoints, selectedRadius, meanRadius, smoothingFactor)
             contourPointNormals = AdaptiveShaftGenerator.calculateNormals(contourPoints, middlePoints);
             contourPoints = AdaptiveShaftGenerator.changeRadius(contourPoints, contourPointNormals, selectedRadius, meanRadius);
@@ -293,6 +312,7 @@ classdef (Sealed) AdaptiveShaftGenerator
         end
 
 
+
         function contourPointNormals = calculateNormals(contourPoints, middlePoints)
 
             % Calculate direction vectors from center points to contour points
@@ -304,6 +324,7 @@ classdef (Sealed) AdaptiveShaftGenerator
         end
 
 
+
         function contourPoints = changeRadius(contourPoints, contourPointNormals, selectedRadius, meanRadius)
 
             % calculate proportion to enlarge or shring the shaft
@@ -311,6 +332,7 @@ classdef (Sealed) AdaptiveShaftGenerator
         
             contourPoints = contourPoints + contourPointNormals.*k;
         end
+
 
 
         function [plugPoints, plugPointNormals] = addPlug(contourPoints, contourPointNormals, middlePoints, middlePointsIdx, idx)
@@ -342,6 +364,7 @@ classdef (Sealed) AdaptiveShaftGenerator
         end
 
 
+
         function mesh = reconstructMesh(vertices, normals)
             % prepare points as input to Python
             verticesNumpy = py.numpy.array(vertices);
@@ -349,7 +372,7 @@ classdef (Sealed) AdaptiveShaftGenerator
             normalsNumpy = py.numpy.array(normals);
 
             % generate mesh by Poisson surface reconstruction
-            depth = 9;
+            depth = AdaptiveShaftGenerator.DEPTH;
             % Initialize the struct with vertices and vertex normals
             mesh_data{1} = struct('vertices', verticesNumpy, ...
                                     'vertexNormals', normalsNumpy);
@@ -363,11 +386,22 @@ classdef (Sealed) AdaptiveShaftGenerator
         end
         
 
+
         function mesh = smoothMesh(mesh, smoothingFactor)
             if smoothingFactor > 0
                 mesh = smoothSurfaceMesh(mesh, smoothingFactor);
             end
         end
 
+
+
+        function parameters = getDefaultParameters()
+            % Provide a structure of default settings for the generation.
+            % We export all parameters that are not in the propertiesToExclude list
+            warning('off','all')
+            parameters = struct(AdaptiveShaftGenerator);
+            % parameters = rmfield(parameters, AdaptiveShaftGenerator.propertiesToExclude);
+            warning('on','all')
+        end
     end
 end
