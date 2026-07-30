@@ -44,7 +44,7 @@ if ~initMeshisWaterTight
 
 end
 
-initMeshVol = compute_mesh_volume(currentMesh.Vertices, currentMesh.Faces);
+initMeshVol = ObjectFeatureExtractor.calculateVolume(currentMesh.Vertices, currentMesh.Faces);
 
 % disp(['init isIntersectiing = ' num2str(initMeshisIntersecting)])
 % disp(['init isWaterTight = ' num2str(initMeshisWaterTight)])
@@ -125,7 +125,7 @@ while offsetCount < totalOffsetOut
     [D,~] = pdist2(origVerts,newVerts,'euclidean','Smallest',1);
   
     medianDistOut(i) = median(D);
-    meshVolOut(i) = compute_mesh_volume(tempMesh.Vertices, tempMesh.Faces);
+    meshVolOut(i) = ObjectFeatureExtractor.calculateVolume(tempMesh.Vertices, tempMesh.Faces);
 
     currentMesh = tempMesh;
     
@@ -214,7 +214,7 @@ for i = 1:30
     end
 
     medianDistIn(i) = -median(D);
-    meshVolIn(i) = compute_mesh_volume(tempMesh.Vertices, tempMesh.Faces);
+    meshVolIn(i) = ObjectFeatureExtractor.calculateVolume(tempMesh.Vertices, tempMesh.Faces);
 
     % disp(['Mean distance = ' num2str(meanDist)])
     % disp(['Median distance = ' num2str(medianDistIn(i))])
