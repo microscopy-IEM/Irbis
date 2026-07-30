@@ -2,10 +2,9 @@ try:
     import sys
     import numpy as np
     import trimesh
-    import traceback
 except ImportError as e:
     print(e)
-    print('Please install the required packages using `pip install numpy trimesh pymeshfix`')
+    print('Please install the required packages using `pip install numpy trimesh`')
     sys.exit(1)
 
 

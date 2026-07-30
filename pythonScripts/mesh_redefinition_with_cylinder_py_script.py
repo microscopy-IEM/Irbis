@@ -6,7 +6,7 @@ try:
     from scipy.spatial.distance import cdist
 except ImportError as e:
     print(e)
-    print('Please install the required packages using `pip install numpy trimesh pymeshfix`')
+    print('Please install the required packages using `pip install numpy trimesh scipy`.')
     sys.exit(1)
 
 
