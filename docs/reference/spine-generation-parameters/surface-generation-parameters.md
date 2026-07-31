@@ -2,22 +2,19 @@
 
 This page describes the surface reconstruction workflow and 3D surface reconstruction parameters used by `IsosurfaceGenerator`.
 
-!!! note
-    The main app UI is stored in `.mlapp` files, so this generated page uses code-level parameter names and property comments rather than extracting UI labels.
-
 ## Reconstruction workflow
 
 `IsosurfaceGenerator` converts a selected image channel from planes data into one or more 3D mesh objects.
-The workflow first reads reconstruction settings from the UI component, loads voxel spacing metadata, checks whether the selected threshold would create an unusually large foreground volume, and then reconstructs the requested time points.
+The workflow first loads voxel spacing metadata and selected reconstruction settings, checks whether the selected threshold is high enough (threshold resulting in more than 10% of voxels being marked as foreground is reported to the user), and then reconstructs the requested time points.
 For each time point, the image stack is resampled, padded, converted into an isosurface mesh, scaled back into physical coordinates, split into connected mesh components, optionally simplified and smoothed, and stored in the model table.
 
 ## Reconstruction reasoning
 
-The reconstruction treats intensity thresholding as the step that separates signal from background. Resampling is applied before isosurface extraction so the mesh can be generated with a chosen detail level and with corrected XY/Z sampling. Padding prevents open surfaces or edge artifacts when signal touches image borders. Connected-face clustering separates disconnected foreground regions into individual objects. Mesh simplification reduces output size after vertices have been scaled into physical units, while optional smoothing can reduce surface noise when the raw mesh is too jagged.
-
-## Time-lapse handling
-
-For time-lapse data, thresholds may be constant or adjusted by bleaching compensation. `getParameters` stores the threshold for the current time point as `threshold`, even though the object stores the full threshold vector as `thresholds`. When multiple time points are reconstructed together, successful time points are returned so downstream drift correction and registration can operate on the generated model objects.
+The reconstruction is based on a fixed intensity threshold.
+Resampling is applied before 3D reconstruction so the mesh can be generated with a chosen detail level and with corrected XY/Z sampling.
+Padding prevents open surfaces or edge artifacts when signal touches image borders.
+Connected-face clustering separates disconnected meshes into individual objects.
+Mesh simplification reduces output size after vertices have been scaled into physical units, while optional smoothing can reduce surface noise when the raw mesh is too jagged.
 
 ## Parameters
 
@@ -28,8 +25,8 @@ For time-lapse data, thresholds may be constant or adjusted by bleaching compens
 | `channel` | `1` | image channel used for reconstruction |
 | `thresholds` | `6000` | intensity threshold(s) used for isosurface extraction |
 | `minVertexNum` | `4` | minimum number of vertices required to keep a reconstructed object |
-| `scaleFactor` | `1` | XY resizing factor used before isosurface extraction |
-| `zScaleFactor` | `1` | additional Z resizing factor used before isosurface extraction |
+| `scaleFactor` | `1` | XY resizing factor used before isosurface extraction (scaleFactor = 1 means no resizing, scaleFactor = 0.5 means halving the number of pixels in XY, etc.) |
+| `zScaleFactor` | `1` | additional Z resizing factor used before isosurface extraction (zScaleFactor = 1 means that the Z step is rescaled to match the XY step) |
 | `bleachCompensation` | `0` | threshold correction used for bleaching compensation |
 
 ### Mesh simplification
@@ -39,7 +36,7 @@ Source reference: <https://www.mathworks.com/help/lidar/ref/surfacemesh.simplify
 | Parameter | Default | Description |
 |---|---:|---|
 | `simplificationOn` | `true` | enable mesh simplification after surface extraction |
-| `simplificationMethod` | `'quadric-decimation'` | method that can yield irregular vertex distribution but preserves overall shape |
+| `simplificationMethod` | `'quadric-decimation'` | method used for simplification (quadratic decimation is a method that can yield irregular vertex distribution but preserves overall shape) |
 | `simplificationTargetReduction` | `0.2` | target reduction factor for simplification (e.g. 0.2 means reducing to 20% of original vertices) |
 | `simplificationMaxError` | `Inf` | maximum allowed error for simplification (set to inf to ignore error constraint) |
 | `simplificationBoundaryWeight` | `1` | weight for preserving boundary edges during simplification |
@@ -52,14 +49,14 @@ Source reference: <https://www.mathworks.com/help/lidar/ref/smoothsurfacemesh.ht
 |---|---:|---|
 | `smoothingOn` | `false` | enable mesh smoothing after surface extraction |
 | `smoothingIterations` | `1` | number of surface smoothing iterations |
-| `smoothingMethod` | `'Taubin'` | method that should not cause shrinkage |
+| `smoothingMethod` | `'Taubin'` | method used for smoothing (Taubin is a method that should not cause shrinkage) |
 | `smoothingScaleFactorPositive` | `0.5` | default value for the first Taubin filter scale factor |
 | `smoothingScaleFactorNegative` | `-0.53` | default value for the second Taubin filter scale factor |
 
 ---
 
-*This page was generated automatically from: `IsosurfaceGenerator.m`.*
+*This page was generated automatically from: `C:\Users\iva.svecova\Documents\MMPack\IsosurfaceGenerator.m`.*
 
-***Generated:** 2026-07-27 11:11:37*
+***Generated:** 2026-07-31 17:57:49*
 
 *Do not edit this file manually. Edit the property comments in the source file and regenerate the documentation.*

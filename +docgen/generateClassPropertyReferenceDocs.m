@@ -89,9 +89,9 @@ function lines = renderMarkdown(pageDocs, classProperties, defaults, missingName
         lines(end+1) = "";
     end
 
-    lines(end+1) = "!!! note";
-    lines(end+1) = "    The main app UI is stored in `.mlapp` files, so this generated page uses code-level parameter names and property comments rather than extracting UI labels.";
-    lines(end+1) = "";
+    % lines(end+1) = "!!! note";
+    % lines(end+1) = "    The main app UI is stored in `.mlapp` files, so this generated page uses code-level parameter names and property comments rather than extracting UI labels.";
+    % lines(end+1) = "";
 
     for i = 1:numel(pageDocs.sections)
         section = pageDocs.sections(i);
