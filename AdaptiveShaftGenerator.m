@@ -291,9 +291,9 @@ classdef (Sealed) AdaptiveShaftGenerator
 
 
 
-        function mesh = generateScaledMesh(contourPoints, middlePoints, selectedRadius, meanRadius, smoothingFactor)
+        function mesh = generateScaledMesh(contourPoints, middlePoints, selectedExpansionFactor, meanRadius, smoothingFactor)
             contourPointNormals = AdaptiveShaftGenerator.calculateNormals(contourPoints, middlePoints);
-            contourPoints = AdaptiveShaftGenerator.changeRadius(contourPoints, contourPointNormals, selectedRadius, meanRadius);
+            contourPoints = AdaptiveShaftGenerator.changeExpansion(contourPoints, middlePoints, selectedExpansionFactor);
 
             [~,~,middlePointsIdx] = unique(middlePoints(:,1),'stable');
             % add start plug
@@ -325,7 +325,24 @@ classdef (Sealed) AdaptiveShaftGenerator
 
 
 
+        function contourPoints = changeExpansion(contourPoints, middlePoints, selectedExpansionFactor)
+            % Scale contour points radially relative to their corresponding middle points.
+            % Semantics: selectedExpansionFactor == 1 -> original contourPoints
+            %            selectedExpansionFactor == 0 -> collapsed to middlePoints (centreline)
+            %            selectedExpansionFactor > 1  -> expanded outward
+
+            % Compute vectors from middle (centre) to contour points and scale them
+            vectors = contourPoints - middlePoints;
+
+            % Apply scalar scaling (works when selectedExpansionFactor is scalar)
+            contourPoints = middlePoints + vectors * selectedExpansionFactor;
+        end
+
+
+
         function contourPoints = changeRadius(contourPoints, contourPointNormals, selectedRadius, meanRadius)
+            % expand or shrink the shaft to the selected mean radius - depreacated, we use changeExpansion instead
+            % it was replaced because local bulging can change the mean radius dramatically across time points
 
             % calculate proportion to enlarge or shring the shaft
             k = selectedRadius-meanRadius;

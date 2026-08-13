@@ -479,7 +479,7 @@ function baseStructs = getBaseStruct(varargin)
 
                         %DOC_FIELD model.(branch).methodApplied; Type: char; Unit:
                         % Description: Reconstruction method applied to derived objects in this branch.
-                        model.(branch).methodApplied = 'Constant diameter';
+                        model.(branch).methodApplied = 'Adaptive';  % 260813 updated from Constant diameter to Adaptive
                     end
 
                     %DOC_FIELD model.(branch).storedFilters; Type: FilteringStorage; Unit:
