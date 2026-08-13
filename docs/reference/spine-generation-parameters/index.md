@@ -4,3 +4,4 @@ These pages describe processing settings used to generate 3D dendrite, shaft and
 
 - [Adaptive shaft generation parameters](adaptive-shaft-generation-parameters.md)
 - [Surface generation parameters](surface-generation-parameters.md)
+- [Connecting objects in time](greedy-object-connection.md)

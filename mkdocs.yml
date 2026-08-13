@@ -82,17 +82,16 @@ nav:
           - Overview: reference/parameters/index.md
           - Areas table: reference/parameters/areas-table.md
           - Model table: reference/parameters/model-table.md
-          - Object features: reference/parameters/object-features.md
           - Points table: reference/parameters/points-table.md
           - Tracks table: reference/parameters/tracks-table.md
           - Views table: reference/parameters/views-table.md
-      - Object connection:
-          - Overview: reference/object-connection/index.md
-          - Object connection in time: reference/object-connection/greedy-object-connection.md
+      - Object features: reference/parameters/object-features.md
       - Model generation parameters:
           - Overview: reference/spine-generation-parameters/index.md
           - Surface generation parameters: reference/spine-generation-parameters/surface-generation-parameters.md
           - Adaptive shaft generation parameters: reference/spine-generation-parameters/adaptive-shaft-generation-parameters.md
+          - Connecting objects in time: reference/spine-generation-parameters/greedy-object-connection.md
+  - Third-party software: third-party-software.md
   - Contact: contact.md
 
 markdown_extensions:
@@ -100,7 +99,9 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.snippets:
-      base_path: docs
+      base_path: 
+        - docs
+        - .
 
 plugins:
   - search
