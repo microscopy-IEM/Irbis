@@ -37,7 +37,7 @@ The adaptive method estimates the shaft boundary from the reconstructed parent m
 2. Set the shaft **Radius** if the generated shaft needs a global radius adjustment.
 3. To apply the same radius adjustment across time points, check **Same radius for all time points**.
 4. Open **Adaptive shaft settings**.
-5. Tune the adaptive settings.
+5. Tune the adaptive settings, especially **Spacing**, **nNeighbours**, and **neighborStep** when the contour is noisy or misses local shaft changes.
 6. Press **Test one plane** to preview one cross-section before applying the settings broadly.
 7. Press **Generate shaft**.
 
@@ -61,6 +61,7 @@ If **All time points** is checked in **Dendrite tracing**, the shaft is generate
 - **Same radius for all time points** applies the selected radius adjustment consistently across time points when multiple time points are generated.
 - **Spacing** controls the distance between centreline positions used to generate mesh slices. Smaller values sample the centreline more densely and may capture local shape changes better, but can increase processing time.
 - **nNeighbours** controls how many neighbouring slices on each side are combined when generating one contour. A value of `2` combines the current slice with two slices before and two slices after it. Higher values can stabilize noisy contours, but may smooth over local changes.
+- **neighborStep** controls the step between neighbouring slices selected by **nNeighbours**. Use `1` to combine adjacent slices; higher values combine every nth neighbouring slice, which widens the sampling window without increasing the number of slices.
 - **Plane position** selects which centreline position is used by **Test one plane**.
 - **Test one plane** previews the adaptive contour at the selected plane position before generating the full shaft.
 - **Morphological processing** applies opening and closing to the binary slice before contour extraction. Use it when extracted contours are fragmented or noisy.

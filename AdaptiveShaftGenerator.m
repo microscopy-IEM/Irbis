@@ -8,7 +8,7 @@ classdef (Sealed) AdaptiveShaftGenerator
 %
 %DOC_SECTION reasoning; Title: Reconstruction reasoning
 % Description: The adaptive shaft model follows the local shape of the reconstructed dendrite instead of using a fixed-radius cylinder.
-% Each centreline position defines a local cutting plane. Nearby slices can be combined to stabilize the contour estimate, which helps when the parent mesh is noisy or sparse.
+% Each centerline position defines a local cutting plane. Nearby slices can be combined to stabilize the contour estimate, which helps when the parent mesh is noisy or sparse. The neighbor step controls whether those neighbors are adjacent slices or every nth sampled slice.
 % Optional morphological postprocessing can clean the binary slice before contour extraction. Missing contours are repaired from the closest valid contour so the downstream mesh reconstruction receives a continuous sequence of cross sections.
 %
 %DOC_SECTION meshConstruction; Title: Mesh construction
@@ -22,8 +22,9 @@ classdef (Sealed) AdaptiveShaftGenerator
         sizeIm = 100 % size of the image in which the contours are calculated
         realCenterDim % physical coordinate of the contour image centre
 
-        ringSpacingPix = 20 % spacing between points of centreline used for generating mesh slices, in points of the centreline
+        ringSpacingPix = 20 % spacing between points of centerline used for generating mesh slices, in points of the centerline
         nRingNeighbors = 2 % number of slices on each side to add to the current slice to generate one contour (2 means that 1+2+2 = 5 will be combined)
+        neighborStep = 1 % step between neighboring slices used for one contour (2 means that every second neighboring slice is combined)
 
         doMorphologicalPostprocessing = false % whether to apply morphological opening and closing to the binary image before extracting the contour
         structuringElementRadius = 2 % radius of the structuring element used in morphological operations
@@ -39,7 +40,7 @@ classdef (Sealed) AdaptiveShaftGenerator
     end
 
     methods
-        function obj = AdaptiveShaftGenerator(contourSpacingPix, nNeighbors, doMorphologicalPostprocessing, structuringElementRadius)
+        function obj = AdaptiveShaftGenerator(contourSpacingPix, nNeighbors, doMorphologicalPostprocessing, structuringElementRadius, neighborStep)
             % Constructor - stores all the user-defined parameters
 
             arguments
@@ -47,12 +48,14 @@ classdef (Sealed) AdaptiveShaftGenerator
                 nNeighbors (1,1) {mustBeNonnegative} = 2
                 doMorphologicalPostprocessing (1,1) {mustBeNumericOrLogical} = false
                 structuringElementRadius (1,1) {mustBePositive} = 2
+                neighborStep (1,1) {mustBePositive, mustBeInteger} = 1
              end
 
             obj.ringSpacingPix = contourSpacingPix;
             obj.nRingNeighbors = nNeighbors;
             obj.doMorphologicalPostprocessing = doMorphologicalPostprocessing;
             obj.structuringElementRadius = structuringElementRadius;
+            obj.neighborStep = neighborStep;
         end
 
 
@@ -86,6 +89,7 @@ classdef (Sealed) AdaptiveShaftGenerator
                 "min_val", -1.0, ...
                 "max_val", 1.0, ...
                 "n_neighbors", obj.nRingNeighbors, ...
+                "neighbor_step", obj.neighborStep, ...
                 "do_morphological_processing", obj.doMorphologicalPostprocessing, ...
                 "disk_radius", obj.structuringElementRadius);
             
@@ -119,6 +123,7 @@ classdef (Sealed) AdaptiveShaftGenerator
                 "min_val", -1.0, ...
                 "max_val", 1.0, ...
                 "n_neighbors", obj.nRingNeighbors, ...
+                "neighbor_step", obj.neighborStep, ...
                 "do_morphological_processing", obj.doMorphologicalPostprocessing, ...
                 "disk_radius", obj.structuringElementRadius);
             

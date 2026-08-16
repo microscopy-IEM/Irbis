@@ -30,7 +30,7 @@ Use the tutorials to learn Irbis through complete guided workflows. Use the step
 
 - [Irbis file structure](reference/irbis-file-structure.md)
 - [Object data tables](reference/parameters/index.md)
-- [Object connection](reference/object-connection/index.md)
+- [Object connection](reference/spine-generation-parameters/greedy-object-connection.md)
 - [Spine generation parameters](reference/spine-generation-parameters/index.md)
 
 ## Contact

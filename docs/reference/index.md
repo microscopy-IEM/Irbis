@@ -4,5 +4,5 @@ Use the reference pages when you need details about Irbis file structure, tables
 
 - [Irbis file structure](irbis-file-structure.md)
 - [Object data tables](parameters/index.md)
-- [Object connection](object-connection/index.md)
+- [Object connection](spine-generation-parameters/greedy-object-connection.md)
 - [Spine generation parameters](spine-generation-parameters/index.md)

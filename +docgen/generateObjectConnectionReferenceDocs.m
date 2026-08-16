@@ -6,7 +6,7 @@ function generateObjectConnectionReferenceDocs(sourceFile, outputFile)
     end
 
     if nargin < 2 || isempty(outputFile)
-        outputFile = fullfile(pwd, "docs", "reference", "object-connection", "greedy-object-connection.md");
+        outputFile = fullfile(pwd, "docs", "reference", "spine-generation-parameters", "greedy-object-connection.md");
     end
 
     docgen.generateDocPageReferenceDocs( ...

@@ -1,6 +1,3 @@
-from unittest import result
-
-
 try:
     import sys
     import numpy as np
@@ -108,9 +105,9 @@ def repair_winding_by_face_removal(mesh):
     )
     repairedMesh.remove_unreferenced_vertices()
     
-    print(f"Original mesh: {len(mesh.faces)} faces, is_winding_consistent = {mesh.is_winding_consistent}")
-    print(f"Removed {len(facesToRemove)} faces from {inconsistentCount} inconsistent edges")
-    print(f"Repaired mesh: {len(repairedMesh.faces)} faces, is_winding_consistent = {repairedMesh.is_winding_consistent}")
+    # print(f"Original mesh: {len(mesh.faces)} faces, is_winding_consistent = {mesh.is_winding_consistent}")
+    # print(f"Removed {len(facesToRemove)} faces from {inconsistentCount} inconsistent edges")
+    # print(f"Repaired mesh: {len(repairedMesh.faces)} faces, is_winding_consistent = {repairedMesh.is_winding_consistent}")
     
     return repairedMesh
 
@@ -171,7 +168,7 @@ def repair_winding_by_vertex_removal(mesh):
             facesToRemove.add(fi)
 
     if len(facesToRemove) == 0 and len(verticesToRemove) == 0:
-        print("No inconsistent edges found for vertex-removal strategy.")
+        # print("No inconsistent edges found for vertex-removal strategy.")
         return mesh
 
     # Build faces mask and new faces array
@@ -183,7 +180,7 @@ def repair_winding_by_vertex_removal(mesh):
     kept_indices = np.nonzero(vertexKeepMask)[0]
     if len(kept_indices) == 0:
         # Removing all vertices — return an empty mesh
-        print("All vertices would be removed; returning empty mesh.")
+        # print("All vertices would be removed; returning empty mesh.")
         return trimesh.Trimesh(vertices=np.zeros((0, 3)), faces=np.zeros((0, 3), dtype=np.int32))
 
     old_to_new = -np.ones(len(mesh.vertices), dtype=int)
@@ -192,14 +189,14 @@ def repair_winding_by_vertex_removal(mesh):
     try:
         reindexed_faces = old_to_new[new_faces]
     except Exception as e:
-        print(f"Error reindexing faces after vertex removal: {e}")
+        # print(f"Error reindexing faces after vertex removal: {e}")
         return mesh
 
     repairedMesh = trimesh.Trimesh(vertices=mesh.vertices[vertexKeepMask], faces=reindexed_faces)
     repairedMesh.remove_unreferenced_vertices()
 
-    print(f"Vertex-removal: removed {len(verticesToRemove)} vertices and {len(facesToRemove)} faces from {inconsistentCount} inconsistent edges")
-    print(f"Repaired mesh: {len(repairedMesh.faces)} faces, is_winding_consistent = {repairedMesh.is_winding_consistent}")
+    # print(f"Vertex-removal: removed {len(verticesToRemove)} vertices and {len(facesToRemove)} faces from {inconsistentCount} inconsistent edges")
+    # print(f"Repaired mesh: {len(repairedMesh.faces)} faces, is_winding_consistent = {repairedMesh.is_winding_consistent}")
 
     return repairedMesh
 
@@ -216,70 +213,41 @@ def fix_mesh(mesh):
         trimesh.Trimesh: Repaired mesh.
     """
     if not mesh.is_watertight:
-        print("Mesh is not watertight. Attempting to fix...")
-
         is_watertight = trimesh.repair.fill_holes(mesh, use_fan=True) # This also does check of is_watertight, but the value should already be cached
         if not is_watertight:
             try:
                 # try-except statemenent added here, because the stitch function fails if no faces are produced
-                print("Filling holes did not help. Using stitch")
                 new_faces, new_vertices = trimesh.repair.stitch(mesh, insert_vertices=True)
-                print(f'Added {len(new_faces)} faces and {len(new_vertices)} vertices to stitch the mesh.')
                 all_faces = np.vstack((mesh.faces, new_faces))
                 mesh.faces = all_faces
                 all_vertices = np.vstack((mesh.vertices, new_vertices))
                 mesh.vertices = all_vertices
-                # mesh.remove_unreferenced_vertices()
-                # print("Filling holes did not help. Using stitch")
-                # new_faces = trimesh.repair.stitch(mesh, insert_vertices=False)
-                # print(f'Added {len(new_faces)} faces stitch the mesh.')
-                # all_faces = np.vstack((mesh.faces, new_faces))
-                # mesh.faces = all_faces
-                # mesh.remove_unreferenced_vertices()
             except Exception as e:
-                print(f"Error during stitching: {e}")
-                # traceback.print_exc()
+                pass
 
     if not mesh.is_winding_consistent:
-        print("Mesh is not winding consistent. Attempting to fix...")
         # This should be after fixing watertightness, as fixing watertightness may change the winding consistency
         trimesh.repair.fix_winding(mesh)  # This also does check of is_winding_consistent, but the value should already be cached
 
     if not mesh.is_winding_consistent:
-        print("Mesh is still not winding consistent after fix_winding. Attempting vertex removal...")
         mesh = repair_winding_by_vertex_removal(mesh)
         # mesh = repair_winding_by_face_removal(mesh)   # This does not seem to solve the problem in situation when removing the vertices and all attached faces does
 
         if not mesh.is_watertight:
-            print("Mesh is not watertight. Attempting to fix...")
-
             is_watertight = trimesh.repair.fill_holes(mesh, use_fan=True) # This also does check of is_watertight, but the value should already be cached
             if not is_watertight:
                 try:
                     # try-except statemenent added here, because the stitch function fails if no faces are produced
-                    print("Filling holes did not help. Using stitch")
                     new_faces, new_vertices = trimesh.repair.stitch(mesh, insert_vertices=True)
-                    print(f'Added {len(new_faces)} faces and {len(new_vertices)} vertices to stitch the mesh.')
                     all_faces = np.vstack((mesh.faces, new_faces))
                     mesh.faces = all_faces
                     all_vertices = np.vstack((mesh.vertices, new_vertices))
                     mesh.vertices = all_vertices
-                    # mesh.remove_unreferenced_vertices()
-                    # print("Filling holes did not help. Using stitch")
-                    # new_faces = trimesh.repair.stitch(mesh, insert_vertices=False)
-                    # print(f'Added {len(new_faces)} faces stitch the mesh.')
-                    # all_faces = np.vstack((mesh.faces, new_faces))
-                    # mesh.faces = all_faces
-                    # mesh.remove_unreferenced_vertices()
                 except Exception as e:
-                    print(f"Error during stitching: {e}")
+                    pass
 
     if mesh.volume < 0:
-        print("Mesh has negative volume. Attempting to fix...")
         mesh.invert()
-
-    result = find_holes(mesh)
-    print(f"Holes: {result['num_holes']}, Sizes: {result['hole_sizes']}, Boundary Edges: {result['num_boundary_edges']}, All accounted for: {result['all_boundary_edges_in_holes']}")
 
     print(f"Final mesh properties: Watertight={mesh.is_watertight}, Winding Consistent={mesh.is_winding_consistent}, Volume={mesh.volume}, is_volume={mesh.is_volume}")
 

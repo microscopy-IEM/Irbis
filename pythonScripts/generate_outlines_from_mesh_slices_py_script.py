@@ -48,6 +48,7 @@ class ProcessingParams:
     
     # Outline consideration
     n_neighbors: int = 2  # Number of neighboring outlines to consider on each side
+    neighbor_step: int = 1  # Step between neighboring outlines; 2 uses every second outline
     
     # Morphological processing
     do_morphological_processing: bool = False
@@ -361,7 +362,8 @@ def project_outlines_to_2d(
 def get_neighboring_outlines(
     projected_outlines: List[np.ndarray],
     index: int,
-    n_neighbors: int = 1
+    n_neighbors: int = 1,
+    neighbor_step: int = 1
 ) -> List[np.ndarray]:
     """
     Get outlines neighboring a given index.
@@ -374,15 +376,20 @@ def get_neighboring_outlines(
         Center index.
     n_neighbors : int, optional
         Number of neighbors on each side to include.
+    neighbor_step : int, optional
+        Step between selected neighboring outlines. A value of 1 selects
+        adjacent outlines; a value of 2 selects every second outline.
         
     Returns
     -------
     List[np.ndarray]
         List of neighboring outlines.
     """
-    min_idx = max(index - n_neighbors, 0)
-    max_idx = min(index + n_neighbors + 1, len(projected_outlines))
-    return projected_outlines[min_idx:max_idx]
+    neighbor_step = max(int(neighbor_step), 1)
+    offsets = range(-n_neighbors * neighbor_step, n_neighbors * neighbor_step + 1, neighbor_step)
+    indices = [index + offset for offset in offsets]
+    valid_indices = [idx for idx in indices if 0 <= idx < len(projected_outlines)]
+    return [projected_outlines[idx] for idx in valid_indices]
 
 
 def outlines_to_binary_image(
@@ -650,7 +657,7 @@ def process_single_point(
     """
     # Get neighboring outlines
     neighboring = get_neighboring_outlines(
-        projected_outlines, index, params.n_neighbors
+        projected_outlines, index, params.n_neighbors, params.neighbor_step
     )
     
     # Convert to binary image

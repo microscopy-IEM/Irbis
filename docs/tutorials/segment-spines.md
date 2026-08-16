@@ -33,7 +33,7 @@ This is the main end-to-end flow for structural microscopy data.
 
         --8<-- "_generated/snippets/step-by-step/data-import/load-data.md"
 
-2. Use the controls in the **Planes** tab to view the structural data and navigate through the z-stack. 
+2. Use the controls in the **Planes** tab to view the structural data and navigate through the z-stack.
 
     ![Planes tab controls for viewing structural data](../assets/tutorial-segment-spines-view-planes.png)
 
@@ -75,7 +75,7 @@ This is the main end-to-end flow for structural microscopy data.
 
         --8<-- "_generated/snippets/step-by-step/model/trace-dendrite.md"
 
-7. To generate the shaft model, stay in the same tab and open **Shaft generation and adjustment**. Select **Adaptive** from the **Method** drop-down menu, press **Generate shaft**, and wait for generation to finish.
+7. To generate the shaft model, stay in the same tab and open **Shaft generation and adjustment**. Select **Adaptive** from the **Method** drop-down menu, adjust **Spacing**, **nNeighbours**, or **neighborStep** in **Adaptive shaft settings** if the previewed contour is noisy or too smoothed, press **Generate shaft**, and wait for generation to finish.
 
     ![Detailed shaft generation and adjustment panel](../assets/tutorial-segment-spines-shaft-generation-panel.png)
 

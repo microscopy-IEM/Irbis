@@ -25,7 +25,7 @@ Use object tracking to connect corresponding model objects across time points. C
 
 Automatic object connection assigns group IDs by matching objects in consecutive time points. Irbis compares object positions and, when available, object volumes. Objects are connected only when they are within the selected radius limit.
 
-For details, see [Greedy object connection in time](../reference/object-connection/greedy-object-connection.md).
+For details, see [Greedy object connection in time](../reference/spine-generation-parameters/greedy-object-connection.md).
 
 **Manual correction**
 
@@ -36,7 +36,7 @@ If automatic connection is wrong, use the object context menu actions **Single: 
 3. Choose **Single: Select next** or **Single: Select previous**.
 4. Select the corresponding object in the next or previous time point.
 
-You can also edit group IDs manually in the **Object list** section by checking **Edit group IDs** and selecting the desired group ID for each row from the dropdown. 
+You can also edit group IDs manually in the **Object list** section by checking **Edit group IDs** and selecting the desired group ID for each row from the dropdown.
 
 **Next steps**
 
