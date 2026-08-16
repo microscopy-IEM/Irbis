@@ -59,7 +59,8 @@ classdef GroupIdHandler
             % currently, groupId > 0 means tracked, groupId == 0 is the default untracked value (or the string can be <missing> if the categorical values are defaulted to <undefined>)
             % defined as a function so that we don't have to replace the check everywhere if we change handling/class of groupId
 
-            isTracked = ~(isequal(string(groupId), string(0)) || ismissing(string(groupId)));
+            groupIdString = string(groupId);
+            isTracked = ~(groupIdString == "0" | ismissing(groupIdString));
         end
 
 
