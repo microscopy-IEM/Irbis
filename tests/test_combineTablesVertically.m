@@ -6,7 +6,7 @@ classdef test_combineTablesVertically < matlab.unittest.TestCase
             T1 = table([1; 2], {'A'; 'B'}, 'VariableNames', {'Num', 'Char'});
             T2 = table([3; 4], {'C'; 'D'}, 'VariableNames', {'Num', 'Char'});
             
-            result = combineTablesVertically(T1, T2);
+            result = tableUtils.combineTablesVertically(T1, T2);
             
             testCase.verifyEqual(height(result), 4);
             testCase.verifyEqual(width(result), 2);
@@ -18,7 +18,7 @@ classdef test_combineTablesVertically < matlab.unittest.TestCase
             T1 = table([1; 2], 'VariableNames', {'A'});
             T2 = table([3; 4], 'VariableNames', {'B'});
             
-            result = combineTablesVertically(T1, T2);
+            result = tableUtils.combineTablesVertically(T1, T2);
             
             testCase.verifyEqual(height(result), 4);
             testCase.verifyEqual(width(result), 2);
@@ -28,7 +28,7 @@ classdef test_combineTablesVertically < matlab.unittest.TestCase
             T1 = table([1; 2], {'A'; 'B'}, 'VariableNames', {'Num', 'Char'});
             T2 = table([3; 4], [true; false], 'VariableNames', {'Num', 'Logic'});
             
-            result = combineTablesVertically(T1, T2);
+            result = tableUtils.combineTablesVertically(T1, T2);
             
             testCase.verifyEqual(height(result), 4);
             testCase.verifyEqual(width(result), 3);
@@ -42,7 +42,7 @@ classdef test_combineTablesVertically < matlab.unittest.TestCase
             
             T2 = table([1; 2], ["X"; "Y"], 'VariableNames', {'A', 'B'});
             
-            result = combineTablesVertically(T1, T2);
+            result = tableUtils.combineTablesVertically(T1, T2);
             
             testCase.verifyEqual(height(result), 2);
             testCase.verifyEqual(width(result), 2);
@@ -52,7 +52,7 @@ classdef test_combineTablesVertically < matlab.unittest.TestCase
             T1 = table([1; 2], ["A"; "B"], 'VariableNames', {'Num', 'Str'});
             T2 = table([3; 4], categorical({'B'; 'C'}), 'VariableNames', {'Num', 'Cat'});
             
-            result = combineTablesVertically(T1, T2);
+            result = tableUtils.combineTablesVertically(T1, T2);
             
             testCase.verifyEqual(height(result), 4);
             testCase.verifyEqual(width(result), 3);
@@ -64,7 +64,7 @@ classdef test_combineTablesVertically < matlab.unittest.TestCase
             T1 = table([1 2 3; 4 5 6], [10; 20], 'VariableNames', {'Matrix', 'Scalar'});
             T2 = table([7 8; 9 10], [30; 40], 'VariableNames', {'Matrix', 'Scalar'});
             
-            result = combineTablesVertically(T1, T2);
+            result = tableUtils.combineTablesVertically(T1, T2);
             
             testCase.verifyEqual(height(result), 4);
             testCase.verifyEqual(width(result), 2);
@@ -78,7 +78,7 @@ classdef test_combineTablesVertically < matlab.unittest.TestCase
             T1 = table({[1 2]; 'text'}, 'VariableNames', {'CellData'});
             T2 = table({struct('a', 1); [3 4 5]}, 'VariableNames', {'CellData'});
             
-            result = combineTablesVertically(T1, T2);
+            result = tableUtils.combineTablesVertically(T1, T2);
             
             testCase.verifyEqual(height(result), 4);
             testCase.verifyEqual(width(result), 1);
@@ -91,7 +91,7 @@ classdef test_combineTablesVertically < matlab.unittest.TestCase
             T1 = table(single([1; 2]), int32([10; 20]), 'VariableNames', {'Single', 'Int32'});
             T2 = table(double([3; 4]), int16([30; 40]), 'VariableNames', {'Double', 'Int16'});
             
-            result = combineTablesVertically(T1, T2);
+            result = tableUtils.combineTablesVertically(T1, T2);
             
             testCase.verifyEqual(height(result), 4);
             testCase.verifyEqual(width(result), 4);
@@ -104,7 +104,7 @@ classdef test_combineTablesVertically < matlab.unittest.TestCase
             T1 = table(datetime([2023 2024], 1, 1), duration([1; 2], 0, 0), 'VariableNames', {'Date', 'Duration'});
             T2 = table(categorical({'A'; 'B'}), [10; 20], 'VariableNames', {'Category', 'Value'});
             
-            result = combineTablesVertically(T1, T2);
+            result = tableUtils.combineTablesVertically(T1, T2);
             
             testCase.verifyEqual(height(result), 4);
             testCase.verifyEqual(width(result), 4);
@@ -119,7 +119,7 @@ classdef test_combineTablesVertically < matlab.unittest.TestCase
             T2 = table(rand(n, 2), string(repmat('test', n, 1)), 'VariableNames', {'Values', 'Text'});
             
             tic;
-            result = combineTablesVertically(T1, T2);
+            result = tableUtils.combineTablesVertically(T1, T2);
             elapsed = toc;
             
             testCase.verifyEqual(height(result), 2*n);
@@ -137,7 +137,7 @@ classdef test_combineTablesVertically < matlab.unittest.TestCase
             T2.Properties.VariableNames = {'C', 'D'};
             T2.Properties.VariableTypes = {'logical', 'categorical'};
             
-            result = combineTablesVertically(T1, T2);
+            result = tableUtils.combineTablesVertically(T1, T2);
             
             testCase.verifyEqual(height(result), 0);
             testCase.verifyEqual(width(result), 4);
@@ -148,7 +148,7 @@ classdef test_combineTablesVertically < matlab.unittest.TestCase
             T1 = table([1; 2], {'A'; 'B'}, [10; 20], 'VariableNames', {'Num', 'Char', 'Val'});
             T2 = table({'C'; 'D'}, [30; 40], [3; 4], 'VariableNames', {'Char', 'Val', 'Num'});
             
-            result = combineTablesVertically(T1, T2);
+            result = tableUtils.combineTablesVertically(T1, T2);
             
             testCase.verifyEqual(height(result), 4);
             testCase.verifyEqual(width(result), 3);
