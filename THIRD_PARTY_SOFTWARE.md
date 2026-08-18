@@ -11,7 +11,7 @@ The GitHub repository contains the Irbis MATLAB source code together with a numb
 | Toolbox Fast Marching | https://www.mathworks.com/matlabcentral/fileexchange/6110-toolbox-fast-marching | BSD-2-Clause | Individual MATLAB files | Fast-marching computations for centreline tracing | [Sethian, 1996](#ref-sethian1996) |
 | msdanalyzer | https://github.com/tinevez/msdanalyzer | BSD-2-Clause | Bundled `@msdanalyzer` class | Mean-square displacement analysis | [Tarantino et al., 2014](#ref-tarantino2014) |
 | TrackMate import script | https://github.com/trackmate-sc/TrackMate/blob/master/scripts/importTrackMateTracks.m | GPL-3.0 | Adapted source code | Import of TrackMate trajectories | [Tinevez et al., 2017](#ref-tinevez2017) |
-| Bio-Formats MATLAB toolbox | https://docs.openmicroscopy.org/bio-formats/stable/developers/matlab-dev.html | BSD-2-Clause helpers + GPL-covered Java components | Bundled MATLAB toolbox (minor modifications) | Microscopy file import and export | [Linkert et al., 2010](#ref-linkert2010) |
+| Bio-Formats MATLAB toolbox | https://github.com/Biofrontiers-ALMC/bioformats-matlab/wiki | BSD-2-Clause helpers + GPL-covered Java components | Bundled MATLAB toolbox (minor modifications) | Microscopy file import and export | [Linkert et al., 2010](#ref-linkert2010) |
 | point2trimesh | https://www.mathworks.com/matlabcentral/fileexchange/52882-point2trimesh-distance-between-point-and-triangulated-surface | BSD-2-Clause | Individual MATLAB file | Distance computation (currently used in SpineSynapseMatcher) ||
 | tubeplot | https://www.aleph.se/Nada/Ray/Tubeplot/tubeplot.html | Informal permission | Individual MATLAB file | Tube generation ||
 | frenet | https://www.aleph.se/Nada/Ray/Tubeplot/tubeplot.html | Informal permission | Individual MATLAB file | Frenet frame computation for tube generation ||
@@ -33,6 +33,7 @@ The standalone Irbis application includes a packaged Python environment containi
 |---------|---------|---------|---------|-----------|
 | NumPy | https://numpy.org | BSD-3-Clause | Numerical arrays and computations | [Harris et al., 2020](#ref-harris2020) |
 | SciPy | https://scipy.org | BSD-3-Clause | Scientific computing | [Virtanen et al., 2020](#ref-virtanen2020) |
+| scikit-image | https://scikit-image.org/ | BSD-3-Clause | Adaptive shaft generation | [Van Der Walt et al., 2014](#ref-vandervalt2014) |
 | trimesh | https://github.com/mikedh/trimesh | MIT | Mesh processing | |
 | manifold3d | https://github.com/elalish/manifold | Apache-2.0 | Mesh operations | |
 | NetworkX | https://networkx.org | BSD-3-Clause | Graph algorithms | [Hagberg et al., 2008](#ref-hagberg2008) |
@@ -73,6 +74,9 @@ The following packages were used during the development of earlier versions of I
 
 <a id="ref-virtanen2020"></a>
 **Virtanen, P., Gommers, R., Oliphant, T. E., Haberland, M., Reddy, T., Cournapeau, D., Burovski, E., Peterson, P., Weckesser, W., Bright, J., Van Der Walt, S. J., Brett, M., Wilson, J., Millman, K. J., Mayorov, N., Nelson, A. R. J., Jones, E., Kern, R., Larson, E., et al. (2020).** SciPy 1.0: fundamental algorithms for scientific computing in Python. Nature Methods, 17(3), 261–272. https://doi.org/10.1038/s41592-019-0686-2
+
+<a id="ref-vandervalt2014"></a>
+**Van Der Walt, S., et al. (2014).** scikit-image: image processing in Python. PeerJ, 2, e453. https://doi.org/10.7717/peerj.453
 
 <a id="ref-hagberg2008"></a>
 **Hagberg, A. A., Schult, D. A., & Swart, P. J. (2008).** Exploring Network Structure, Dynamics, and Function using NetworkX. Proceedings of the 7th Python in Science Conference, 11–15. Pasadena, CA, USA.

@@ -17,7 +17,7 @@ classdef (Sealed) AdaptiveShaftGenerator
 % The final mesh is produced by Poisson surface reconstruction through `PythonMeshHelper.reconstruct`, and optional smoothing is applied by `smoothSurfaceMesh`.
 
     properties
-        endsBuffer = 30 % number of centreline points ignored near each end during contour extraction
+        endsBuffer = 0 % number of centreline points ignored near each end during contour extraction
 
         sizeIm = 100 % size of the image in which the contours are calculated
         realCenterDim % physical coordinate of the contour image centre
