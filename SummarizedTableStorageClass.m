@@ -1,4 +1,8 @@
 classdef SummarizedTableStorageClass < handle
+
+    % DEPRECATED: We never actually started using this class, the summarized tables ended up being implemented differently. 
+    % Kept here for now, because the .irbis files created before 260820 have an empty SummarizedTableStorageClass object in them.
+    
     properties
         summarizedTableObjects
     end

@@ -356,10 +356,6 @@ function baseStructs = getBaseStruct(varargin)
                     %DOC_FIELD tracks.storedCategorizations; Type: CategorizationStorage; Unit:
                     % Description: Storage object for categorizations related to tracks.
                     tracks.storedCategorizations = CategorizationStorage();
-
-                    %DOC_FIELD tracks.storedSummarizedTables; Type: SummarizedTableStorageClass; Unit:
-                    % Description: Storage for precomputed summarized tables for tracks.
-                    tracks.storedSummarizedTables = SummarizedTableStorageClass();
                     
                     %DOC_FIELD tracks.timePointPresent; Type: logical; Unit:
                     % Description: Flag indicating whether tracks include explicit time-point information.
@@ -391,10 +387,6 @@ function baseStructs = getBaseStruct(varargin)
                 %DOC_FIELD points.manualAlignment; Type: struct; Unit:
                 % Description: Manual alignment adjustments applied to points.
                 points.manualAlignment = [];
-
-                %DOC_FIELD points.storedSummarizedTables; Type: SummarizedTableStorageClass; Unit:
-                % Description: Storage for summarized tables derived from points.
-                points.storedSummarizedTables = SummarizedTableStorageClass();
             
                 baseStructs.points = points;
 
@@ -489,10 +481,6 @@ function baseStructs = getBaseStruct(varargin)
                     %DOC_FIELD model.(branch).storedCategorizations; Type: CategorizationStorage; Unit:
                     % Description: Stored categorizations for objects in this branch.
                     model.(branch).storedCategorizations = CategorizationStorage();
-
-                    %DOC_FIELD model.(branch).storedSummarizedTables; Type: SummarizedTableStorageClass; Unit:
-                    % Description: Summarized tables storage for objects in this branch.
-                    model.(branch).storedSummarizedTables = SummarizedTableStorageClass();
                 end
 
                 % General model features
@@ -503,10 +491,6 @@ function baseStructs = getBaseStruct(varargin)
                 %DOC_FIELD model.timeDriftCorrected; Type: logical / numeric; Unit:
                 % Description: Flag indicating if time drift correction has been applied.
                 model.timeDriftCorrected = 0;
-
-                %DOC_FIELD model.driftCorrectedColumns; Type: cell; Unit:
-                % Description: List of model property names that are corrected by drift compensation.
-                model.driftCorrectedColumns = {'Mesh','Points','CentreLine','Contours','MiddlePoints','cuttingPlaneCentre'};
 
                 baseStructs.model = model;
 
