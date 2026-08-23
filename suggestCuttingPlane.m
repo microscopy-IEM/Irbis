@@ -111,7 +111,7 @@ function [center, normal] = fitPlanePCA(P)
     [~, S, V] = svd(X, 0);
     singularValues = diag(S);
 
-    if numel(singularValues) < 3 || singularValues(3) < eps(max(singularValues))
+    if numel(singularValues) < 2 || singularValues(2) < eps(max(singularValues))
         error('fitPlanePCA:DegenerateGeometry', ...
             'Point cloud is degenerate; cannot fit a reliable plane.');
     end
