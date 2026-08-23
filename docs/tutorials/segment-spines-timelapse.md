@@ -18,6 +18,7 @@ This is an end-to-end flow for timelapse structural microscopy data. It expands 
 
     - Irbis is installed and running.
     - You have a structural microscopy dataset containing a dendrite with visible spines. The example TIFF image can be downloaded [here](https://microscopy.iem.cas.cz/irbis-downloads/control_01_ROI2.tif).
+    - A processed version of the example dataset is available [here](https://microscopy.iem.cas.cz/irbis-downloads/control_01_ROI2_processed.irbis) if you want to compare your result with a finished `.irbis` file.
 
 !!! note "Folded details"
     Folded sections in this tutorial are not separate tutorial steps. They provide additional detailed information from the step-by-step guides.
@@ -44,6 +45,8 @@ This is an end-to-end flow for timelapse structural microscopy data. It expands 
     ??? note "View data"
 
         --8<-- "_generated/snippets/step-by-step/planes/view-raw-data.md"
+
+3. For the example dataset, correct the axial scaling before segmentation. The dendrite appears stretched in z because the data were acquired with an oil-immersion objective while the cells were in a water-based solution. This refractive-index mismatch can cause sample-induced spherical aberration and axial distortion, as described by [Diel et al., 2020](https://www.nature.com/articles/s41596-020-0360-2). To correct the example dataset, change **Z step** from **0.2 um** to **0.16 um**.
 
 
 ### TS: Register planes in xy
@@ -134,7 +137,7 @@ This is an end-to-end flow for timelapse structural microscopy data. It expands 
 
 1. To separate the spines from the shaft, go to **Model** > **Spines** and open **Spine separation**.
 2. TS: Check the **All time points** checkbox.
-3. Press **Separate spines** and wait for separation to finish.
+3. Press **Separate spines**, click on the shaft you want to use for segmentation and wait for separation to finish.
 
     ![Separated spine objects shown in the visualization panel](../assets/tutorial-segment-spines-spines-visualization.png)
 
