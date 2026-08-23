@@ -45,6 +45,22 @@ classdef GenerateScreenshotsTest < matlab.uitest.TestCase
                 "crop-planes-window.png", 2);   % the test will error because we resume the app without necessary info
         end
 
+        function registerPlanesScreenshots(testCase)
+            testCase.openPlanesTab();
+            channelButtonHandle = findobj(testCase.App.IrbisMainFig, 'Tag', 'ch2', 'Type', 'uistatebutton');
+            testCase.choose(channelButtonHandle, true);
+            testCase.captureUiwaitWindowSnapshot(@() testCase.press(testCase.App.PreregisterButton), ...
+                "register-planes-window.png", 2);   % the test will error because we resume the app without necessary info
+        end
+
+        function preprocessingWindowScreenshots(testCase)
+            testCase.openPlanesTab();
+            channelButtonHandle = findobj(testCase.App.IrbisMainFig, 'Tag', 'ch2', 'Type', 'uistatebutton');
+            testCase.choose(channelButtonHandle, true);
+            testCase.captureUiwaitWindowSnapshot(@() testCase.press(testCase.App.EditfiltersetsButton), ...
+                "mightyDuck-window.png", 2);   % the test will error because we resume the app without necessary info
+        end
+
         function segmentSpinesTutorialScreenshots(testCase)
             testCase.openFilesTab();
             testCase.captureSnapshot(testCase.App.FilesTab, ...
@@ -295,6 +311,8 @@ classdef GenerateScreenshotsTest < matlab.uitest.TestCase
         function captureUiwaitWindowSnapshot(testCase, interactionFcn, fileName, waitSeconds, releaseFcn)
             if nargin < 4 || isempty(waitSeconds)
                 waitSeconds = 0.5;
+            else
+                disp(waitSeconds)
             end
             if nargin < 5 || isempty(releaseFcn)
                 releaseFcn = @uiresume;
@@ -319,6 +337,7 @@ classdef GenerateScreenshotsTest < matlab.uitest.TestCase
             testCase.verifyTrue(isfile(outputFile), ...
                 "Missing screenshot: " + outputFile);
 
+            % If I set the timer too long, it gets deleted before it finishes
             clear cleanup
 
             function captureAndReleaseNewWindow(~, ~)

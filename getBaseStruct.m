@@ -5,7 +5,7 @@ function baseStructs = getBaseStruct(varargin)
     %     2: timeDependencyType
     %     3: nTimePoints
 
-    irbisVersion = 1.17;    % Updated from 1.16 to 1.17 on 27.4.2026 - only relevant for model, changes how reconstruction parameters are kept
+    irbisFormatVersion = 1.17;    % Updated from 1.16 to 1.17 on 27.4.2026 - only relevant for model, changes how reconstruction parameters are kept
     % Updated from 1.15 to 1.16 on 15.3.2026 - only relevant for model
     % Updated from 1.14 to 1.15 on 21.6.2025
 
@@ -24,8 +24,8 @@ function baseStructs = getBaseStruct(varargin)
             end
             baseStructs = createEmptyList(structType,nRows,branchTypes);
             return
-        elseif isequal(varargin{1},'irbisVersion')
-            baseStructs = irbisVersion;
+        elseif isequal(varargin{1},'irbisFormatVersion')
+            baseStructs = irbisFormatVersion;
             return
         end
     end
@@ -65,9 +65,9 @@ function baseStructs = getBaseStruct(varargin)
             case 'info'
                 info = struct();
 
-                %DOC_FIELD info.irbisVersion; Type: double; Unit:
+                %DOC_FIELD info.irbisFormatVersion; Type: double; Unit:
                 % Description: Irbis version used to create the file.
-                info.irbisVersion = irbisVersion;
+                info.irbisFormatVersion = irbisFormatVersion;
 
                 %DOC_FIELD info.matlabVersion; Type: char; Unit:
                 % Description: MATLAB version used to create the file.

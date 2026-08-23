@@ -1,6 +1,6 @@
 # Tutorial: segment dendritic spines from a single time point
 
-This is the main end-to-end flow for structural microscopy data.
+This is a simplified end-to-end flow for structural microscopy data.
 
 ???+ info "Learning objectives"
     After completing this tutorial, you will be able to:
@@ -15,8 +15,7 @@ This is the main end-to-end flow for structural microscopy data.
     Before starting this tutorial, make sure that:
 
     - Irbis is installed and running.
-    - You have a structural microscopy dataset containing a dendrite with visible spines.
-    - The dataset has already been acquired and does not require preprocessing outside Irbis.
+    - You have a structural microscopy dataset containing a dendrite with visible spines. The example TIFF image can be downloaded [here](https://microscopy.iem.cas.cz/irbis-downloads/control_01_ROI2_ch2_t1.tif).
 
 !!! note "Folded details"
     Folded sections in this tutorial are not separate tutorial steps. They provide additional detailed information from the step-by-step guides.
@@ -63,7 +62,7 @@ This is the main end-to-end flow for structural microscopy data.
 
 5. If the reconstruction needs adjustment, enter a different threshold value and press **Generate 3D** again.
 
-*Next, generate a dendritic shaft model. The shaft is used to separate spines from the dendrite centre. This happens in two steps: first trace the dendrite, then use the resulting centreline together with the full dendrite model to generate the shaft.*
+*In the next steps, you will generate a dendritic shaft model. The shaft is used to separate spines from the dendrite centre. This happens in two steps: first trace the dendrite, then use the resulting centreline together with the full dendrite model to generate the shaft.*
 
 ![Shaft tab with dendrite and shaft controls](../assets/tutorial-segment-spines-shaft-tab.png)
 
@@ -75,7 +74,7 @@ This is the main end-to-end flow for structural microscopy data.
 
         --8<-- "_generated/snippets/step-by-step/model/trace-dendrite.md"
 
-7. To generate the shaft model, stay in the same tab and open **Shaft generation and adjustment**. Select **Adaptive** from the **Method** drop-down menu, adjust **Spacing**, **nNeighbours**, or **neighborStep** in **Adaptive shaft settings** if the previewed contour is noisy or too smoothed, press **Generate shaft**, and wait for generation to finish.
+7. To generate the shaft model, stay in the same tab and open **Shaft generation and adjustment**. Select **Adaptive** from the **Method** drop-down menu, press **Generate shaft**, and wait for generation to finish.
 
     ![Detailed shaft generation and adjustment panel](../assets/tutorial-segment-spines-shaft-generation-panel.png)
 
@@ -83,11 +82,11 @@ This is the main end-to-end flow for structural microscopy data.
 
         --8<-- "_generated/snippets/step-by-step/model/generate-shaft.md"
 
-8. The shaft model should cover the dendrite centre and wrap tightly around it without covering too much of the spines. If it is too thin or too thick, adjust its thickness with the **Radius** slider.
+8. The shaft model should cover the dendrite centre and wrap tightly around it without covering too much of the spines. If it is too thin or too thick, adjust its thickness with the **Expansion** slider.
 
     ![Generated shaft shown with the dendrite reconstruction](../assets/tutorial-segment-spines-shaft-visualization.png)
 
-*Now separate the spines. Everything extending outside the shaft is treated as a spine. If two or more spines are close together, they may be merged and require manual separation.*
+*Now you will separate the spines. Everything extending outside the shaft is treated as a spine. If two or more spines are close together, they may be merged and require manual separation.*
 
 ![Spines tab with spine separation controls](../assets/tutorial-segment-spines-spines-tab.png)
 
@@ -99,7 +98,7 @@ This is the main end-to-end flow for structural microscopy data.
 
         --8<-- "_generated/snippets/step-by-step/model/separate-spines.md"
 
-10. Review the separated spines. Use **Show base points** to visualize where spines are connected to the shaft. If there are spines merged together, left-click them in the right panel, right-click to open the context menu and select **Single: Suggest division plane**. A cutting tool appears; move it by dragging the tip points and rotate it by dragging the circles. When the cutting plane is positioned correctly, press Enter to finish the cut. For semi-automatic correction, use **Find cuts** to search for candidate cuts and review the proposed cuts before applying them.
+10. Review the separated spines. Use **Show base points** to visualize where spines are connected to the shaft. If there are spines merged together, left-click them in the right panel, right-click to open the context menu and select **Single: Suggest division plane**. A cutting tool appears; move it by dragging the tip points and rotate it by dragging the circles. When the cutting plane is positioned correctly, press Enter to finish the cut. (If you have a dataset with more time points, use **Find cuts** to search for candidate cuts. This tool looks for spines that are connected in one time point but separated in another, then uses that information to place the gizmo.)
 
     ![Manual spine editing options](../assets/segment-spines-manual-spine-editing-panel.png)
 

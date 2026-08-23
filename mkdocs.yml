@@ -23,6 +23,7 @@ nav:
   - Tutorial flows:
       - Overview: tutorials/index.md
       - Segment dendritic spines: tutorials/segment-spines.md
+      - Segment and connect in time: tutorials/segment-spines-timelapse.md
       - Compare datasets in ResultsViewer: tutorials/compare-datasets-results-viewer.md
   - Step-by-step:
       - Overview: step-by-step/index.md
@@ -53,12 +54,12 @@ nav:
           - Calculate spine features: step-by-step/model/calculate-spine-features.md
           - Classify spines manually: step-by-step/model/classify-spines-manually.md
           - Export model objects: step-by-step/model/export-model-objects.md
-      - Tracks processing:
-          - Overview: step-by-step/tracks/index.md
-          - Import tracks: step-by-step/tracks/import-tracks.md
-          - View tracks: step-by-step/tracks/view-tracks.md
-          - Calculate track parameters: step-by-step/tracks/calculate-parameters.md
-          - Define and edit track categorizations: step-by-step/tracks/categorize-tracks.md
+    #   - Tracks processing:
+    #       - Overview: step-by-step/tracks/index.md
+    #       - Import tracks: step-by-step/tracks/import-tracks.md
+    #       - View tracks: step-by-step/tracks/view-tracks.md
+    #       - Calculate track parameters: step-by-step/tracks/calculate-parameters.md
+    #       - Define and edit track categorizations: step-by-step/tracks/categorize-tracks.md
       - ResultsViewer:
           - Overview: step-by-step/results-viewer/index.md
           - Use table views and plots: step-by-step/results-viewer/modes-plots.md

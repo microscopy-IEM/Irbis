@@ -21,7 +21,7 @@ Use the tutorials to learn Irbis through complete guided workflows. Use the step
 - [Data import and saving](step-by-step/data-import/index.md)
 - [Planes processing](step-by-step/planes/index.md)
 - [3D model processing](step-by-step/model/index.md)
-- [Tracks processing](step-by-step/tracks/index.md)
+<!-- - [Tracks processing](step-by-step/tracks/index.md) -->
 - [ResultsViewer](step-by-step/results-viewer/index.md)
 - [Visualization and navigation](step-by-step/visualization-and-navigation/index.md)
 - [Views and animations](step-by-step/viewport/index.md)
