@@ -1,9 +1,8 @@
-function settings = getDefaultSettings(appData)
+function settings = getDefaultSettings()
     settings.Paths = {' '};
     settings.currentPath = 1;
     settings.GPUprocessing = 0;
     settings.parallelProcessing = 0;
-    settings.version = appData.Version; % Version of what? Irbis or settings?
     settings.predefinedFilterSettings = [];
 
     % Save settings

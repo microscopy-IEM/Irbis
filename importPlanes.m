@@ -87,7 +87,7 @@ function planes = importPlanesNew(fig, wb)
     else
         channelNames = reader.channelNames;
     end
-    planes.channelNames = channelNames;
+    planes.channelNames = matlab.lang.makeValidName(channelNames);  % Validation added because some channel names may contain invalid characters for field names (such as -)
 
     bitDepth = reader.bitDepth;
     planes.bitDepth = bitDepth;
