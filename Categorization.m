@@ -19,8 +19,8 @@ classdef Categorization < handle
 
         function columnName = getColumnName(obj)
             % Returns the name of the column
-            % Returns: string of the column name
-            columnName = obj.CategorizationName;
+            % Returns: char of the column name
+            columnName = char(obj.CategorizationName);
         end
 
         function conditions = getConditions(obj)
