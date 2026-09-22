@@ -17,8 +17,6 @@ The GitHub repository contains the Irbis MATLAB source code together with a numb
 | frenet | https://www.aleph.se/Nada/Ray/Tubeplot/tubeplot.html | Informal permission | Individual MATLAB file | Frenet frame computation for tube generation ||
 | intriangulation | https://www.mathworks.com/matlabcentral/fileexchange/43381-intriangulation-vertices-faces-testp-heavytest | BSD-2-Clause | Individual MATLAB file | Point-in-mesh testing ||
 | write3mf | https://github.com/cvergari/write3mf | MIT | Individual MATLAB file | Export of 3MF models ||
-| BM4D | https://webpages.tuni.fi/foi/GCF-BM3D/ | Non-commercial research license | Bundled MATLAB package | Volumetric image denoising | [Dabov et al., 2007](#ref-dabov2007) |
-| findPeaksSK | Adapted Matlab code | MathWorks copyright | Individual MATLAB file | Detecting peaks in a plot||
 
 ---
 
@@ -65,9 +63,6 @@ The following packages were used during the development of earlier versions of I
 
 <a id="ref-linkert2010"></a>
 **Linkert, M., Rueden, C. T., Allan, C., Burel, J.-M., Moore, W., Patterson, A., Loranger, B., Moore, J., Neves, C., MacDonald, D., Tarkowska, A., Sticco, C., Hill, E., Rossner, M., Eliceiri, K. W., & Swedlow, J. R. (2010).** Metadata matters: access to image data in the real world. Journal of Cell Biology, 189(5), 777–782. https://doi.org/10.1083/jcb.201004104
-
-<a id="ref-dabov2007"></a>
-**Dabov, K., Foi, A., Katkovnik, V., & Egiazarian, K. (2007).** Image Denoising by Sparse 3-D Transform-Domain Collaborative Filtering. IEEE Transactions on Image Processing, 16(8), 2080–2095. https://doi.org/10.1109/TIP.2007.901238
 
 <a id="ref-harris2020"></a>
 **Harris, C. R., Millman, K. J., Van Der Walt, S. J., Gommers, R., Virtanen, P., Cournapeau, D., Wieser, E., Taylor, J., Berg, S., Smith, N. J., Kern, R., Picus, M., Hoyer, S., Van Kerkwijk, M. H., Brett, M., Haldane, A., Del Río, J. F., Wiebe, M., Peterson, P., Gérard-Marchant, P., Sheppard, K., Reddy, T., Weckesser, W., Abbasi, H., Gohlke, C., & Oliphant, T. E. (2020).** Array programming with NumPy. Nature, 585, 357–362. https://doi.org/10.1038/s41586-020-2649-2

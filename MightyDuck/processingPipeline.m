@@ -206,17 +206,17 @@ classdef processingPipeline < handle
                     newStep.paramsInfo.method.label = 'Method';
                     newStep.paramsInfo.method.tooltip = 'Deconvolution method';
 
-                case 'BM4D'
-
-                    newStep.type = type;
-                    newStep.do = true;
-                    newStep.fcn = @obj.myBM4D;
-                    
-                    newStep.params.degreeOfSmoothing = 1;
-                    newStep.paramsInfo.degreeOfSmoothing.limits = [1 10];
-                    newStep.paramsInfo.degreeOfSmoothing.step = 1;
-                    newStep.paramsInfo.degreeOfSmoothing.label = 'DoS';
-                    newStep.paramsInfo.degreeOfSmoothing.tooltip = 'Degree of smoothing';                    
+                % case 'BM4D'
+                % 
+                %     newStep.type = type;
+                %     newStep.do = true;
+                %     newStep.fcn = @obj.myBM4D;
+                % 
+                %     newStep.params.degreeOfSmoothing = 1;
+                %     newStep.paramsInfo.degreeOfSmoothing.limits = [1 10];
+                %     newStep.paramsInfo.degreeOfSmoothing.step = 1;
+                %     newStep.paramsInfo.degreeOfSmoothing.label = 'DoS';
+                %     newStep.paramsInfo.degreeOfSmoothing.tooltip = 'Degree of smoothing';                    
 
             end
 
@@ -384,80 +384,80 @@ classdef processingPipeline < handle
 
         %% External functions
       
-        function im = myBM4D(im,params)
-
-            degreeOfSmoothing = params.degreeOfSmoothing;
-            origRange = getrangefromclass(im); % bit depth
-            origClass = class(im);
-            origClassFc = str2func(origClass);
-
-            % convert to double for the BM4D fcn
-            im = im2double(im);
-
-            patchVar = std2(im(:));
-            DoS = patchVar*degreeOfSmoothing*0.25;
-            hasLicense = license('test', 'wavelet_toolbox'); 
-                       
-            if size(im,3) < 3 % 2D case
-                % single plane
-                disp('Run BM4D plane for single plane using BM3D')
-                im = BM3D(im, DoS, 'lc');
-                % im = BM3D(im, DoS);
-
-            else % 3D case
-
-                sz = size(im);
-                if(max(sz) > 512)                                                               
-    
-                    if hasLicense      
-
-                        disp('Run BM4D in blocks')                     
-                        bs = round(min(sz(1:2))/4);
-    
-                        bim = blockedImage(im,BlockSize=[bs bs sz(3)]);
-                        clear im
-                        % fc = @(bl)BM4D(bl.Data,DoS);
-                        fc = @(bl)BM4D(bl.Data,DoS,'lc'); 
-    
-                        bim2 = apply(bim,fc,BorderSize=[5 5]);
-                        % bim2 = apply(bim,fc,BorderSize=[5 5 5]);
-                        im = gather(bim2);
-     
-                    else
-                        
-                        disp('Wavelet toolbox is missing')
-                        disp('Run BM4D plane wise using BM3D')
-
-                        for plane = 1:sz(3)
-                            im(:,:,plane) =  BM3D(im(:,:,plane),DoS);
-                        end
-                    end
-
-                else
-
-                    if hasLicense   
-                        disp('Run BM4D normally')
-                        im = BM4D(im, DoS);
-                    else
-
-                        disp('Wavelet toolbox is missing')
-                        disp('Run BM4D plane wise using BM3D')
-
-                        for plane = 1:sz(3)
-                            im(:,:,plane) =  BM3D(im(:,:,plane),DoS);
-                        end
-
-                    end
-
-                end
-
-            end
-
-            % rescale back to original range and convert to original class
-            im = im.*origRange(2);
-            im = origClassFc(im);
-
-        end
+        % function im = myBM4D(im,params)
+        % 
+        %     degreeOfSmoothing = params.degreeOfSmoothing;
+        %     origRange = getrangefromclass(im); % bit depth
+        %     origClass = class(im);
+        %     origClassFc = str2func(origClass);
+        % 
+        %     % convert to double for the BM4D fcn
+        %     im = im2double(im);
+        % 
+        %     patchVar = std2(im(:));
+        %     DoS = patchVar*degreeOfSmoothing*0.25;
+        %     hasLicense = license('test', 'wavelet_toolbox'); 
+        % 
+        %     if size(im,3) < 3 % 2D case
+        %         % single plane
+        %         disp('Run BM4D plane for single plane using BM3D')
+        %         im = BM3D(im, DoS, 'lc');
+        %         % im = BM3D(im, DoS);
+        % 
+        %     else % 3D case
+        % 
+        %         sz = size(im);
+        %         if(max(sz) > 512)                                                               
+        % 
+        %             if hasLicense      
+        % 
+        %                 disp('Run BM4D in blocks')                     
+        %                 bs = round(min(sz(1:2))/4);
+        % 
+        %                 bim = blockedImage(im,BlockSize=[bs bs sz(3)]);
+        %                 clear im
+        %                 % fc = @(bl)BM4D(bl.Data,DoS);
+        %                 fc = @(bl)BM4D(bl.Data,DoS,'lc'); 
+        % 
+        %                 bim2 = apply(bim,fc,BorderSize=[5 5]);
+        %                 % bim2 = apply(bim,fc,BorderSize=[5 5 5]);
+        %                 im = gather(bim2);
+        % 
+        %             else
+        % 
+        %                 disp('Wavelet toolbox is missing')
+        %                 disp('Run BM4D plane wise using BM3D')
+        % 
+        %                 for plane = 1:sz(3)
+        %                     im(:,:,plane) =  BM3D(im(:,:,plane),DoS);
+        %                 end
+        %             end
+        % 
+        %         else
+        % 
+        %             if hasLicense   
+        %                 disp('Run BM4D normally')
+        %                 im = BM4D(im, DoS);
+        %             else
+        % 
+        %                 disp('Wavelet toolbox is missing')
+        %                 disp('Run BM4D plane wise using BM3D')
+        % 
+        %                 for plane = 1:sz(3)
+        %                     im(:,:,plane) =  BM3D(im(:,:,plane),DoS);
+        %                 end
+        % 
+        %             end
+        % 
+        %         end
+        % 
+        %     end
+        % 
+        %     % rescale back to original range and convert to original class
+        %     im = im.*origRange(2);
+        %     im = origClassFc(im);
+        % 
+        % end
 
         %% Progress bar functions
         function progressBar = createProgressBar(callerFigure)

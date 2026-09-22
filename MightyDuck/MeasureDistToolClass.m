@@ -18,6 +18,8 @@ classdef MeasureDistToolClass < handle
         maxHist
         minHist
         listenersHandle
+        smallUnits = ' nm';
+        largeUnits = ' \mum';
         
         % State flags
         showProfile = 0;
@@ -60,6 +62,16 @@ classdef MeasureDistToolClass < handle
             obj.z = z;
             obj.pixelSize = pixelSize;
             
+            if isequal(pixelSize,'none')
+                obj.pixelSize = 1;
+                obj.smallUnits = ' pixels';
+                obj.largeUnits = ' pixels';
+                disp('pixel units')
+            else
+                obj.pixelSize = pixelSize;
+                disp('real world units')
+            end
+                       
             % If imageData (imageCell) is empty or not provided, extract CData from ctrlObjs
             if nargin < 4 || isempty(imageCell)
                 imageCell = cell(1, length(ctrlObjs));
@@ -86,8 +98,8 @@ classdef MeasureDistToolClass < handle
                 end
             end
             
-            obj.maxHist = 10 * pixelSize;
-            obj.minHist = 2 * pixelSize;
+            obj.maxHist = 10 * obj.pixelSize;
+            obj.minHist = 2 * obj.pixelSize;
             
             % Store original callbacks
             obj.WindowButtonMotionFcnOrig = fig.WindowButtonMotionFcn;
@@ -111,8 +123,10 @@ classdef MeasureDistToolClass < handle
 
 
             %%
-            obj.listenersHandle = addlistener(ctrlObjs(1), 'CData', 'PostSet', @obj.dataChangedCallback);
-            obj.listenersHandle = addlistener(ctrlObjs(2), 'CData', 'PostSet', @obj.dataChangedCallback);
+            for i = 1:numAxes
+                obj.listenersHandle = addlistener(ctrlObjs(i), 'CData', 'PostSet', @obj.dataChangedCallback);
+                % obj.listenersHandle = addlistener(ctrlObjs(2), 'CData', 'PostSet', @obj.dataChangedCallback);
+            end
 
             % obj.listenersHandle = addlistener(ctrlObjs(1), 'UserData', 'PostSet', @obj.cdataChangedCallback);
             % obj.listenersHandle = addlistener(ctrlObjs(2), 'UserData', 'PostSet', @obj.cdataChangedCallback);
@@ -217,9 +231,9 @@ classdef MeasureDistToolClass < handle
                 
                 obj.textObj(i).Position = centrePos;
                 if obj.dist >= 1
-                    obj.textObj(i).String = [num2str(round(obj.dist, obj.nDig)) ' \mum'];
+                    obj.textObj(i).String = [num2str(round(obj.dist, obj.nDig)) obj.largeUnits];
                 else
-                    obj.textObj(i).String = [num2str(round(obj.dist*1000, 0)) ' nm'];
+                    obj.textObj(i).String = [num2str(round(obj.dist*1000, 0)) obj.smallUnits];
                 end
             end
         end
@@ -379,9 +393,9 @@ classdef MeasureDistToolClass < handle
                     
                     obj.textObj(i).Position = centrePos;
                     if obj.dist >= 1
-                        obj.textObj(i).String = [num2str(round(obj.dist, obj.nDig)) ' \mum'];
+                        obj.textObj(i).String = [num2str(round(obj.dist, obj.nDig)) obj.largeUnits];
                     else
-                        obj.textObj(i).String = [num2str(round(obj.dist*1000, 0)) ' nm'];
+                        obj.textObj(i).String = [num2str(round(obj.dist*1000, 0)) obj.smallUnits];
                     end
                 end
                 obj.updateProfilePlot();
@@ -492,16 +506,55 @@ classdef MeasureDistToolClass < handle
                 
                 if obj.detectPeaks
                     xVect = x - x(1);
-                    [pks, ~, w, p, wxPk] = findpeaksSK(-Vq, xVect, 'MinPeakProminence', 0.1, 'Annotate', 'extents');
+                    % [pks, lcs, w, p, wxPk] = findpeaksSK(-Vq, xVect, 'MinPeakProminence', 0.1, 'Annotate', 'extents');
+                    [pks, lcs, w, p] = findpeaks(-Vq, xVect, 'MinPeakProminence', 0.1, 'Annotate', 'extents');
+
+                    % clc
+                    % pks
+                    % lcs
+                    % w
+                    % wxPk
+                    % p
+
+                    % -Vq>p
+                    
+                    % wxPk
                     
                     if ~isempty(pks)
                         if size(pks,1) > 1
                             [~, peakInd] = max(pks);
                             pks = pks(peakInd);
+                            lcs = lcs(peakInd);
                             w = w(peakInd);
                             p = p(peakInd);
-                            wxPk = wxPk(peakInd,:);
+                            % wxPk = wxPk(peakInd,:);
+                            
                         end
+
+                        wxPk(1) = lcs-w/2;
+                        wxPk(2) = lcs+w/2;
+                        % wxPk
+
+
+                        peak_idx = find(xVect == lcs,1);
+                        
+
+                        Y_half_prom = -Vq(peak_idx) - (pks / 2);
+
+                        % 2. Find all indices where the signal is above the threshold
+                        above_threshold_indices = find(-Vq >= Y_half_prom);
+                        
+                        % 3. Get the first and last indices
+                        idx_first = above_threshold_indices(1)+1;
+                        idx_last  = above_threshold_indices(end)-1;
+
+                        wxPk(1) = xVect(idx_first);
+                        wxPk(2) = xVect(idx_last);
+                        
+                        % 4. Extract the values
+                        % global_first_value = Yin(idx_first);
+                        % global_last_value  = Yin(idx_last);
+
                         
                         peakWidth = w;
                         ypos = -(pks - p/2);
@@ -513,9 +566,9 @@ classdef MeasureDistToolClass < handle
                         obj.widthLineObj(i).ZData = [obj.z + obj.lineZOffset, obj.z + obj.lineZOffset];
                         
                         if peakWidth >= 1
-                            obj.widthTxtObj(i).String = [num2str(round(peakWidth, obj.nDig)) ' \mum'];
+                            obj.widthTxtObj(i).String = [num2str(round(peakWidth, obj.nDig)) obj.largeUnits];
                         else
-                            obj.widthTxtObj(i).String = [num2str(round(peakWidth*1000, 0)) ' nm'];
+                            obj.widthTxtObj(i).String = [num2str(round(peakWidth*1000, 0)) obj.smallUnits];
                         end
                         
                         centrePoint = mean(hwpmPointsRot);
@@ -543,9 +596,9 @@ classdef MeasureDistToolClass < handle
                         
                         obj.exportWidthText(i).Position = [hwpmPoints(1,1)+w/2, -(hwpmPoints(1,2)+0.05), 0];
                         if peakWidth >= 1
-                            obj.exportWidthText(i).String = [num2str(round(peakWidth, 3)) ' \mum'];
+                            obj.exportWidthText(i).String = [num2str(round(peakWidth, 3)) obj.largeUnits];
                         else
-                            obj.exportWidthText(i).String = [num2str(round(peakWidth*1000, 0)) ' nm'];
+                            obj.exportWidthText(i).String = [num2str(round(peakWidth*1000, 0)) obj.smallUnits];
                         end
                     else
                         obj.exportWidth(i).XData = [];
