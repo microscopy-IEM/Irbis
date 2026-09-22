@@ -33,6 +33,7 @@ classdef (Sealed) FormulaColumnDefinitionDialog
             % Check if the user pressed cancel
             if isempty(input)
                 columnName = '';
+                formulaString = [];
                 return
             end
 

@@ -242,6 +242,10 @@ classdef FullTableComponentHelper < handle
 
                     [newName, conditions] = CategorizationColumnDefinitionDialog.showExisting(columnNames, getColumnFcn, userColumnDefinition);
 
+                    if isempty(newName) || isempty(conditions)   % can be empty if the user cancels the dialog
+                        return
+                    end
+
                     if isequal(newName, columnName)
                         userColumnDefinition.replaceRules(conditions);
                         newColumnData = userColumnDefinition.generateColumn(data);
@@ -259,6 +263,10 @@ classdef FullTableComponentHelper < handle
                     existingColumnName = userColumnDefinition.getColumnName();
                     existingFormula = userColumnDefinition.getRules();
                     [columnName, formulaString] = FormulaColumnDefinitionDialog.showExisting(existingColumnName, existingFormula);
+
+                    if isempty(columnName) || isempty(formulaString)
+                        return
+                    end
 
                     if ~isempty(columnName) && ~isempty(formulaString)
                         data = obj.tableStoreHandle.getTableData();
@@ -283,6 +291,10 @@ classdef FullTableComponentHelper < handle
                         existingColumnName = userColumnDefinition.getColumnName();  
                         [name, formula] = MergedColumnDefinitionDialog.showExisting(categoricalOrNumericColumnNames, existingColumnName);
 
+                        if isempty(name) || isempty(formula)
+                            return
+                        end
+
                         if ~isempty(name) && ~isempty(formula)
                             if isequal(existingColumnName, name)
                                 % no name change means that the rules did not change -> do not do anything
@@ -303,6 +315,10 @@ classdef FullTableComponentHelper < handle
                     existingGroupNames = userColumnDefinition.getGroupNames();
                     existingDefaultGroupName = userColumnDefinition.getDefaultGroupName();
                     [name, groupNames, defaultGroupName] = ManualColumnDefinitionDialog.showExisting(existingColumnName, existingGroupNames, existingDefaultGroupName); 
+
+                    if isempty(name) || isempty(groupNames)
+                        return;
+                    end
 
                     if ~isempty(name) && ~isempty(groupNames)
                         data = obj.tableStoreHandle.getTableData();
@@ -411,6 +427,10 @@ classdef FullTableComponentHelper < handle
                     numExistingCategories = obj.tableStoreHandle.getNumDefinitionsOfType('categorization');
 
                     [name, conditions] = CategorizationColumnDefinitionDialog.show(columnNames, getColumnFcn, numExistingCategories); % open the dialog to define the new column
+
+                    if isempty(name) || isempty(conditions)   % can be empty if the user cancels the dialog
+                        return
+                    end
         
                     % extract the categorization and store it
                     newCategorization = Categorization(name, conditions);
@@ -424,6 +444,10 @@ classdef FullTableComponentHelper < handle
                 data = obj.tableStoreHandle.getTableData();
                 [name, formula] = FormulaColumnDefinitionDialog.show(); % open the dialog to define the new column
                 
+                if isempty(name) || isempty(formula)
+                    return;
+                end
+
                 if ~isempty(name) && ~isempty(formula)
                     columnDefinitionObject = FormulaColumnDefinition(name, formula); % create the column definition object
                     % apply the formula to the table
@@ -540,6 +564,10 @@ classdef FullTableComponentHelper < handle
 
                     [newName, conditions] = CategorizationColumnDefinitionDialog.showExisting(columnNames, getColumnFcn, userColumnDefinition);
 
+                    if isempty(newName) || isempty(conditions)   % can be empty if the user cancels the dialog
+                        return
+                    end
+
                     if isequal(newName, templateName)
                         userColumnDefinition.replaceRules(conditions);
                         obj.templates{idx} = userColumnDefinition; % This is not necessary, because for now, the userColumnDefinition is handle - it is changed automatically
@@ -555,6 +583,10 @@ classdef FullTableComponentHelper < handle
                     existingColumnName = userColumnDefinition.getColumnName();
                     existingFormula = userColumnDefinition.getRules();
                     [columnName, formulaString] = FormulaColumnDefinitionDialog.showExisting(existingColumnName, existingFormula);
+
+                    if isempty(columnName) || isempty(formulaString)
+                        return;
+                    end
 
                     if ~isempty(columnName) && ~isempty(formulaString)
                         if isequal(existingColumnName, columnName)
@@ -576,6 +608,10 @@ classdef FullTableComponentHelper < handle
                         existingColumnName = userColumnDefinition.getColumnName();  
                         [name, formula] = MergedColumnDefinitionDialog.showExisting(categoricalOrNumericColumnNames, existingColumnName);
 
+                        if isempty(name) || isempty(formula)
+                            return;
+                        end
+
                         if ~isempty(name) && ~isempty(formula)
                             if isequal(existingColumnName, name)
                                 % no name change means that the rules did not change -> do not do anything
@@ -594,6 +630,10 @@ classdef FullTableComponentHelper < handle
                     existingGroupNames = userColumnDefinition.getGroupNames();
                     existingDefaultGroupName = userColumnDefinition.getDefaultGroupName();
                     [name, groupNames, defaultGroupName] = ManualColumnDefinitionDialog.showExisting(existingColumnName, existingGroupNames, existingDefaultGroupName); 
+
+                    if isempty(name) || isempty(groupNames)
+                        return;
+                    end
 
                     if ~isempty(name) && ~isempty(groupNames)
                         if isequal(existingColumnName, name)
@@ -626,6 +666,10 @@ classdef FullTableComponentHelper < handle
             userColumnDefinition = obj.templates{idx};
             existingNames = obj.templateNames;
             newName = FullTableComponentHelper.getUnusedNameCopy(templateName, existingNames);
+            if isempty(newName)
+                disp('Failed to generate a unique name for the new template.');
+                return;
+            end
 
             rules = userColumnDefinition.getRules();
             definitionType = userColumnDefinition.getDefinitionType();
