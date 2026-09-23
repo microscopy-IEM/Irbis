@@ -22,6 +22,7 @@ function planes = importPlanesNew(fig, wb)
     fullPath = fullfile(path, fileName);
 
     try
+        bfInitLogging('ERROR'); 
         reader = BioformatsImage(fullPath);
         % assignin('base', 'reader', reader); % Assign to base workspace for debugging
     catch ME
