@@ -253,8 +253,20 @@ def extract_points_and_normals(
     
     for i in selected_indices:
         ahead_points = centerline[i + 1:i + 1 + ahead_index]
-        average_pos = np.mean(ahead_points, axis=0)
-        normal = average_pos - centerline[i]
+
+        if len(ahead_points) > 0:
+            average_pos = np.mean(ahead_points, axis=0)
+            normal = average_pos - centerline[i]
+        else:
+            behind_points = centerline[max(0, i - ahead_index):i]
+            if len(behind_points) == 0:
+                raise ValueError("Cannot compute centerline normal: centerline is too short.")
+            average_pos = np.mean(behind_points, axis=0)
+            normal = centerline[i] - average_pos
+
+        if not np.all(np.isfinite(normal)) or np.linalg.norm(normal) == 0:
+            raise ValueError(f"Invalid centerline normal at index {i}.")
+
         normals.append(normal)
     
     normals = np.array(normals)

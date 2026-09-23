@@ -1,12 +1,11 @@
 try:
-    import sys
     import numpy as np
     import trimesh
-    import traceback
 except ImportError as e:
-    print(e)
-    print('Please install the required packages using `pip install numpy trimesh`')
-    sys.exit(1)
+    raise RuntimeError(
+        "Missing required packages for mesh boolean segmentation. "
+        "Please install them using `pip install numpy trimesh`."
+    ) from e
 
 
 
@@ -196,8 +195,6 @@ def segment_mesh(mesh_data):
 try:
     output = segment_mesh(mesh_data)
 except Exception as e:
-    print(f"Error performing mesh intersection: {e}")
-    traceback.print_exc()
-    sys.exit(1)
+    raise RuntimeError(f"Error performing mesh boolean segmentation: {e}") from e
 
 

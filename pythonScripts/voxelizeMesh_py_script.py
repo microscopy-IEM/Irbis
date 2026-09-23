@@ -8,7 +8,6 @@
     
 import open3d as o3d
 import numpy as np
-import sys
 
 def to_numpy_array(data, dtype):
     """Ensure data is a NumPy array, converting memoryview if needed."""

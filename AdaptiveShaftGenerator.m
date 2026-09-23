@@ -17,7 +17,7 @@ classdef (Sealed) AdaptiveShaftGenerator
 % The final mesh is produced by Poisson surface reconstruction through `PythonMeshHelper.reconstruct`, and optional smoothing is applied by `smoothSurfaceMesh`.
 
     properties
-        endsBuffer = 0 % number of centreline points ignored near each end during contour extraction
+        endsBuffer = 1 % number of centreline points ignored near each end during contour extraction
 
         sizeIm = 100 % size of the image in which the contours are calculated
         realCenterDim % physical coordinate of the contour image centre
@@ -93,8 +93,15 @@ classdef (Sealed) AdaptiveShaftGenerator
                 "do_morphological_processing", obj.doMorphologicalPostprocessing, ...
                 "disk_radius", obj.structuringElementRadius);
             
-            [contoursPy, pointsPy, normalsPy] = pyrunfile("generate_outlines_from_mesh_slices_py_script.py", ["contours_3d", "points", "normals"], ...
-            vertices=verticesPy, faces=facesPy, centerline=centrelinePy, matlab_params=parameters);
+            try
+                [contoursPy, pointsPy, normalsPy] = pyrunfile("generate_outlines_from_mesh_slices_py_script.py", ["contours_3d", "points", "normals"], ...
+                vertices=verticesPy, faces=facesPy, centerline=centrelinePy, matlab_params=parameters);
+            catch ME
+                newME = MException('AdaptiveShaftGenerator:PythonScriptFailed', ...
+                    'Python script generate_outlines_from_mesh_slices_py_script.py failed in runInPython:%s%s', newline, ME.message);
+                newME = addCause(newME, ME);
+                throwAsCaller(newME);
+            end
 
             contoursPy = cell(contoursPy);
             contours = cell(size(contoursPy));
@@ -127,8 +134,15 @@ classdef (Sealed) AdaptiveShaftGenerator
                 "do_morphological_processing", obj.doMorphologicalPostprocessing, ...
                 "disk_radius", obj.structuringElementRadius);
             
-            [contoursPy, pointsPy, normalsPy] = pyrunfile("generate_outlines_from_mesh_slices_py_script.py", ["contours_3d", "points", "normals"], ...
-            vertices=verticesPy, faces=facesPy, centerline=centrelinePy, matlab_params=parameters, test_point=position);
+            try
+                [contoursPy, pointsPy, normalsPy] = pyrunfile("generate_outlines_from_mesh_slices_py_script.py", ["contours_3d", "points", "normals"], ...
+                vertices=verticesPy, faces=facesPy, centerline=centrelinePy, matlab_params=parameters, test_point=position);
+            catch ME
+                newME = MException('AdaptiveShaftGenerator:PythonScriptFailed', ...
+                    'Python script generate_outlines_from_mesh_slices_py_script.py failed in runSingleInPython:%s%s', newline, ME.message);
+                newME = addCause(newME, ME);
+                throwAsCaller(newME);
+            end
 
             contoursPy = cell(contoursPy);
             contours = cell(size(contoursPy));

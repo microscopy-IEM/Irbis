@@ -1,13 +1,12 @@
 try:
-    import sys
     import numpy as np
     import trimesh
-    import traceback
     from scipy.spatial.distance import cdist
 except ImportError as e:
-    print(e)
-    print('Please install the required packages using `pip install numpy trimesh scipy`.')
-    sys.exit(1)
+    raise RuntimeError(
+        "Missing required packages for cylinder mesh redefinition. "
+        "Please install them using `pip install numpy trimesh scipy`."
+    ) from e
 
 
 
@@ -248,6 +247,6 @@ def redefine_with_cylinder(mesh_data, min_valid_faces=50, distance_tolerance=1e-
 try:
     output = redefine_with_cylinder(mesh_data, min_valid_faces, distance_tolerance, min_match)
 except Exception as e:
-    print(f"Error performing cylinder subtraction and dendrite adjustment: {e}")
-    traceback.print_exc()
-    sys.exit(1)  
+    raise RuntimeError(
+        f"Error performing cylinder subtraction and dendrite adjustment: {e}"
+    ) from e

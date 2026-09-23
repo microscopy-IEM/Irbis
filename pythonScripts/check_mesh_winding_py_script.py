@@ -1,12 +1,11 @@
 try:
-    import sys
     import numpy as np
     import trimesh
-    import traceback
 except ImportError as e:
-    print(e)
-    print('Please install the required packages using `pip install numpy trimesh`')
-    sys.exit(1)
+    raise RuntimeError(
+        "Missing required packages for mesh winding check. "
+        "Please install them using `pip install numpy trimesh`."
+    ) from e
 
 
 def to_numpy_array(data, dtype):
@@ -48,6 +47,4 @@ try:
     mesh = load_mesh(mesh_data)
     is_winding_consistent = mesh.is_winding_consistent
 except Exception as e:
-    print(f"Error performing mesh repair: {e}")
-    traceback.print_exc()
-    sys.exit(1)
+    raise RuntimeError(f"Error checking mesh winding: {e}") from e

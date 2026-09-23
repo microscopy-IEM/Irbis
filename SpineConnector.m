@@ -373,9 +373,16 @@ classdef SpineConnector < handle
             input_data.vertices = mesh.Vertices;  % Mesh vertices
             input_data.faces = mesh.Faces - 1;  % Converting to 0-based indexing for Python
 
-            voxel_coordinates_numpy = pyrunfile('voxelizeMesh_py_script.py', ...
-                "voxel_coordinates", data=input_data, ...
-                voxel_size=voxelSize);
+            try
+                voxel_coordinates_numpy = pyrunfile('voxelizeMesh_py_script.py', ...
+                    "voxel_coordinates", data=input_data, ...
+                    voxel_size=voxelSize);
+            catch ME
+                newME = MException('SpineConnector:PythonScriptFailed', ...
+                    'Python script voxelizeMesh_py_script.py failed:%s%s', newline, ME.message);
+                newME = addCause(newME, ME);
+                throwAsCaller(newME);
+            end
 
             voxelCoordinates = double(voxel_coordinates_numpy);  % Convert to uint64
             voxelCoordinates = voxelCoordinates + 1; % add 1 for MATLAB 1-based indexing

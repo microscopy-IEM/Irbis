@@ -1,11 +1,11 @@
 try:
-    import sys
     import numpy as np
     import trimesh
 except ImportError as e:
-    print(e)
-    print('Please install the required packages using `pip install numpy trimesh`')
-    sys.exit(1)
+    raise RuntimeError(
+        "Missing required packages for mesh validity testing. "
+        "Please install them using `pip install numpy trimesh`."
+    ) from e
 
 
 

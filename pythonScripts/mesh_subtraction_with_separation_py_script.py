@@ -1,12 +1,11 @@
 try:
-    import sys
     import numpy as np
     import trimesh
-    import traceback
 except ImportError as e:
-    print(e)
-    print('Please install the required packages using `pip install numpy trimesh`')
-    sys.exit(1)
+    raise RuntimeError(
+        "Missing required packages for mesh subtraction. "
+        "Please install them using `pip install numpy trimesh`."
+    ) from e
 
 
 
@@ -163,8 +162,6 @@ def run_subtraction(mesh_data):
 try:
     output = run_subtraction(mesh_data)
 except Exception as e:
-    print(f"Error performing mesh subtraction: {e}")
-    traceback.print_exc()
-    sys.exit(1)
+    raise RuntimeError(f"Error performing mesh subtraction: {e}") from e
 
 

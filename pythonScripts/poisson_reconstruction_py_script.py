@@ -1,7 +1,6 @@
 import open3d as o3d
 import numpy as np
 import trimesh
-import sys
 
 
 def to_numpy_array(data, dtype):
@@ -176,7 +175,4 @@ try:
         separate=separate
     )
 except Exception as e:
-    print(e)
-    output = None
-
-    sys.exit(1)  # Return status 1 if an error occurred
+    raise RuntimeError(f"Poisson reconstruction failed: {e}") from e

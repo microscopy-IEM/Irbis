@@ -1,12 +1,11 @@
 try:
-    import sys
     import numpy as np
     import trimesh
-    import traceback
 except ImportError as e:
-    print(e)
-    print('Please install the required packages using `pip install numpy trimesh`')
-    sys.exit(1)
+    raise RuntimeError(
+        "Missing required packages for mesh repair. "
+        "Please install them using `pip install numpy trimesh`."
+    ) from e
 
 
 
@@ -356,7 +355,5 @@ try:
     # Expects mesh_data as a dictionary with 'vertices' and 'faces' keys, where values are array-like (e.g. lists, numpy arrays, or memoryviews)
     output, is_winding_consistent = fix_mesh(load_mesh(mesh_data))
 except Exception as e:
-    print(f"Error performing mesh repair: {e}")
-    traceback.print_exc()
-    sys.exit(1)
+    raise RuntimeError(f"Error performing mesh repair: {e}") from e
 

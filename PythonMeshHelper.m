@@ -19,14 +19,22 @@ classdef PythonMeshHelper
                 separate {mustBeNumericOrLogical} = false
             end
 
-            output = pyrunfile('poisson_reconstruction_py_script.py',"output", ...
-                mesh_data=mesh_data, ...
-                d=depth, ...
-                f=fractionToKeep, ...
-                nVer=minVertexNum, ...
-                separate=separate);
-            % the open3d version seems to be faster compared to pymeshlab (0.5 vs 1.4 s on constant shaft)
-                % same for adaptive shaft (0.6 vs 4.2 s)
+            try
+                % Call the Python script with mesh data and parameters
+                output = pyrunfile('poisson_reconstruction_py_script.py',"output", ...
+                    mesh_data=mesh_data, ...
+                    d=depth, ...
+                    f=fractionToKeep, ...
+                    nVer=minVertexNum, ...
+                    separate=separate);
+                % the open3d version seems to be faster compared to pymeshlab (0.5 vs 1.4 s on constant shaft)
+                    % same for adaptive shaft (0.6 vs 4.2 s)
+            catch ME
+                newME = MException('PythonMeshHelper:PythonScriptFailed', ...
+                    'Python script poisson_reconstruction_py_script.py failed:%s%s', newline, ME.message);
+                newME = addCause(newME, ME);
+                throwAsCaller(newME);
+            end
 
             % Retrieve the number of objects
             nObjects = int8(output{'n_objects'});
@@ -59,8 +67,10 @@ classdef PythonMeshHelper
                 output = pyrunfile('mesh_boolean_segmentation_py_script.py', "output", ...
                     mesh_data=mesh_data);
             catch ME
-                disp(ME.message);
-                error("Error in running the python script.");
+                newME = MException('PythonMeshHelper:PythonScriptFailed', ...
+                    'Python script mesh_boolean_segmentation_py_script.py failed:%s%s', newline, ME.message);
+                newME = addCause(newME, ME);
+                throwAsCaller(newME);
             end
 
             parentMesh = PythonMeshHelper.pyDictToMesh(output{'parent_mesh'});
@@ -116,8 +126,10 @@ classdef PythonMeshHelper
                 pyrunfile('test_mesh_validity_py_script.py', ...
                     mesh_data=mesh_data);
             catch ME
-                disp(ME.message);
-                error("Error in running the python script.");
+                newME = MException('PythonMeshHelper:PythonScriptFailed', ...
+                    'Python script test_mesh_validity_py_script.py failed:%s%s', newline, ME.message);
+                newME = addCause(newME, ME);
+                throwAsCaller(newME);
             end
         end
 
@@ -137,8 +149,10 @@ classdef PythonMeshHelper
                 [outputDict, is_winding_consistent] = pyrunfile('repair_mesh_py_script.py', ["output", "is_winding_consistent"], ...
                     mesh_data=mesh_data);
             catch ME
-                disp(ME.message);
-                error("Error in running the python script.");
+                newME = MException('PythonMeshHelper:PythonScriptFailed', ...
+                    'Python script repair_mesh_py_script.py failed:%s%s', newline, ME.message);
+                newME = addCause(newME, ME);
+                throwAsCaller(newME);
             end
 
             repairedMesh = PythonMeshHelper.pyDictToMesh(outputDict);
@@ -164,8 +178,10 @@ classdef PythonMeshHelper
                 is_winding_consistent = pyrunfile('check_mesh_winding_py_script.py', "is_winding_consistent", ...
                     mesh_data=mesh_data);
             catch ME
-                disp(ME.message);
-                error("Error in running the python script.");
+                newME = MException('PythonMeshHelper:PythonScriptFailed', ...
+                    'Python script check_mesh_winding_py_script.py failed:%s%s', newline, ME.message);
+                newME = addCause(newME, ME);
+                throwAsCaller(newME);
             end
 
             isConsistent = logical(is_winding_consistent);
@@ -193,8 +209,10 @@ classdef PythonMeshHelper
                     min_valid_faces=PythonMeshHelper.min_valid_faces);
 
             catch ME
-                disp(ME.message);
-                error("Error in running the python script.");
+                newME = MException('PythonMeshHelper:PythonScriptFailed', ...
+                    'Python script mesh_redefinition_with_cylinder_py_script.py failed:%s%s', newline, ME.message);
+                newME = addCause(newME, ME);
+                throwAsCaller(newME);
             end
 
             dendriteMesh = PythonMeshHelper.pyDictToMesh(output{'new_dendrite_data'});
@@ -223,9 +241,11 @@ classdef PythonMeshHelper
                 output = pyrunfile('mesh_subtraction_with_separation_py_script.py', "output", ...
                     mesh_data=mesh_data);
             
-            catch ME    % this is not perfect - we do not handle not having the outputs of python script, so it will crash anyway
-                disp(ME.message);
-                error("Error in running the python script.");
+            catch ME
+                newME = MException('PythonMeshHelper:PythonScriptFailed', ...
+                    'Python script mesh_subtraction_with_separation_py_script.py failed:%s%s', newline, ME.message);
+                newME = addCause(newME, ME);
+                throwAsCaller(newME);
             end
 
             nSubtractions = int8(output{'n_subtractions'});
