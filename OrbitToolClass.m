@@ -254,6 +254,28 @@ classdef OrbitToolClass < handle
         end
 
 
+        function supplementWindowKeyPressCallback(obj, keyPressCallback)
+
+            % replace the main part of the window key press callback with a new one, but keep the extension
+
+            obj.hFig.KeyPressFcn = @(src, evt) obj.callSupplementedKeyPressCallback(src, evt, keyPressCallback);
+
+        end
+
+
+        function callSupplementedKeyPressCallback(obj, src, evt, keyPressCallback)
+
+            % First call the replacement/main callback
+            keyPressCallback(src, evt);
+
+            % Then call the extension
+            if ~isempty(obj.keypressExtension) && isa(obj.keypressExtension, 'function_handle')
+                obj.keypressExtension(evt);
+            end
+
+        end
+
+
         function resetWindowKeyPressCallback(obj)
 
             % reset the key press callback to the original one added by orbitTool
