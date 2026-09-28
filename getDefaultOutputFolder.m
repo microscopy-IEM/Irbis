@@ -1,4 +1,14 @@
-function outputFolder = getDefaultOutputFolder()
+function outputFolder = getDefaultOutputFolder(currentPath)
+    arguments
+        currentPath = []
+    end
+
+    if ~isempty(currentPath) && isfolder(currentPath)
+        % If a valid current path is provided, use it as the default output folder
+        outputFolder = currentPath;
+        return;
+    end
+
     if ispc
         % Windows: Look for the Documents folder in the user's profile
         outputFolder = fullfile(getenv('USERPROFILE'), 'Documents');
