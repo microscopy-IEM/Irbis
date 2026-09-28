@@ -1,0 +1,16 @@
+name: irbis-python
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.10.16
+  - pip
+  - pip:
+      - numpy==2.2.1
+      - scipy==1.14.1
+      - scikit-image==0.25.2
+      - trimesh==4.11.5
+      - open3d==0.19.0
+      - matplotlib==3.10.7
+      - pyvista==0.46.4
