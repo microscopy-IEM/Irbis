@@ -8,7 +8,7 @@ addpath(appDirectory);
 
 % subfoldersToAdd = {'Mesh_processing_toolbox', 'toolbox_fast_marching'};
 
-subfoldersToAdd = {'BioformatsToolbox', 'toolbox_fast_marching', 'UI', 'DialogWindows', 'ResultsViewer', 'gizmo', 'CustomUIComponents', 'registrationHelpers', 'MightyDuck', 'automaticSpineCutting', 'pythonScripts', 'external'};
+subfoldersToAdd = {'BioformatsToolbox', 'toolbox_fast_marching', 'UI', 'DialogWindows', 'ResultsViewer', 'gizmo', 'CustomUIComponents', 'registrationHelpers', 'MightyDuck', 'automaticSpineCutting', 'pythonScripts', 'external','Tracks'};
 % ResultsViewer has to be included, because some classes are used in IrbisApp independently.
 % Before, we were just adding ResultsViewer when opening ResultsViewer, but this is not enough.
 for folderNum = 1:length(subfoldersToAdd)
