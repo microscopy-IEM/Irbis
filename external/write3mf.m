@@ -38,6 +38,7 @@ function write3mf(filename , vertices , faces, colors)
         % No colors provided
         colors = [];
     end
+
     
     % Check if input is valid
     checkInput(filename , vertices , faces, colors);

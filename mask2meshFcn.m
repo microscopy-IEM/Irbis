@@ -9,7 +9,7 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
     % default paramateres
     padSize = 4;
     sigma = 2;
-    scaleF = 2;
+    scaleF = 1;
     isoThres = 0.3;
     % dataPrecision = 'single';
     % depth = 4
@@ -203,7 +203,8 @@ function T = mask2meshFcn(mask,pixel_size,z_spacing,greyMap,wb_handle)
     
                 case '2D'
     
-                    verts(:,3) = verts(:,3).*0.5;
+                    virtualZelongation = 1.5;
+                    verts(:,3) = verts(:,3).*virtualZelongation;
                     verts(:,3) = verts(:,3) - mean(verts(:,3));
                    
                     % mesh = surfaceMesh(verts,faces);
