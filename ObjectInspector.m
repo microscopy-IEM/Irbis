@@ -215,12 +215,20 @@ classdef ObjectInspector < handle
             obj.timeEdit.RoundFractionalValues = true;
             obj.timeEdit.Value = 1;
 
-            % Slider
+            % Time point slider
             nTime = numel(obj.rowArray);
+            if nTime>1
+                lims = [1 nTime];
+                ticks = 1:nTime;            
+            else
+                lims = [0 nTime];
+                ticks = [0 nTime];
+            end
+
             obj.slider = uislider(obj.sliderPanel, ...
-                'Limits', [1 max(1, nTime)], ...
+                'Limits', lims, ...
                 'Value', 1, ...
-                'MajorTicks', 1:nTime, ...
+                'MajorTicks', ticks, ...
                 'MinorTicks', [], ...
                 'ValueChangingFcn', @(src, evt) obj.onTimeChanging(evt), ...
                 'ValueChangedFcn', @(src, evt) obj.onTimeChanged(round(src.Value)));
@@ -390,12 +398,25 @@ classdef ObjectInspector < handle
             % Refresh UI controls and update all displays
             % Only update slider and edit field if needed
             nTime = numel(obj.rowArray);
+           
+            if nTime > 1
+                lims = [1 nTime];
+                ticks = 1:nTime;
+            else
+                lims = [0 1];
+                ticks = [0 1];
+            end
+            
             if ~isempty(obj.slider) && isvalid(obj.slider)
-                if any(obj.slider.Limits ~= [1 max(1, nTime)])
-                    obj.slider.Limits = [1 max(1, nTime)];
+                % if any(obj.slider.Limits ~= [1 max(1, nTime)])
+                if any(obj.slider.Limits ~= lims)
+                    % obj.slider.Limits = [1 max(1, nTime)];
+                    obj.slider.Limits = lims;
                 end
-                if ~isequal(obj.slider.MajorTicks, 1:nTime)
-                    obj.slider.MajorTicks = 1:nTime;
+                % if ~isequal(obj.slider.MajorTicks, 1:nTime)
+                if ~isequal(obj.slider.MajorTicks, ticks)
+                    % obj.slider.MajorTicks = 1:nTime;
+                    obj.slider.MajorTicks = ticks;
                 end
                 % Don't reset value unless out of bounds
                 if obj.slider.Value < 1 || obj.slider.Value > nTime
@@ -403,8 +424,10 @@ classdef ObjectInspector < handle
                 end
             end
             if ~isempty(obj.timeEdit) && isvalid(obj.timeEdit)
-                if any(obj.timeEdit.Limits ~= [1 max(1, nTime)])
-                    obj.timeEdit.Limits = [1 max(1, nTime)];
+                % if any(obj.timeEdit.Limits ~= [1 max(1, nTime)])
+                %     obj.timeEdit.Limits = [1 max(1, nTime)];
+                if any(obj.timeEdit.Limits ~= lims)
+                    obj.timeEdit.Limits = lims;
                 end
                 if obj.timeEdit.Value < 1 || obj.timeEdit.Value > nTime
                     obj.timeEdit.Value = 1;
